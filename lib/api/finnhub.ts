@@ -50,6 +50,8 @@ import {
   PriceTarget,
   FinancialMetrics,
   EarningsData,
+  InsiderTransaction,
+  TechnicalIndicators,
 } from '@/lib/utils/types'
 
 // ─── Internal helpers ─────────────────────────────────────────────────────
@@ -510,6 +512,90 @@ export async function getEarnings(symbol: string): Promise<EarningsData[]> {
         surprise:        e.surprise        ?? 0,
         surprisePercent: e.surprisePercent ?? 0,
       }))
+    },
+  )
+}
+
+// ─── Peers / Insider / Technicals ─────────────────────────────────────────
+
+interface FinnhubInsiderTransaction {
+  name: string
+  share: number
+  change: number
+  filingDate: string
+  transactionDate: string
+  transactionCode: string // P=Purchase, S=Sale, A=Grant, M=Exercise
+  transactionPrice: number
+}
+
+export async function getPeers(symbol: string): Promise<string[]> {
+  return cachedFetch<string[]>(
+    `finnhub:peers:${symbol}`,
+    TTL.QUOTE,
+    async () => {
+      const data = await finnhubGet<string[]>(`/stock/peers?symbol=${encodeURIComponent(symbol)}`)
+      return data.filter((s: string) => s !== symbol).slice(0, 8)
+    },
+  )
+}
+
+export async function getInsiderTransactions(symbol: string): Promise<InsiderTransaction[]> {
+  return cachedFetch<InsiderTransaction[]>(
+    `finnhub:insider:${symbol}`,
+    TTL.NEWS,
+    async () => {
+      const res = await finnhubGet<{ data: FinnhubInsiderTransaction[] }>(
+        `/stock/insider-transactions?symbol=${encodeURIComponent(symbol)}`
+      )
+      const txns = res.data ?? []
+      const typeMap: Record<string, InsiderTransaction['type']> = {
+        P: 'Purchase', S: 'Sale', A: 'Grant', M: 'Exercise',
+      }
+      return txns
+        .filter((t: FinnhubInsiderTransaction) => ['P', 'S'].includes(t.transactionCode) && t.change !== 0)
+        .slice(0, 20)
+        .map((t: FinnhubInsiderTransaction) => ({
+          name: t.name,
+          shares: Math.abs(t.change),
+          change: t.change,
+          filingDate: t.filingDate,
+          transactionDate: t.transactionDate,
+          type: typeMap[t.transactionCode] ?? 'Other',
+          price: t.transactionPrice,
+        }))
+    },
+  )
+}
+
+export async function getAggregateIndicators(symbol: string): Promise<TechnicalIndicators | null> {
+  return cachedFetch<TechnicalIndicators | null>(
+    `finnhub:technicals:${symbol}`,
+    TTL.QUOTE,
+    async () => {
+      const data = await finnhubGet<{
+        technicalAnalysis: { count: { buy: number; sell: number; neutral: number }; signal: string }
+      }>(`/scan/technical-indicator?symbol=${encodeURIComponent(symbol)}&resolution=D`)
+      if (!data?.technicalAnalysis) return null
+      const ta = data.technicalAnalysis
+      return {
+        buy: ta.count.buy,
+        sell: ta.count.sell,
+        neutral: ta.count.neutral,
+        signal: ta.signal as TechnicalIndicators['signal'],
+      }
+    },
+  )
+}
+
+export async function getSupportResistance(symbol: string): Promise<number[]> {
+  return cachedFetch<number[]>(
+    `finnhub:sr:${symbol}`,
+    TTL.QUOTE,
+    async () => {
+      const data = await finnhubGet<{ levels: number[] }>(
+        `/scan/support-resistance?symbol=${encodeURIComponent(symbol)}&resolution=D`
+      )
+      return data.levels ?? []
     },
   )
 }

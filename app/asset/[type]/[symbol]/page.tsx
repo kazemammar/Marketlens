@@ -12,6 +12,9 @@ import NewsSection from '@/components/asset/NewsSection'
 import FinancialsTable from '@/components/asset/FinancialsTable'
 import AnalystRatings from '@/components/asset/AnalystRatings'
 import SentimentCard from '@/components/asset/SentimentCard'
+import PeersTable from '@/components/asset/PeersTable'
+import InsiderActivity from '@/components/asset/InsiderActivity'
+import TechnicalSummary from '@/components/asset/TechnicalSummary'
 
 export const dynamic = 'force-dynamic'
 
@@ -246,17 +249,28 @@ export default async function AssetPage({ params }: AssetPageProps) {
         <TradingViewChart symbol={symbol} type={type} />
       </div>
 
+      {/* ── Peers & Technicals (stock only) — full-width, below chart ── */}
+      {type === 'stock' && (
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+          <PeersTable symbol={symbol} />
+          <TechnicalSummary symbol={symbol} currentPrice={asset.price} />
+        </div>
+      )}
+
       {/* ── Content — constrained, tight padding ── */}
       <main className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6">
         <div
           className="grid grid-cols-1 gap-4 lg:gap-5"
           style={{ gridTemplateColumns: 'minmax(0,65fr) minmax(0,35fr)' }}
         >
-          {/* ── Left 65%: News ── */}
+          {/* ── Left 65%: News + Insider Activity (stock only) ── */}
           <div className="col-span-1">
             <Suspense fallback={<SectionSkeleton rows={6} />}>
               <NewsSection symbol={symbol} type={type} />
             </Suspense>
+            {type === 'stock' && (
+              <InsiderActivity symbol={symbol} />
+            )}
           </div>
 
           {/* ── Right 35%: Sentiment → Analyst → Financials ── */}

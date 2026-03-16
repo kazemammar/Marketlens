@@ -205,3 +205,30 @@ export interface RssFeed {
   name: string
   url: string
 }
+
+// ─── Insider transactions ─────────────────────────────────────────────────
+
+export interface InsiderTransaction {
+  name: string
+  shares: number
+  change: number
+  filingDate: string
+  transactionDate: string
+  type: 'Purchase' | 'Sale' | 'Grant' | 'Exercise' | 'Other'
+  price: number
+}
+
+// ─── Technical indicators ─────────────────────────────────────────────────
+
+export interface TechnicalIndicators {
+  buy: number
+  sell: number
+  neutral: number
+  signal: 'buy' | 'sell' | 'neutral'
+}
+
+// ─── Support & Resistance ─────────────────────────────────────────────────
+
+export interface SupportResistance {
+  levels: number[]
+}

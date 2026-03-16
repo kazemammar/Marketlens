@@ -1,0 +1,5 @@
+// Generic badge/tag component
+
+export default function Badge() {
+  return <span>Badge</span>
+}

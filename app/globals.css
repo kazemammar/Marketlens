@@ -1,26 +1,159 @@
 @import "tailwindcss";
 
+/* ─── Class-based dark mode (Tailwind v4) ────────────────────────────────── */
+@custom-variant dark (&:is(.dark, .dark *));
+
+/* ─── Theme tokens ────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:          #f0f4f8;
+  --surface:     #ffffff;
+  --surface-2:   #e8edf3;
+  --surface-3:   #dde3ec;
+  --border:      rgba(0, 0, 0, 0.09);
+  --text:        #0f172a;
+  --text-muted:  #64748b;
+  --font-sans:   var(--font-geist-sans);
+  --font-mono:   var(--font-geist-mono);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --bg:          #0a0e17;
+  --surface:     #111827;
+  --surface-2:   #1a2234;
+  --surface-3:   #1f2a3c;
+  --border:      rgba(30, 41, 59, 0.7);
+  --text:        #e2e8f0;
+  --text-muted:  #94a3b8;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color:            var(--text);
+  font-family:      var(--font-sans), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* ─── Ticker tape ────────────────────────────────────────────────────────── */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display:   flex;
+  width:     max-content;
+  animation: ticker 40s linear infinite;
+}
+
+.ticker-track:hover { animation-play-state: paused; }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(148,163,184,0.2); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.4); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fadeUp 0.25s ease forwards; }
+
+@keyframes conflict-pulse {
+  0%   { transform: scale(1);   opacity: 0.9; }
+  70%  { transform: scale(3.2); opacity: 0;   }
+  100% { transform: scale(1);   opacity: 0;   }
+}
+
+/* ─── Conflict zone markers ──────────────────────────────────────────────── */
+.conflict-marker {
+  position: relative;
+  width:  14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.conflict-marker-dot {
+  width:  14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid rgba(239,68,68,0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.conflict-marker-ring {
+  position:  absolute;
+  inset:     0;
+  border-radius: 50%;
+  background: rgba(239,68,68,0.45);
+  animation: conflict-pulse 2.2s ease-out infinite;
+}
+
+.conflict-marker-ring-2 { animation-delay: 0.75s; }
+
+/* ─── Chokepoint markers ─────────────────────────────────────────────────── */
+.chokepoint-marker {
+  width:  11px;
+  height: 11px;
+  background: #f59e0b;
+  border:     2px solid rgba(245,158,11,0.5);
+  transform:  rotate(45deg);
+  cursor:     pointer;
+  box-shadow: 0 0 8px rgba(245,158,11,0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.chokepoint-marker:hover {
+  transform: rotate(45deg) scale(1.3);
+  box-shadow: 0 0 14px rgba(245,158,11,0.7);
+}
+
+/* ─── MapLibre dark theme overrides ─────────────────────────────────────── */
+.maplibregl-popup-content {
+  background:    #111827 !important;
+  border:        1px solid rgba(30,41,59,0.8) !important;
+  border-radius: 6px !important;
+  padding:       10px 12px !important;
+  color:         #e2e8f0 !important;
+  font-family:   inherit !important;
+  font-size:     12px !important;
+  box-shadow:    0 8px 32px rgba(0,0,0,0.6) !important;
+  max-width:     240px !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color:    #111827 !important;
+  border-bottom-color: #111827 !important;
+}
+
+.maplibregl-popup-close-button {
+  color:     #94a3b8 !important;
+  font-size: 14px !important;
+  padding:   2px 6px !important;
+  top:       4px !important;
+  right:     4px !important;
+}
+.maplibregl-popup-close-button:hover { color: #e2e8f0 !important; background: transparent !important; }
+
+.maplibregl-ctrl-group {
+  background: #111827 !important;
+  border:     1px solid rgba(30,41,59,0.8) !important;
+  border-radius: 4px !important;
+}
+.maplibregl-ctrl-group button { background-color: transparent !important; }
+.maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(0.75) !important; }
+.maplibregl-ctrl-attrib { background: rgba(17,24,39,0.8) !important; color: #475569 !important; font-size: 9px !important; }
+.maplibregl-ctrl-attrib a { color: #64748b !important; }
+
+/* ─── War room panel dividers ────────────────────────────────────────────── */
+.war-panel {
+  border-right: 1px solid var(--border);
+}
+.war-panel:last-child { border-right: none; }

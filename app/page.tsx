@@ -13,6 +13,7 @@ import RiskGauge         from '@/components/warroom/RiskGauge'
 import SignalsPanel         from '@/components/warroom/SignalsPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
+import NewsBriefing         from '@/components/warroom/NewsBriefing'
 import MaritimePanel        from '@/components/warroom/MaritimePanel'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
@@ -50,12 +51,9 @@ export default async function HomePage({
       <CommodityStrip initialData={homepage?.commodityStrip} />
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
-      <div
-        className="grid border-b border-[var(--border)]"
-        style={{ gridTemplateColumns: 'minmax(0,65fr) minmax(0,35fr)' }}
-      >
+      <div className="grid grid-cols-1 border-b border-[var(--border)] lg:grid-cols-[65fr_35fr]">
         {/* GeoMap — left */}
-        <div className="border-r border-[var(--border)]">
+        <div className="lg:border-r border-[var(--border)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
             <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
@@ -68,7 +66,7 @@ export default async function HomePage({
         {/* IntelPanel — right, scrollable */}
         <div
           className="flex flex-col overflow-hidden bg-[var(--surface)]"
-          style={{ height: 'clamp(400px, 55vw, 600px)' }}
+          style={{ height: 'clamp(300px, 55vw, 600px)' }}
         >
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
@@ -114,6 +112,9 @@ export default async function HomePage({
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}
       <PredictionMarkets />
+
+      {/* ══ NEWS BRIEFING — top stories by category ═══════════════════════ */}
+      <NewsBriefing />
 
       {/* ══ ECONOMIC INDICATORS ═══════════════════════════════════════════ */}
       <EconomicIndicators />

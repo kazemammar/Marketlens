@@ -2,6 +2,7 @@ import Parser from 'rss-parser'
 import { cachedFetch, cacheKey } from '@/lib/cache/redis'
 import { TTL, RSS_FEEDS } from '@/lib/utils/constants'
 import { NewsArticle } from '@/lib/utils/types'
+import { getAssetKeywords } from '@/lib/utils/news-helpers'
 
 // ─── Extended RSS item types ──────────────────────────────────────────────
 
@@ -142,4 +143,27 @@ export async function getNewsForSymbol(symbol: string): Promise<NewsArticle[]> {
       a.summary.toLowerCase().includes(term) ||
       (a.relatedSymbols ?? []).some((s) => s.toLowerCase() === term),
   )
+}
+
+export async function getRelatedNewsForAsset(symbol: string, type: string): Promise<NewsArticle[]> {
+  const allArticles = await getFinanceNews()
+  const keywords    = getAssetKeywords(symbol, type)
+
+  type Scored = NewsArticle & { _score: number }
+
+  const scored: Scored[] = allArticles.map((article) => {
+    const text  = `${article.headline} ${article.summary}`.toLowerCase()
+    let score   = 0
+    for (const kw of keywords) {
+      if (text.includes(kw.toLowerCase())) score += kw.length > 4 ? 2 : 1
+    }
+    return { ...article, _score: score }
+  })
+
+  return scored
+    .filter((a) => a._score > 0)
+    .sort((a, b) => b._score - a._score || b.publishedAt - a.publishedAt)
+    .slice(0, 15)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    .map(({ _score, ...a }) => a as NewsArticle)
 }

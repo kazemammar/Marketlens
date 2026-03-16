@@ -116,26 +116,82 @@ export const CRYPTO_SYMBOL_TO_CG_ID: Record<string, string> = {
 // ─── RSS feeds ────────────────────────────────────────────────────────────
 
 export const RSS_FEEDS: RssFeed[] = [
-  // Financial news
+  // ── Financial News (Major) ──
   { name: 'Reuters Business',    url: 'https://feeds.reuters.com/reuters/businessNews' },
   { name: 'Reuters World',       url: 'https://feeds.reuters.com/Reuters/worldNews' },
   { name: 'MarketWatch',         url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories' },
   { name: 'Yahoo Finance',       url: 'https://finance.yahoo.com/news/rssindex' },
   { name: 'Seeking Alpha',       url: 'https://seekingalpha.com/market_currents.xml' },
   { name: 'Investopedia',        url: 'https://www.investopedia.com/feedbuilder/feed/getfeed?feedName=rss_headline' },
-  // CNBC
+  { name: 'Benzinga',            url: 'https://www.benzinga.com/feed' },
+
+  // ── CNBC ──
   { name: 'CNBC Top News',       url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114' },
   { name: 'CNBC World Markets',  url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=15839135' },
-  { name: 'CNBC World Economy',  url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100727362' },
-  // World news (good for geopolitical intelligence)
+  { name: 'CNBC Economy',        url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100727362' },
+  { name: 'CNBC Tech',           url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=19854910' },
+  { name: 'CNBC Finance',        url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664' },
+
+  // ── World News & Geopolitics ──
   { name: 'BBC World',           url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
+  { name: 'BBC Business',        url: 'https://feeds.bbci.co.uk/news/business/rss.xml' },
   { name: 'Al Jazeera',          url: 'https://www.aljazeera.com/xml/rss/all.xml' },
-  // Energy & commodities
+  { name: 'NPR World',           url: 'https://feeds.npr.org/1004/rss.xml' },
+  { name: 'NPR Business',        url: 'https://feeds.npr.org/1006/rss.xml' },
+  { name: 'AP News',             url: 'https://rsshub.app/apnews/topics/business' },
+  { name: 'France 24',           url: 'https://www.france24.com/en/rss' },
+  { name: 'DW News',             url: 'https://rss.dw.com/rdf/rss-en-all' },
+
+  // ── Energy & Commodities ──
   { name: 'OilPrice.com',        url: 'https://oilprice.com/rss/main' },
-  // Defense & security
+  { name: 'Rigzone',             url: 'https://www.rigzone.com/news/rss/rigzone_latest.aspx' },
+  { name: 'Mining.com',          url: 'https://www.mining.com/feed/' },
+
+  // ── Crypto ──
+  { name: 'CoinDesk',            url: 'https://www.coindesk.com/arc/outboundfeeds/rss/' },
+  { name: 'CoinTelegraph',       url: 'https://cointelegraph.com/rss' },
+  { name: 'The Block',           url: 'https://www.theblock.co/rss.xml' },
+  { name: 'Decrypt',             url: 'https://decrypt.co/feed' },
+
+  // ── Tech ──
+  { name: 'TechCrunch',          url: 'https://techcrunch.com/feed/' },
+  { name: 'The Verge',           url: 'https://www.theverge.com/rss/index.xml' },
+  { name: 'Ars Technica',        url: 'https://feeds.arstechnica.com/arstechnica/index' },
+  { name: 'Wired Business',      url: 'https://www.wired.com/feed/category/business/latest/rss' },
+
+  // ── Defense & Security ──
   { name: 'Defense One',         url: 'https://www.defenseone.com/rss/' },
-  // Breaking market news
-  { name: 'Benzinga',            url: 'https://www.benzinga.com/feed' },
+  { name: 'Defense News',        url: 'https://www.defensenews.com/arc/outboundfeeds/rss/' },
+  { name: 'War on the Rocks',    url: 'https://warontherocks.com/feed/' },
+
+  // ── Central Banks & Economics ──
+  { name: 'Fed Reserve',         url: 'https://www.federalreserve.gov/feeds/press_all.xml' },
+  { name: 'ECB',                 url: 'https://www.ecb.europa.eu/rss/press.html' },
+  { name: 'IMF Blog',            url: 'https://www.imf.org/en/News/rss?Language=ENG' },
+  { name: 'World Bank',          url: 'https://blogs.worldbank.org/feed' },
+
+  // ── Real Estate & Housing ──
+  { name: 'HousingWire',         url: 'https://www.housingwire.com/feed/' },
+
+  // ── Auto & EV ──
+  { name: 'Electrek',            url: 'https://electrek.co/feed/' },
+  { name: 'InsideEVs',           url: 'https://insideevs.com/rss/news/all/' },
+
+  // ── Healthcare & Pharma ──
+  { name: 'STAT News',           url: 'https://www.statnews.com/feed/' },
+  { name: 'Fierce Pharma',       url: 'https://www.fiercepharma.com/rss/xml' },
+
+  // ── Supply Chain & Trade ──
+  { name: 'FreightWaves',        url: 'https://www.freightwaves.com/news/rss.xml' },
+  { name: 'Supply Chain Dive',   url: 'https://www.supplychaindive.com/feeds/news/' },
+
+  // ── Climate & ESG ──
+  { name: 'Carbon Brief',        url: 'https://www.carbonbrief.org/feed' },
+  { name: 'CleanTechnica',       url: 'https://cleantechnica.com/feed/' },
+
+  // ── Asia Markets ──
+  { name: 'Nikkei Asia',         url: 'https://asia.nikkei.com/rss' },
+  { name: 'South China Morning Post', url: 'https://www.scmp.com/rss/91/feed' },
 ]
 
 // ─── Related assets ───────────────────────────────────────────────────────

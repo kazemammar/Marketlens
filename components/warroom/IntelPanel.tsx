@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Flame, TrendingUp, Shield, Landmark, Bitcoin, ArrowLeftRight, Globe, Fuel } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { categorizeArticle, type NewsCategory } from '@/lib/utils/news-helpers'
 
 interface Article {
   headline:    string
@@ -25,6 +26,8 @@ const REGIONS = [
 ] as const
 
 type RegionId = typeof REGIONS[number]['id']
+type Severity = 'ALL' | 'HIGH' | 'MED' | 'LOW'
+type CatFilter = 'ALL' | NewsCategory
 
 const HIGH_KW = ['war','attack','strike','sanction','blockade','invasion','missile','drone','crisis','crash','collapse','emergency','opec cut','opec+','default','coup','explosion','seized']
 const MED_KW  = ['tariff','trade','regulation','election','gdp','inflation','rate hike','rate cut','deficit','devaluation','recession','unemployment','fomc','opec']
@@ -48,6 +51,16 @@ const IMP_BORDER: Record<string, string> = {
   LOW:  'border-l-[var(--border)]',
 }
 
+// Severity pill active colors
+const SEV_ACTIVE: Record<Severity, string> = {
+  ALL:  'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]',
+  HIGH: 'border-transparent bg-[#ff4444] text-white',
+  MED:  'border-transparent bg-[#f59e0b] text-black',
+  LOW:  'border-transparent bg-[#2a2a2a] text-[#888888]',
+}
+
+const INACTIVE_PILL = 'border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:text-[var(--text-2)]'
+
 // ─── Article thumbnail helpers ────────────────────────────────────────────
 
 function isValidImage(url?: string): boolean {
@@ -58,29 +71,25 @@ function isValidImage(url?: string): boolean {
   return url.startsWith('http')
 }
 
-type IconCategory = {
-  icon: LucideIcon
-  gradient: string
-  color: string
-}
+type IconCategory = { icon: LucideIcon; gradient: string; color: string }
 
 function getArticleIcon(headline: string): IconCategory {
   const h = headline.toLowerCase()
   if (/oil|crude|opec|barrel|brent|wti|petroleum/.test(h))
-    return { icon: Flame,           gradient: 'from-orange-950 to-orange-900',  color: '#f97316' }
+    return { icon: Flame,          gradient: 'from-orange-950 to-orange-900', color: '#f97316' }
   if (/war|military|strike|attack|conflict|iran|israel|missile|drone|invasion/.test(h))
-    return { icon: Shield,          gradient: 'from-red-950 to-red-900',         color: '#ff4444' }
+    return { icon: Shield,         gradient: 'from-red-950 to-red-900',       color: '#ff4444' }
   if (/fed|federal reserve|fomc|rate|inflation|gdp|economy|recession|treasury/.test(h))
-    return { icon: Landmark,        gradient: 'from-blue-950 to-blue-900',       color: '#60a5fa' }
+    return { icon: Landmark,       gradient: 'from-blue-950 to-blue-900',     color: '#60a5fa' }
   if (/crypto|bitcoin|ethereum|btc|eth|blockchain|defi|nft/.test(h))
-    return { icon: Bitcoin,         gradient: 'from-purple-950 to-purple-900',   color: '#a78bfa' }
+    return { icon: Bitcoin,        gradient: 'from-purple-950 to-purple-900', color: '#a78bfa' }
   if (/forex|currency|dollar|yen|euro|pound|yuan|rupee|fx/.test(h))
-    return { icon: ArrowLeftRight,  gradient: 'from-cyan-950 to-cyan-900',       color: '#22d3ee' }
+    return { icon: ArrowLeftRight, gradient: 'from-cyan-950 to-cyan-900',     color: '#22d3ee' }
   if (/gas|wheat|corn|commodity|agriculture|lumber|copper|natural gas/.test(h))
-    return { icon: Fuel,            gradient: 'from-yellow-950 to-yellow-900',   color: '#eab308' }
+    return { icon: Fuel,           gradient: 'from-yellow-950 to-yellow-900', color: '#eab308' }
   if (/stock|shares|market|s&p|dow|nasdaq|equity|earnings|ipo/.test(h))
-    return { icon: TrendingUp,      gradient: 'from-emerald-950 to-emerald-900', color: '#10b981' }
-  return   { icon: Globe,           gradient: 'from-zinc-900 to-zinc-800',       color: '#888888' }
+    return { icon: TrendingUp,     gradient: 'from-emerald-950 to-emerald-900', color: '#10b981' }
+  return   { icon: Globe,          gradient: 'from-zinc-900 to-zinc-800',     color: '#888888' }
 }
 
 function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: string }) {
@@ -119,8 +128,30 @@ function ago(ts: string | number) {
   return `${Math.floor(h/24)}d`
 }
 
+// ─── Filter pill ──────────────────────────────────────────────────────────
+
+function Pill({ active, activeClass, onClick, children }: {
+  active: boolean
+  activeClass: string
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`shrink-0 rounded px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] transition-all duration-100 ${
+        active ? activeClass : INACTIVE_PILL
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function IntelPanel() {
   const [region,   setRegion]   = useState<RegionId>('all')
+  const [severity, setSeverity] = useState<Severity>('ALL')
+  const [category, setCategory] = useState<CatFilter>('ALL')
   const [all,      setAll]      = useState<Article[]>([])
   const [loading,  setLoading]  = useState(true)
   const [updating, setUpdating] = useState(false)
@@ -151,13 +182,22 @@ export default function IntelPanel() {
     return () => clearInterval(id)
   }, [fetch_])
 
-  const def     = REGIONS.find((r) => r.id === region)!
-  const visible = region === 'all'
+  // ── Apply all three filters ───────────────────────────────────────────
+  const def = REGIONS.find((r) => r.id === region)!
+
+  let visible = region === 'all'
     ? all
     : all.filter((a) => {
         const h = `${a.headline} ${a.summary}`.toLowerCase()
         return def.keywords.some((k) => h.includes(k))
       })
+
+  if (severity !== 'ALL') {
+    visible = visible.filter((a) => impact(`${a.headline} ${a.summary}`) === severity)
+  }
+  if (category !== 'ALL') {
+    visible = visible.filter((a) => categorizeArticle(a.headline) === category)
+  }
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -169,7 +209,7 @@ export default function IntelPanel() {
         />
       )}
 
-      {/* Region tabs + LIVE indicator */}
+      {/* Region tabs */}
       <div className="flex shrink-0 items-center overflow-x-auto border-b border-[var(--border)]">
         <div className="flex flex-1 overflow-x-auto">
           {REGIONS.map((r) => (
@@ -196,6 +236,37 @@ export default function IntelPanel() {
         </div>
       </div>
 
+      {/* Filter pills row */}
+      <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] px-2 py-1.5">
+        {/* Severity */}
+        {(['ALL', 'HIGH', 'MED', 'LOW'] as Severity[]).map((s) => (
+          <Pill key={s} active={severity === s} activeClass={SEV_ACTIVE[s]} onClick={() => setSeverity(s)}>
+            {s}
+          </Pill>
+        ))}
+
+        <div className="h-3 w-px shrink-0 bg-[var(--border)]" />
+
+        {/* Category */}
+        {([
+          ['ALL',           'ALL'],
+          ['GEOPOLITICAL',  'GEO'],
+          ['MARKETS',       'MKTS'],
+          ['ENERGY',        'ENERGY'],
+          ['TECH',          'TECH'],
+          ['CRYPTO',        'CRYPTO'],
+        ] as [CatFilter, string][]).map(([id, label]) => (
+          <Pill
+            key={id}
+            active={category === id}
+            activeClass="bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]"
+            onClick={() => setCategory(id)}
+          >
+            {label}
+          </Pill>
+        ))}
+      </div>
+
       {/* Article list */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
@@ -210,7 +281,7 @@ export default function IntelPanel() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-[var(--text-muted)] opacity-30" aria-hidden>
               <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
             </svg>
-            <p className="font-mono text-[11px] text-[var(--text-muted)]">No articles in this region</p>
+            <p className="font-mono text-[11px] text-[var(--text-muted)]">No articles match filters</p>
           </div>
         ) : (
           <>

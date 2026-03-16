@@ -1,5 +1,7 @@
-import { NewsArticle, AssetType } from '@/lib/utils/types'
+import { AssetType } from '@/lib/utils/types'
 import { formatRelativeTime } from '@/lib/utils/formatters'
+import { getCompanyNews } from '@/lib/api/finnhub'
+import { getNewsForSymbol } from '@/lib/api/rss'
 import NewsThumb from './NewsThumb'
 
 interface NewsSectionProps {
@@ -7,15 +9,16 @@ interface NewsSectionProps {
   type:   AssetType
 }
 
-async function fetchNews(symbol: string, type: AssetType): Promise<NewsArticle[]> {
+async function fetchNews(symbol: string, type: AssetType) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-    const res = await fetch(
-      `${baseUrl}/api/news/${encodeURIComponent(symbol)}?type=${type}`,
-      { next: { revalidate: 300 } },
-    )
-    if (!res.ok) return []
-    return res.json()
+    if (type === 'stock' || type === 'etf') {
+      const to   = new Date()
+      const from = new Date(to.getTime() - 30 * 24 * 60 * 60 * 1_000)
+      const fmt  = (d: Date) => d.toISOString().slice(0, 10)
+      const articles = await getCompanyNews(symbol, fmt(from), fmt(to))
+      if (articles.length > 0) return articles.slice(0, 10)
+    }
+    return (await getNewsForSymbol(symbol)).slice(0, 10)
   } catch {
     return []
   }

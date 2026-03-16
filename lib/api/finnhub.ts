@@ -276,7 +276,7 @@ export async function getCompanyNews(
         summary:        item.summary,
         source:         item.source,
         url:            item.url,
-        imageUrl:       item.image || undefined,
+        imageUrl:       (item.image && !item.image.includes('yimg.com/rz/stage')) ? item.image : undefined,
         publishedAt:    item.datetime * 1_000,
         relatedSymbols: item.related ? item.related.split(',').map((s) => s.trim()) : [],
       }))

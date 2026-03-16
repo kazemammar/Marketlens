@@ -30,33 +30,34 @@ const parser = new Parser<CustomFeed, CustomItem>({
 
 // ─── Image extraction ─────────────────────────────────────────────────────
 
-const isHttps = (url: string) => url.startsWith('https://')
+const isValidImage = (url: string) =>
+  url.startsWith('https://') && !url.includes('yimg.com/rz/stage')
 
 function extractImage(item: Parser.Item & CustomItem): string | undefined {
   // 1. media:content url (most common for news sites)
   const mc = item['media:content']?.['$']?.url
-  if (mc && isHttps(mc)) return mc
+  if (mc && isValidImage(mc)) return mc
 
   // 2. media:thumbnail (BBC, Reuters)
   const mt = item['media:thumbnail']?.['$']?.url
-  if (mt && isHttps(mt)) return mt
+  if (mt && isValidImage(mt)) return mt
 
   // 3. media:group > media:thumbnail[0]
   const mg = item['media:group']?.['media:thumbnail']?.[0]?.['$']?.url
-  if (mg && isHttps(mg)) return mg
+  if (mg && isValidImage(mg)) return mg
 
   // 4. enclosure (can be object or string)
   const enc = item.enclosure
   if (enc) {
     const url = typeof enc === 'string' ? enc : enc.url
-    if (url && isHttps(url) && !url.endsWith('.mp3') && !url.endsWith('.mp4')) return url
+    if (url && isValidImage(url) && !url.endsWith('.mp3') && !url.endsWith('.mp4')) return url
   }
 
   // 5. itunes:image
   const ii = item['itunes:image']
   if (ii) {
     const url = typeof ii === 'string' ? ii : ii?.['$']?.href
-    if (url && isHttps(url)) return url
+    if (url && isValidImage(url)) return url
   }
 
   // 6. Scan content for first <img> src (https only)

@@ -41,7 +41,7 @@ function isRelevant(question: string): boolean {
 interface GammaMarketRaw {
   id:              string
   question:        string
-  outcomePrices:   string[] | null   // ["0.73", "0.27"]
+  outcomePrices:   string | string[] | null  // API returns JSON string e.g. "[\"0.73\", \"0.27\"]"
   volume:          string | number
   endDate?:        string
   end_date_iso?:   string
@@ -54,10 +54,10 @@ interface GammaMarketRaw {
 
 export async function getPredictionMarkets(): Promise<PolymarketMarket[]> {
   return cachedFetch<PolymarketMarket[]>(
-    'polymarket:markets',
+    'polymarket:markets:v2',
     CACHE_TTL,
     async () => {
-      const url = `${GAMMA_BASE}/markets?active=true&limit=100&order=volume&ascending=false`
+      const url = `${GAMMA_BASE}/markets?active=true&closed=false&limit=100&order=volume&ascending=false`
 
       const res = await fetch(url, {
         headers: { 'Accept': 'application/json' },
@@ -75,12 +75,22 @@ export async function getPredictionMarkets(): Promise<PolymarketMarket[]> {
       for (const m of raw) {
         if (!m.active || m.closed) continue
         if (!isRelevant(m.question)) continue
-        if (!m.outcomePrices || m.outcomePrices.length < 1) continue
 
-        const yesPriceStr = m.outcomePrices[0]
-        const yesPrice    = parseFloat(yesPriceStr)
+        // Parse outcomePrices — API returns a JSON string, not an array
+        let parsedPrices: string[]
+        try {
+          parsedPrices = typeof m.outcomePrices === 'string'
+            ? JSON.parse(m.outcomePrices)
+            : Array.isArray(m.outcomePrices) ? m.outcomePrices : []
+        } catch {
+          continue
+        }
+        if (parsedPrices.length < 1) continue
+
+        const yesPrice = parseFloat(parsedPrices[0])
         if (isNaN(yesPrice)) continue
 
+        // Parse volume to number before sorting
         const volume = typeof m.volume === 'string' ? parseFloat(m.volume) : (m.volume ?? 0)
 
         markets.push({

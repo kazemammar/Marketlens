@@ -7,6 +7,7 @@ import type { PolymarketMarket } from '@/lib/api/polymarket'
 export async function GET() {
   try {
     const markets = await getPredictionMarkets()
+    console.log('[predictions] markets count:', markets.length, 'first:', markets[0]?.question)
     // Return top 8 by volume
     return NextResponse.json(markets.slice(0, 8))
   } catch (err) {

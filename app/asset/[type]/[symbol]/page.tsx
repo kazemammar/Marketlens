@@ -15,6 +15,7 @@ import SentimentCard from '@/components/asset/SentimentCard'
 import PeersTable from '@/components/asset/PeersTable'
 import InsiderActivity from '@/components/asset/InsiderActivity'
 import TechnicalSummary from '@/components/asset/TechnicalSummary'
+import AssetContext from '@/components/asset/AssetContext'
 
 export const dynamic = 'force-dynamic'
 
@@ -256,6 +257,11 @@ export default async function AssetPage({ params }: AssetPageProps) {
           <TechnicalSummary symbol={symbol} />
         </div>
       )}
+
+      {/* ── What's Affecting This ── */}
+      <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+        <AssetContext symbol={symbol} type={type} />
+      </div>
 
       {/* ── Content — constrained, tight padding ── */}
       <main className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6">

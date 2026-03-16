@@ -94,3 +94,89 @@ function isValidLabel(label: unknown): label is SentimentLabel {
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
 }
+
+// ─── Asset Context ────────────────────────────────────────────────────────
+
+const CONTEXT_SYSTEM_PROMPT = `You are a geopolitical and financial intelligence analyst. Given an asset (stock, crypto, commodity, forex, or ETF) and recent news headlines, identify the key EXTERNAL FORCES currently affecting this asset.
+
+Categorize each force into one of these types:
+- "geopolitical" — wars, sanctions, tariffs, trade tensions, elections, political instability
+- "macro" — Fed policy, interest rates, inflation, GDP, unemployment, currency strength
+- "sector" — industry competition, regulation, technology disruption, supply chain
+- "environmental" — climate events, weather, ESG policy, energy transition
+- "sentiment" — social media buzz, analyst upgrades/downgrades, institutional buying/selling, retail interest
+
+Respond with valid JSON only — no markdown fences. Use this exact shape:
+{
+  "factors": [
+    {
+      "category": "geopolitical" | "macro" | "sector" | "environmental" | "sentiment",
+      "title": "<short 3-6 word title>",
+      "description": "<1 sentence explaining the impact on this specific asset>",
+      "impact": "bullish" | "bearish" | "neutral",
+      "severity": "HIGH" | "MED" | "LOW"
+    }
+  ],
+  "summary": "<2-3 sentence executive summary of the overall external environment for this asset>"
+}
+
+Return 4-8 factors, ordered by severity (HIGH first). Be specific to THIS asset — don't give generic market commentary. Connect world events to concrete impacts on the asset's price, revenue, supply chain, or demand.`
+
+export interface AssetContextFactor {
+  category:    'geopolitical' | 'macro' | 'sector' | 'environmental' | 'sentiment'
+  title:       string
+  description: string
+  impact:      'bullish' | 'bearish' | 'neutral'
+  severity:    'HIGH' | 'MED' | 'LOW'
+}
+
+export interface AssetContext {
+  symbol:     string
+  factors:    AssetContextFactor[]
+  summary:    string
+  analyzedAt: number
+}
+
+export async function analyzeAssetContext(
+  symbol: string,
+  type: string,
+  headlines: string[],
+  metadata?: { industry?: string; name?: string },
+): Promise<AssetContext> {
+  return cachedFetch(
+    `context:${symbol.toUpperCase()}`,
+    TTL.SENTIMENT,
+    async () => {
+      const client = getClient()
+
+      const userMessage = [
+        `Asset: ${symbol} (${type})`,
+        metadata?.name     ? `Company: ${metadata.name}`       : '',
+        metadata?.industry ? `Industry: ${metadata.industry}`  : '',
+        `Recent Headlines (${headlines.length}):`,
+        headlines.slice(0, 25).map((h, i) => `${i + 1}. ${h}`).join('\n'),
+      ].filter(Boolean).join('\n')
+
+      const completion = await client.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: CONTEXT_SYSTEM_PROMPT },
+          { role: 'user',   content: userMessage },
+        ],
+        temperature: 0.3,
+        max_tokens:  1024,
+        response_format: { type: 'json_object' },
+      })
+
+      const raw    = completion.choices[0]?.message?.content ?? '{}'
+      const parsed = JSON.parse(raw) as { factors?: AssetContextFactor[]; summary?: string }
+
+      return {
+        symbol,
+        factors:    Array.isArray(parsed.factors) ? parsed.factors.slice(0, 8) : [],
+        summary:    parsed.summary ?? 'Context analysis unavailable.',
+        analyzedAt: Date.now(),
+      }
+    },
+  )
+}

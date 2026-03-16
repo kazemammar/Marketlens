@@ -1,27 +1,19 @@
 import { NextResponse }      from 'next/server'
 import { getQuotesBatched }  from '@/lib/api/finnhub'
 import { redis }             from '@/lib/cache/redis'
+import type {
+  SignalVerdict,
+  RadarSignal,
+  MarketRadarPayload,
+} from '@/lib/api/homepage'
+
+// Re-export so existing imports from this route file still work
+export type { SignalVerdict, RadarSignal, MarketRadarPayload }
 
 export const dynamic = 'force-dynamic'
 
 const CACHE_KEY = 'market-radar:v2'
 const CACHE_TTL = 300 // 5 min
-
-export type SignalVerdict = 'BUY' | 'CASH' | 'MIXED'
-
-export interface RadarSignal {
-  name:    string
-  verdict: SignalVerdict
-  value:   string
-  reason:  string
-}
-
-export interface MarketRadarPayload {
-  verdict:   SignalVerdict
-  score:     number         // 0–100 (100 = max bullish)
-  signals:   RadarSignal[]
-  updatedAt: number
-}
 
 const SYMBOLS = ['SPY', 'QQQ', 'GLD', 'USO', 'VXX', 'TLT', 'BTC']
 

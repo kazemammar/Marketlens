@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import { QuoteRaw } from '@/lib/api/finnhub'
 import { formatPrice, formatChange, formatPercent } from '@/lib/utils/formatters'
 
-// Symbols to show in the ticker, and their display labels.
-// Only Finnhub free-tier symbols: US stocks/ETFs + Binance crypto.
-// (OANDA forex and commodity futures require a premium plan.)
+// Symbols to show in the ticker and their display labels.
 const TICKER_SYMBOLS = [
   { symbol: 'SPY',             label: 'S&P 500',    currency: 'USD' },
   { symbol: 'DIA',             label: 'Dow Jones',  currency: 'USD' },
@@ -67,8 +65,12 @@ function Divider() {
   return <span className="text-[var(--border)] select-none">|</span>
 }
 
-export default function TickerTape() {
-  const [quotes, setQuotes] = useState<TickerQuotes>({})
+export default function TickerTape({
+  initialData,
+}: {
+  initialData?: Record<string, QuoteRaw>
+}) {
+  const [quotes, setQuotes] = useState<TickerQuotes>(initialData ?? {})
 
   useEffect(() => {
     async function fetchQuotes() {
@@ -77,13 +79,17 @@ export default function TickerTape() {
         const data = await res.json() as TickerQuotes
         setQuotes(data)
       } catch {
-        // silently fail — tape shows loading state
+        // silently fail — tape shows whatever data we have
       }
     }
 
-    fetchQuotes()
-    const id = setInterval(fetchQuotes, 60_000) // refresh every 60 s
-    return () => clearInterval(id)
+    // If we have server-side data for all Finnhub symbols already, delay the
+    // first fetch so crypto quotes still load but we don't race Finnhub on mount.
+    const delay = initialData && Object.keys(initialData).length >= 6 ? 5_000 : 0
+    const timer = setTimeout(fetchQuotes, delay)
+    const id    = setInterval(fetchQuotes, 60_000)   // refresh every 60 s
+    return () => { clearTimeout(timer); clearInterval(id) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const items = TICKER_SYMBOLS.flatMap((t, i) => [

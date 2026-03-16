@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { MarketRadarPayload, SignalVerdict } from '@/app/api/market-radar/route'
+import type { MarketRadarPayload, SignalVerdict } from '@/lib/api/homepage'
 
 const VERDICT_STYLE: Record<SignalVerdict, { bg: string; text: string; border: string; label: string }> = {
   BUY:   { bg: '#052e16', text: '#4ade80', border: '#16a34a', label: 'BUY' },
@@ -15,15 +15,24 @@ const SIG_COLOR: Record<SignalVerdict, string> = {
   MIXED: '#fbbf24',
 }
 
-export default function MarketRadar() {
-  const [data,    setData]    = useState<MarketRadarPayload | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function MarketRadar({
+  initialData = null,
+}: {
+  initialData?: MarketRadarPayload | null
+}) {
+  const [data,    setData]    = useState<MarketRadarPayload | null>(initialData)
+  const [loading, setLoading] = useState(initialData === null)
 
   useEffect(() => {
+    // If we got server-side data, skip immediate fetch — route refresh still
+    // updates the panel on next client-side interval if we add one later.
+    if (initialData !== null) { setLoading(false); return }
+
     fetch('/api/market-radar')
       .then((r) => r.ok ? r.json() as Promise<MarketRadarPayload> : null)
       .then((d) => { if (d) setData(d); setLoading(false) })
       .catch(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

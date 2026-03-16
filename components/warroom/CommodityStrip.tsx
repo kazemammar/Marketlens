@@ -2,15 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { CommodityStripItem } from '@/app/api/commodities-strip/route'
+import type { CommodityStripItem } from '@/lib/api/homepage'
 
-const REFRESH_MS = 30_000
+export type { CommodityStripItem }
+
+const REFRESH_MS = 60_000   // refresh every 60 s (was 30 s — halved to reduce load)
 
 function pct(n: number) { return (n >= 0 ? '+' : '') + n.toFixed(2) + '%' }
 
-export default function CommodityStrip() {
-  const [items,   setItems]   = useState<CommodityStripItem[]>([])
-  const [loading, setLoading] = useState(true)
+export default function CommodityStrip({
+  initialData,
+}: {
+  initialData?: CommodityStripItem[]
+}) {
+  const [items,   setItems]   = useState<CommodityStripItem[]>(initialData ?? [])
+  const [loading, setLoading] = useState(!initialData || initialData.length === 0)
 
   async function load() {
     try {
@@ -22,9 +28,16 @@ export default function CommodityStrip() {
   }
 
   useEffect(() => {
+    // If we got server-side data, skip the immediate fetch — schedule refresh only
+    if (initialData && initialData.length > 0) {
+      const id = setInterval(load, REFRESH_MS)
+      return () => clearInterval(id)
+    }
+    // No server-side data — fetch immediately then refresh
     load()
     const id = setInterval(load, REFRESH_MS)
     return () => clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

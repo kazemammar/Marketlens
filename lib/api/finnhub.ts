@@ -17,6 +17,31 @@ async function isRateLimited(): Promise<boolean> {
 async function markRateLimited(): Promise<void> {
   redis.set(RATE_LIMIT_KEY, 1, { ex: TTL.RATE_LIMIT_BACKOFF }).catch(() => {})
 }
+
+// ─── Per-minute call quota ─────────────────────────────────────────────────
+// Fixed-window counter keyed by UTC minute.  If we hit 40 calls in a single
+// minute, we stop early and set the 429 backoff flag so other handlers also
+// pause.  This keeps us safely under Finnhub's 60 req/min free-tier limit
+// even when multiple serverless invocations run concurrently.
+const MAX_CALLS_PER_MIN = 40
+
+async function checkCallQuota(): Promise<boolean> {
+  try {
+    const minute = Math.floor(Date.now() / 60_000)
+    const key    = `finnhub:rpm:${minute}`
+    const count  = await redis.incr(key)
+    // First increment: set a 2-minute expiry so the key auto-cleans
+    if (count === 1) redis.expire(key, 120).catch(() => {})
+    if (count > MAX_CALLS_PER_MIN) {
+      console.warn(`[finnhub] per-minute quota hit (${count} calls) — pausing`)
+      await markRateLimited()
+      return false
+    }
+    return true
+  } catch {
+    return true   // allow the call if Redis is unavailable
+  }
+}
 import {
   Asset,
   AssetType,
@@ -50,6 +75,12 @@ async function finnhubGetQuote(sym: string): Promise<FinnhubQuote | null> {
     // Honour the 30-second backoff window after a 429
     if (await isRateLimited()) {
       console.warn(`[finnhub] rate-limit backoff active — skipping ${sym}`)
+      return null
+    }
+
+    // Check per-minute quota before calling Finnhub
+    if (!(await checkCallQuota())) {
+      console.warn(`[finnhub] per-minute quota exceeded — skipping ${sym}`)
       return null
     }
 

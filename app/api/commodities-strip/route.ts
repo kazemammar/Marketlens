@@ -1,21 +1,15 @@
-import { NextResponse }      from 'next/server'
-import { getQuotesBatched }  from '@/lib/api/finnhub'
-import { redis }             from '@/lib/cache/redis'
+import { NextResponse }                          from 'next/server'
+import { getQuotesBatched }                      from '@/lib/api/finnhub'
+import { redis }                                 from '@/lib/cache/redis'
+import type { CommodityStripItem }               from '@/lib/api/homepage'
+
+// Re-export so existing imports of this type from this route still work
+export type { CommodityStripItem }
 
 export const dynamic = 'force-dynamic'
 
 const CACHE_KEY = 'commodities-strip:v2'
 const CACHE_TTL = 300
-
-export interface CommodityStripItem {
-  symbol:        string
-  name:          string
-  shortName:     string
-  price:         number
-  change:        number
-  changePercent: number
-  currency:      string
-}
 
 const STRIP = [
   { symbol: 'USO',  name: 'WTI Crude Oil',  shortName: 'WTI'     },

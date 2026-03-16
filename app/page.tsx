@@ -11,22 +11,10 @@ import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
 import RiskGauge         from '@/components/warroom/RiskGauge'
 import SignalsPanel      from '@/components/warroom/SignalsPanel'
-import { AssetCardData, AssetType }    from '@/lib/utils/types'
-import { warmupHomepageQuotes }        from '@/lib/api/warmup'
-import { DEFAULT_STOCKS }              from '@/lib/utils/constants'
+import { AssetType }     from '@/lib/utils/types'
+import { getHomepageData } from '@/lib/api/homepage'
 
 const VALID_TABS: AssetType[] = ['stock', 'crypto', 'forex', 'commodity', 'etf']
-
-const STOCK_NAMES: Record<string, string> = {
-  AAPL: 'Apple Inc.',        MSFT: 'Microsoft Corp.',
-  GOOGL:'Alphabet Inc.',     AMZN: 'Amazon.com',
-  NVDA: 'NVIDIA Corp.',      META: 'Meta Platforms',
-  TSLA: 'Tesla Inc.',     'BRK.B': 'Berkshire Hathaway',
-  JPM:  'JPMorgan Chase',    V:    'Visa Inc.',
-  UNH:  'UnitedHealth',      XOM:  'Exxon Mobil',
-  JNJ:  'Johnson & Johnson', PG:   'Procter & Gamble',
-  MA:   'Mastercard',
-}
 
 export default async function HomePage({
   searchParams,
@@ -38,31 +26,13 @@ export default async function HomePage({
     ? (tabParam as AssetType)
     : 'stock'
 
-  let initialStocks: AssetCardData[] = []
-  try {
-    // Warm ALL homepage symbols (warroom + stocks) in one server-side batch.
-    // By the time the browser loads and client components call their own routes,
-    // every quote:SYMBOL key is already in Redis → zero Finnhub calls client-side.
-    const map = await warmupHomepageQuotes()
-    initialStocks = DEFAULT_STOCKS.flatMap((sym): AssetCardData[] => {
-      const q = map.get(sym)
-      if (!q) return []
-      const price = q.price > 0 ? q.price : q.previousClose
-      if (price <= 0) return []
-      return [{
-        symbol:        sym,
-        name:          STOCK_NAMES[sym] ?? sym,
-        type:          'stock',
-        price,
-        change:        q.price > 0 ? q.change        : 0,
-        changePercent: q.price > 0 ? q.changePercent : 0,
-        currency:      'USD',
-        open:  q.open  > 0 ? q.open  : price,
-        high:  q.high  > 0 ? q.high  : price,
-        low:   q.low   > 0 ? q.low   : price,
-      }]
-    })
-  } catch { /* non-fatal */ }
+  // Fetch ALL homepage data in one call.
+  // — Warm cache (≤600 s old): returns instantly from Redis.
+  // — Cold start: fetches ~29 Finnhub symbols in batches of 3 (1 s gap),
+  //   plus BTC/ETH/SOL from CoinGecko, then caches for 10 minutes.
+  // Either way, by the time HTML is sent to the browser every component
+  // already has its data as props → zero client-side Finnhub calls on load.
+  let homepage = await getHomepageData().catch(() => null)
 
   return (
     <div className="min-h-screen">
@@ -73,7 +43,7 @@ export default async function HomePage({
       </Suspense>
 
       {/* ══ COMMODITY STRIP — 40px ══════════════════════════════════════ */}
-      <CommodityStrip />
+      <CommodityStrip initialData={homepage?.commodityStrip} />
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
       <div
@@ -110,7 +80,9 @@ export default async function HomePage({
 
       {/* ══ DATA PANELS — 4-column row (2x2 on mobile) ══════════════════ */}
       <div className="grid grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] lg:grid-cols-4">
-        <div className="war-panel min-w-0 overflow-hidden"><MarketRadar /></div>
+        <div className="war-panel min-w-0 overflow-hidden">
+          <MarketRadar initialData={homepage?.marketRadar ?? null} />
+        </div>
         <div className="war-panel min-w-0 overflow-hidden"><FXMonitor /></div>
         <div className="war-panel min-w-0 overflow-hidden"><RiskGauge /></div>
         <div className="min-w-0 overflow-hidden"><SignalsPanel /></div>
@@ -121,7 +93,7 @@ export default async function HomePage({
 
       {/* ══ MARKET DASHBOARD ══════════════════════════════════════════════ */}
       <div id="market-overview">
-        <TickerTape />
+        <TickerTape initialData={homepage?.tickerQuotes} />
       </div>
 
       <main className="px-3 py-4 sm:px-4">
@@ -138,7 +110,7 @@ export default async function HomePage({
           </span>
         </div>
 
-        <MarketTabs initialStocks={initialStocks} initialTab={initialTab} />
+        <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />
       </main>
     </div>
   )

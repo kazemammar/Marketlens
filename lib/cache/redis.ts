@@ -1,10 +1,31 @@
 import { Redis } from '@upstash/redis'
 
+// ─── In-memory fallback cache ─────────────────────────────────────────────
+// Used transparently when Upstash Redis is unreachable (network error,
+// missing env vars, service outage).  Capped at 500 entries to bound memory.
+
+const memCache = new Map<string, { value: unknown; expires: number }>()
+
+function memGet<T>(key: string): T | null {
+  const entry = memCache.get(key)
+  if (!entry) return null
+  if (Date.now() > entry.expires) { memCache.delete(key); return null }
+  return entry.value as T
+}
+
+function memSet(key: string, value: unknown, ttlSecs: number): void {
+  if (memCache.size >= 500) {
+    const first = memCache.keys().next().value
+    if (first !== undefined) memCache.delete(first)
+  }
+  memCache.set(key, { value, expires: Date.now() + ttlSecs * 1_000 })
+}
+
 // ─── Client ───────────────────────────────────────────────────────────────
 
 export const redis = new Redis({
-  url:   process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  url:   process.env.UPSTASH_REDIS_REST_URL  ?? '',
+  token: process.env.UPSTASH_REDIS_REST_TOKEN ?? '',
 })
 
 // ─── Generic cached fetch ─────────────────────────────────────────────────
@@ -13,16 +34,15 @@ export const redis = new Redis({
  * Check Redis for a cached value. If missing, call `fetcher()`, store the
  * result with the given TTL (seconds), and return it.
  *
- * @param key     Redis key
- * @param ttl     Time-to-live in seconds
- * @param fetcher Async function that performs the real API call
+ * Falls back to an in-memory Map cache if Redis is unavailable, so the app
+ * continues to work even when Upstash is down.
  */
 export async function cachedFetch<T>(
   key: string,
   ttl: number,
   fetcher: () => Promise<T>,
 ): Promise<T> {
-  // 1. Try cache — non-fatal if Redis is misconfigured or unavailable
+  // 1. Try Redis
   try {
     const cached = await redis.get<T>(key)
     if (cached !== null) {
@@ -31,14 +51,20 @@ export async function cachedFetch<T>(
     }
   } catch (err) {
     console.warn(`[cache] Redis read failed for "${key}":`, (err as Error).message)
-    // Fall through to live fetch
+    // Redis down — try in-memory fallback before hitting the API
+    const mem = memGet<T>(key)
+    if (mem !== null) {
+      console.log(`[cache] MEM-HIT  ${key}`)
+      return mem
+    }
   }
 
   // 2. Cache miss (or Redis error) — call the real API
   console.log(`[cache] MISS ${key}`)
   const data = await fetcher()
 
-  // 3. Store result (fire-and-forget — don't block the response)
+  // 3. Store in both Redis and in-memory (fire-and-forget for Redis)
+  memSet(key, data, ttl)
   redis.set(key, data, { ex: ttl }).catch((err: unknown) => {
     console.warn(`[cache] Redis write failed for "${key}":`, (err as Error).message)
   })
@@ -47,10 +73,11 @@ export async function cachedFetch<T>(
 }
 
 /**
- * Invalidate (delete) a cached key.
+ * Invalidate (delete) a cached key from both Redis and in-memory store.
  */
 export async function invalidateCache(key: string): Promise<void> {
-  await redis.del(key)
+  memCache.delete(key)
+  await redis.del(key).catch(() => {})
 }
 
 /**

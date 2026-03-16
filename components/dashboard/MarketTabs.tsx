@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import AssetCard from './AssetCard'
 import { AssetCardData, AssetType } from '@/lib/utils/types'
 
@@ -37,6 +38,22 @@ function makeInitial(initialStocks: AssetCardData[]): Record<AssetType, TabState
 
 // ─── Component ────────────────────────────────────────────────────────────
 
+// Inner component that reads searchParams — must be inside Suspense
+function TabParamSync({
+  onTabChange,
+}: {
+  onTabChange: (tab: AssetType) => void
+}) {
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const urlTab = (searchParams.get('tab') ?? 'stock') as AssetType
+    if (!TABS.some((t) => t.id === urlTab)) return
+    onTabChange(urlTab)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+  return null
+}
+
 export default function MarketTabs({
   initialStocks,
   initialTab = 'stock',
@@ -46,12 +63,6 @@ export default function MarketTabs({
 }) {
   const [tabs,      setTabs]      = useState<Record<AssetType, TabState>>(() => makeInitial(initialStocks))
   const [activeTab, setActiveTab] = useState<AssetType>(initialTab)
-
-  // Auto-load the initial tab if it isn't 'stock' (stock data comes from the server)
-  useEffect(() => {
-    if (initialTab !== 'stock') loadTab(initialTab)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const loadTab = useCallback(async (tab: AssetType) => {
     // Already loaded or in-flight — skip
@@ -84,10 +95,18 @@ export default function MarketTabs({
     loadTab(tab)
   }
 
+  function handleParamChange(tab: AssetType) {
+    setActiveTab(tab)
+    loadTab(tab)
+  }
+
   const current = tabs[activeTab]
 
   return (
     <section>
+      <Suspense fallback={null}>
+        <TabParamSync onTabChange={handleParamChange} />
+      </Suspense>
       {/* ── Tab bar ── */}
       <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)]">
         {TABS.map((tab) => {

@@ -6,7 +6,7 @@ import { getFinanceNews }    from '@/lib/api/rss'
 export const dynamic = 'force-dynamic'
 
 const CACHE_KEY = 'signals:v2'
-const CACHE_TTL = 120 // 2 min
+const CACHE_TTL = 300 // 5 min
 
 export interface Signal {
   id:        string

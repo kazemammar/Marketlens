@@ -11,9 +11,9 @@ import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
 import RiskGauge         from '@/components/warroom/RiskGauge'
 import SignalsPanel      from '@/components/warroom/SignalsPanel'
-import { AssetCardData, AssetType } from '@/lib/utils/types'
-import { getQuotesBatched }   from '@/lib/api/finnhub'
-import { DEFAULT_STOCKS }     from '@/lib/utils/constants'
+import { AssetCardData, AssetType }    from '@/lib/utils/types'
+import { warmupHomepageQuotes }        from '@/lib/api/warmup'
+import { DEFAULT_STOCKS }              from '@/lib/utils/constants'
 
 const VALID_TABS: AssetType[] = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
@@ -40,7 +40,10 @@ export default async function HomePage({
 
   let initialStocks: AssetCardData[] = []
   try {
-    const map = await getQuotesBatched(DEFAULT_STOCKS)
+    // Warm ALL homepage symbols (warroom + stocks) in one server-side batch.
+    // By the time the browser loads and client components call their own routes,
+    // every quote:SYMBOL key is already in Redis → zero Finnhub calls client-side.
+    const map = await warmupHomepageQuotes()
     initialStocks = DEFAULT_STOCKS.flatMap((sym): AssetCardData[] => {
       const q = map.get(sym)
       if (!q) return []
@@ -117,7 +120,9 @@ export default async function HomePage({
       <div className="h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
       {/* ══ MARKET DASHBOARD ══════════════════════════════════════════════ */}
-      <TickerTape />
+      <div id="market-overview">
+        <TickerTape />
+      </div>
 
       <main className="px-3 py-4 sm:px-4">
         {/* Dashboard header */}

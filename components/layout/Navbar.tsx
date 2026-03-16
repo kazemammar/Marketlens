@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRef, useState, useEffect, useCallback, KeyboardEvent, Suspense } from 'react'
 import Link from 'next/link'
 import { useTheme } from './ThemeProvider'
 import { Asset } from '@/lib/utils/types'
@@ -39,6 +39,60 @@ const NAV_LINKS = [
   { label: 'ETFs',        href: '/?tab=etf'       },
   { label: 'News',        href: '/news'            },
 ]
+
+function NavLinks() {
+  const pathname    = usePathname()
+  const searchParams = useSearchParams()
+  const activeHref = pathname === '/'
+    ? `/?tab=${searchParams.get('tab') ?? 'stock'}`
+    : pathname
+
+  function handleNavClick() {
+    if (pathname === '/') {
+      setTimeout(() => {
+        document.getElementById('market-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+    }
+  }
+
+  return (
+    <nav className="hidden items-center gap-0.5 lg:flex ml-2">
+      {NAV_LINKS.map(({ label, href }) => {
+        const isActive = href === activeHref
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={handleNavClick}
+            className={`rounded px-2.5 py-1 font-mono text-[10px] font-medium transition ${
+              isActive
+                ? 'bg-blue-500/10 text-blue-400'
+                : 'text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]'
+            }`}
+          >
+            {label}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
+function NavLinksFallback() {
+  return (
+    <nav className="hidden items-center gap-0.5 lg:flex ml-2">
+      {NAV_LINKS.map(({ label, href }) => (
+        <Link
+          key={href}
+          href={href}
+          className="rounded px-2.5 py-1 font-mono text-[10px] font-medium text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+        >
+          {label}
+        </Link>
+      ))}
+    </nav>
+  )
+}
 
 export default function Navbar() {
   const router      = useRouter()
@@ -164,17 +218,9 @@ export default function Navbar() {
         </Link>
 
         {/* Nav links (lg+) */}
-        <nav className="hidden items-center gap-0.5 lg:flex ml-2">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link
-              key={href}
-              href={href}
-              className="rounded px-2.5 py-1 font-mono text-[10px] font-medium text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
+        <Suspense fallback={<NavLinksFallback />}>
+          <NavLinks />
+        </Suspense>
 
         {/* Spacer */}
         <div className="flex-1" />

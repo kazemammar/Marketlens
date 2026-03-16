@@ -1,11 +1,23 @@
 // GET /api/market?tab=stock|crypto|forex|commodity|etf
 // Returns AssetCardData[] for the requested tab.
 // Called lazily by MarketTabs when the user first clicks a tab.
+//
+// Caching strategy (Finnhub tabs only: stock, etf, commodity):
+//   • Route-level Redis key stores the full assembled AssetCardData[] with a timestamp.
+//   • Every request checks this key FIRST.
+//     – If fresh  (< 15 min old) → return immediately, zero Finnhub calls.
+//     – If stale  (≥ 15 min old) → return stale data immediately AND kick off a
+//       background refresh (Redis lock prevents concurrent refreshes).
+//     – If absent                → blocking fetch with slow batching (2/1 500 ms)
+//       so a cold-start never fires more than ~8 Finnhub calls per minute.
+//   • If Finnhub returns 429 the route returns whatever stale data exists
+//     (or an empty array), never an error that crashes the UI.
 
 import { NextRequest } from 'next/server'
 import { getQuotesBatched } from '@/lib/api/finnhub'
 import { getCryptoMarkets } from '@/lib/api/coingecko'
 import { getForexCards }    from '@/lib/api/forex'
+import { redis }            from '@/lib/cache/redis'
 import {
   DEFAULT_STOCKS,
   DEFAULT_ETFS,
@@ -34,15 +46,31 @@ const ETF_NAMES: Record<string, string> = {
   VNQ: 'Vanguard Real Est.', ARKK: 'ARK Innovation',
 }
 
-// ─── Helper ───────────────────────────────────────────────────────────────
+// ─── Route-level cache config ─────────────────────────────────────────────
 
+// Keys for the full pre-assembled tab result (includes fetchedAt timestamp)
+const TAB_CACHE_KEY  = (tab: string) => `market:v2:${tab}`
+const TAB_LOCK_KEY   = (tab: string) => `market:lock:${tab}`
+const TAB_CACHE_TTL  = 1_800           // keep stale data for 30 min
+const REFRESH_AFTER  = 900_000         // refresh in background if > 15 min old
+
+interface CachedTab {
+  data:      AssetCardData[]
+  fetchedAt: number
+}
+
+// ─── Data builders ────────────────────────────────────────────────────────
+
+// Slow batching: 2 symbols per batch, 1 500 ms between batches.
+// For 15 stock symbols → 8 batches → 7 pauses → ~10 500 ms total.
+// Keeps Finnhub calls well under 60/min even on concurrent cold starts.
 async function quotesToCards(
   symbols:  string[],
   getName:  (s: string) => string,
   type:     AssetType,
   currency = 'USD',
 ): Promise<AssetCardData[]> {
-  const map = await getQuotesBatched(symbols)
+  const map = await getQuotesBatched(symbols, 2, 1_500)
   const cards: AssetCardData[] = []
 
   for (const [sym, q] of map) {
@@ -68,70 +96,128 @@ async function quotesToCards(
     .filter((c): c is AssetCardData => c !== undefined)
 }
 
+async function buildTabData(tab: AssetType): Promise<AssetCardData[]> {
+  switch (tab) {
+    case 'stock':
+      return quotesToCards(DEFAULT_STOCKS, (s) => STOCK_NAMES[s] ?? s, 'stock')
+
+    case 'crypto':
+      return getCryptoMarkets(1, 'usd', 20).then((coins) =>
+        coins.map((c): AssetCardData => ({
+          symbol:        c.symbol.toUpperCase(),
+          name:          c.name,
+          type:          'crypto',
+          price:         c.currentPrice,
+          change:        c.priceChange24h,
+          changePercent: c.priceChangePercent24h,
+          currency:      'USD',
+          open:          c.currentPrice - c.priceChange24h,
+          high:          c.high24h,
+          low:           c.low24h,
+        })),
+      )
+
+    case 'forex':
+      return getForexCards()
+
+    case 'commodity':
+      return quotesToCards(
+        DEFAULT_COMMODITIES.map((c) => c.symbol),
+        (s) => DEFAULT_COMMODITIES.find((c) => c.symbol === s)?.name ?? s,
+        'commodity',
+      )
+
+    case 'etf':
+      return quotesToCards(DEFAULT_ETFS, (s) => ETF_NAMES[s] ?? s, 'etf')
+
+    default:
+      return []
+  }
+}
+
+// ─── Background cache refresh ─────────────────────────────────────────────
+
+// Uses a Redis NX lock to ensure only one refresh runs at a time per tab.
+async function refreshCache(tab: AssetType): Promise<void> {
+  const lock = await redis.set(TAB_LOCK_KEY(tab), 1, { ex: 120, nx: true }).catch(() => null)
+  if (!lock) return  // another invocation is already refreshing this tab
+
+  try {
+    const data = await buildTabData(tab)
+    if (data.length > 0) {
+      await redis.set(TAB_CACHE_KEY(tab), { data, fetchedAt: Date.now() } satisfies CachedTab, { ex: TAB_CACHE_TTL })
+      console.log(`[/api/market] background refresh complete: tab=${tab} symbols=${data.length}`)
+    }
+  } catch (err) {
+    console.warn(`[/api/market] background refresh failed: tab=${tab}`, err)
+  } finally {
+    redis.del(TAB_LOCK_KEY(tab)).catch(() => {})
+  }
+}
+
 // ─── Route ────────────────────────────────────────────────────────────────
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   const tab = req.nextUrl.searchParams.get('tab') as AssetType | null
 
+  console.log('[market] FINNHUB_API_KEY exists:', !!process.env.FINNHUB_API_KEY)
+  console.log('[market] FINNHUB_API_KEY length:', process.env.FINNHUB_API_KEY?.length)
+  console.log('[market] UPSTASH_REDIS_REST_URL exists:', !!process.env.UPSTASH_REDIS_REST_URL)
+
+  if (!tab) {
+    return Response.json({ error: 'Missing tab param' }, { status: 400 })
+  }
+
+  const validTabs: AssetType[] = ['stock', 'crypto', 'forex', 'commodity', 'etf']
+  if (!validTabs.includes(tab)) {
+    return Response.json({ error: `Unknown tab: "${tab}"` }, { status: 400 })
+  }
+
+  // ── Step 1: Check route-level cache ──────────────────────────────────────
   try {
-    let assets: AssetCardData[] = []
+    const cached = await redis.get<CachedTab>(TAB_CACHE_KEY(tab))
 
-    switch (tab) {
-      case 'stock':
-        assets = await quotesToCards(
-          DEFAULT_STOCKS,
-          (s) => STOCK_NAMES[s] ?? s,
-          'stock',
-        )
-        break
+    if (cached && cached.data.length > 0) {
+      const ageMs = Date.now() - cached.fetchedAt
+      console.log(`[/api/market] cache ${ageMs < REFRESH_AFTER ? 'FRESH' : 'STALE'} tab=${tab} age=${Math.round(ageMs / 1000)}s`)
 
-      case 'crypto':
-        assets = await getCryptoMarkets(1, 'usd', 20).then((coins) =>
-          coins.map((c): AssetCardData => ({
-            symbol:        c.symbol.toUpperCase(),
-            name:          c.name,
-            type:          'crypto',
-            price:         c.currentPrice,
-            change:        c.priceChange24h,
-            changePercent: c.priceChangePercent24h,
-            currency:      'USD',
-            open:          c.currentPrice - c.priceChange24h,
-            high:          c.high24h,
-            low:           c.low24h,
-          })),
-        )
-        break
+      if (ageMs >= REFRESH_AFTER) {
+        // Step 2a: Return stale data immediately, refresh in background.
+        // Fire-and-forget — the function may or may not complete the refresh
+        // before Vercel terminates it, but the lock prevents pile-ups and the
+        // next request will retry if this one dies early.
+        refreshCache(tab).catch(() => {})
+      }
 
-      case 'forex':
-        assets = await getForexCards()
-        break
+      return Response.json(cached.data, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=840' },
+      })
+    }
+  } catch (err) {
+    console.warn(`[/api/market] Redis read failed for tab=${tab}:`, err)
+    // Fall through to live fetch
+  }
 
-      case 'commodity':
-        assets = await quotesToCards(
-          DEFAULT_COMMODITIES.map((c) => c.symbol),
-          (s) => DEFAULT_COMMODITIES.find((c) => c.symbol === s)?.name ?? s,
-          'commodity',
-        )
-        break
+  // ── Step 3: No cache — blocking slow fetch ────────────────────────────────
+  console.log(`[/api/market] cold fetch tab=${tab}`)
+  try {
+    const data = await buildTabData(tab)
 
-      case 'etf':
-        assets = await quotesToCards(
-          DEFAULT_ETFS,
-          (s) => ETF_NAMES[s] ?? s,
-          'etf',
-        )
-        break
-
-      default:
-        return Response.json({ error: `Unknown tab: "${tab}"` }, { status: 400 })
+    if (data.length > 0) {
+      redis.set(TAB_CACHE_KEY(tab), { data, fetchedAt: Date.now() } satisfies CachedTab, { ex: TAB_CACHE_TTL }).catch(() => {})
     }
 
-    console.log(`[/api/market] tab=${tab} → ${assets.length} assets`)
-    return Response.json(assets, {
-      headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=10' },
+    console.log(`[/api/market] tab=${tab} → ${data.length} assets`)
+    return Response.json(data, {
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=840' },
     })
   } catch (err) {
-    console.error(`[/api/market] tab=${tab} failed:`, err)
-    return Response.json({ error: 'Failed to fetch market data' }, { status: 500 })
+    console.error(`[/api/market] cold fetch failed tab=${tab}:`, err)
+    // Step 4: 429 or other error — return empty gracefully (never 500 the UI)
+    return Response.json([], {
+      headers: { 'Cache-Control': 'no-store' },
+    })
   }
 }

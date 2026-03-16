@@ -15,7 +15,7 @@ export const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3'
 // ─── Cache TTLs (seconds) ─────────────────────────────────────────────────
 
 export const TTL = {
-  QUOTE:            300,       // live price — 5 min (markets don't change faster for a dashboard)
+  QUOTE:            900,       // live price — 15 min (aggressive cache to stay within Finnhub free tier)
   SEARCH:           300,       // search results — 5 min
   NEWS:             300,       // news articles — 5 min
   SENTIMENT:        1_800,     // AI sentiment — 30 min

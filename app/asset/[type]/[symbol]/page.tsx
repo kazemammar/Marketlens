@@ -20,6 +20,7 @@ import CryptoStats    from '@/components/asset/CryptoStats'
 import FearGreedGauge from '@/components/asset/FearGreedGauge'
 import DefiTvl        from '@/components/asset/DefiTvl'
 import RelatedAssets  from '@/components/asset/RelatedAssets'
+import CommodityIntel from '@/components/asset/CommodityIntel'
 
 export const dynamic = 'force-dynamic'
 
@@ -258,6 +259,13 @@ export default async function AssetPage({ params }: AssetPageProps) {
       <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
         <RelatedAssets symbol={symbol} type={type} />
       </div>
+
+      {/* ── Commodity Intelligence (commodity only) ── */}
+      {type === 'commodity' && (
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+          <CommodityIntel symbol={symbol} />
+        </div>
+      )}
 
       {/* ── Peers & Technicals (stock only) — full-width, below chart ── */}
       {type === 'stock' && (

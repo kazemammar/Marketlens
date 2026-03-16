@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from './useAuth'
+import { createClient } from '@/lib/supabase/client'
 
 export interface WatchlistItem {
   id:         string
@@ -12,6 +13,7 @@ export interface WatchlistItem {
 
 export function useWatchlist() {
   const { user } = useAuth()
+  const supabase  = useMemo(() => createClient(), [])
   const [items,   setItems]   = useState<WatchlistItem[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -19,14 +21,15 @@ export function useWatchlist() {
     if (!user) { setItems([]); return }
     setLoading(true)
     try {
-      const res = await fetch('/api/watchlist')
-      if (res.ok) {
-        const data = await res.json()
-        setItems(data)
-      }
+      const { data, error } = await supabase
+        .from('watchlists')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('added_at', { ascending: false })
+      if (!error && data) setItems(data as WatchlistItem[])
     } catch { /* silent */ }
     setLoading(false)
-  }, [user])
+  }, [user, supabase])
 
   useEffect(() => {
     fetchWatchlist()
@@ -35,34 +38,35 @@ export function useWatchlist() {
   const addToWatchlist = useCallback(async (symbol: string, assetType: string) => {
     if (!user) return false
     try {
-      const res = await fetch('/api/watchlist', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ symbol, asset_type: assetType }),
-      })
-      if (res.ok) {
-        await fetchWatchlist()
+      const { error } = await supabase
+        .from('watchlists')
+        .insert({ user_id: user.id, symbol, asset_type: assetType })
+      if (!error) {
+        setItems((prev) => [
+          { id: crypto.randomUUID(), symbol, asset_type: assetType, added_at: new Date().toISOString() },
+          ...prev,
+        ])
         return true
       }
     } catch { /* silent */ }
     return false
-  }, [user, fetchWatchlist])
+  }, [user, supabase])
 
   const removeFromWatchlist = useCallback(async (symbol: string) => {
     if (!user) return false
     try {
-      const res = await fetch('/api/watchlist', {
-        method:  'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ symbol }),
-      })
-      if (res.ok) {
+      const { error } = await supabase
+        .from('watchlists')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('symbol', symbol)
+      if (!error) {
         setItems((prev) => prev.filter((i) => i.symbol !== symbol))
         return true
       }
     } catch { /* silent */ }
     return false
-  }, [user])
+  }, [user, supabase])
 
   const isInWatchlist = useCallback((symbol: string) => {
     return items.some((i) => i.symbol === symbol)

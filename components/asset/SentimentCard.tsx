@@ -35,6 +35,7 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
   const [data,    setData]    = useState<SentimentAnalysis | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(false)
+  const [dateStr, setDateStr] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -51,6 +52,12 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
     }
     load()
   }, [symbol, type])
+
+  useEffect(() => {
+    if (data?.analyzedAt) {
+      setDateStr(new Date(data.analyzedAt).toLocaleDateString())
+    }
+  }, [data?.analyzedAt])
 
   const cfg = data ? LABEL_CONFIG[data.label] : LABEL_CONFIG.Neutral
 
@@ -86,7 +93,7 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
                 {data.label}
               </span>
               <span className="text-xs text-[var(--text-muted)]">
-                Analyzed {new Date(data.analyzedAt).toLocaleDateString()}
+                Analyzed {dateStr || '…'}
               </span>
             </div>
 

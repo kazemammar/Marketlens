@@ -22,6 +22,14 @@ export default function MarketRadar({
 }) {
   const [data,    setData]    = useState<MarketRadarPayload | null>(initialData)
   const [loading, setLoading] = useState(initialData === null)
+  // Locale-dependent formatting must only run on the client to avoid
+  // SSR/hydration mismatch (server uses UTC, browser uses local timezone).
+  const [timeStr, setTimeStr] = useState('')
+  useEffect(() => {
+    if (data?.updatedAt) {
+      setTimeStr(new Date(data.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+    }
+  }, [data?.updatedAt])
 
   useEffect(() => {
     // If we got server-side data, skip immediate fetch — route refresh still
@@ -118,7 +126,7 @@ export default function MarketRadar({
             </div>
 
             <p className="mt-2.5 font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-              Updated {new Date(data.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Updated {timeStr || '--:--'}
             </p>
           </>
         ) : (

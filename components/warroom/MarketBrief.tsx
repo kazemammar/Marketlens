@@ -20,7 +20,9 @@ const RISK_DOT: Record<string, string> = {
 }
 
 function ts(ms: number) {
-  return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+  const d = new Date(ms)
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 export default function MarketBrief() {

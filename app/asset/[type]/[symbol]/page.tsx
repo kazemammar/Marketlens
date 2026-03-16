@@ -20,7 +20,9 @@ import CryptoStats    from '@/components/asset/CryptoStats'
 import FearGreedGauge from '@/components/asset/FearGreedGauge'
 import DefiTvl        from '@/components/asset/DefiTvl'
 import RelatedAssets  from '@/components/asset/RelatedAssets'
-import CommodityIntel from '@/components/asset/CommodityIntel'
+import CommodityIntel    from '@/components/asset/CommodityIntel'
+import ForexStrength     from '@/components/asset/ForexStrength'
+import ForexCentralBanks from '@/components/asset/ForexCentralBanks'
 
 export const dynamic = 'force-dynamic'
 
@@ -264,6 +266,14 @@ export default async function AssetPage({ params }: AssetPageProps) {
       {type === 'commodity' && (
         <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
           <CommodityIntel symbol={symbol} />
+        </div>
+      )}
+
+      {/* ── Forex panels (forex only) ── */}
+      {type === 'forex' && (
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+          <ForexStrength symbol={symbol} />
+          <ForexCentralBanks symbol={symbol} />
         </div>
       )}
 

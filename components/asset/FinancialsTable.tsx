@@ -45,10 +45,9 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
   if (!hasFinancials && !hasMetrics && !hasEarnings) {
     return (
       <section>
-        <h2 className="mb-4 text-lg font-semibold text-[var(--text)]">Financials</h2>
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-12 text-center">
-          <p className="text-2xl">📊</p>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">Financial data unavailable.</p>
+        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Financials</h2>
+        <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-8 text-center">
+          <p className="text-sm text-[var(--text-muted)]">Financial data unavailable.</p>
         </div>
       </section>
     )
@@ -58,12 +57,12 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
   const quarters = financials?.incomeStatements.slice(0, 4) ?? []
 
   return (
-    <section className="space-y-6">
-      <h2 className="text-lg font-semibold text-[var(--text)]">Financials</h2>
+    <section className="space-y-3">
+      <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Financials</h2>
 
       {/* ── Income statement table ── */}
       {quarters.length > 0 && (
-        <div className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+        <div className="overflow-x-auto rounded border border-[var(--border)] bg-[var(--surface)]">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--border)]">
@@ -104,11 +103,11 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {/* ── Key ratios ── */}
         {hasMetrics && (
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <h3 className="mb-2 text-sm font-semibold text-[var(--text)]">Key Ratios</h3>
+          <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+            <h3 className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Key Ratios</h3>
             <div className="divide-y divide-[var(--border)]">
               <MetricRow label="P/E Ratio"     value={metrics!.peRatio       != null ? formatNumber(metrics!.peRatio, 2)       : null} />
               <MetricRow label="P/B Ratio"     value={metrics!.pbRatio       != null ? formatNumber(metrics!.pbRatio, 2)       : null} />
@@ -132,8 +131,8 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
 
         {/* ── Earnings surprises ── */}
         {hasEarnings && (
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <h3 className="mb-2 text-sm font-semibold text-[var(--text)]">EPS Surprises</h3>
+          <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+            <h3 className="mb-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">EPS Surprises</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

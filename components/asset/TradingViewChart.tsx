@@ -38,6 +38,8 @@ export default function TradingViewChart({ symbol, type, theme = 'dark' }: Tradi
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+
+    // Full teardown before mounting — prevents duplicate widgets on re-render
     container.innerHTML = ''
 
     const script = document.createElement('script')
@@ -45,37 +47,28 @@ export default function TradingViewChart({ symbol, type, theme = 'dark' }: Tradi
     script.type  = 'text/javascript'
     script.async = true
     script.innerHTML = JSON.stringify({
-      autosize:            true,
+      autosize:            false,
       symbol:              tvSymbol,
       interval:            'D',
-      timezone:            'Etc/UTC',
+      timezone:            'exchange',
       theme:               theme,
       style:               '1',
       locale:              'en',
-      toolbar_bg:          theme === 'dark' ? '#111827' : '#ffffff',
+      width:               '100%',
+      height:              550,
       enable_publishing:   false,
+      allow_symbol_change: true,
+      save_image:          true,
       withdateranges:      true,
-      range:               '3M',
       hide_side_toolbar:   false,
-      allow_symbol_change: false,
       calendar:            false,
-      studies:             ['Volume@tv-basicstudies', 'RSI@tv-basicstudies', 'MACD@tv-basicstudies'],
+      hide_volume:         false,
       support_host:        'https://www.tradingview.com',
     })
     container.appendChild(script)
 
-    return () => { if (container) container.innerHTML = '' }
+    return () => { container.innerHTML = '' }
   }, [tvSymbol, theme])
 
-  return (
-    // No border/rounded corners — bleeds edge to edge
-    <div className="w-full bg-[var(--surface)]">
-      <div
-        ref={containerRef}
-        className="tradingview-widget-container h-[450px] w-full sm:h-[600px]"
-      >
-        <div className="tradingview-widget-container__widget h-full w-full" />
-      </div>
-    </div>
-  )
+  return <div ref={containerRef} className="tradingview-widget-container w-full" />
 }

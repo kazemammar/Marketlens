@@ -81,15 +81,14 @@ export default async function AnalystRatings({ symbol }: AnalystRatingsProps) {
 
   return (
     <section>
-      <h2 className="mb-4 text-lg font-semibold text-[var(--text)]">Analyst Ratings</h2>
+      <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Analyst Ratings</h2>
 
       {recs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-10 text-center">
-          <p className="text-2xl">🔍</p>
-          <p className="mt-2 text-sm text-[var(--text-muted)]">No analyst recommendations available.</p>
+        <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-8 text-center">
+          <p className="text-sm text-[var(--text-muted)]">No analyst data available.</p>
         </div>
       ) : (
-        <div className="space-y-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="space-y-4 rounded border border-[var(--border)] bg-[var(--surface)] p-3">
           {recs.slice(0, 3).map((rec) => (
             <ConsensusBar key={rec.period} recs={rec} />
           ))}

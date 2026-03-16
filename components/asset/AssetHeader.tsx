@@ -55,7 +55,7 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
 
       {/* Right: price */}
       <div className="flex flex-col items-start sm:items-end">
-        <p className="text-3xl font-bold font-mono tabular-nums text-[var(--text)]">
+        <p className="text-4xl font-bold font-mono tabular-nums text-[var(--text)]">
           {formatPrice(price, currency)}
         </p>
         <div className={`flex items-center gap-2 text-sm font-mono font-medium tabular-nums ${color}`}>

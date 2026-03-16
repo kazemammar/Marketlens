@@ -4,7 +4,8 @@
  * Format a price with 2 decimal places and a currency symbol.
  * Falls back to USD if no currency is provided.
  */
-export function formatPrice(value: number, currency = 'USD'): string {
+export function formatPrice(value: number | null | undefined, currency = 'USD'): string {
+  if (value == null || isNaN(value)) return '$0.00'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
@@ -16,7 +17,8 @@ export function formatPrice(value: number, currency = 'USD'): string {
 /**
  * Format a raw number as a currency string without symbol (for tables).
  */
-export function formatNumber(value: number, decimals = 2): string {
+export function formatNumber(value: number | null | undefined, decimals = 2): string {
+  if (value == null || isNaN(value)) return '0.00'
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -29,7 +31,8 @@ export function formatNumber(value: number, decimals = 2): string {
  * Format a decimal fraction as a percentage string, e.g. 0.0512 → "+5.12%"
  * If the value is already a percent (e.g. 5.12), pass asDecimal=false.
  */
-export function formatPercent(value: number, asDecimal = true): string {
+export function formatPercent(value: number | null | undefined, asDecimal = true): string {
+  if (value == null || isNaN(value)) return '+0.00%'
   const pct = asDecimal ? value * 100 : value
   const sign = pct >= 0 ? '+' : ''
   return `${sign}${pct.toFixed(2)}%`
@@ -38,7 +41,8 @@ export function formatPercent(value: number, asDecimal = true): string {
 /**
  * Same as formatPercent but without a leading sign.
  */
-export function formatPercentAbs(value: number, asDecimal = true): string {
+export function formatPercentAbs(value: number | null | undefined, asDecimal = true): string {
+  if (value == null || isNaN(value)) return '0.00%'
   const pct = asDecimal ? value * 100 : value
   return `${Math.abs(pct).toFixed(2)}%`
 }
@@ -48,7 +52,8 @@ export function formatPercentAbs(value: number, asDecimal = true): string {
 /**
  * Abbreviate large numbers: 1_200_000 → "1.2M", 450_000_000_000 → "450B".
  */
-export function formatCompact(value: number): string {
+export function formatCompact(value: number | null | undefined): string {
+  if (value == null || isNaN(value)) return '0'
   const abs = Math.abs(value)
   const sign = value < 0 ? '-' : ''
 
@@ -65,7 +70,8 @@ export function formatCompact(value: number): string {
  * Return a human-readable relative time string from a unix timestamp (ms).
  * e.g. 1_700_000_000_000 → "3 hours ago"
  */
-export function formatRelativeTime(timestampMs: number): string {
+export function formatRelativeTime(timestampMs: number | null | undefined): string {
+  if (timestampMs == null || isNaN(timestampMs)) return '—'
   const diffMs  = Date.now() - timestampMs
   const diffSec = Math.floor(diffMs / 1_000)
   const diffMin = Math.floor(diffSec / 60)
@@ -87,7 +93,8 @@ export function formatRelativeTime(timestampMs: number): string {
 /**
  * Format a unix timestamp (ms) as a short date/time string.
  */
-export function formatDateTime(timestampMs: number): string {
+export function formatDateTime(timestampMs: number | null | undefined): string {
+  if (timestampMs == null || isNaN(timestampMs)) return '—'
   return new Date(timestampMs).toLocaleString('en-US', {
     month:  'short',
     day:    'numeric',
@@ -102,7 +109,8 @@ export function formatDateTime(timestampMs: number): string {
 /**
  * Return Tailwind color class based on whether a value is positive/negative.
  */
-export function changeColor(value: number): string {
+export function changeColor(value: number | null | undefined): string {
+  if (value == null || isNaN(value)) return 'text-slate-400'
   if (value > 0) return 'text-green-500'
   if (value < 0) return 'text-red-500'
   return 'text-slate-400'
@@ -111,7 +119,8 @@ export function changeColor(value: number): string {
 /**
  * Format a price change with sign, e.g. +1.23 or -0.45.
  */
-export function formatChange(value: number, decimals = 2): string {
+export function formatChange(value: number | null | undefined, decimals = 2): string {
+  if (value == null || isNaN(value)) return '0.00'
   const sign = value >= 0 ? '+' : ''
   return `${sign}${value.toFixed(decimals)}`
 }

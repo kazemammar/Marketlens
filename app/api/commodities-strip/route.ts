@@ -5,7 +5,7 @@ import { redis }             from '@/lib/cache/redis'
 export const dynamic = 'force-dynamic'
 
 const CACHE_KEY = 'commodities-strip:v2'
-const CACHE_TTL = 60
+const CACHE_TTL = 120
 
 export interface CommodityStripItem {
   symbol:        string

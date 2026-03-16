@@ -1,5 +1,22 @@
 import { cachedFetch, cacheKey, redis } from '@/lib/cache/redis'
 import { TTL, FINNHUB_BASE_URL } from '@/lib/utils/constants'
+
+// ─── Global rate-limit state ──────────────────────────────────────────────
+// Redis key set for TTL.RATE_LIMIT_BACKOFF seconds when Finnhub returns 429.
+// All callers check this before hitting Finnhub — stops the death-spiral.
+const RATE_LIMIT_KEY = 'finnhub:rl'
+
+async function isRateLimited(): Promise<boolean> {
+  try {
+    return (await redis.get<number>(RATE_LIMIT_KEY)) !== null
+  } catch {
+    return false
+  }
+}
+
+async function markRateLimited(): Promise<void> {
+  redis.set(RATE_LIMIT_KEY, 1, { ex: TTL.RATE_LIMIT_BACKOFF }).catch(() => {})
+}
 import {
   Asset,
   AssetType,
@@ -26,9 +43,16 @@ async function finnhubGet<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-// Quote-specific fetch: returns null on any error so the caller can skip gracefully
+// Quote-specific fetch: returns null on any error so the caller can skip gracefully.
+// Checks the global rate-limit backoff flag before every call, and sets it on 429.
 async function finnhubGetQuote(sym: string): Promise<FinnhubQuote | null> {
   try {
+    // Honour the 30-second backoff window after a 429
+    if (await isRateLimited()) {
+      console.warn(`[finnhub] rate-limit backoff active — skipping ${sym}`)
+      return null
+    }
+
     const apiKey = process.env.FINNHUB_API_KEY
     if (!apiKey) throw new Error('FINNHUB_API_KEY is not set')
 
@@ -37,7 +61,8 @@ async function finnhubGetQuote(sym: string): Promise<FinnhubQuote | null> {
     const res  = await fetch(url, { next: { revalidate: 0 } })
 
     if (res.status === 429) {
-      console.warn(`[finnhub] rate-limited — skipping ${sym}`)
+      console.warn(`[finnhub] 429 received — setting ${TTL.RATE_LIMIT_BACKOFF}s backoff`)
+      await markRateLimited()
       return null
     }
     if (!res.ok) {
@@ -282,16 +307,19 @@ export async function getPriceTarget(symbol: string): Promise<PriceTarget | null
 
 /**
  * Fetch quotes for multiple Finnhub symbols efficiently:
- *  1. Check Redis for ALL symbols in parallel (no Finnhub calls for cache hits)
- *  2. Fan out to Finnhub ONLY for cache misses, in batches of `batchSize`
- *     with `delayMs` pause between batches to stay under 60 req/min.
+ *  1. Phase 1 — parallel Redis check (no Finnhub calls for cache hits)
+ *  2. Phase 2 — for each miss, do a final Redis re-check right before calling
+ *     Finnhub (catches in-flight fetches from OTHER concurrent route handlers
+ *     that started at the same time and may have populated the cache since).
+ *  3. Phase 3 — Finnhub call ONLY for confirmed misses, in batches of
+ *     `batchSize` with `delayMs` pause between batches (≤50 req/min).
  *
  * Returns a Map of symbol → QuoteRaw for every symbol that succeeded.
  */
 export async function getQuotesBatched(
   symbols:   string[],
-  batchSize = 5,
-  delayMs   = 300,
+  batchSize = 4,     // was 5 — reduced to stay well under 60 req/min
+  delayMs   = 500,   // was 300 — increased to spread load
 ): Promise<Map<string, QuoteRaw>> {
   const result = new Map<string, QuoteRaw>()
   if (symbols.length === 0) return result
@@ -328,8 +356,17 @@ export async function getQuotesBatched(
 
     const settled = await Promise.allSettled(
       batch.map(async (sym) => {
+        // Re-check Redis immediately before the Finnhub call.
+        // Another concurrent route handler (market-radar, signals, etc.) may
+        // have already fetched and cached this symbol since our Phase 1 check.
+        const fresh = await redis.get<QuoteRaw>(cacheKey.quote(sym)).catch(() => null)
+        if (fresh !== null) {
+          console.log(`[cache] LATE-HIT ${cacheKey.quote(sym)}`)
+          return { sym, quote: fresh }
+        }
+
         const data = await finnhubGetQuote(sym)
-        if (data === null) return null   // 429 — skip gracefully
+        if (data === null) return null   // 429 or rate-limit backoff — skip
         const quote: QuoteRaw = {
           price:         data.c,
           previousClose: data.pc,

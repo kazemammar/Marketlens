@@ -231,41 +231,36 @@ export default async function AssetPage({ params }: AssetPageProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
 
-      {/* ── Asset header — constrained width ── */}
-      <div className="mx-auto max-w-screen-xl px-4 pt-6 pb-0 sm:px-6">
-        <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-4">
-          <AssetHeader
-            asset={asset}
-            logoUrl={logoUrl}
-            exchange={exchange}
-            industry={industry}
-          />
-        </div>
+      {/* ── Asset header ── */}
+      <div className="mx-auto max-w-screen-xl px-4 pt-4 pb-3 sm:px-6">
+        <AssetHeader
+          asset={asset}
+          logoUrl={logoUrl}
+          exchange={exchange}
+          industry={industry}
+        />
       </div>
 
-      {/* ── Chart — FULL WIDTH, no horizontal constraints ── */}
-      <div className="w-full border-b border-[var(--border)]">
+      {/* ── Chart — constrained to same max-width as page content ── */}
+      <div className="mx-auto w-full max-w-screen-xl overflow-hidden px-4 sm:px-6">
         <TradingViewChart symbol={symbol} type={type} />
       </div>
 
-      {/* ── Content — constrained width ── */}
-      <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          {/* Main column (2/3) */}
-          <div className="space-y-5 lg:col-span-2">
+      {/* ── Content — constrained, tight padding ── */}
+      <main className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6">
+        <div
+          className="grid grid-cols-1 gap-4 lg:gap-5"
+          style={{ gridTemplateColumns: 'minmax(0,65fr) minmax(0,35fr)' }}
+        >
+          {/* ── Left 65%: News ── */}
+          <div className="col-span-1">
             <Suspense fallback={<SectionSkeleton rows={6} />}>
               <NewsSection symbol={symbol} type={type} />
             </Suspense>
-
-            {showFinancials && (
-              <Suspense fallback={<SectionSkeleton rows={8} />}>
-                <FinancialsTable symbol={symbol} />
-              </Suspense>
-            )}
           </div>
 
-          {/* Sidebar (1/3) */}
-          <div className="space-y-5">
+          {/* ── Right 35%: Sentiment → Analyst → Financials ── */}
+          <div className="col-span-1 space-y-4">
             {showSentiment && (
               <SentimentCard symbol={symbol} type={type} />
             )}
@@ -273,6 +268,12 @@ export default async function AssetPage({ params }: AssetPageProps) {
             {showAnalyst && (
               <Suspense fallback={<SectionSkeleton rows={4} />}>
                 <AnalystRatings symbol={symbol} />
+              </Suspense>
+            )}
+
+            {showFinancials && (
+              <Suspense fallback={<SectionSkeleton rows={8} />}>
+                <FinancialsTable symbol={symbol} />
               </Suspense>
             )}
           </div>

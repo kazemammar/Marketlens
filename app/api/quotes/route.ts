@@ -4,11 +4,21 @@
 // Routing logic:
 //  - BINANCE:* symbols → CoinGecko (free, no rate limit, 1 API call for all)
 //  - Everything else  → Finnhub via getQuotesBatched
-//    (checks Redis first; only Finnhub-calls cache misses, 5 at a time)
+//    (checks Redis first; only calls Finnhub for cache misses, 4 at a time)
+//
+// Route-level Redis cache: the full response for a given sorted symbol set is
+// cached under `quotes:batch:{key}` for 90 seconds. Concurrent requests for
+// the same symbol set (e.g. TickerTape firing twice on hot-reload) return the
+// cached payload without touching Finnhub at all.
 
 import { NextRequest } from 'next/server'
 import { getQuotesBatched, QuoteRaw } from '@/lib/api/finnhub'
 import { getCryptoByIds } from '@/lib/api/coingecko'
+import { redis } from '@/lib/cache/redis'
+
+export const dynamic = 'force-dynamic'
+
+const ROUTE_CACHE_TTL = 90 // seconds
 
 // Map BINANCE: ticker symbols to CoinGecko IDs
 const BINANCE_TO_CG: Record<string, string> = {
@@ -30,7 +40,22 @@ export async function GET(req: NextRequest) {
     return Response.json({ error: 'No symbols provided' }, { status: 400 })
   }
 
-  // ── Split: crypto (CoinGecko) vs Finnhub ─────────────────────────────────
+  // Stable cache key: sort symbols so ?symbols=A,B and ?symbols=B,A share cache
+  const sorted   = [...symbols].sort()
+  const routeKey = `quotes:batch:${sorted.join(',')}`
+
+  // ── Route-level Redis cache (full response) ──────────────────────────────
+  try {
+    const cached = await redis.get<Record<string, QuoteRaw>>(routeKey)
+    if (cached) {
+      console.log(`[/api/quotes] route cache HIT (${symbols.length} symbols)`)
+      return Response.json(cached, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
+      })
+    }
+  } catch { /* fall through */ }
+
+  // ── Split: crypto (CoinGecko) vs Finnhub ────────────────────────────────
   const cryptoSymbols:  string[] = []
   const finnhubSymbols: string[] = []
 
@@ -44,12 +69,11 @@ export async function GET(req: NextRequest) {
 
   const quotes: Record<string, QuoteRaw> = {}
 
-  // ── Fetch crypto via CoinGecko (1 request, no Finnhub calls) ─────────────
+  // ── Fetch crypto via CoinGecko (1 request, no Finnhub calls) ────────────
   if (cryptoSymbols.length > 0) {
     const cgIds = cryptoSymbols.map((s) => BINANCE_TO_CG[s])
     try {
       const coins = await getCryptoByIds(cgIds)
-      // Re-map from CoinGecko ID back to BINANCE: symbol
       const idToSymbol = Object.fromEntries(
         cryptoSymbols.map((s) => [BINANCE_TO_CG[s], s]),
       )
@@ -75,7 +99,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ── Fetch Finnhub symbols via batched, cache-first fetcher ────────────────
+  // ── Fetch Finnhub symbols via batched, cache-first fetcher ───────────────
   if (finnhubSymbols.length > 0) {
     try {
       const finnhubMap = await getQuotesBatched(finnhubSymbols)
@@ -94,7 +118,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Cache the full response so concurrent/repeat calls skip all the above
+  if (Object.keys(quotes).length > 0) {
+    redis.set(routeKey, quotes, { ex: ROUTE_CACHE_TTL }).catch(() => {})
+  }
+
   return Response.json(quotes, {
-    headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=10' },
+    headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
   })
 }

@@ -157,3 +157,20 @@ body {
   border-right: 1px solid var(--border);
 }
 .war-panel:last-child { border-right: none; }
+
+/* ─── TradingView widget ─────────────────────────────────────────────────── */
+/* Mobile-first height; desktop bumped to 550px via media query */
+.tv-chart {
+  height: 400px;
+}
+@media (min-width: 640px) {
+  .tv-chart {
+    height: 550px;
+  }
+}
+/* Force the injected iframe to fill its container regardless of widget defaults */
+.tradingview-widget-container iframe {
+  height: 100% !important;
+  width:  100% !important;
+  display: block;
+}

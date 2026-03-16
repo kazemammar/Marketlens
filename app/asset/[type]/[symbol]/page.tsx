@@ -19,6 +19,7 @@ import AssetContext from '@/components/asset/AssetContext'
 import CryptoStats    from '@/components/asset/CryptoStats'
 import FearGreedGauge from '@/components/asset/FearGreedGauge'
 import DefiTvl        from '@/components/asset/DefiTvl'
+import RelatedAssets  from '@/components/asset/RelatedAssets'
 
 export const dynamic = 'force-dynamic'
 
@@ -251,6 +252,11 @@ export default async function AssetPage({ params }: AssetPageProps) {
       {/* ── Chart — constrained to same max-width as page content ── */}
       <div className="mx-auto w-full max-w-screen-xl overflow-hidden px-4 sm:px-6">
         <TradingViewChart symbol={symbol} type={type} />
+      </div>
+
+      {/* ── Related Assets — all types ── */}
+      <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+        <RelatedAssets symbol={symbol} type={type} />
       </div>
 
       {/* ── Peers & Technicals (stock only) — full-width, below chart ── */}

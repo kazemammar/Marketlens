@@ -137,3 +137,187 @@ export const RSS_FEEDS: RssFeed[] = [
   // Breaking market news
   { name: 'Benzinga',            url: 'https://www.benzinga.com/feed' },
 ]
+
+// ─── Related assets ───────────────────────────────────────────────────────
+
+export interface RelatedAsset {
+  symbol: string
+  name:   string
+  type:   'stock' | 'crypto' | 'forex' | 'commodity' | 'etf'
+}
+
+export const RELATED_ASSETS: Record<string, RelatedAsset[]> = {
+  // ── Stocks ──────────────────────────────────────────────────────────────
+  AAPL:  [
+    { symbol: 'MSFT',    name: 'Microsoft',    type: 'stock' },
+    { symbol: 'GOOGL',   name: 'Alphabet',     type: 'stock' },
+    { symbol: 'META',    name: 'Meta',         type: 'stock' },
+    { symbol: 'QQQ',     name: 'Nasdaq 100',   type: 'etf'   },
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+  ],
+  MSFT:  [
+    { symbol: 'AAPL',    name: 'Apple',        type: 'stock' },
+    { symbol: 'GOOGL',   name: 'Alphabet',     type: 'stock' },
+    { symbol: 'AMZN',    name: 'Amazon',       type: 'stock' },
+    { symbol: 'NVDA',    name: 'NVIDIA',       type: 'stock' },
+    { symbol: 'QQQ',     name: 'Nasdaq 100',   type: 'etf'   },
+  ],
+  GOOGL: [
+    { symbol: 'META',    name: 'Meta',         type: 'stock' },
+    { symbol: 'MSFT',    name: 'Microsoft',    type: 'stock' },
+    { symbol: 'AMZN',    name: 'Amazon',       type: 'stock' },
+    { symbol: 'SNAP',    name: 'Snap',         type: 'stock' },
+    { symbol: 'QQQ',     name: 'Nasdaq 100',   type: 'etf'   },
+  ],
+  AMZN:  [
+    { symbol: 'MSFT',    name: 'Microsoft',    type: 'stock' },
+    { symbol: 'GOOGL',   name: 'Alphabet',     type: 'stock' },
+    { symbol: 'SHOP',    name: 'Shopify',      type: 'stock' },
+    { symbol: 'WMT',     name: 'Walmart',      type: 'stock' },
+    { symbol: 'QQQ',     name: 'Nasdaq 100',   type: 'etf'   },
+  ],
+  NVDA:  [
+    { symbol: 'AMD',     name: 'AMD',          type: 'stock' },
+    { symbol: 'INTC',    name: 'Intel',        type: 'stock' },
+    { symbol: 'MSFT',    name: 'Microsoft',    type: 'stock' },
+    { symbol: 'AVGO',    name: 'Broadcom',     type: 'stock' },
+    { symbol: 'SOXX',    name: 'Semi ETF',     type: 'etf'   },
+  ],
+  META:  [
+    { symbol: 'GOOGL',   name: 'Alphabet',     type: 'stock' },
+    { symbol: 'SNAP',    name: 'Snap',         type: 'stock' },
+    { symbol: 'PINS',    name: 'Pinterest',    type: 'stock' },
+    { symbol: 'TWTR',    name: 'Twitter/X',    type: 'stock' },
+    { symbol: 'QQQ',     name: 'Nasdaq 100',   type: 'etf'   },
+  ],
+  TSLA:  [
+    { symbol: 'RIVN',    name: 'Rivian',       type: 'stock' },
+    { symbol: 'NIO',     name: 'NIO',          type: 'stock' },
+    { symbol: 'F',       name: 'Ford',         type: 'stock' },
+    { symbol: 'GM',      name: 'GM',           type: 'stock' },
+    { symbol: 'LIT',     name: 'Lithium ETF',  type: 'etf'   },
+  ],
+  JPM:   [
+    { symbol: 'BAC',     name: 'Bank of America', type: 'stock' },
+    { symbol: 'GS',      name: 'Goldman Sachs',   type: 'stock' },
+    { symbol: 'MS',      name: 'Morgan Stanley',  type: 'stock' },
+    { symbol: 'WFC',     name: 'Wells Fargo',     type: 'stock' },
+    { symbol: 'XLF',     name: 'Financials ETF',  type: 'etf'   },
+  ],
+  XOM:   [
+    { symbol: 'CVX',     name: 'Chevron',      type: 'stock' },
+    { symbol: 'COP',     name: 'ConocoPhillips', type: 'stock' },
+    { symbol: 'BP',      name: 'BP',           type: 'stock' },
+    { symbol: 'USO',     name: 'Crude Oil',    type: 'commodity' },
+    { symbol: 'XLE',     name: 'Energy ETF',   type: 'etf'   },
+  ],
+  // ── Crypto ──────────────────────────────────────────────────────────────
+  BTC:   [
+    { symbol: 'ETH',     name: 'Ethereum',     type: 'crypto' },
+    { symbol: 'SOL',     name: 'Solana',       type: 'crypto' },
+    { symbol: 'BNB',     name: 'BNB',          type: 'crypto' },
+    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+    { symbol: 'MSTR',    name: 'MicroStrategy', type: 'stock' },
+  ],
+  ETH:   [
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+    { symbol: 'SOL',     name: 'Solana',       type: 'crypto' },
+    { symbol: 'MATIC',   name: 'Polygon',      type: 'crypto' },
+    { symbol: 'LINK',    name: 'Chainlink',    type: 'crypto' },
+    { symbol: 'AVAX',    name: 'Avalanche',    type: 'crypto' },
+  ],
+  SOL:   [
+    { symbol: 'ETH',     name: 'Ethereum',     type: 'crypto' },
+    { symbol: 'AVAX',    name: 'Avalanche',    type: 'crypto' },
+    { symbol: 'MATIC',   name: 'Polygon',      type: 'crypto' },
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+    { symbol: 'DOT',     name: 'Polkadot',     type: 'crypto' },
+  ],
+  BNB:   [
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+    { symbol: 'ETH',     name: 'Ethereum',     type: 'crypto' },
+    { symbol: 'XRP',     name: 'XRP',          type: 'crypto' },
+    { symbol: 'ADA',     name: 'Cardano',      type: 'crypto' },
+    { symbol: 'DOGE',    name: 'Dogecoin',     type: 'crypto' },
+  ],
+  XRP:   [
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+    { symbol: 'ADA',     name: 'Cardano',      type: 'crypto' },
+    { symbol: 'XLM',     name: 'Stellar',      type: 'crypto' },
+    { symbol: 'ATOM',    name: 'Cosmos',       type: 'crypto' },
+    { symbol: 'DOT',     name: 'Polkadot',     type: 'crypto' },
+  ],
+  DOGE:  [
+    { symbol: 'SHIB',    name: 'Shiba Inu',    type: 'crypto' },
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+    { symbol: 'LTC',     name: 'Litecoin',     type: 'crypto' },
+    { symbol: 'BCH',     name: 'Bitcoin Cash', type: 'crypto' },
+    { symbol: 'TSLA',    name: 'Tesla',        type: 'stock'  },
+  ],
+  // ── Forex ────────────────────────────────────────────────────────────────
+  'EUR/USD': [
+    { symbol: 'GBP/USD', name: 'Cable',        type: 'forex' },
+    { symbol: 'USD/CHF', name: 'Swissie',      type: 'forex' },
+    { symbol: 'USD/JPY', name: 'Dollar Yen',   type: 'forex' },
+    { symbol: 'AUD/USD', name: 'Aussie',       type: 'forex' },
+    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+  ],
+  'GBP/USD': [
+    { symbol: 'EUR/USD', name: 'Fiber',        type: 'forex' },
+    { symbol: 'EUR/GBP', name: 'EUR/GBP',      type: 'forex' },
+    { symbol: 'USD/JPY', name: 'Dollar Yen',   type: 'forex' },
+    { symbol: 'AUD/USD', name: 'Aussie',       type: 'forex' },
+    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+  ],
+  'USD/JPY': [
+    { symbol: 'EUR/USD', name: 'Fiber',        type: 'forex' },
+    { symbol: 'GBP/USD', name: 'Cable',        type: 'forex' },
+    { symbol: 'USD/CHF', name: 'Swissie',      type: 'forex' },
+    { symbol: 'AUD/USD', name: 'Aussie',       type: 'forex' },
+    { symbol: 'NZD/USD', name: 'Kiwi',         type: 'forex' },
+  ],
+  // ── Commodities ──────────────────────────────────────────────────────────
+  GLD:   [
+    { symbol: 'SLV',     name: 'Silver',       type: 'commodity' },
+    { symbol: 'GDX',     name: 'Gold Miners',  type: 'etf'   },
+    { symbol: 'EUR/USD', name: 'EUR/USD',      type: 'forex' },
+    { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
+    { symbol: 'TLT',     name: 'Long Bonds',   type: 'etf'   },
+  ],
+  SLV:   [
+    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+    { symbol: 'PPLT',    name: 'Platinum',     type: 'commodity' },
+    { symbol: 'CPER',    name: 'Copper',       type: 'commodity' },
+    { symbol: 'GDX',     name: 'Gold Miners',  type: 'etf'   },
+    { symbol: 'XOM',     name: 'Exxon',        type: 'stock' },
+  ],
+  USO:   [
+    { symbol: 'XOM',     name: 'Exxon',        type: 'stock' },
+    { symbol: 'CVX',     name: 'Chevron',      type: 'stock' },
+    { symbol: 'UNG',     name: 'Natural Gas',  type: 'commodity' },
+    { symbol: 'XLE',     name: 'Energy ETF',   type: 'etf'   },
+    { symbol: 'EUR/USD', name: 'EUR/USD',      type: 'forex' },
+  ],
+  // ── ETFs ─────────────────────────────────────────────────────────────────
+  SPY:   [
+    { symbol: 'QQQ',     name: 'Nasdaq 100',   type: 'etf'   },
+    { symbol: 'DIA',     name: 'Dow Jones',    type: 'etf'   },
+    { symbol: 'IWM',     name: 'Russell 2000', type: 'etf'   },
+    { symbol: 'VTI',     name: 'Total Market', type: 'etf'   },
+    { symbol: 'AAPL',    name: 'Apple',        type: 'stock' },
+  ],
+  QQQ:   [
+    { symbol: 'SPY',     name: 'S&P 500',      type: 'etf'   },
+    { symbol: 'AAPL',    name: 'Apple',        type: 'stock' },
+    { symbol: 'MSFT',    name: 'Microsoft',    type: 'stock' },
+    { symbol: 'NVDA',    name: 'NVIDIA',       type: 'stock' },
+    { symbol: 'ARKK',    name: 'ARK Innov.',   type: 'etf'   },
+  ],
+  TLT:   [
+    { symbol: 'SPY',     name: 'S&P 500',      type: 'etf'   },
+    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+    { symbol: 'HYG',     name: 'High Yield',   type: 'etf'   },
+    { symbol: 'IEF',     name: '7-10yr Bond',  type: 'etf'   },
+    { symbol: 'EUR/USD', name: 'EUR/USD',      type: 'forex' },
+  ],
+}

@@ -1,14 +1,19 @@
-// GET /api/quote/[symbol]
-// Returns live quote for a stock or ETF symbol via Finnhub
-// Cached in Redis
+export const dynamic = 'force-dynamic'
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getQuote } from '@/lib/api/finnhub'
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ symbol: string }> }
+  { params }: { params: Promise<{ symbol: string }> },
 ) {
   const { symbol } = await params
-  void symbol
-  return Response.json({ todo: true })
+  try {
+    const quote = await getQuote(symbol)
+    if (!quote) return NextResponse.json(null, { status: 404 })
+    return NextResponse.json(quote)
+  } catch (err) {
+    console.error('[api/quote]', err)
+    return NextResponse.json(null, { status: 500 })
+  }
 }

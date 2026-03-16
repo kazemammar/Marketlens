@@ -1,17 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { getPeers, getQuote, getCompanyProfile } from '@/lib/api/finnhub'
+import { getPeers, getCompanyProfile } from '@/lib/api/finnhub'
 
-interface PeerData {
-  symbol: string
-  name: string
-  price: number
-  change: number
-  changePercent: number
+export interface PeerInfo {
+  symbol:    string
+  name:      string
+  logo:      string | null
+  industry:  string | null
   marketCap: number | null
-  industry: string | null
-  logo: string | null
 }
 
 export async function GET(
@@ -22,26 +19,24 @@ export async function GET(
   try {
     const peerSymbols = await getPeers(symbol)
     const peerData = await Promise.allSettled(
-      peerSymbols.map(async (s): Promise<PeerData> => {
-        const [quote, profile] = await Promise.allSettled([getQuote(s), getCompanyProfile(s)])
-        const q = quote.status === 'fulfilled' ? quote.value : null
-        const p = profile.status === 'fulfilled' ? profile.value : null
-        return {
-          symbol: s,
-          name: p?.name ?? s,
-          price: q?.price ?? 0,
-          change: q?.change ?? 0,
-          changePercent: q?.changePercent ?? 0,
-          marketCap: p?.marketCapitalization ?? null,
-          industry: p?.finnhubIndustry ?? null,
-          logo: p?.logo ?? null,
+      peerSymbols.slice(0, 6).map(async (s): Promise<PeerInfo> => {
+        try {
+          const p = await getCompanyProfile(s)
+          return {
+            symbol:    s,
+            name:      p?.name       ?? s,
+            logo:      p?.logo       ?? null,
+            industry:  p?.finnhubIndustry       ?? null,
+            marketCap: p?.marketCapitalization  ?? null,
+          }
+        } catch {
+          return { symbol: s, name: s, logo: null, industry: null, marketCap: null }
         }
       })
     )
     const peers = peerData
-      .filter((r): r is PromiseFulfilledResult<PeerData> => r.status === 'fulfilled')
-      .map(r => r.value)
-      .filter(p => p.price > 0)
+      .map(r => r.status === 'fulfilled' ? r.value : null)
+      .filter((p): p is PeerInfo => p !== null)
     return NextResponse.json(peers)
   } catch (err) {
     console.error('[api/stock/peers]', err)

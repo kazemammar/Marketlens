@@ -69,18 +69,19 @@ export default function CryptoStats({ symbol }: { symbol: string }) {
   }, [symbol])
 
   return (
-    <div className="border-b border-[var(--border)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="2" y="2" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="9" y="2" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="2" y="9" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="9" y="9" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
         </svg>
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Market Data
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       {loading ? (
@@ -120,8 +121,8 @@ export default function CryptoStats({ symbol }: { symbol: string }) {
               label="All-Time High"
               value={fmtPrice(data.ath)}
               sub={
-                <span style={{ color: data.athChangePercent > -10 ? 'var(--price-up)' : data.athChangePercent < -30 ? 'var(--price-down)' : '#f59e0b' }}>
-                  {data.athChangePercent.toFixed(1)}% from ATH
+                <span style={{ color: (data.athChangePercent ?? 0) > -10 ? 'var(--price-up)' : (data.athChangePercent ?? 0) < -30 ? 'var(--price-down)' : '#f59e0b' }}>
+                  {(data.athChangePercent ?? 0).toFixed(1)}% from ATH
                 </span>
               }
             />
@@ -130,7 +131,7 @@ export default function CryptoStats({ symbol }: { symbol: string }) {
               value={fmtPrice(data.atl)}
               sub={
                 <span style={{ color: 'var(--price-up)' }}>
-                  +{data.atlChangePercent.toFixed(0)}% from ATL
+                  +{(data.atlChangePercent ?? 0).toFixed(0)}% from ATL
                 </span>
               }
             />

@@ -92,17 +92,16 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
   return (
     <div className="border-b border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
-        <div className="flex items-center gap-2">
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-            <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.4"/>
-          </svg>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
-            What&apos;s Affecting {symbol}
-          </span>
-          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-        </div>
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
+        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+          <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.4"/>
+        </svg>
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+          What&apos;s Affecting {symbol}
+        </span>
+        <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         {data && (
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
             AI · {ago(data.analyzedAt)}

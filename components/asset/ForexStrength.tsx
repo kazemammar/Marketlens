@@ -59,14 +59,15 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
   return (
     <div className="border-b border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M2 10l3-4 3 2 3-5 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M14 4v3h-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Pair Overview
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       <div className="bg-[var(--surface)]">

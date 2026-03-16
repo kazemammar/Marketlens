@@ -119,14 +119,15 @@ export default function FearGreedGauge() {
   return (
     <div className="border-b border-[var(--border)] lg:border-b-0">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M8 2v2M2 8h2M14 8h-2M8 14v-2M4.22 4.22l1.41 1.41M10.36 10.36l1.42 1.42M4.22 11.78l1.41-1.41" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3"/>
         </svg>
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Fear &amp; Greed
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       <div className="bg-[var(--surface)] px-4 py-3">

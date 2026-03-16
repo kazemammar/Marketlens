@@ -26,15 +26,16 @@ export default function InsiderActivity({ symbol }: { symbol: string }) {
   }, [symbol])
 
   return (
-    <div className="border-t border-[var(--border)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <circle cx="8" cy="4" r="2" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M4 14c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
         </svg>
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Insider Activity
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       {loading ? (

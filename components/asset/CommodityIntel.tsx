@@ -86,8 +86,9 @@ const PIPELINE_STATUS_COLOR: Record<string, string> = {
 
 function SectionHeader({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
-      <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">{label}</span>
+    <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">{label}</span>
+      <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
     </div>
   )
 }
@@ -137,17 +138,18 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="border-b border-[var(--border)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
         <span className="relative flex h-2 w-2 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-50" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
         </span>
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Commodity Intelligence — {sym}
         </span>
-        <span className="ml-auto font-mono text-[9px] text-[var(--text-muted)]">
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+        <span className="font-mono text-[9px] text-[var(--text-muted)]">
           GEOPOLITICAL RISK BRIEFING
         </span>
       </div>

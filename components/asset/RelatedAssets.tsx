@@ -25,7 +25,7 @@ export default function RelatedAssets({ symbol, type }: Props) {
   return (
     <div className="border-b border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <circle cx="3" cy="8" r="2" stroke="currentColor" strokeWidth="1.4" />
           <circle cx="13" cy="3" r="2" stroke="currentColor" strokeWidth="1.4" />
@@ -33,9 +33,10 @@ export default function RelatedAssets({ symbol, type }: Props) {
           <line x1="5" y1="7" x2="11" y2="4" stroke="currentColor" strokeWidth="1.2" />
           <line x1="5" y1="9" x2="11" y2="12" stroke="currentColor" strokeWidth="1.2" />
         </svg>
-        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
           Related Assets
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       {/* Horizontal scroll strip */}

@@ -5,27 +5,6 @@ import type { MaritimeData } from '@/lib/api/maritime'
 
 const REFRESH_MS = 5 * 60 * 1000 // 5 minutes
 
-interface ChipProps {
-  label: string
-  count: number
-  alert?: boolean
-}
-
-function Chip({ label, count, alert }: ChipProps) {
-  return (
-    <div
-      className="flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[9px] font-semibold tabular-nums"
-      style={{
-        borderColor: alert ? 'rgba(239,68,68,0.4)' : 'var(--border)',
-        background:  alert ? 'rgba(239,68,68,0.08)' : 'var(--surface-2)',
-        color:       alert ? '#fca5a5' : 'var(--text-muted)',
-      }}
-    >
-      <span className="uppercase tracking-[0.1em]">{label}</span>
-      <span className="font-mono text-white">{count}</span>
-    </div>
-  )
-}
 
 export default function MaritimePanel() {
   const [data,    setData]    = useState<MaritimeData | null>(null)
@@ -69,32 +48,52 @@ export default function MaritimePanel() {
         )}
       </div>
 
-      {/* Chokepoint chips */}
-      <div className="flex flex-wrap items-center gap-1.5 px-3 py-2">
-        {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="skeleton h-6 w-24 rounded border border-[var(--border)]" />
-          ))
-        ) : !cp ? (
-          <p className="font-mono text-[9px] text-[var(--text-muted)]">Maritime data unavailable</p>
-        ) : (
-          <>
-            <Chip label="Hormuz"    count={cp.hormuz}      alert={cp.hormuz < 3} />
-            <Chip label="Suez"      count={cp.suez}        alert={cp.suez < 3} />
-            <Chip label="Malacca"   count={cp.malacca}     alert={cp.malacca < 3} />
-            <Chip label="Bab el-Mandeb" count={cp.babelMandeb} alert={cp.babelMandeb < 5} />
-
-            {babAlert && (
-              <div className="ml-1 flex items-center gap-1.5 rounded border border-red-500/30 bg-red-500/08 px-2 py-0.5">
-                <span className="live-dot inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
-                <span className="font-mono text-[9px] font-semibold text-red-400">
-                  ALERT: Bab el-Mandeb — Houthi threat active
+      {/* Chokepoint grid */}
+      {loading ? (
+        <div className="grid grid-cols-2 gap-px bg-[var(--border)] sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-1.5 bg-[var(--surface)] px-3 py-2">
+              <div className="skeleton h-2 w-20 rounded" />
+              <div className="skeleton h-6 w-10 rounded" />
+              <div className="skeleton h-1 w-full rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : !cp ? (
+        <p className="px-3 py-3 font-mono text-[9px] text-[var(--text-muted)]">Maritime data unavailable</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-px bg-[var(--border)] sm:grid-cols-4">
+          {[
+            { label: 'Strait of Hormuz', key: 'hormuz'     as const, alert: (cp?.hormuz     ?? 0) < 3 },
+            { label: 'Suez Canal',       key: 'suez'       as const, alert: (cp?.suez       ?? 0) < 3 },
+            { label: 'Malacca Strait',   key: 'malacca'    as const, alert: (cp?.malacca    ?? 0) < 3 },
+            { label: 'Bab el-Mandeb',    key: 'babelMandeb'as const, alert: babAlert },
+          ].map(({ label, key, alert }) => {
+            const count    = cp?.[key] ?? 0
+            const pct      = Math.min((count / 15) * 100, 100)
+            const barColor = alert ? '#ef4444' : 'var(--accent)'
+            return (
+              <div key={key} className="flex flex-col gap-1.5 bg-[var(--surface)] px-3 py-2">
+                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  {label}
                 </span>
+                <div className="flex items-end gap-2">
+                  <span className="font-mono text-[20px] font-bold leading-none tabular-nums text-white">
+                    {count}
+                  </span>
+                  <span className="mb-0.5 font-mono text-[8px] text-[var(--text-muted)]">vessels</span>
+                </div>
+                <div className="h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, background: barColor, opacity: 0.8 }}
+                  />
+                </div>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Ship counts by category if data loaded */}
       {!loading && data && (

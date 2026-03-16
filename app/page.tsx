@@ -115,9 +115,7 @@ export default async function HomePage({
       <PredictionMarkets />
 
       {/* ══ ECONOMIC INDICATORS ═══════════════════════════════════════════ */}
-      <div className="border-b border-[var(--border)]">
-        <EconomicIndicators />
-      </div>
+      <EconomicIndicators />
 
       {/* ══ MARITIME PANEL ════════════════════════════════════════════════ */}
       <MaritimePanel />

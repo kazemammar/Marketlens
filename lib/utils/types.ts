@@ -218,17 +218,3 @@ export interface InsiderTransaction {
   price: number
 }
 
-// ─── Technical indicators ─────────────────────────────────────────────────
-
-export interface TechnicalIndicators {
-  buy: number
-  sell: number
-  neutral: number
-  signal: 'buy' | 'sell' | 'neutral'
-}
-
-// ─── Support & Resistance ─────────────────────────────────────────────────
-
-export interface SupportResistance {
-  levels: number[]
-}

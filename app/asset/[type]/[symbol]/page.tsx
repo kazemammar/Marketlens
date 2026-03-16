@@ -253,7 +253,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
       {type === 'stock' && (
         <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
           <PeersTable symbol={symbol} />
-          <TechnicalSummary symbol={symbol} currentPrice={asset.price} />
+          <TechnicalSummary symbol={symbol} />
         </div>
       )}
 

@@ -51,7 +51,6 @@ import {
   FinancialMetrics,
   EarningsData,
   InsiderTransaction,
-  TechnicalIndicators,
 } from '@/lib/utils/types'
 
 // ─── Internal helpers ─────────────────────────────────────────────────────
@@ -567,38 +566,6 @@ export async function getInsiderTransactions(symbol: string): Promise<InsiderTra
   )
 }
 
-export async function getAggregateIndicators(symbol: string): Promise<TechnicalIndicators | null> {
-  return cachedFetch<TechnicalIndicators | null>(
-    `finnhub:technicals:${symbol}`,
-    TTL.QUOTE,
-    async () => {
-      const data = await finnhubGet<{
-        technicalAnalysis: { count: { buy: number; sell: number; neutral: number }; signal: string }
-      }>(`/scan/technical-indicator?symbol=${encodeURIComponent(symbol)}&resolution=D`)
-      if (!data?.technicalAnalysis) return null
-      const ta = data.technicalAnalysis
-      return {
-        buy: ta.count.buy,
-        sell: ta.count.sell,
-        neutral: ta.count.neutral,
-        signal: ta.signal as TechnicalIndicators['signal'],
-      }
-    },
-  )
-}
-
-export async function getSupportResistance(symbol: string): Promise<number[]> {
-  return cachedFetch<number[]>(
-    `finnhub:sr:${symbol}`,
-    TTL.QUOTE,
-    async () => {
-      const data = await finnhubGet<{ levels: number[] }>(
-        `/scan/support-resistance?symbol=${encodeURIComponent(symbol)}&resolution=D`
-      )
-      return data.levels ?? []
-    },
-  )
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 

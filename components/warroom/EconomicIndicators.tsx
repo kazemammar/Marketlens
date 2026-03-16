@@ -78,15 +78,19 @@ function IndicatorCard({ ind }: { ind: EconomicIndicator }) {
 
       {/* Change row */}
       <div className="flex items-center justify-between gap-1">
-        {hasChange && ind.change !== null && ind.change !== 0 ? (
-          <span
-            className="flex items-center gap-0.5 font-mono text-[9px] font-semibold tabular-nums"
-            style={{ color: changeColor }}
-          >
-            {positive ? <ArrowUp /> : <ArrowDown />}
-            {positive ? '+' : ''}{ind.change.toFixed(2)}
-            {ind.unit === '%' ? 'pp' : ''}
-          </span>
+        {hasChange && ind.change !== null ? (
+          ind.change === 0 ? (
+            <span className="font-mono text-[9px] text-[var(--price-flat)]">UNCH</span>
+          ) : (
+            <span
+              className="flex items-center gap-0.5 font-mono text-[9px] font-semibold tabular-nums"
+              style={{ color: changeColor }}
+            >
+              {positive ? <ArrowUp /> : <ArrowDown />}
+              {positive ? '+' : ''}{ind.change.toFixed(2)}
+              {ind.unit === '%' ? 'pp' : ''}
+            </span>
+          )
         ) : (
           <span className="font-mono text-[9px] text-[var(--price-flat)]">—</span>
         )}

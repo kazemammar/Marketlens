@@ -168,7 +168,7 @@ function buildIndicators(
 export async function GET() {
   try {
     const indicators = await cachedFetch<EconomicIndicator[]>(
-      'economics:indicators',
+      'economics:indicators:v2',
       CACHE_TTL,
       async () => {
         const hasFredKey = !!process.env.FRED_API_KEY

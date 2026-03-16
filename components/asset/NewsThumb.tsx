@@ -2,35 +2,42 @@
 
 import { useState } from 'react'
 
-// Source-specific brand colors (checked first, case-insensitive substring match)
-const SOURCE_COLOR_MAP: Array<[string, string]> = [
-  ['yahoo',       'bg-violet-700'],
-  ['seeking',     'bg-emerald-700'],   // SeekingAlpha
-  ['cnbc',        'bg-blue-700'],
-  ['oilprice',    'bg-orange-600'],
-  ['reuters',     'bg-red-700'],
-  ['bbc',         'bg-red-700'],
-  ['al jazeera',  'bg-amber-600'],
-  ['aljazeera',   'bg-amber-600'],
-  ['marketwatch', 'bg-teal-700'],
-  ['benzinga',    'bg-cyan-700'],
-  ['investopedia','bg-blue-800'],
-  ['defense',     'bg-slate-600'],
+// Source abbreviation brands — purely local, no external requests
+const SOURCE_BRANDS: Record<string, { abbr: string; bg: string; text?: string }> = {
+  'yahoo':          { abbr: 'YF',  bg: '#7B1FA2' },
+  'seeking alpha':  { abbr: 'SA',  bg: '#1B5E20' },
+  'cnbc':           { abbr: 'CN',  bg: '#1565C0' },
+  'reuters':        { abbr: 'RT',  bg: '#FF6F00' },
+  'marketwatch':    { abbr: 'MW',  bg: '#00695C' },
+  'benzinga':       { abbr: 'BZ',  bg: '#0097A7' },
+  'investopedia':   { abbr: 'IP',  bg: '#1A237E' },
+  'bbc':            { abbr: 'BBC', bg: '#B71C1C' },
+  'al jazeera':     { abbr: 'AJ',  bg: '#E65100' },
+  'bloomberg':      { abbr: 'BB',  bg: '#1A1A1A' },
+  'financial times':{ abbr: 'FT',  bg: '#E8C4A0', text: '#1A1A1A' },
+  'motley fool':    { abbr: 'MF',  bg: '#1565C0' },
+  'the motley':     { abbr: 'MF',  bg: '#1565C0' },
+  'fool':           { abbr: 'MF',  bg: '#1565C0' },
+  'barrons':        { abbr: 'BR',  bg: '#004D40' },
+  'oilprice':       { abbr: 'OP',  bg: '#E65100' },
+  'wall street':    { abbr: 'WSJ', bg: '#111111' },
+  'investor':       { abbr: 'IV',  bg: '#283593' },
+  'zacks':          { abbr: 'ZK',  bg: '#0D47A1' },
+}
+
+const FALLBACK_COLORS = [
+  '#6A1B9A','#1565C0','#2E7D32','#E65100',
+  '#00838F','#AD1457','#4527A0','#00695C',
 ]
 
-// Fallback palette keyed by first-char code
-const PALETTE = [
-  'bg-blue-600', 'bg-violet-600', 'bg-emerald-600', 'bg-amber-600',
-  'bg-rose-600', 'bg-cyan-600',   'bg-indigo-600',  'bg-orange-600',
-]
-
-function sourceColor(source: string): string {
+function getSourceBrand(source: string): { abbr: string; bg: string; text: string } {
   const lower = source.toLowerCase()
-  for (const [key, color] of SOURCE_COLOR_MAP) {
-    if (lower.includes(key)) return color
+  for (const [key, brand] of Object.entries(SOURCE_BRANDS)) {
+    if (lower.includes(key)) return { text: '#ffffff', ...brand }
   }
-  const code = source.trim().toUpperCase().charCodeAt(0) || 0
-  return PALETTE[code % PALETTE.length]
+  const abbr = source.trim().substring(0, 2).toUpperCase() || '??'
+  const idx  = ((source.charCodeAt(0) || 0) + (source.charCodeAt(1) || 0)) % FALLBACK_COLORS.length
+  return { abbr, bg: FALLBACK_COLORS[idx], text: '#ffffff' }
 }
 
 // Treat these as "no image" even if the URL is technically valid
@@ -49,16 +56,27 @@ interface NewsThumbProps {
 
 export default function NewsThumb({ src, headline: _headline = '', source = '', size = 'md' }: NewsThumbProps) {
   const [failed, setFailed] = useState(false)
-  const sizeClass  = size === 'sm' ? 'h-10 w-10 text-sm' : 'h-12 w-12 text-base'
-  const letter     = source.trim().charAt(0).toUpperCase() || '?'
-  const colorClass = sourceColor(source)
 
+  const sizeClass   = size === 'sm' ? 'h-10 w-10' : 'h-12 w-12'
   const showFallback = !src || failed || isBadImage(src)
 
   if (showFallback) {
+    const brand = getSourceBrand(source)
     return (
-      <div className={`${sizeClass} ${colorClass} flex shrink-0 items-center justify-center rounded font-bold text-white`}>
-        {letter}
+      <div
+        className={`${sizeClass} flex shrink-0 items-center justify-center rounded`}
+        style={{ backgroundColor: brand.bg }}
+      >
+        <span
+          className="font-mono font-bold"
+          style={{
+            color:         brand.text,
+            fontSize:      brand.abbr.length > 2 ? '9px' : '11px',
+            letterSpacing: '0.05em',
+          }}
+        >
+          {brand.abbr}
+        </span>
       </div>
     )
   }

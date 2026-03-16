@@ -16,6 +16,9 @@ import PeersTable from '@/components/asset/PeersTable'
 import InsiderActivity from '@/components/asset/InsiderActivity'
 import TechnicalSummary from '@/components/asset/TechnicalSummary'
 import AssetContext from '@/components/asset/AssetContext'
+import CryptoStats    from '@/components/asset/CryptoStats'
+import FearGreedGauge from '@/components/asset/FearGreedGauge'
+import DefiTvl        from '@/components/asset/DefiTvl'
 
 export const dynamic = 'force-dynamic'
 
@@ -258,9 +261,26 @@ export default async function AssetPage({ params }: AssetPageProps) {
         </div>
       )}
 
-      {/* ── What's Affecting This ── */}
+      {/* ── Crypto-specific panels ── */}
+      {type === 'crypto' && (
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+          <CryptoStats symbol={symbol} />
+        </div>
+      )}
+
+      {/* ── Context + Fear & Greed (crypto) / Context alone (others) ── */}
       <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
-        <AssetContext symbol={symbol} type={type} />
+        {type === 'crypto' ? (
+          <div
+            className="grid items-start gap-px bg-[var(--border)]"
+            style={{ gridTemplateColumns: 'minmax(0,30fr) minmax(0,70fr)' }}
+          >
+            <FearGreedGauge />
+            <AssetContext symbol={symbol} type={type} />
+          </div>
+        ) : (
+          <AssetContext symbol={symbol} type={type} />
+        )}
       </div>
 
       {/* ── Content — constrained, tight padding ── */}

@@ -189,6 +189,11 @@ export default function Navbar() {
             </span>
           </Link>
 
+          {/* ── Byline ───────────────────────────────────────────────── */}
+          <span className="hidden xl:block text-[9px] font-medium tracking-wide" style={{ color: 'rgba(161,161,170,0.45)' }}>
+            by Kazem Ammar
+          </span>
+
           {/* ── Separator ────────────────────────────────────────────── */}
           <div className="hidden lg:block h-5 w-px shrink-0" style={{ background: 'rgba(63,63,70,0.6)' }} />
 

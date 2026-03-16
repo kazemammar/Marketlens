@@ -4,8 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Flame, TrendingUp, TrendingDown, AlertTriangle, ArrowLeftRight, Shield, Fuel, Activity } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Signal } from '@/app/api/signals/route'
-
-const REFRESH_MS = 120_000
+import { useFetch } from '@/lib/hooks/useFetch'
 
 const SEV_BAR: Record<string, string> = {
   HIGH: 'bg-[#ff4444]',
@@ -39,37 +38,25 @@ function ago(ts: number) {
 }
 
 export default function SignalsPanel() {
-  const [signals,  setSignals]  = useState<Signal[]>([])
-  const [loading,  setLoading]  = useState(true)
-  const [newIds,   setNewIds]   = useState<Set<string>>(new Set())
+  const { data: raw, loading } = useFetch<Signal[]>('/api/signals', { refreshInterval: 2 * 60_000 })
+  const signals = raw ?? []
+
+  const [newIds, setNewIds] = useState<Set<string>>(new Set())
   const prevIds = useRef<Set<string>>(new Set())
 
-  async function load() {
-    try {
-      const r = await fetch('/api/signals')
-      const d = await r.json() as Signal[]
-
-      // find brand-new signal IDs
-      const fresh = new Set<string>()
-      for (const s of d) {
-        if (!prevIds.current.has(s.id)) fresh.add(s.id)
-      }
-      prevIds.current = new Set(d.map((s) => s.id))
-
-      if (fresh.size > 0) {
-        setNewIds(fresh)
-        setTimeout(() => setNewIds(new Set()), 2000)
-      }
-      setSignals(d)
-    } catch { /* silent */ }
-    setLoading(false)
-  }
-
+  // Detect brand-new signal IDs on each refresh
   useEffect(() => {
-    load()
-    const id = setInterval(load, REFRESH_MS)
-    return () => clearInterval(id)
-  }, [])
+    if (!raw) return
+    const fresh = new Set<string>()
+    for (const s of raw) {
+      if (!prevIds.current.has(s.id)) fresh.add(s.id)
+    }
+    prevIds.current = new Set(raw.map((s) => s.id))
+    if (fresh.size > 0) {
+      setNewIds(fresh)
+      setTimeout(() => setNewIds(new Set()), 2000)
+    }
+  }, [raw])
 
   return (
     <div className="flex flex-col">

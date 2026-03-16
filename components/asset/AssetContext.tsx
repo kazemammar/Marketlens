@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { AssetContext, AssetContextFactor } from '@/lib/api/groq'
 import type { AssetType } from '@/lib/utils/types'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 // Category config
 const CAT_CONFIG: Record<AssetContextFactor['category'], { label: string; color: string; bg: string }> = {
@@ -70,24 +70,10 @@ function ago(ts: number): string {
 }
 
 export default function AssetContext({ symbol, type }: { symbol: string; type: AssetType }) {
-  const [data,    setData]    = useState<AssetContext | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(false)
-
-  useEffect(() => {
-    setLoading(true)
-    setError(false)
-    fetch(`/api/asset-context/${encodeURIComponent(symbol)}?type=${type}`)
-      .then(r => r.json())
-      .then((d: AssetContext) => {
-        setData(d)
-        setLoading(false)
-      })
-      .catch(() => {
-        setError(true)
-        setLoading(false)
-      })
-  }, [symbol, type])
+  const { data, loading, error } = useFetch<AssetContext>(
+    `/api/asset-context/${encodeURIComponent(symbol)}?type=${type}`,
+    { refreshInterval: 30 * 60_000 },
+  )
 
   return (
     <div className="border-b border-[var(--border)]">

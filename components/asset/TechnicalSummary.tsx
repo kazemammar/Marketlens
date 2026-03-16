@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { formatPrice } from '@/lib/utils/formatters'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 interface TechSignal {
   name:   string
@@ -40,16 +40,7 @@ const OVERALL_LABEL = {
 } as const
 
 export default function TechnicalSummary({ symbol }: { symbol: string }) {
-  const [data,    setData]    = useState<TechData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    fetch(`/api/stock/technicals/${symbol}`)
-      .then(r => r.json())
-      .then((d: TechData) => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [symbol])
+  const { data, loading } = useFetch<TechData>(`/api/stock/technicals/${symbol}`, { refreshInterval: 2 * 60_000 })
 
   const sig      = data?.overallSignal ?? 'neutral'
   const sigColor = SIGNAL_COLOR[sig]

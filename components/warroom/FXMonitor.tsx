@@ -1,9 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { AssetCardData } from '@/lib/utils/types'
-
-const REFRESH_MS = 30_000
+import { useFetch } from '@/lib/hooks/useFetch'
 
 function fmt(price: number, sym: string): string {
   if (sym.includes('JPY') || sym.includes('CNY')) return price.toFixed(2)
@@ -34,23 +32,8 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
 }
 
 export default function FXMonitor() {
-  const [pairs,   setPairs]   = useState<AssetCardData[]>([])
-  const [loading, setLoading] = useState(true)
-
-  async function load() {
-    try {
-      const r = await fetch('/api/market?tab=forex')
-      const d = await r.json() as AssetCardData[]
-      setPairs(d)
-    } catch { /* silent */ }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    load()
-    const id = setInterval(load, REFRESH_MS)
-    return () => clearInterval(id)
-  }, [])
+  const { data, loading } = useFetch<AssetCardData[]>('/api/market?tab=forex', { refreshInterval: 60_000 })
+  const pairs = data ?? []
 
   const stressed1pct = pairs.filter((p) => Math.abs(p.changePercent) >= 1).length
   const stressed05   = pairs.filter((p) => Math.abs(p.changePercent) >= 0.5 && Math.abs(p.changePercent) < 1).length

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -88,15 +88,7 @@ function Skeleton() {
 // ─── Main component ───────────────────────────────────────────────────────
 
 export default function EtfHoldings({ symbol }: { symbol: string }) {
-  const [data,    setData]    = useState<EtfData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`/api/etf/holdings/${symbol}`)
-      .then(r => r.json() as Promise<EtfData>)
-      .then(d => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [symbol])
+  const { data, loading } = useFetch<EtfData>(`/api/etf/holdings/${symbol}`, { refreshInterval: 60 * 60_000 })
 
   const noData = !loading && (!data || (data.holdings.length === 0 && data.sectors.length === 0))
 

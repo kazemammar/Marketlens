@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 interface FngDataPoint {
   value:                string
@@ -102,15 +102,7 @@ function Sparkline({ history }: { history: FngDataPoint[] }) {
 }
 
 export default function FearGreedGauge() {
-  const [data,    setData]    = useState<FngResponse | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/crypto/fear-greed')
-      .then(r => r.json())
-      .then((d: FngResponse) => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [])
+  const { data, loading } = useFetch<FngResponse>('/api/crypto/fear-greed', { refreshInterval: 15 * 60_000 })
 
   const score = data?.current ? parseInt(data.current.value) : 0
   const color = getColor(score)

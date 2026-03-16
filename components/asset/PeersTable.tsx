@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { formatPrice, formatPercent } from '@/lib/utils/formatters'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 interface PeerInfo {
   symbol:    string
@@ -77,15 +78,8 @@ function PeerCard({ peer }: { peer: PeerInfo }) {
 }
 
 export default function PeersTable({ symbol }: { symbol: string }) {
-  const [peers,   setPeers]   = useState<PeerInfo[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`/api/stock/peers/${symbol}`)
-      .then(r => r.json())
-      .then(d => { setPeers(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [symbol])
+  const { data, loading } = useFetch<PeerInfo[]>(`/api/stock/peers/${symbol}`, { refreshInterval: 5 * 60_000 })
+  const peers = data ?? []
 
   if (!loading && peers.length === 0) return null
 

@@ -1,9 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { EconomicIndicator } from '@/app/api/economics/route'
-
-const REFRESH_MS = 6 * 60 * 60 * 1000 // 6 hours
+import { useFetch } from '@/lib/hooks/useFetch'
 
 function ArrowUp() {
   return (
@@ -113,25 +111,8 @@ function SkeletonCard() {
 }
 
 export default function EconomicIndicators() {
-  const [indicators, setIndicators] = useState<EconomicIndicator[]>([])
-  const [loading,    setLoading]    = useState(true)
-
-  async function load() {
-    try {
-      const res  = await fetch('/api/economics')
-      const data = await res.json() as EconomicIndicator[]
-      setIndicators(data)
-    } catch {
-      /* silent */
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    load()
-    const id = setInterval(load, REFRESH_MS)
-    return () => clearInterval(id)
-  }, [])
+  const { data, loading } = useFetch<EconomicIndicator[]>('/api/economics', { refreshInterval: 30 * 60_000 })
+  const indicators = data ?? []
 
   const inverted = indicators.find((i) => i.id === 'YIELD_SPREAD' && (i.value ?? 0) < 0)
 

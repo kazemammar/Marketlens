@@ -1,9 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { PolymarketMarket } from '@/lib/api/polymarket'
-
-const REFRESH_MS = 5 * 60 * 1000 // 5 minutes
+import { useFetch } from '@/lib/hooks/useFetch'
 
 function formatVolume(v: number): string {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`
@@ -82,27 +80,8 @@ function SkeletonRow() {
 }
 
 export default function PredictionMarkets() {
-  const [markets, setMarkets] = useState<PolymarketMarket[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(false)
-
-  async function load() {
-    try {
-      const res  = await fetch('/api/predictions')
-      const data = await res.json() as PolymarketMarket[]
-      setMarkets(data)
-      setError(false)
-    } catch {
-      setError(true)
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    load()
-    const id = setInterval(load, REFRESH_MS)
-    return () => clearInterval(id)
-  }, [])
+  const { data, loading, error } = useFetch<PolymarketMarket[]>('/api/predictions', { refreshInterval: 5 * 60_000 })
+  const markets = data ?? []
 
   return (
     <div className="border-b border-[var(--border)] bg-[var(--surface)]">

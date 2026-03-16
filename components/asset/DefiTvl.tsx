@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 interface ChainTvlData {
   name: string
@@ -25,18 +25,11 @@ function fmtTvl(n: number): string {
 }
 
 export default function DefiTvl({ symbol }: { symbol: string }) {
-  const [data,    setData]    = useState<ChainTvlData | null>(null)
-  const [loading, setLoading] = useState(true)
-
   const chainName = CHAIN_MAP[symbol.toUpperCase()]
-
-  useEffect(() => {
-    if (!chainName) { setLoading(false); return }
-    fetch(`/api/crypto/defi-tvl?chain=${encodeURIComponent(chainName)}`)
-      .then(r => r.json())
-      .then((d: ChainTvlData | null) => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [symbol, chainName])
+  const { data, loading } = useFetch<ChainTvlData>(
+    chainName ? `/api/crypto/defi-tvl?chain=${encodeURIComponent(chainName)}` : null,
+    { refreshInterval: 60 * 60_000 },
+  )
 
   // Only render for chains with DeFi TVL
   if (!chainName) return null

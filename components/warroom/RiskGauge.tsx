@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { MarketRiskPayload } from '@/app/api/market-risk/route'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 // ─── Circular Ring Gauge ──────────────────────────────────────────────────
 
@@ -83,15 +83,7 @@ const LEVEL_LABEL: Record<string, string> = {
 }
 
 export default function RiskGauge() {
-  const [data,    setData]    = useState<MarketRiskPayload | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/market-risk')
-      .then((r) => r.ok ? r.json() as Promise<MarketRiskPayload> : null)
-      .then((d) => { if (d) setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [])
+  const { data, loading } = useFetch<MarketRiskPayload>('/api/market-risk', { refreshInterval: 2 * 60_000 })
 
   const scoreColor = data
     ? (data.score >= 80 ? '#ff4444' : data.score >= 60 ? '#f97316' : data.score >= 30 ? '#f59e0b' : '#00ff88')

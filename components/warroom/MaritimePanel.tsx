@@ -1,29 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { MaritimeData } from '@/lib/api/maritime'
-
-const REFRESH_MS = 5 * 60 * 1000 // 5 minutes
-
+import { useFetch } from '@/lib/hooks/useFetch'
 
 export default function MaritimePanel() {
-  const [data,    setData]    = useState<MaritimeData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  async function load() {
-    try {
-      const res  = await fetch('/api/maritime')
-      const json = await res.json() as MaritimeData
-      setData(json)
-    } catch { /* silent */ }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    load()
-    const id = setInterval(load, REFRESH_MS)
-    return () => clearInterval(id)
-  }, [])
+  const { data, loading } = useFetch<MaritimeData>('/api/maritime', { refreshInterval: 5 * 60_000 })
 
   const cp          = data?.chokepoints
   const babAlert    = (cp?.babelMandeb ?? 5) < 5

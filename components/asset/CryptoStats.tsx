@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 interface CryptoStatsData {
   name:              string
@@ -58,15 +58,7 @@ function StatCard({ label, value, sub }: StatCardProps) {
 }
 
 export default function CryptoStats({ symbol }: { symbol: string }) {
-  const [data,    setData]    = useState<CryptoStatsData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`/api/crypto/stats/${symbol}`)
-      .then(r => r.json())
-      .then((d: CryptoStatsData | null) => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [symbol])
+  const { data, loading } = useFetch<CryptoStatsData>(`/api/crypto/stats/${symbol}`, { refreshInterval: 2 * 60_000 })
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">

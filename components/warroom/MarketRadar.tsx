@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { MarketRadarPayload, SignalVerdict } from '@/lib/api/homepage'
 import type { AssetCardData } from '@/lib/utils/types'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 const VERDICT_STYLE: Record<SignalVerdict, { bg: string; text: string; border: string; glow: string; label: string }> = {
   BUY:   { bg: 'rgba(0,255,136,0.06)',  text: '#00ff88', border: 'rgba(0,255,136,0.25)',  glow: 'rgba(0,255,136,0.2)',   label: 'BUY'   },
@@ -46,8 +47,9 @@ export default function MarketRadar({
   initialData?: MarketRadarPayload | null
   stocks?: AssetCardData[]
 }) {
-  const [data,    setData]    = useState<MarketRadarPayload | null>(initialData)
-  const [loading, setLoading] = useState(initialData === null)
+  const { data: refreshed, loading: fetchLoading } = useFetch<MarketRadarPayload>('/api/market-radar', { refreshInterval: 5 * 60_000 })
+  const data    = refreshed ?? initialData
+  const loading = data === null && fetchLoading
   const [timeStr, setTimeStr] = useState('')
 
   useEffect(() => {
@@ -55,15 +57,6 @@ export default function MarketRadar({
       setTimeStr(new Date(data.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     }
   }, [data?.updatedAt])
-
-  useEffect(() => {
-    if (initialData !== null) { setLoading(false); return }
-    fetch('/api/market-radar')
-      .then((r) => r.ok ? r.json() as Promise<MarketRadarPayload> : null)
-      .then((d) => { if (d) setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <div className="flex flex-col">

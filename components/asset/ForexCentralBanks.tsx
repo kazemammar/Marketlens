@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -144,21 +144,15 @@ function Skeleton() {
 // ─── Main component ───────────────────────────────────────────────────────
 
 export default function ForexCentralBanks({ symbol }: { symbol: string }) {
-  const [data,    setData]    = useState<CbData | null>(null)
-  const [loading, setLoading] = useState(true)
-
   // Parse "EUR/USD" → base=EUR, quote=USD
   const [base, quote] = symbol.includes('/')
     ? symbol.split('/')
     : [symbol.slice(0, 3), symbol.slice(3)]
 
-  useEffect(() => {
-    setLoading(true)
-    fetch(`/api/forex/central-banks?base=${base}&quote=${quote}`)
-      .then(r => r.json() as Promise<CbData>)
-      .then(d => { setData(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [base, quote])
+  const { data, loading } = useFetch<CbData>(
+    `/api/forex/central-banks?base=${base}&quote=${quote}`,
+    { refreshInterval: 60 * 60_000 },
+  )
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">

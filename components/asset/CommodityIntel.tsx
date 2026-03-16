@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { Ship, MaritimeData } from '@/lib/api/maritime'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 // ─── Static intel data (mirrored from GeoMap.tsx) ─────────────────────────
 
@@ -111,15 +111,9 @@ function RiskDot({ severity }: { severity: number }) {
 // ─── Main component ───────────────────────────────────────────────────────
 
 export default function CommodityIntel({ symbol }: { symbol: string }) {
-  const [ships, setShips] = useState<Ship[] | null>(null)
-  const [chokepoints, setChokepoints] = useState<MaritimeData['chokepoints'] | null>(null)
-
-  useEffect(() => {
-    fetch('/api/maritime')
-      .then(r => r.json() as Promise<MaritimeData>)
-      .then(d => { setShips(d.ships); setChokepoints(d.chokepoints) })
-      .catch(() => {})
-  }, [])
+  const { data: maritime } = useFetch<MaritimeData>('/api/maritime', { refreshInterval: 5 * 60_000 })
+  const ships      = maritime?.ships ?? null
+  const chokepoints = maritime?.chokepoints ?? null
 
   const sym         = symbol.toUpperCase()
   const shipCat     = COMMODITY_SHIP_CATEGORY[sym] ?? ''

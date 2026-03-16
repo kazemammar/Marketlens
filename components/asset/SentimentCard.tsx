@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { SentimentAnalysis, SentimentLabel, AssetType } from '@/lib/utils/types'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 const LABEL_CONFIG: Record<SentimentLabel, { color: string; bg: string; icon: string }> = {
   Bullish: { color: 'text-green-500', bg: 'bg-green-500/10', icon: '📈' },
@@ -32,26 +33,11 @@ interface SentimentCardProps {
 }
 
 export default function SentimentCard({ symbol, type }: SentimentCardProps) {
-  const [data,    setData]    = useState<SentimentAnalysis | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(false)
+  const { data, loading, error } = useFetch<SentimentAnalysis>(
+    `/api/sentiment/${encodeURIComponent(symbol)}?type=${type}`,
+    { refreshInterval: 30 * 60_000 },
+  )
   const [dateStr, setDateStr] = useState('')
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch(`/api/sentiment/${encodeURIComponent(symbol)}?type=${type}`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const json = await res.json() as SentimentAnalysis
-        setData(json)
-      } catch {
-        setError(true)
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [symbol, type])
 
   useEffect(() => {
     if (data?.analyzedAt) {

@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import type { InsiderTransaction } from '@/lib/utils/types'
+import { useFetch } from '@/lib/hooks/useFetch'
 
 function formatShares(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`
@@ -15,15 +15,8 @@ function formatDate(s: string): string {
 }
 
 export default function InsiderActivity({ symbol }: { symbol: string }) {
-  const [txns, setTxns] = useState<InsiderTransaction[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch(`/api/stock/insider/${symbol}`)
-      .then(r => r.json())
-      .then(d => { setTxns(d); setLoading(false) })
-      .catch(() => setLoading(false))
-  }, [symbol])
+  const { data, loading } = useFetch<InsiderTransaction[]>(`/api/stock/insider/${symbol}`, { refreshInterval: 10 * 60_000 })
+  const txns = data ?? []
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">

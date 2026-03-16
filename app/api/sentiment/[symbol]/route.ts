@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCompanyNews } from '@/lib/api/finnhub'
-import { getNewsForSymbol } from '@/lib/api/rss'
+import { getNewsForSymbol, getRelatedNewsForAsset } from '@/lib/api/rss'
 import { analyzeSentiment } from '@/lib/api/groq'
 import { AssetType } from '@/lib/utils/types'
 
@@ -26,6 +26,20 @@ export async function GET(
     if (headlines.length === 0) {
       const articles = await getNewsForSymbol(symbol)
       headlines = articles.map((a) => a.headline)
+    }
+
+    // Supplement with keyword-matched related news when we have < 5 headlines
+    // This fixes commodity/forex/crypto pages that have no direct symbol matches
+    if (headlines.length < 5) {
+      const related = await getRelatedNewsForAsset(symbol, type)
+      const seen = new Set(headlines.map((h) => h.toLowerCase().slice(0, 50)))
+      for (const a of related) {
+        const key = a.headline.toLowerCase().slice(0, 50)
+        if (!seen.has(key)) {
+          headlines.push(a.headline)
+          seen.add(key)
+        }
+      }
     }
 
     if (headlines.length === 0) {

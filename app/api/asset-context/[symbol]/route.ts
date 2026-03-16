@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse }        from 'next/server'
 import { getCompanyNews, getCompanyProfile } from '@/lib/api/finnhub'
-import { getNewsForSymbol }    from '@/lib/api/rss'
+import { getNewsForSymbol, getRelatedNewsForAsset } from '@/lib/api/rss'
 import { analyzeAssetContext } from '@/lib/api/groq'
 import type { AssetType }      from '@/lib/utils/types'
 
@@ -29,10 +29,22 @@ export async function GET(
       headlines = articles.map((a) => a.headline)
     }
 
-    // Supplement with RSS headlines
+    // Supplement with symbol-match RSS headlines
     const rssArticles  = await getNewsForSymbol(symbol).catch(() => [])
     const rssHeadlines = rssArticles.map((a) => a.headline)
-    headlines = [...new Set([...headlines, ...rssHeadlines])].slice(0, 25)
+    headlines = [...new Set([...headlines, ...rssHeadlines])]
+
+    // If still sparse, use keyword-matched related news (fixes commodity/forex/crypto)
+    if (headlines.length < 5) {
+      const related = await getRelatedNewsForAsset(symbol, type).catch(() => [])
+      const seen = new Set(headlines.map((h) => h.toLowerCase().slice(0, 50)))
+      for (const a of related) {
+        const key = a.headline.toLowerCase().slice(0, 50)
+        if (!seen.has(key)) { headlines.push(a.headline); seen.add(key) }
+      }
+    }
+
+    headlines = headlines.slice(0, 25)
 
     if (headlines.length === 0) {
       return NextResponse.json({

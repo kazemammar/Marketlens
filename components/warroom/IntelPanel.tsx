@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Flame, TrendingUp, Shield, Landmark, Bitcoin, ArrowLeftRight, Globe, Fuel } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { categorizeArticle, type NewsCategory } from '@/lib/utils/news-helpers'
@@ -25,8 +25,8 @@ const REGIONS = [
   { id: 'africa',   label: 'AFRICA',   keywords: ['africa','nigeria','south africa','egypt','kenya','angola','ghana','sudan','ethiopia','johannesburg','nairobi'] },
 ] as const
 
-type RegionId = typeof REGIONS[number]['id']
-type Severity = 'ALL' | 'HIGH' | 'MED' | 'LOW'
+type RegionId  = typeof REGIONS[number]['id']
+type Severity  = 'ALL' | 'HIGH' | 'MED' | 'LOW'
 type CatFilter = 'ALL' | NewsCategory
 
 const HIGH_KW = ['war','attack','strike','sanction','blockade','invasion','missile','drone','crisis','crash','collapse','emergency','opec cut','opec+','default','coup','explosion','seized']
@@ -51,7 +51,6 @@ const IMP_BORDER: Record<string, string> = {
   LOW:  'border-l-[var(--border)]',
 }
 
-// Severity pill active colors
 const SEV_ACTIVE: Record<Severity, string> = {
   ALL:  'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]',
   HIGH: 'border-transparent bg-[#ff4444] text-white',
@@ -61,7 +60,7 @@ const SEV_ACTIVE: Record<Severity, string> = {
 
 const INACTIVE_PILL = 'border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:text-[var(--text-2)]'
 
-// ─── Article thumbnail helpers ────────────────────────────────────────────
+// ─── Article thumbnail ────────────────────────────────────────────────────
 
 function isValidImage(url?: string): boolean {
   if (!url) return false
@@ -121,20 +120,20 @@ function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: str
 function ago(ts: string | number) {
   const d = Date.now() - (typeof ts === 'number' ? ts : new Date(ts).getTime())
   const m = Math.floor(d / 60_000)
-  if (m < 1) return 'now'
+  if (m < 1)  return 'now'
   if (m < 60) return `${m}m`
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h`
-  return `${Math.floor(h/24)}d`
+  return `${Math.floor(h / 24)}d`
 }
 
 // ─── Filter pill ──────────────────────────────────────────────────────────
 
 function Pill({ active, activeClass, onClick, children }: {
-  active: boolean
+  active:      boolean
   activeClass: string
-  onClick: () => void
-  children: React.ReactNode
+  onClick:     () => void
+  children:    React.ReactNode
 }) {
   return (
     <button
@@ -148,6 +147,8 @@ function Pill({ active, activeClass, onClick, children }: {
   )
 }
 
+// ─── Main component ───────────────────────────────────────────────────────
+
 export default function IntelPanel() {
   const [region,   setRegion]   = useState<RegionId>('all')
   const [severity, setSeverity] = useState<Severity>('ALL')
@@ -157,32 +158,62 @@ export default function IntelPanel() {
   const [updating, setUpdating] = useState(false)
   const [page,     setPage]     = useState(1)
   const [hasMore,  setHasMore]  = useState(false)
-  const [loadMore, setLoadMore] = useState(false)
+  const [fetching, setFetching] = useState(false)  // fetching next page
 
-  const fetch_ = useCallback(async (p: number, reset: boolean) => {
-    if (reset) { setLoading(true) }
-    else if (p > 1) { setLoadMore(true) }
-    else { setUpdating(true) }
+  const scrollRef  = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  const fetchPage = useCallback(async (p: number, reset: boolean) => {
+    if (reset) {
+      setLoading(true)
+    } else {
+      setFetching(true)
+    }
+    if (!reset && p === 1) setUpdating(true)
+
     try {
-      const res  = await fetch(`/api/news?page=${p}&limit=50`)
+      // Load 100 on first fetch to fill the panel; 50 for subsequent pages
+      const limit = (reset && p === 1) ? 100 : 50
+      const res  = await fetch(`/api/news?page=${p}&limit=${limit}`)
       const data = await res.json() as FeedResponse
       if (reset || p === 1) setAll(data.articles)
       else setAll((prev) => [...prev, ...data.articles])
       setHasMore(data.hasMore)
       setPage(p)
     } catch { /* silent */ }
+
     setLoading(false)
-    setTimeout(() => setUpdating(false), 800)
-    setLoadMore(false)
+    setFetching(false)
+    if (!reset && p === 1) setTimeout(() => setUpdating(false), 800)
   }, [])
 
+  // Initial load + polling
   useEffect(() => {
-    fetch_(1, true)
-    const id = setInterval(() => fetch_(1, false), 120_000)
+    fetchPage(1, true)
+    const id = setInterval(() => fetchPage(1, false), 120_000)
     return () => clearInterval(id)
-  }, [fetch_])
+  }, [fetchPage])
 
-  // ── Apply all three filters ───────────────────────────────────────────
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    const container = scrollRef.current
+    if (!sentinel || !container) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !fetching && !loading) {
+          fetchPage(page + 1, false)
+        }
+      },
+      { root: container, threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, fetching, loading, page, fetchPage])
+
+  // ── Apply filters ─────────────────────────────────────────────────────
   const def = REGIONS.find((r) => r.id === region)!
 
   let visible = region === 'all'
@@ -201,6 +232,7 @@ export default function IntelPanel() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
+
       {/* Updating shimmer bar */}
       {updating && (
         <div
@@ -226,7 +258,6 @@ export default function IntelPanel() {
             </button>
           ))}
         </div>
-        {/* LIVE + count */}
         <div className="flex shrink-0 items-center gap-2 px-3">
           <div className="flex items-center gap-1">
             <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
@@ -236,9 +267,8 @@ export default function IntelPanel() {
         </div>
       </div>
 
-      {/* Filter pills row */}
+      {/* Filter pills */}
       <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] px-2 py-1.5">
-        {/* Severity */}
         {(['ALL', 'HIGH', 'MED', 'LOW'] as Severity[]).map((s) => (
           <Pill key={s} active={severity === s} activeClass={SEV_ACTIVE[s]} onClick={() => setSeverity(s)}>
             {s}
@@ -247,14 +277,13 @@ export default function IntelPanel() {
 
         <div className="h-3 w-px shrink-0 bg-[var(--border)]" />
 
-        {/* Category */}
         {([
-          ['ALL',           'ALL'],
-          ['GEOPOLITICAL',  'GEO'],
-          ['MARKETS',       'MKTS'],
-          ['ENERGY',        'ENERGY'],
-          ['TECH',          'TECH'],
-          ['CRYPTO',        'CRYPTO'],
+          ['ALL',          'ALL'],
+          ['GEOPOLITICAL', 'GEO'],
+          ['MARKETS',      'MKTS'],
+          ['ENERGY',       'ENERGY'],
+          ['TECH',         'TECH'],
+          ['CRYPTO',       'CRYPTO'],
         ] as [CatFilter, string][]).map(([id, label]) => (
           <Pill
             key={id}
@@ -267,8 +296,8 @@ export default function IntelPanel() {
         ))}
       </div>
 
-      {/* Article list */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Scrollable article list */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {loading ? (
           Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="border-b border-[var(--border)] border-l-2 border-l-[var(--border)] px-3 py-2">
@@ -298,7 +327,7 @@ export default function IntelPanel() {
                 >
                   <ArticleThumb headline={a.headline} imageUrl={a.imageUrl} />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[11px] font-medium leading-snug transition-colors duration-100" style={{ color: '#e0e0e0' }}>
+                    <p className="line-clamp-2 text-[11px] font-medium leading-snug" style={{ color: '#e0e0e0' }}>
                       {a.headline}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -313,19 +342,22 @@ export default function IntelPanel() {
                 </a>
               )
             })}
-            {hasMore && (
-              <button
-                onClick={() => fetch_(page + 1, false)}
-                disabled={loadMore}
-                className="w-full border-b border-[var(--border)] py-2.5 font-mono text-[10px] text-[var(--text-muted)] transition-all duration-150 hover:bg-[var(--surface-2)] hover:text-[var(--text)] disabled:opacity-50"
-              >
-                {loadMore ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="h-2.5 w-2.5 animate-spin rounded-full border border-current border-t-transparent" />
-                    Loading…
-                  </span>
-                ) : 'Load more'}
-              </button>
+
+            {/* Sentinel — triggers next page load when scrolled into view */}
+            <div ref={sentinelRef} className="h-4" />
+
+            {/* Subtle loading indicator */}
+            {fetching && (
+              <div className="flex items-center justify-center gap-2 py-3">
+                <span className="h-2 w-2 animate-spin rounded-full border border-[var(--text-muted)] border-t-transparent" />
+                <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">Loading more…</span>
+              </div>
+            )}
+
+            {!hasMore && all.length > 0 && (
+              <p className="py-3 text-center font-mono text-[9px] text-[var(--text-muted)] opacity-30">
+                All articles loaded
+              </p>
             )}
           </>
         )}

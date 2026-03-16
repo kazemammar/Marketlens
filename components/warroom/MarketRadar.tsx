@@ -2,29 +2,54 @@
 
 import { useEffect, useState } from 'react'
 import type { MarketRadarPayload, SignalVerdict } from '@/lib/api/homepage'
+import type { AssetCardData } from '@/lib/utils/types'
 
-const VERDICT_STYLE: Record<SignalVerdict, { bg: string; text: string; border: string; label: string }> = {
-  BUY:   { bg: '#052e16', text: '#4ade80', border: '#16a34a', label: 'BUY' },
-  CASH:  { bg: '#2d0a0a', text: '#f87171', border: '#dc2626', label: 'CASH' },
-  MIXED: { bg: '#1c1a05', text: '#fbbf24', border: '#d97706', label: 'MIXED' },
+const VERDICT_STYLE: Record<SignalVerdict, { bg: string; text: string; border: string; glow: string; label: string }> = {
+  BUY:   { bg: 'rgba(0,255,136,0.06)',  text: '#00ff88', border: 'rgba(0,255,136,0.25)',  glow: 'rgba(0,255,136,0.2)',   label: 'BUY'   },
+  CASH:  { bg: 'rgba(255,68,68,0.06)',  text: '#ff4444', border: 'rgba(255,68,68,0.25)',  glow: 'rgba(255,68,68,0.2)',   label: 'CASH'  },
+  MIXED: { bg: 'rgba(245,158,11,0.06)', text: '#f59e0b', border: 'rgba(245,158,11,0.2)',  glow: 'rgba(245,158,11,0.15)', label: 'MIXED' },
 }
 
 const SIG_COLOR: Record<SignalVerdict, string> = {
-  BUY:   '#4ade80',
-  CASH:  '#f87171',
-  MIXED: '#fbbf24',
+  BUY:   '#00ff88',
+  CASH:  '#ff4444',
+  MIXED: '#f59e0b',
+}
+
+function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
+  const abs   = Math.min(Math.abs(pct), 3) // cap at 3% for color intensity
+  const ratio = abs / 3
+  const isPos = pct >= 0
+  const bg    = isPos
+    ? `rgba(0,255,136,${0.1 + ratio * 0.32})`
+    : `rgba(255,68,68,${0.1 + ratio * 0.32})`
+  const chgColor = isPos ? '#00ff88' : '#ff4444'
+  const sym = symbol.length <= 4 ? symbol : symbol.slice(0, 4)
+  return (
+    <div
+      title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
+      className="flex flex-col items-center justify-center rounded-sm gap-0"
+      style={{ background: bg, minHeight: '38px', border: '1px solid rgba(255,255,255,0.04)' }}
+    >
+      <span className="font-mono font-bold text-white leading-none" style={{ fontSize: '8px' }}>{sym}</span>
+      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: '7px', color: chgColor }}>
+        {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
+      </span>
+    </div>
+  )
 }
 
 export default function MarketRadar({
   initialData = null,
+  stocks = [],
 }: {
   initialData?: MarketRadarPayload | null
+  stocks?: AssetCardData[]
 }) {
   const [data,    setData]    = useState<MarketRadarPayload | null>(initialData)
   const [loading, setLoading] = useState(initialData === null)
-  // Locale-dependent formatting must only run on the client to avoid
-  // SSR/hydration mismatch (server uses UTC, browser uses local timezone).
   const [timeStr, setTimeStr] = useState('')
+
   useEffect(() => {
     if (data?.updatedAt) {
       setTimeStr(new Date(data.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
@@ -32,10 +57,7 @@ export default function MarketRadar({
   }, [data?.updatedAt])
 
   useEffect(() => {
-    // If we got server-side data, skip immediate fetch — route refresh still
-    // updates the panel on next client-side interval if we add one later.
     if (initialData !== null) { setLoading(false); return }
-
     fetch('/api/market-radar')
       .then((r) => r.ok ? r.json() as Promise<MarketRadarPayload> : null)
       .then((d) => { if (d) setData(d); setLoading(false) })
@@ -45,9 +67,8 @@ export default function MarketRadar({
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
-        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-blue-400" aria-hidden>
+        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
           <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
           <circle cx="8" cy="8" r="1" fill="currentColor"/>
@@ -59,73 +80,56 @@ export default function MarketRadar({
 
       <div className="flex-1 px-3 py-2.5">
         {loading ? (
-          <div className="space-y-2 animate-pulse">
-            <div className="h-10 w-full rounded bg-[var(--surface-2)]" />
+          <div className="space-y-2">
+            <div className="skeleton h-14 w-full rounded-lg" />
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--surface-2)]" />
-                <div className="h-2.5 flex-1 rounded bg-[var(--surface-2)]" />
-                <div className="h-2.5 w-10 rounded bg-[var(--surface-2)]" />
+                <div className="skeleton h-2 w-2 rounded-full" />
+                <div className="skeleton h-2.5 flex-1 rounded" />
+                <div className="skeleton h-2.5 w-10 rounded" />
               </div>
             ))}
           </div>
         ) : data ? (
           <>
-            {/* Verdict badge */}
+            {/* Verdict */}
             {(() => {
               const s = VERDICT_STYLE[data.verdict]
               return (
                 <div
-                  className="mb-3 flex items-center justify-between rounded px-3 py-2"
-                  style={{ background: s.bg, border: `1px solid ${s.border}` }}
+                  className={`mb-3 flex items-center justify-between rounded-lg px-3 py-2.5 ${data.verdict !== 'MIXED' ? 'animate-verdict-pulse' : ''}`}
+                  style={{ background: s.bg, border: `1px solid ${s.border}`, ['--verdict-glow' as string]: s.glow }}
                 >
                   <div>
-                    <p className="font-mono text-[8px] uppercase tracking-[0.14em]" style={{ color: s.text, opacity: 0.7 }}>
-                      Overall Verdict
-                    </p>
-                    <p className="font-mono text-[18px] font-bold leading-none" style={{ color: s.text }}>
+                    <p className="font-mono text-[8px] uppercase tracking-[0.16em]" style={{ color: s.text, opacity: 0.65 }}>Overall Verdict</p>
+                    <p className="font-mono text-[28px] font-bold leading-none tracking-tight" style={{ color: s.text, textShadow: `0 0 24px ${s.glow}` }}>
                       {s.label}
                     </p>
                   </div>
-                  {/* Score bar */}
                   <div className="flex flex-col items-end gap-1">
-                    <span className="font-mono text-[10px]" style={{ color: s.text }}>{data.score}%</span>
+                    <span className="font-mono text-[11px] font-semibold" style={{ color: s.text }}>{data.score}%</span>
                     <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--surface-3)]">
-                      <div className="h-full rounded-full" style={{ width: `${data.score}%`, background: s.text }} />
+                      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${data.score}%`, background: `linear-gradient(90deg, ${s.border}, ${s.text})` }} />
                     </div>
-                    <span className="font-mono text-[8px]" style={{ color: s.text, opacity: 0.6 }}>
-                      bull score
-                    </span>
+                    <span className="font-mono text-[8px]" style={{ color: s.text, opacity: 0.55 }}>bull score</span>
                   </div>
                 </div>
               )
             })()}
 
             {/* Signals */}
-            <div className="space-y-1">
+            <div className="space-y-1 stagger">
               {data.signals.map((sig, i) => (
-                <div key={i} className="flex items-center gap-2 py-0.5">
-                  <span
-                    className="h-1.5 w-1.5 shrink-0 rounded-full"
-                    style={{ background: SIG_COLOR[sig.verdict] }}
-                  />
-                  <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-[var(--text-muted)]">
-                    {sig.name}
-                  </span>
-                  <span className="font-mono text-[10px] tabular-nums text-[var(--text)]">
-                    {sig.value}
-                  </span>
-                  <span
-                    className="font-mono text-[8px] font-bold uppercase"
-                    style={{ color: SIG_COLOR[sig.verdict] }}
-                  >
-                    {sig.verdict}
-                  </span>
+                <div key={i} className="flex items-center gap-2 py-0.5 animate-fade-up">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: SIG_COLOR[sig.verdict], boxShadow: `0 0 5px ${SIG_COLOR[sig.verdict]}60` }} />
+                  <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-[var(--text-muted)]">{sig.name}</span>
+                  <span className="font-mono text-[10px] tabular-nums font-semibold" style={{ color: SIG_COLOR[sig.verdict] }}>{sig.value}</span>
+                  <span className="font-mono text-[8px] font-bold uppercase" style={{ color: SIG_COLOR[sig.verdict] }}>{sig.verdict}</span>
                 </div>
               ))}
             </div>
 
-            <p className="mt-2.5 font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+            <p className="mt-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
               Updated {timeStr || '--:--'}
             </p>
           </>
@@ -133,6 +137,20 @@ export default function MarketRadar({
           <p className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">Unavailable</p>
         )}
       </div>
+
+      {/* Mini stock heatmap */}
+      {stocks.length > 0 && (
+        <div className="border-t border-[var(--border)] px-3 py-2">
+          <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] opacity-60">
+            Heatmap
+          </p>
+          <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${Math.min(stocks.length, 6)}, 1fr)` }}>
+            {stocks.slice(0, 12).map((s) => (
+              <HeatCell key={s.symbol} symbol={s.symbol} pct={s.changePercent} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

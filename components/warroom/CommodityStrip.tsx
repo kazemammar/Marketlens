@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { CommodityStripItem } from '@/lib/api/homepage'
 
 export type { CommodityStripItem }
 
-const REFRESH_MS = 60_000   // refresh every 60 s (was 30 s — halved to reduce load)
+const REFRESH_MS = 60_000
 
 function pct(n: number) { return (n >= 0 ? '+' : '') + n.toFixed(2) + '%' }
 
@@ -17,23 +17,40 @@ export default function CommodityStrip({
 }) {
   const [items,   setItems]   = useState<CommodityStripItem[]>(initialData ?? [])
   const [loading, setLoading] = useState(!initialData || initialData.length === 0)
+  const [flash,   setFlash]   = useState<Record<string, 'up' | 'down'>>({})
+  const prevPrices = useRef<Record<string, number>>({})
 
   async function load() {
     try {
       const r = await fetch('/api/commodities-strip')
       const d = await r.json() as CommodityStripItem[]
+
+      const newFlash: Record<string, 'up' | 'down'> = {}
+      for (const item of d) {
+        const prev = prevPrices.current[item.symbol]
+        if (prev !== undefined && prev !== item.price) {
+          newFlash[item.symbol] = item.price > prev ? 'up' : 'down'
+        }
+        prevPrices.current[item.symbol] = item.price
+      }
+      if (Object.keys(newFlash).length > 0) {
+        setFlash(newFlash)
+        setTimeout(() => setFlash({}), 700)
+      }
+
       setItems(d)
     } catch { /* silent */ }
     setLoading(false)
   }
 
   useEffect(() => {
-    // If we got server-side data, skip the immediate fetch — schedule refresh only
+    if (initialData) {
+      for (const item of initialData) prevPrices.current[item.symbol] = item.price
+    }
     if (initialData && initialData.length > 0) {
       const id = setInterval(load, REFRESH_MS)
       return () => clearInterval(id)
     }
-    // No server-side data — fetch immediately then refresh
     load()
     const id = setInterval(load, REFRESH_MS)
     return () => clearInterval(id)
@@ -41,38 +58,43 @@ export default function CommodityStrip({
   }, [])
 
   return (
-    <div className="flex h-10 items-center border-b border-[var(--border)] bg-[var(--surface-2)] px-3">
-      {/* Label */}
+    <div
+      className="flex h-10 items-center border-b border-[var(--border)] px-3"
+      style={{ background: '#111111' }}
+    >
       <span className="mr-3 shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
         COMMODITIES
       </span>
-
-      {/* Scrollable items */}
       <div className="flex flex-1 items-center gap-0 overflow-x-auto">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex shrink-0 animate-pulse items-center gap-2 border-r border-[var(--border)] px-4">
-                <div className="h-2 w-8 rounded bg-[var(--surface-3)]" />
-                <div className="h-2 w-12 rounded bg-[var(--surface-3)]" />
+              <div key={i} className="flex shrink-0 items-center gap-2 border-r border-[var(--border)] px-4 h-10">
+                <div className="skeleton h-2 w-8 rounded" />
+                <div className="skeleton h-2 w-12 rounded" />
               </div>
             ))
           : items.map((item) => {
-              const pos = item.changePercent >= 0
-              const chgColor = pos ? 'text-emerald-400' : 'text-red-400'
+              const pos      = item.changePercent >= 0
+              const chgColor = pos ? 'var(--price-up)' : 'var(--price-down)'
+              const flashCls = flash[item.symbol] === 'up'
+                ? 'price-flash-up'
+                : flash[item.symbol] === 'down'
+                  ? 'price-flash-down'
+                  : ''
               return (
                 <Link
                   key={item.symbol}
                   href={`/asset/commodity/${item.symbol}`}
-                  className="flex shrink-0 items-center gap-2.5 border-r border-[var(--border)] px-4 py-0 transition hover:bg-[var(--surface-3)]"
+                  className="flex shrink-0 items-center gap-2.5 border-r border-[var(--border)] px-4 py-0 transition-colors duration-150 hover:bg-white/5"
                 >
-                  <span className="font-mono text-[10px] font-semibold text-[var(--text-muted)]">
+                  <span className="font-mono text-[10px] font-semibold text-white">
                     {item.shortName}
                   </span>
-                  <span className="font-mono text-[11px] font-semibold tabular-nums text-[var(--text)]">
+                  <span className={`inline-block font-mono text-[11px] font-bold tabular-nums text-white ${flashCls}`}>
                     ${item.price.toFixed(2)}
                   </span>
-                  <span className={`font-mono text-[10px] tabular-nums ${chgColor}`}>
-                    {pct(item.changePercent)}
+                  <span className="font-mono text-[10px] tabular-nums font-semibold" style={{ color: chgColor }}>
+                    {pos ? '▲' : '▼'} {pct(item.changePercent)}
                   </span>
                 </Link>
               )

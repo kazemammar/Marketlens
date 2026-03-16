@@ -3,112 +3,294 @@
 /* ─── Class-based dark mode (Tailwind v4) ────────────────────────────────── */
 @custom-variant dark (&:is(.dark, .dark *));
 
-/* ─── Theme tokens ────────────────────────────────────────────────────────── */
+/* ─── Obsidian Terminal Design Tokens ────────────────────────────────────── */
 :root {
-  --bg:          #f0f4f8;
-  --surface:     #ffffff;
-  --surface-2:   #e8edf3;
-  --surface-3:   #dde3ec;
-  --border:      rgba(0, 0, 0, 0.09);
-  --text:        #0f172a;
-  --text-muted:  #64748b;
-  --font-sans:   var(--font-geist-sans);
-  --font-mono:   var(--font-geist-mono);
+  /* Light mode fallback (same obsidian — this app is dark-only) */
+  --bg:          #09090b;
+  --surface:     #18181b;
+  --surface-2:   #1c1c1f;
+  --surface-3:   #222226;
+  --border:      #27272a;
+  --text:        #fafafa;
+  --text-2:      #a1a1aa;
+  --text-muted:  #71717a;
+
+  /* Accent system — emerald green is the brand */
+  --accent:      #10b981;
+  --accent-dim:  rgba(16, 185, 129, 0.12);
+  --accent-glow: rgba(16, 185, 129, 0.22);
+  --danger:      #ef4444;
+  --danger-dim:  rgba(239, 68, 68, 0.12);
+  --warning:     #f59e0b;
+  --warning-dim: rgba(245, 158, 11, 0.12);
+
+  /* High-contrast price colors — Bloomberg-style */
+  --price-up:   #00ff88;
+  --price-down: #ff4444;
+  --price-flat: #888888;
+
+  /* Font stack */
+  --font-sans:  var(--font-inter), ui-sans-serif, system-ui, Arial, sans-serif;
+  --font-mono:  var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, monospace;
+  --font-geist-sans: var(--font-inter);
+  --font-geist-mono: var(--font-jetbrains-mono);
 }
 
+/* Dark mode is the default and only mode */
 .dark {
-  --bg:          #0a0e17;
-  --surface:     #111827;
-  --surface-2:   #1a2234;
-  --surface-3:   #1f2a3c;
-  --border:      rgba(30, 41, 59, 0.7);
-  --text:        #e2e8f0;
-  --text-muted:  #94a3b8;
+  --bg:          #09090b;
+  --surface:     #18181b;
+  --surface-2:   #1c1c1f;
+  --surface-3:   #222226;
+  --border:      #27272a;
+  --text:        #fafafa;
+  --text-2:      #a1a1aa;
+  --text-muted:  #71717a;
+  --accent:      #10b981;
+  --accent-dim:  rgba(16, 185, 129, 0.12);
+  --accent-glow: rgba(16, 185, 129, 0.22);
+  --danger:      #ef4444;
+  --danger-dim:  rgba(239, 68, 68, 0.12);
+  --warning:     #f59e0b;
+  --warning-dim: rgba(245, 158, 11, 0.12);
 }
 
-/* ─── Base ────────────────────────────────────────────────────────────────── */
-* { box-sizing: border-box; }
+/* ─── Base reset ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
 
 body {
   background-color: var(--bg);
   color:            var(--text);
-  font-family:      var(--font-sans), Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  font-family:      var(--font-sans);
+  font-size:        13px;
+  line-height:      1.6;
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Ticker tape ────────────────────────────────────────────────────────── */
+/* Subtle noise texture overlay for depth */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* ─── Global selection ───────────────────────────────────────────────────── */
+::selection {
+  background: rgba(16, 185, 129, 0.28);
+  color: #fafafa;
+}
+
+/* ─── Focus outline — emerald green ─────────────────────────────────────── */
+:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ─── Transition defaults ────────────────────────────────────────────────── */
+* {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform, filter;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+/* Disable transitions on elements that shouldn't animate */
+.no-transition, .no-transition * { transition: none !important; }
+
+/* ─── Font rules ─────────────────────────────────────────────────────────── */
+[class*="font-mono"],
+.font-mono,
+.tabular-nums,
+code, pre, kbd {
+  font-family: var(--font-mono) !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "ss01", "zero";
+}
+
+/* ─── Custom scrollbar — thin zinc ──────────────────────────────────────── */
+::-webkit-scrollbar        { width: 3px; height: 3px; }
+::-webkit-scrollbar-track  { background: var(--surface); }
+::-webkit-scrollbar-thumb  { background: #3f3f46; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+/* ─── Ticker tape animation ──────────────────────────────────────────────── */
 @keyframes ticker {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
-
 .ticker-track {
-  display:   flex;
-  width:     max-content;
-  animation: ticker 40s linear infinite;
+  display: flex;
+  width: max-content;
+  animation: ticker 50s linear infinite;
 }
-
 .ticker-track:hover { animation-play-state: paused; }
 
-/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 4px; height: 4px; }
-::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: rgba(148,163,184,0.2); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.4); }
+/* ─── Skeleton shimmer ───────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 3px;
+}
 
-/* ─── Animations ─────────────────────────────────────────────────────────── */
+/* ─── Fade up entrance ───────────────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-fade-up { animation: fadeUp 0.25s ease forwards; }
+.animate-fade-up { animation: fadeUp 0.22s cubic-bezier(0.16,1,0.3,1) both; }
 
-@keyframes conflict-pulse {
-  0%   { transform: scale(1);   opacity: 0.9; }
-  70%  { transform: scale(3.2); opacity: 0;   }
-  100% { transform: scale(1);   opacity: 0;   }
+/* ─── Slide in from left ─────────────────────────────────────────────────── */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
+.animate-slide-in { animation: slideInLeft 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ─── Emerald live pulse ─────────────────────────────────────────────────── */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+  50%       { opacity: 0.7; transform: scale(1.3); box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+}
+.live-dot {
+  display: inline-block;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* ─── Verdict glow pulse ─────────────────────────────────────────────────── */
+@keyframes verdictPulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%       { box-shadow: var(--verdict-shadow, 0 0 20px rgba(16,185,129,0.2)); }
+}
+.animate-verdict-pulse { animation: verdictPulse 2.5s ease-in-out infinite; }
+
+/* ─── Search expand ──────────────────────────────────────────────────────── */
+@keyframes searchExpand {
+  from { opacity: 0; transform: scaleX(0.9); }
+  to   { opacity: 1; transform: scaleX(1); }
+}
+.animate-search-expand {
+  animation: searchExpand 0.15s cubic-bezier(0.16,1,0.3,1) forwards;
+  transform-origin: right center;
+}
+
+/* ─── Stagger children ───────────────────────────────────────────────────── */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.stagger > *:nth-child(3) { animation-delay: 80ms; }
+.stagger > *:nth-child(4) { animation-delay: 120ms; }
+.stagger > *:nth-child(5) { animation-delay: 160ms; }
+.stagger > *:nth-child(6) { animation-delay: 200ms; }
+.stagger > *:nth-child(7) { animation-delay: 240ms; }
+.stagger > *:nth-child(8) { animation-delay: 280ms; }
+
+/* ─── Reduced motion ────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .ticker-track { animation: none !important; }
+}
+
+/* ─── Intelligence Feed — article left borders ─────────────────────────── */
+.intel-item-HIGH { border-left: 2px solid rgba(239, 68, 68, 0.7); }
+.intel-item-MED  { border-left: 2px solid rgba(245, 158, 11, 0.6); }
+.intel-item-LOW  { border-left: 2px solid #27272a; }
+
+/* ─── AI brief gradient bar ──────────────────────────────────────────────── */
+.ai-brief-bar {
+  background: linear-gradient(
+    180deg,
+    rgba(16, 185, 129, 0.06) 0%,
+    transparent 100%
+  );
+  border-top: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+/* ─── Nav active indicator — emerald underline ────────────────────────────── */
+.nav-link-active {
+  position: relative;
+  color: var(--accent) !important;
+}
+.nav-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 60%;
+  height: 1.5px;
+  background: var(--accent);
+  border-radius: 1px 1px 0 0;
+  transform: translateX(-50%);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* ─── Asset card — hover lift ────────────────────────────────────────────── */
+.asset-card {
+  transform: translateY(0);
+  border: 1px solid var(--border);
+}
+.asset-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.1);
+}
+
+/* ─── War room panel dividers ────────────────────────────────────────────── */
+.war-panel {
+  border-right: 1px solid var(--border);
+}
+.war-panel:last-child { border-right: none; }
 
 /* ─── Conflict zone markers ──────────────────────────────────────────────── */
-.conflict-marker {
-  position: relative;
-  width:  14px;
-  height: 14px;
-  cursor: pointer;
+@keyframes conflict-pulse {
+  0%   { transform: scale(1); opacity: 0.9; }
+  70%  { transform: scale(3.2); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
 }
 
+.conflict-marker { position: relative; width: 14px; height: 14px; cursor: pointer; }
 .conflict-marker-dot {
-  width:  14px;
-  height: 14px;
+  width: 14px; height: 14px;
   border-radius: 50%;
   background: #ef4444;
   border: 2px solid rgba(239,68,68,0.4);
-  position: relative;
-  z-index: 1;
+  position: relative; z-index: 1;
 }
-
 .conflict-marker-ring {
-  position:  absolute;
-  inset:     0;
+  position: absolute; inset: 0;
   border-radius: 50%;
   background: rgba(239,68,68,0.45);
   animation: conflict-pulse 2.2s ease-out infinite;
 }
-
 .conflict-marker-ring-2 { animation-delay: 0.75s; }
 
 /* ─── Chokepoint markers ─────────────────────────────────────────────────── */
 .chokepoint-marker {
-  width:  11px;
-  height: 11px;
+  width: 11px; height: 11px;
   background: #f59e0b;
-  border:     2px solid rgba(245,158,11,0.5);
-  transform:  rotate(45deg);
-  cursor:     pointer;
+  border: 2px solid rgba(245,158,11,0.5);
+  transform: rotate(45deg);
+  cursor: pointer;
   box-shadow: 0 0 8px rgba(245,158,11,0.4);
-  transition: transform 0.15s, box-shadow 0.15s;
 }
 .chokepoint-marker:hover {
   transform: rotate(45deg) scale(1.3);
@@ -117,60 +299,112 @@ body {
 
 /* ─── MapLibre dark theme overrides ─────────────────────────────────────── */
 .maplibregl-popup-content {
-  background:    #111827 !important;
-  border:        1px solid rgba(30,41,59,0.8) !important;
+  background: #18181b !important;
+  border: 1px solid #27272a !important;
   border-radius: 6px !important;
-  padding:       10px 12px !important;
-  color:         #e2e8f0 !important;
-  font-family:   inherit !important;
-  font-size:     12px !important;
-  box-shadow:    0 8px 32px rgba(0,0,0,0.6) !important;
-  max-width:     240px !important;
+  padding: 10px 12px !important;
+  color: #fafafa !important;
+  font-family: var(--font-sans) !important;
+  font-size: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.7) !important;
+  max-width: 240px !important;
 }
-
 .maplibregl-popup-tip {
-  border-top-color:    #111827 !important;
-  border-bottom-color: #111827 !important;
+  border-top-color:    #18181b !important;
+  border-bottom-color: #18181b !important;
 }
-
 .maplibregl-popup-close-button {
-  color:     #94a3b8 !important;
+  color: #71717a !important;
   font-size: 14px !important;
-  padding:   2px 6px !important;
-  top:       4px !important;
-  right:     4px !important;
+  padding: 2px 6px !important;
+  top: 4px !important; right: 4px !important;
 }
-.maplibregl-popup-close-button:hover { color: #e2e8f0 !important; background: transparent !important; }
-
+.maplibregl-popup-close-button:hover { color: #fafafa !important; background: transparent !important; }
 .maplibregl-ctrl-group {
-  background: #111827 !important;
-  border:     1px solid rgba(30,41,59,0.8) !important;
+  background: #18181b !important;
+  border: 1px solid #27272a !important;
   border-radius: 4px !important;
 }
 .maplibregl-ctrl-group button { background-color: transparent !important; }
 .maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(0.75) !important; }
-.maplibregl-ctrl-attrib { background: rgba(17,24,39,0.8) !important; color: #475569 !important; font-size: 9px !important; }
-.maplibregl-ctrl-attrib a { color: #64748b !important; }
-
-/* ─── War room panel dividers ────────────────────────────────────────────── */
-.war-panel {
-  border-right: 1px solid var(--border);
-}
-.war-panel:last-child { border-right: none; }
+.maplibregl-ctrl-attrib { background: rgba(9,9,11,0.8) !important; color: #52525b !important; font-size: 9px !important; }
+.maplibregl-ctrl-attrib a { color: #71717a !important; }
 
 /* ─── TradingView widget ─────────────────────────────────────────────────── */
-/* Mobile-first height; desktop bumped to 550px via media query */
-.tv-chart {
-  height: 400px;
-}
-@media (min-width: 640px) {
-  .tv-chart {
-    height: 550px;
-  }
-}
-/* Force the injected iframe to fill its container regardless of widget defaults */
+.tv-chart { height: 400px; }
+@media (min-width: 640px) { .tv-chart { height: 550px; } }
 .tradingview-widget-container iframe {
   height: 100% !important;
   width:  100% !important;
   display: block;
+}
+
+/* ─── Price flash on update ──────────────────────────────────────────────── */
+@keyframes priceFlash {
+  0%   { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+.price-flash { animation: priceFlash 0.3s ease-out; }
+
+/* ─── Slide in from right ────────────────────────────────────────────────── */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-right { animation: slideInRight 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ─── Price flash — directional ──────────────────────────────────────────── */
+@keyframes priceFlashUp {
+  0%   { background-color: rgba(16,185,129,0.28); }
+  100% { background-color: transparent; }
+}
+@keyframes priceFlashDown {
+  0%   { background-color: rgba(239,68,68,0.25); }
+  100% { background-color: transparent; }
+}
+.price-flash-up   { animation: priceFlashUp   0.6s ease-out forwards; border-radius: 3px; }
+.price-flash-down { animation: priceFlashDown 0.6s ease-out forwards; border-radius: 3px; }
+
+/* ─── Signal new-item glow ───────────────────────────────────────────────── */
+@keyframes signalGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0); background: rgba(16,185,129,0.08); }
+  40%  { box-shadow: 0 0 0 1px rgba(16,185,129,0.25); background: rgba(16,185,129,0.08); }
+  100% { box-shadow: none; background: transparent; }
+}
+.signal-new { animation: signalGlow 1.8s ease-out both; }
+
+/* ─── Radar sweep ────────────────────────────────────────────────────────── */
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.radar-sweep {
+  animation: radarSweep 10s linear infinite;
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+/* ─── Section fade-in-up (Intersection Observer) ────────────────────────── */
+.section-hidden {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1);
+}
+.section-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Status bar dot ─────────────────────────────────────────────────────── */
+.status-dot-fresh  { background: #10b981; }
+.status-dot-stale  { background: #f59e0b; }
+.status-dot-old    { background: #ef4444; }
+
+/* ─── Command palette overlay ────────────────────────────────────────────── */
+@keyframes paletteIn {
+  from { opacity: 0; transform: scale(0.97) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-palette-in {
+  animation: paletteIn 0.18s cubic-bezier(0.16,1,0.3,1) both;
 }

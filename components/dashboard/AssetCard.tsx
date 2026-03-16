@@ -1,20 +1,18 @@
 import Link from 'next/link'
-import { AssetCardData, AssetType } from '@/lib/utils/types'
-import { formatPrice, formatChange, formatPercent, changeColor } from '@/lib/utils/formatters'
+import { AssetCardData } from '@/lib/utils/types'
+import { formatPrice, formatPercent } from '@/lib/utils/formatters'
 
-// Re-export so any file that still imports AssetCardData from here keeps working
 export type { AssetCardData }
 
 // ─── Sparkline ────────────────────────────────────────────────────────────
 
 function Sparkline({
-  open, high, low, price, isPositive,
+  open, high, low, price, isPositive, gradientId,
 }: {
-  open: number; high: number; low: number; price: number; isPositive: boolean
+  open: number; high: number; low: number; price: number; isPositive: boolean; gradientId: string
 }) {
-  const W = 80, H = 32, PAD = 3
+  const W = 72, H = 28, PAD = 2
 
-  // 5 OHLC-derived points that sketch the day's movement
   const pts: number[] = isPositive
     ? [open, (open + low) / 2,  low,  (low  + price) / 2, price]
     : [open, (open + high) / 2, high, (high + price) / 2, price]
@@ -36,58 +34,57 @@ function Sparkline({
     d += ` C ${cpx},${prev.y} ${cpx},${cur.y} ${cur.x},${cur.y}`
   }
 
-  const fillD = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
-  const stroke = isPositive ? '#22c55e' : '#ef4444'
-  const fill   = isPositive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)'
+  const fillD    = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
+  const stroke   = isPositive ? '#00ff88' : '#ff4444'
+  const stopColor = isPositive ? '#00ff88' : '#ff4444'
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="shrink-0" aria-hidden>
-      <path d={fillD} fill={fill} />
-      <path d={d} fill="none" stroke={stroke} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={stopColor} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={stopColor} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={fillD} fill={`url(#${gradientId})`} />
+      <path d={d} fill="none" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────
 
-const TYPE_LABELS: Record<AssetType, string> = {
-  stock: 'Stock', crypto: 'Crypto', forex: 'Forex', commodity: 'Commodity', etf: 'ETF',
-}
-
 export default function AssetCard({ asset }: { asset: AssetCardData }) {
   const { symbol, name, type, price, change, changePercent, currency, open, high, low } = asset
   const isPositive = change >= 0
-  const color      = changeColor(change)
+  const chgColor   = changePercent === 0 ? 'var(--price-flat)' : isPositive ? 'var(--price-up)' : 'var(--price-down)'
   const href       = `/asset/${type}/${encodeURIComponent(symbol)}`
+  const gradientId = `sg-${symbol.replace(/[^a-z0-9]/gi, '')}-${type}`
 
   return (
     <Link
       href={href}
-      className="
-        group flex flex-col gap-3 rounded-xl border border-[var(--border)]
-        bg-[var(--surface)] p-4 transition animate-fade-up
-        hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/5
-      "
+      className="asset-card group relative flex flex-col gap-2.5 rounded-lg bg-[var(--surface)] p-3.5 transition-all duration-200 animate-fade-up"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-semibold text-[var(--text)]">{symbol}</span>
-            <span className="shrink-0 rounded-full bg-[var(--surface-2)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wide">
-              {TYPE_LABELS[type]}
-            </span>
-          </div>
-          <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">{name}</p>
+          <span className="block truncate font-mono font-bold text-white" style={{ fontSize: '15px' }}>
+            {symbol}
+          </span>
+          <p className="mt-0.5 truncate text-[11px]" style={{ color: '#888888' }}>{name}</p>
         </div>
-        <Sparkline open={open} high={high} low={low} price={price} isPositive={isPositive} />
+        <Sparkline
+          open={open} high={high} low={low} price={price}
+          isPositive={isPositive} gradientId={gradientId}
+        />
       </div>
 
       <div className="flex items-end justify-between">
-        <p className="text-lg font-semibold font-mono text-[var(--text)] tabular-nums">
+        <p className="font-mono font-bold tabular-nums text-white" style={{ fontSize: '18px' }}>
           {formatPrice(price, currency)}
         </p>
-        <div className={`flex flex-col items-end text-xs font-mono font-medium tabular-nums ${color}`}>
-          <span>{formatChange(change, 2)}</span>
+        <div className="flex items-center gap-1 font-mono text-[12px] font-semibold tabular-nums" style={{ color: chgColor }}>
+          <span className="text-[10px] leading-none">{isPositive ? '▲' : '▼'}</span>
           <span>{formatPercent(changePercent, false)}</span>
         </div>
       </div>

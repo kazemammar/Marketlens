@@ -6,9 +6,9 @@ import { MarketBriefPayload } from '@/app/api/market-brief/route'
 import { MarketRiskPayload }  from '@/app/api/market-risk/route'
 
 const DIR_COLOR: Record<string, string> = {
-  up:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-  down:     'text-red-400 bg-red-500/10 border-red-500/25',
-  volatile: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
+  up:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+  down:     'text-red-400 bg-red-500/10 border-red-500/30',
+  volatile: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
 }
 const DIR_ARROW: Record<string, string> = { up: '▲', down: '▼', volatile: '↕' }
 
@@ -42,11 +42,11 @@ export default function MarketBrief() {
 
   if (loading) {
     return (
-      <div className="flex h-10 animate-pulse items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4">
-        <div className="h-2 w-2 rounded-full bg-[var(--surface-2)]" />
-        <div className="h-2.5 flex-1 max-w-2xl rounded bg-[var(--surface-2)]" />
+      <div className="ai-brief-bar flex h-10 items-center gap-3 border-b border-[var(--border)] px-4">
+        <div className="skeleton h-2 w-2 rounded-full" />
+        <div className="skeleton h-2.5 flex-1 max-w-2xl" />
         <div className="flex gap-1.5">
-          {[1,2,3].map(i => <div key={i} className="h-5 w-12 rounded bg-[var(--surface-2)]" />)}
+          {[1,2,3].map(i => <div key={i} className="skeleton h-5 w-12 rounded" />)}
         </div>
       </div>
     )
@@ -61,24 +61,24 @@ export default function MarketBrief() {
   const dotClass  = RISK_DOT[riskLevel] ?? 'bg-amber-500'
 
   return (
-    <div className="flex min-h-10 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 sm:px-4">
+    <div className="ai-brief-bar flex min-h-10 items-center gap-3 border-b border-[var(--border)] px-3 py-1.5 sm:px-4 animate-fade-up">
 
       {/* Risk indicator dot */}
       <div className="flex shrink-0 items-center gap-1.5">
-        <span className={`h-2 w-2 rounded-full ${dotClass} animate-pulse`} />
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+        <span className={`h-2 w-2 rounded-full ${dotClass} live-dot`} />
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--accent)' }}>
           AI BRIEF
         </span>
-        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+        <span className="font-mono text-[9px] text-white opacity-60">
           {ts(brief.generatedAt)}
         </span>
       </div>
 
-      <span className="hidden text-[var(--border)] sm:block">|</span>
+      <span className="hidden text-[var(--border)] sm:block" aria-hidden>│</span>
 
       {/* Brief text */}
-      <p className="min-w-0 flex-1 text-[11px] leading-snug text-[var(--text-muted)]">
-        <span className="text-[var(--text)]">{text2}</span>
+      <p className="min-w-0 flex-1 text-[11px] leading-snug" style={{ color: '#e0e0e0' }}>
+        {text2}
       </p>
 
       {/* Asset badges */}
@@ -88,7 +88,7 @@ export default function MarketBrief() {
             <Link
               key={a.symbol}
               href={`/asset/${a.type}/${encodeURIComponent(a.symbol)}`}
-              className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold transition hover:opacity-75 ${DIR_COLOR[a.direction] ?? DIR_COLOR.volatile}`}
+              className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold transition-all duration-150 hover:opacity-75 hover:scale-105 ${DIR_COLOR[a.direction] ?? DIR_COLOR.volatile}`}
             >
               {DIR_ARROW[a.direction] ?? '↕'} {a.symbol}
             </Link>

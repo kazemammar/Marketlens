@@ -11,6 +11,7 @@ import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
 import RiskGauge         from '@/components/warroom/RiskGauge'
 import SignalsPanel      from '@/components/warroom/SignalsPanel'
+import StatusBar         from '@/components/layout/StatusBar'
 import { AssetType }     from '@/lib/utils/types'
 import { getHomepageData } from '@/lib/api/homepage'
 
@@ -26,19 +27,18 @@ export default async function HomePage({
     ? (tabParam as AssetType)
     : 'stock'
 
-  // Fetch ALL homepage data in one call.
-  // — Warm cache (≤600 s old): returns instantly from Redis.
-  // — Cold start: fetches ~29 Finnhub symbols in batches of 3 (1 s gap),
-  //   plus BTC/ETH/SOL from CoinGecko, then caches for 10 minutes.
-  // Either way, by the time HTML is sent to the browser every component
-  // already has its data as props → zero client-side Finnhub calls on load.
   let homepage = await getHomepageData().catch(() => null)
 
   return (
     <div className="min-h-screen">
 
       {/* ══ AI BRIEF BAR — full width slim ══════════════════════════════ */}
-      <Suspense fallback={<div className="h-10 border-b border-[var(--border)] bg-[var(--surface)]" />}>
+      <Suspense fallback={
+        <div className="ai-brief-bar flex h-10 items-center gap-3 border-b border-[var(--border)] px-4">
+          <div className="skeleton h-2 w-2 rounded-full" />
+          <div className="skeleton h-2.5 flex-1 max-w-2xl rounded" />
+        </div>
+      }>
         <MarketBrief />
       </Suspense>
 
@@ -53,8 +53,8 @@ export default async function HomePage({
         {/* GeoMap — left */}
         <div className="border-r border-[var(--border)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
-            <span className="h-1 w-1 animate-pulse rounded-full bg-red-500" />
-            <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+            <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
+            <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Geopolitical Intelligence Map
             </span>
           </div>
@@ -67,8 +67,8 @@ export default async function HomePage({
           style={{ height: 'clamp(400px, 55vw, 600px)' }}
         >
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
-            <span className="h-1 w-1 animate-pulse rounded-full bg-purple-400" />
-            <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Intelligence Feed
             </span>
           </div>
@@ -78,18 +78,38 @@ export default async function HomePage({
         </div>
       </div>
 
+      {/* ══ MARKET INTELLIGENCE SECTION HEADER ════════════════════════════ */}
+      <div className="flex items-center gap-3 border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 sm:px-4">
+        <div className="flex items-center gap-2">
+          {/* animated radar icon */}
+          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
+            <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="8" cy="8" r="1" fill="currentColor"/>
+          </svg>
+          <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+            Market Intelligence
+          </span>
+        </div>
+        <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
+        <div className="flex items-center gap-1">
+          <span className="live-dot h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+          <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">LIVE</span>
+        </div>
+      </div>
+
       {/* ══ DATA PANELS — 4-column row (2x2 on mobile) ══════════════════ */}
       <div className="grid grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] lg:grid-cols-4">
         <div className="war-panel min-w-0 overflow-hidden">
-          <MarketRadar initialData={homepage?.marketRadar ?? null} />
+          <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={homepage?.stocks ?? []} />
         </div>
         <div className="war-panel min-w-0 overflow-hidden"><FXMonitor /></div>
         <div className="war-panel min-w-0 overflow-hidden"><RiskGauge /></div>
         <div className="min-w-0 overflow-hidden"><SignalsPanel /></div>
       </div>
 
-      {/* ══ SECTION DIVIDER ══════════════════════════════════════════════ */}
-      <div className="h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+      {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
+      <div className="h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />
 
       {/* ══ MARKET DASHBOARD ══════════════════════════════════════════════ */}
       <div id="market-overview">
@@ -99,19 +119,23 @@ export default async function HomePage({
       <main className="px-3 py-4 sm:px-4">
         {/* Dashboard header */}
         <div className="mb-3 flex items-center gap-2">
-          <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-blue-400" aria-hidden>
+          <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: 'var(--accent)' }} aria-hidden>
             <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '12px', letterSpacing: '0.05em' }}>
             Market Overview
           </span>
-          <span className="text-[11px] text-[var(--text-muted)] opacity-60">
+          <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
             Stocks · Crypto · Forex · Commodities · ETFs
           </span>
         </div>
 
         <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />
       </main>
+
+      {/* ══ STATUS BAR — data freshness ══════════════════════════════════════ */}
+      <StatusBar />
     </div>
   )
 }

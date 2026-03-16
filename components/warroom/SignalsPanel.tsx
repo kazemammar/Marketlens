@@ -1,14 +1,34 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Flame, TrendingUp, TrendingDown, AlertTriangle, ArrowLeftRight, Shield, Fuel, Activity } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { Signal } from '@/app/api/signals/route'
 
 const REFRESH_MS = 120_000
 
-const SEV_STYLE: Record<string, string> = {
-  HIGH: 'text-red-400 bg-red-500/10 border-red-500/25',
-  MED:  'text-amber-400 bg-amber-500/10 border-amber-500/25',
-  LOW:  'text-slate-400 bg-slate-700/20 border-slate-700/25',
+const SEV_BAR: Record<string, string> = {
+  HIGH: 'bg-[#ff4444]',
+  MED:  'bg-[#f59e0b]',
+  LOW:  'bg-[var(--border)]',
+}
+
+const SEV_BADGE: Record<string, string> = {
+  HIGH: 'text-white border-transparent bg-[#ff4444]',
+  MED:  'text-black border-transparent bg-[#f59e0b]',
+  LOW:  'border-transparent bg-[#2a2a2a] text-[#888888]',
+}
+
+function getSignalIcon(text: string): { icon: LucideIcon; color: string } {
+  const t = text.toLowerCase()
+  if (/oil|crude|wti|brent|opec|petroleum/.test(t))       return { icon: Flame,          color: '#f97316' }
+  if (/war|military|conflict|geopolit|sanction|attack/.test(t)) return { icon: Shield,    color: '#ff4444' }
+  if (/vix|volatil|fear/.test(t))                          return { icon: AlertTriangle,  color: '#f59e0b' }
+  if (/forex|currency|dollar|yen|euro|pound|yuan|fx/.test(t))  return { icon: ArrowLeftRight, color: '#22d3ee' }
+  if (/gas|wheat|corn|commodity|natural gas|copper/.test(t))   return { icon: Fuel,       color: '#eab308' }
+  if (/-\d|\bdown\b|sell|drop|fall|crash|decline/.test(t)) return { icon: TrendingDown,  color: '#ff4444' }
+  if (/\+\d|\bup\b|buy|rise|rally|surge|gain/.test(t))    return { icon: TrendingUp,     color: '#00ff88' }
+  return { icon: Activity, color: 'var(--accent)' }
 }
 
 function ago(ts: number) {
@@ -19,13 +39,27 @@ function ago(ts: number) {
 }
 
 export default function SignalsPanel() {
-  const [signals, setSignals] = useState<Signal[]>([])
-  const [loading, setLoading] = useState(true)
+  const [signals,  setSignals]  = useState<Signal[]>([])
+  const [loading,  setLoading]  = useState(true)
+  const [newIds,   setNewIds]   = useState<Set<string>>(new Set())
+  const prevIds = useRef<Set<string>>(new Set())
 
   async function load() {
     try {
       const r = await fetch('/api/signals')
       const d = await r.json() as Signal[]
+
+      // find brand-new signal IDs
+      const fresh = new Set<string>()
+      for (const s of d) {
+        if (!prevIds.current.has(s.id)) fresh.add(s.id)
+      }
+      prevIds.current = new Set(d.map((s) => s.id))
+
+      if (fresh.size > 0) {
+        setNewIds(fresh)
+        setTimeout(() => setNewIds(new Set()), 2000)
+      }
       setSignals(d)
     } catch { /* silent */ }
     setLoading(false)
@@ -39,10 +73,9 @@ export default function SignalsPanel() {
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">
-          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
           <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             Signals
           </span>
@@ -52,43 +85,53 @@ export default function SignalsPanel() {
         </span>
       </div>
 
-      {/* List */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex animate-pulse gap-2 border-b border-[var(--border)] px-3 py-2.5">
-              <div className="h-4 w-4 rounded bg-[var(--surface-2)]" />
+            <div key={i} className="flex gap-2 border-b border-[var(--border)] px-3 py-2.5">
+              <div className="skeleton h-4 w-4 rounded" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-2.5 w-full rounded bg-[var(--surface-2)]" />
-                <div className="h-2 w-16 rounded bg-[var(--surface-2)]" />
+                <div className="skeleton h-2.5 w-full rounded" />
+                <div className="skeleton h-2 w-16 rounded" />
               </div>
             </div>
           ))
         ) : signals.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-8">
-            <span className="text-xl opacity-30">📡</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7 text-[var(--text-muted)] opacity-25" aria-hidden>
+              <path d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+            </svg>
             <p className="font-mono text-[10px] text-[var(--text-muted)]">No active signals</p>
-            <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
-              Signals appear on notable market moves
-            </p>
+            <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">Signals appear on notable market moves</p>
           </div>
         ) : (
-          signals.map((sig) => (
-            <div key={sig.id} className="flex gap-2 border-b border-[var(--border)] px-3 py-2.5">
-              <span className="mt-0.5 shrink-0 text-[13px] leading-none">{sig.icon}</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-medium leading-snug text-[var(--text)]">
-                  {sig.text}
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_STYLE[sig.severity]}`}>
-                    {sig.severity}
-                  </span>
-                  <span className="font-mono text-[9px] text-[var(--text-muted)]">{ago(sig.timestamp)}</span>
+          <div>
+            {signals.map((sig, i) => {
+              const isNew = newIds.has(sig.id)
+              return (
+                <div
+                  key={sig.id}
+                  className={`flex gap-2 border-b border-[var(--border)] px-3 py-2.5 transition-all duration-150 hover:bg-[var(--surface-2)] hover:translate-x-0.5 ${isNew ? 'animate-slide-right signal-new' : 'animate-slide-in'}`}
+                  style={{ animationDelay: isNew ? '0ms' : `${i * 40}ms` }}
+                >
+                  <div className={`mt-0.5 w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
+                  {(() => {
+                    const { icon: Icon, color } = getSignalIcon(sig.text)
+                    return <Icon size={14} className="mt-0.5 shrink-0" style={{ color }} strokeWidth={2} />
+                  })()}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium leading-snug text-white">{sig.text}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
+                        {sig.severity}
+                      </span>
+                      <span className="font-mono text-[9px]" style={{ color: '#666666' }}>{ago(sig.timestamp)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))
+              )
+            })}
+          </div>
         )}
       </div>
     </div>

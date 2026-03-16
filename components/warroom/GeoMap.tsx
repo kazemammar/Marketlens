@@ -414,17 +414,28 @@ export default function GeoMap() {
       {/* Map canvas */}
       <div className="relative flex-1 overflow-hidden">
         <div ref={containerRef} className="absolute inset-0 h-full w-full" />
+        {/* Radar sweep — pure CSS, very low opacity */}
+        <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+          <div
+            className="radar-sweep absolute"
+            style={{
+              inset: '-50%',
+              background: 'conic-gradient(from 0deg, transparent 0deg, transparent 340deg, rgba(16,185,129,0.04) 355deg, transparent 360deg)',
+            }}
+          />
+        </div>
 
-        {/* Top-left: UTC clock */}
-        <div className="pointer-events-none absolute left-0 top-0 z-10 px-2.5 py-2">
-          <span className="font-mono text-[9px] font-semibold tracking-[0.12em] text-white/40">
+        {/* Top-left: UTC clock + live dot */}
+        <div className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-1.5 rounded border border-white/10 bg-black/50 px-2 py-1 backdrop-blur-sm">
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+          <span className="font-mono text-[10px] font-semibold tracking-[0.08em] text-white/70">
             {utcTime} UTC
           </span>
         </div>
 
         {/* Layer toggles — top right */}
         <div className="absolute right-1.5 top-1.5 z-20 flex flex-col gap-px">
-          <div className="rounded border border-[rgba(30,41,59,0.9)] bg-[rgba(10,14,23,0.92)] px-2 py-1.5 backdrop-blur-sm">
+          <div className="rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-xl">
             <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Layers</p>
             {LAYER_CFG.map(({ key, label, dot }) => (
               <label key={key} className="flex cursor-pointer items-center gap-1.5 py-0.5">
@@ -443,7 +454,7 @@ export default function GeoMap() {
 
         {/* Pipeline legend — bottom left */}
         {layers.pipelines && (
-          <div className="absolute bottom-6 left-1.5 z-10 rounded border border-[rgba(30,41,59,0.9)] bg-[rgba(10,14,23,0.9)] px-2 py-1.5 backdrop-blur-sm">
+          <div className="absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-xl">
             <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Pipelines</p>
             {PIPELINE_LEGEND.map((p) => (
               <div key={p.name} className="flex items-center gap-1.5 py-0.5">
@@ -458,7 +469,7 @@ export default function GeoMap() {
         {/* Loading */}
         {!mapReady && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-[#0a0e17]">
-            <span className="h-7 w-7 animate-spin rounded-full border-2 border-blue-500/40 border-t-blue-400" />
+            <span className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)]" />
             <span className="font-mono text-[10px] tracking-[0.2em] text-white/25">LOADING MAP…</span>
           </div>
         )}
@@ -471,7 +482,7 @@ export default function GeoMap() {
           <button
             key={p.label}
             onClick={() => flyTo(p.center, p.zoom)}
-            className="rounded border border-[var(--border)] px-2 py-0.5 font-mono text-[9px] text-[var(--text-muted)] transition hover:border-blue-500/50 hover:bg-[var(--surface-2)] hover:text-blue-400"
+            className="rounded border border-[var(--border)] px-2 py-0.5 font-mono text-[9px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--surface-2)] hover:text-[var(--accent)]"
           >
             {p.label}
           </button>

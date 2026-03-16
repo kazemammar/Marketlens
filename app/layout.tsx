@@ -1,18 +1,22 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets:  ['latin'],
+  display:  'swap',
+  weight:   ['400', '500', '600', '700'],
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
   subsets:  ['latin'],
+  display:  'swap',
+  weight:   ['400', '500', '600', '700'],
 })
 
 const SITE_DESCRIPTION =
@@ -44,8 +48,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: dark)',  color: '#0f1117' },
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)',  color: '#09090b' },
+    { media: '(prefers-color-scheme: light)', color: '#09090b' },
   ],
 }
 
@@ -55,10 +59,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    // Default to dark — ThemeProvider will read localStorage and override if needed
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
         suppressHydrationWarning
       >
         <ThemeProvider>

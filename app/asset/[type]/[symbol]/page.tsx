@@ -23,6 +23,8 @@ import RelatedAssets  from '@/components/asset/RelatedAssets'
 import CommodityIntel    from '@/components/asset/CommodityIntel'
 import ForexStrength     from '@/components/asset/ForexStrength'
 import ForexCentralBanks from '@/components/asset/ForexCentralBanks'
+import EtfOverview       from '@/components/asset/EtfOverview'
+import EtfHoldings       from '@/components/asset/EtfHoldings'
 
 export const dynamic = 'force-dynamic'
 
@@ -274,6 +276,14 @@ export default async function AssetPage({ params }: AssetPageProps) {
         <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
           <ForexStrength symbol={symbol} />
           <ForexCentralBanks symbol={symbol} />
+        </div>
+      )}
+
+      {/* ── ETF panels (etf only) ── */}
+      {type === 'etf' && (
+        <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6">
+          <EtfOverview symbol={symbol} />
+          <EtfHoldings symbol={symbol} />
         </div>
       )}
 

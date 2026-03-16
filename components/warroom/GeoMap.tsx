@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import type { Ship, MaritimeData } from '@/lib/api/maritime'
 
 // ─── Static data ──────────────────────────────────────────────────────────
 
@@ -141,12 +142,49 @@ const NUCLEAR_SITES = [
 // ─── Types ────────────────────────────────────────────────────────────────
 
 interface LayerState {
-  conflicts:  boolean
+  conflicts:   boolean
   chokepoints: boolean
-  pipelines:  boolean
-  bases:      boolean
-  cables:     boolean
-  nuclear:    boolean
+  pipelines:   boolean
+  bases:       boolean
+  cables:      boolean
+  nuclear:     boolean
+  ships:       boolean
+}
+
+// ─── Ship category colors ──────────────────────────────────────────────────
+
+const SHIP_COLORS: Record<string, string> = {
+  tanker:   '#f97316',
+  lng:      '#a855f7',
+  cargo:    '#3b82f6',
+  military: '#ef4444',
+}
+
+function shipColor(category: string): string {
+  return SHIP_COLORS[category] ?? '#666666'
+}
+
+function shipPopup(s: Ship): string {
+  const color  = shipColor(s.category)
+  const status = s.status === 'REROUTED'
+    ? `<span style="background:#ef444420;border:1px solid #ef444440;color:#fca5a5;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${s.status}</span>`
+    : `<span style="background:#10b98120;border:1px solid #10b98130;color:#6ee7b7;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${s.status}</span>`
+  return `
+    <div style="min-width:190px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <div style="width:8px;height:8px;background:${color};clip-path:polygon(50% 0%,100% 100%,0% 100%);transform:rotate(${s.heading}deg);flex-shrink:0"></div>
+        <span style="font-weight:700;font-size:12px;color:#f1f5f9">${s.name}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px;margin-bottom:6px">
+        <div style="color:#64748b">Type: <span style="color:#e2e8f0">${s.type}</span></div>
+        <div style="color:#64748b">Flag: <span style="color:#e2e8f0">${s.flag}</span></div>
+        <div style="color:#64748b">Speed: <span style="color:#e2e8f0">${s.speed} kn</span></div>
+        <div style="color:#64748b">HDG: <span style="color:#e2e8f0">${s.heading}°</span></div>
+        <div style="color:#64748b">Cargo: <span style="color:#e2e8f0">${s.cargo}</span></div>
+        <div style="color:#64748b">To: <span style="color:#e2e8f0">${s.destination}</span></div>
+      </div>
+      ${status}
+    </div>`
 }
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
@@ -235,15 +273,30 @@ export default function GeoMap() {
 
   const [layers, setLayers] = useState<LayerState>({
     conflicts: true, chokepoints: true, pipelines: true,
-    bases: false, cables: false, nuclear: false,
+    bases: false, cables: false, nuclear: false, ships: true,
   })
-  const [mapReady, setMapReady] = useState(false)
-  const [utcTime,  setUtcTime]  = useState('')
+  const [mapReady,    setMapReady]    = useState(false)
+  const [utcTime,     setUtcTime]     = useState('')
+  const [shipData,    setShipData]    = useState<MaritimeData | null>(null)
 
   useEffect(() => {
     const tick = () => setUtcTime(new Date().toUTCString().slice(17, 25))
     tick()
     const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  // ── Fetch maritime traffic ────────────────────────────────────────────
+  useEffect(() => {
+    async function fetchShips() {
+      try {
+        const res  = await fetch('/api/maritime')
+        const data = await res.json() as MaritimeData
+        setShipData(data)
+      } catch { /* silent */ }
+    }
+    fetchShips()
+    const id = setInterval(fetchShips, 5 * 60 * 1000)
     return () => clearInterval(id)
   }, [])
 
@@ -368,6 +421,44 @@ export default function GeoMap() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // ── Add/refresh ship markers when data arrives ───────────────────────
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !shipData) return
+
+    // Remove existing ship markers
+    const remaining = markersRef.current.filter(({ el, group }) => {
+      if (group === 'ships') { el.remove(); return false }
+      return true
+    })
+    markersRef.current = remaining
+
+    import('maplibre-gl').then((mgl) => {
+      const map = mapRef.current as import('maplibre-gl').Map
+      for (const ship of shipData.ships) {
+        const color   = shipColor(ship.category)
+        const el      = document.createElement('div')
+        const size    = 10
+        Object.assign(el.style, {
+          width:           `${size}px`,
+          height:          `${size}px`,
+          cursor:          'pointer',
+          display:         layers.ships ? '' : 'none',
+          // SVG triangle rotated to heading
+          background:      'transparent',
+        })
+        // Use an SVG data URI for the ship triangle
+        el.innerHTML = `<svg viewBox="0 0 10 14" width="${size}" height="${size + 4}" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(${ship.heading}deg);filter:drop-shadow(0 0 2px ${color}80)">
+          <polygon points="5,0 10,14 5,11 0,14" fill="${color}" opacity="0.9"/>
+        </svg>`
+
+        const popup = new mgl.Popup({ offset: 12, closeButton: true, maxWidth: '240px' }).setHTML(shipPopup(ship))
+        new mgl.Marker({ element: el }).setLngLat([ship.lng, ship.lat]).setPopup(popup).addTo(map)
+        markersRef.current.push({ el, group: 'ships' })
+      }
+    }).catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shipData, mapReady])
+
   // ── Sync layer visibility ────────────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
@@ -399,6 +490,7 @@ export default function GeoMap() {
     { key: 'bases'      as keyof LayerState, label: 'Military Bases', dot: '#a78bfa' },
     { key: 'cables'     as keyof LayerState, label: 'Undersea Cables',dot: '#8b5cf6' },
     { key: 'nuclear'    as keyof LayerState, label: 'Nuclear Sites',  dot: '#facc15' },
+    { key: 'ships'      as keyof LayerState, label: 'Ships',          dot: '#f97316' },
   ] as const
 
   const PIPELINE_LEGEND = [
@@ -463,6 +555,27 @@ export default function GeoMap() {
                 <span className="font-mono text-[8px] text-white/25">{p.status}</span>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Ship legend — bottom center */}
+        {layers.ships && shipData && (
+          <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded border border-white/10 bg-black/60 px-2.5 py-1.5 backdrop-blur-md shadow-xl">
+            <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Vessels by Chokepoint</p>
+            <div className="flex items-center gap-3">
+              {[
+                { label: 'HORMUZ',   count: shipData.chokepoints.hormuz,      color: '#f59e0b' },
+                { label: 'SUEZ',     count: shipData.chokepoints.suez,         color: '#3b82f6' },
+                { label: 'MALACCA',  count: shipData.chokepoints.malacca,      color: '#10b981' },
+                { label: 'BAB-EL',   count: shipData.chokepoints.babelMandeb,  color: '#ef4444' },
+              ].map((cp) => (
+                <div key={cp.label} className="flex items-center gap-1">
+                  <span className="font-mono text-[9px] font-bold" style={{ color: cp.color }}>{cp.label}</span>
+                  <span className="font-mono text-[9px] text-white/60">·</span>
+                  <span className="font-mono text-[9px] font-bold text-white/80">{cp.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: 'Commodities', href: '/?tab=commodity' },
   { label: 'ETFs',        href: '/?tab=etf'       },
   { label: 'News',        href: '/news'            },
+  { label: 'Econ',        href: '/economics'       },
 ]
 
 function NavLinks() {

@@ -10,10 +10,13 @@ import IntelPanel        from '@/components/warroom/IntelPanel'
 import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
 import RiskGauge         from '@/components/warroom/RiskGauge'
-import SignalsPanel      from '@/components/warroom/SignalsPanel'
-import StatusBar         from '@/components/layout/StatusBar'
-import { AssetType }     from '@/lib/utils/types'
-import { getHomepageData } from '@/lib/api/homepage'
+import SignalsPanel         from '@/components/warroom/SignalsPanel'
+import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
+import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
+import MaritimePanel        from '@/components/warroom/MaritimePanel'
+import StatusBar            from '@/components/layout/StatusBar'
+import { AssetType }        from '@/lib/utils/types'
+import { getHomepageData }  from '@/lib/api/homepage'
 
 const VALID_TABS: AssetType[] = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
@@ -107,6 +110,17 @@ export default async function HomePage({
         <div className="war-panel min-w-0 overflow-hidden"><RiskGauge /></div>
         <div className="min-w-0 overflow-hidden"><SignalsPanel /></div>
       </div>
+
+      {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}
+      <PredictionMarkets />
+
+      {/* ══ ECONOMIC INDICATORS ═══════════════════════════════════════════ */}
+      <div className="border-b border-[var(--border)]">
+        <EconomicIndicators />
+      </div>
+
+      {/* ══ MARITIME PANEL ════════════════════════════════════════════════ */}
+      <MaritimePanel />
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
       <div className="h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />

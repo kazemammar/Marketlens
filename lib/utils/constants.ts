@@ -80,7 +80,8 @@ export const DEFAULT_FOREX_PAIRS = [
 ]
 
 // Base URL for the free forex rates API (no key required)
-export const EXCHANGE_RATE_BASE_URL = 'https://open.er-api.com/v6/latest'
+// Kept for reference; forex.ts uses api.frankfurter.app directly.
+export const EXCHANGE_RATE_BASE_URL = 'https://api.frankfurter.app'
 
 // CoinGecko IDs for the default crypto list
 export const DEFAULT_CRYPTO_IDS = [

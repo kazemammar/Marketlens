@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import AssetCard from '@/components/dashboard/AssetCard'
+import GlobalSearch from '@/components/search/GlobalSearch'
 import { getQuotesBatched } from '@/lib/api/finnhub'
 import { DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import { AssetCardData } from '@/lib/utils/types'
@@ -40,13 +41,19 @@ export default async function CommoditiesPage() {
       <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
 
         {/* Page header */}
-        <div className="mb-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
-            Commodities
-          </h1>
-          <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
-            Real-time commodity prices — gold, silver, crude oil, natural gas, and more
-          </p>
+        <div className="mb-6 space-y-4">
+          <div>
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+              Commodities
+            </h1>
+            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+              Real-time commodity prices — gold, silver, crude oil, natural gas, and more
+            </p>
+          </div>
+          <GlobalSearch
+            placeholder="Search commodities, e.g. Gold, Oil..."
+            className="w-full max-w-lg"
+          />
         </div>
 
         {/* Grid */}

@@ -7,10 +7,21 @@ import type { Asset } from '@/lib/utils/types'
 const TYPE_COLORS: Record<string, string> = {
   stock:     'bg-emerald-500/10 text-emerald-400',
   crypto:    'bg-orange-500/10 text-orange-400',
-  forex:     'bg-emerald-500/10 text-emerald-300',
+  forex:     'bg-sky-500/10 text-sky-400',
   commodity: 'bg-amber-500/10 text-amber-400',
   etf:       'bg-purple-500/10 text-purple-400',
 }
+
+const POPULAR = [
+  { symbol: 'AAPL',    name: 'Apple Inc.',      type: 'stock'     },
+  { symbol: 'MSFT',    name: 'Microsoft',       type: 'stock'     },
+  { symbol: 'GOOGL',   name: 'Alphabet',        type: 'stock'     },
+  { symbol: 'BTC',     name: 'Bitcoin',         type: 'crypto'    },
+  { symbol: 'ETH',     name: 'Ethereum',        type: 'crypto'    },
+  { symbol: 'EUR/USD', name: 'Euro/Dollar',     type: 'forex'     },
+  { symbol: 'GLD',     name: 'Gold ETF',        type: 'commodity' },
+  { symbol: 'SPY',     name: 'S&P 500 ETF',     type: 'etf'       },
+] as const
 
 function useDebounce<T>(value: T, delay: number): T {
   const [d, setD] = useState(value)
@@ -34,6 +45,7 @@ export default function CommandPalette({
   const [suggestions, setSuggestions] = useState<Asset[]>([])
   const [loading,     setLoading]     = useState(false)
   const [activeIdx,   setActiveIdx]   = useState(-1)
+  const [noResults,   setNoResults]   = useState(false)
 
   const dq = useDebounce(query.trim(), 250)
 
@@ -43,18 +55,26 @@ export default function CommandPalette({
       setQuery('')
       setSuggestions([])
       setActiveIdx(-1)
+      setNoResults(false)
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [isOpen])
 
   // Search
   useEffect(() => {
-    if (dq.length < 1) { setSuggestions([]); return }
+    if (dq.length < 1) { setSuggestions([]); setNoResults(false); return }
     let cancelled = false
     setLoading(true)
+    setNoResults(false)
     fetch(`/api/search?q=${encodeURIComponent(dq)}&limit=8`)
       .then((r) => r.json() as Promise<Asset[]>)
-      .then((d) => { if (!cancelled) { setSuggestions(d); setActiveIdx(-1) } })
+      .then((d) => {
+        if (!cancelled) {
+          setSuggestions(d)
+          setNoResults(d.length === 0)
+          setActiveIdx(-1)
+        }
+      })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -118,9 +138,22 @@ export default function CommandPalette({
           </kbd>
         </div>
 
-        {/* Results */}
-        {(suggestions.length > 0 || (dq.length > 0 && !loading)) && (
-          <ul role="listbox" className="max-h-80 overflow-y-auto py-1">
+        {/* No-results message */}
+        {noResults && dq.length >= 2 && !loading && (
+          <div className="px-4 py-5 text-center">
+            <p className="font-mono text-[12px] text-[var(--text-muted)]">
+              No results for{' '}
+              <span className="text-[var(--text)]">&ldquo;{dq}&rdquo;</span>
+            </p>
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)] opacity-60">
+              Try a ticker symbol like AAPL or BTC
+            </p>
+          </div>
+        )}
+
+        {/* Search results */}
+        {(suggestions.length > 0 || (dq.length > 0 && !loading && !noResults)) && (
+          <ul role="listbox" className="max-h-72 overflow-y-auto py-1">
             {suggestions.map((asset, i) => (
               <li key={`${asset.type}-${asset.symbol}`} role="option" aria-selected={i === activeIdx}>
                 <button
@@ -133,13 +166,13 @@ export default function CommandPalette({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-mono text-[12px] font-semibold text-[var(--text)]">{asset.symbol}</span>
-                    <span className="block truncate text-[10px] text-[var(--text-muted)]">{asset.name}</span>
+                    <span className="block truncate font-mono text-[10px] text-[var(--text-muted)]">{asset.name}</span>
                   </span>
                   <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)]" aria-hidden>↵</span>
                 </button>
               </li>
             ))}
-            {dq.length > 0 && (
+            {dq.length > 0 && suggestions.length > 0 && (
               <li className="border-t border-[var(--border)]">
                 <button
                   onMouseDown={(e) => { e.preventDefault(); onClose(); router.push(`/search?q=${encodeURIComponent(query.trim())}`) }}
@@ -153,19 +186,31 @@ export default function CommandPalette({
           </ul>
         )}
 
-        {/* Empty state hint */}
+        {/* Popular — shown when input is empty */}
         {query.length === 0 && (
-          <div className="grid grid-cols-3 gap-px border-t border-[var(--border)] bg-[var(--border)]">
-            {[
-              { label: 'Stocks',      example: 'AAPL, TSLA, NVDA' },
-              { label: 'Crypto',      example: 'BTC, ETH, SOL' },
-              { label: 'Forex',       example: 'EUR/USD, GBP/USD' },
-            ].map((h) => (
-              <div key={h.label} className="flex flex-col gap-0.5 bg-[var(--surface)] px-4 py-3">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">{h.label}</span>
-                <span className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">{h.example}</span>
-              </div>
-            ))}
+          <div className="border-t border-[var(--border)]">
+            <div className="px-4 py-2">
+              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">Popular</span>
+            </div>
+            <ul className="pb-1">
+              {POPULAR.map((asset, i) => (
+                <li key={asset.symbol}>
+                  <button
+                    onMouseDown={(e) => { e.preventDefault(); navigateTo(asset) }}
+                    onMouseEnter={() => setActiveIdx(suggestions.length + i)}
+                    className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-[var(--surface-2)]`}
+                  >
+                    <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide ${TYPE_COLORS[asset.type] ?? 'bg-zinc-800 text-zinc-400'}`}>
+                      {asset.type}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-mono text-[11px] font-semibold text-[var(--text)]">{asset.symbol}</span>
+                      <span className="block truncate font-mono text-[10px] text-[var(--text-muted)]">{asset.name}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

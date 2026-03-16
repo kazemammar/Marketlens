@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
 import AssetCard from '@/components/dashboard/AssetCard'
+import GlobalSearch from '@/components/search/GlobalSearch'
 import { getForexCards } from '@/lib/api/forex'
 
 export const metadata: Metadata = {
@@ -17,13 +18,19 @@ export default async function ForexPage() {
       <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
 
         {/* Page header */}
-        <div className="mb-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
-            Forex Market
-          </h1>
-          <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
-            Real-time foreign exchange rates and currency pair analysis
-          </p>
+        <div className="mb-6 space-y-4">
+          <div>
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+              Forex Market
+            </h1>
+            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+              Real-time foreign exchange rates and currency pair analysis
+            </p>
+          </div>
+          <GlobalSearch
+            placeholder="Search currency pairs, e.g. EUR/USD..."
+            className="w-full max-w-lg"
+          />
         </div>
 
         {/* Grid */}

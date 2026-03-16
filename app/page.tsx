@@ -15,6 +15,7 @@ import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import MaritimePanel        from '@/components/warroom/MaritimePanel'
 import StatusBar            from '@/components/layout/StatusBar'
+import GlobalSearch         from '@/components/search/GlobalSearch'
 import { AssetType }        from '@/lib/utils/types'
 import { getHomepageData }  from '@/lib/api/homepage'
 
@@ -141,6 +142,14 @@ export default async function HomePage({
           <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
             Stocks · Crypto · Forex · Commodities · ETFs
           </span>
+        </div>
+
+        {/* Search bar */}
+        <div className="mb-4">
+          <GlobalSearch
+            placeholder="Search stocks, crypto, forex, commodities..."
+            className="w-full max-w-lg"
+          />
         </div>
 
         <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />

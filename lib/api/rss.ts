@@ -30,37 +30,39 @@ const parser = new Parser<CustomFeed, CustomItem>({
 
 // ─── Image extraction ─────────────────────────────────────────────────────
 
+const isHttps = (url: string) => url.startsWith('https://')
+
 function extractImage(item: Parser.Item & CustomItem): string | undefined {
   // 1. media:content url (most common for news sites)
   const mc = item['media:content']?.['$']?.url
-  if (mc && mc.startsWith('http')) return mc
+  if (mc && isHttps(mc)) return mc
 
   // 2. media:thumbnail (BBC, Reuters)
   const mt = item['media:thumbnail']?.['$']?.url
-  if (mt && mt.startsWith('http')) return mt
+  if (mt && isHttps(mt)) return mt
 
   // 3. media:group > media:thumbnail[0]
   const mg = item['media:group']?.['media:thumbnail']?.[0]?.['$']?.url
-  if (mg && mg.startsWith('http')) return mg
+  if (mg && isHttps(mg)) return mg
 
   // 4. enclosure (can be object or string)
   const enc = item.enclosure
   if (enc) {
     const url = typeof enc === 'string' ? enc : enc.url
-    if (url && url.startsWith('http') && !url.endsWith('.mp3') && !url.endsWith('.mp4')) return url
+    if (url && isHttps(url) && !url.endsWith('.mp3') && !url.endsWith('.mp4')) return url
   }
 
   // 5. itunes:image
   const ii = item['itunes:image']
   if (ii) {
     const url = typeof ii === 'string' ? ii : ii?.['$']?.href
-    if (url && url.startsWith('http')) return url
+    if (url && isHttps(url)) return url
   }
 
-  // 6. Scan content for first <img> src
+  // 6. Scan content for first <img> src (https only)
   const content = (item as Record<string, string>).content ?? ''
-  const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i)
-  if (imgMatch?.[1] && imgMatch[1].startsWith('http')) return imgMatch[1]
+  const imgMatch = content.match(/<img[^>]+src=["'](https:\/\/[^"']+)["']/i)
+  if (imgMatch?.[1]) return imgMatch[1]
 
   return undefined
 }
@@ -69,7 +71,16 @@ function extractImage(item: Parser.Item & CustomItem): string | undefined {
 
 async function fetchFeed(feedUrl: string, feedName: string): Promise<NewsArticle[]> {
   try {
-    const feed = await parser.parseURL(feedUrl)
+    const res = await fetch(feedUrl, {
+      signal: AbortSignal.timeout(9_000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; MarketLens/1.0; +https://marketlens.vercel.app)',
+        'Accept':     'application/rss+xml, application/xml, text/xml, */*',
+      },
+    })
+    if (!res.ok) return []
+    const xml  = await res.text()
+    const feed = await parser.parseString(xml)
 
     return (feed.items ?? []).slice(0, 20).map((item): NewsArticle => {
       const imageUrl    = extractImage(item)

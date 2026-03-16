@@ -66,6 +66,12 @@ export default function FXMonitor() {
                 <div className="h-2.5 w-16 rounded bg-[var(--surface-2)]" />
               </div>
             ))
+          : pairs.length === 0
+          ? (
+              <p className="py-8 text-center font-mono text-[10px] text-[var(--text-muted)]">
+                FX data unavailable
+              </p>
+            )
           : pairs.map((p) => {
               const abs  = Math.abs(p.changePercent)
               const pos  = p.changePercent >= 0

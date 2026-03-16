@@ -64,7 +64,16 @@ export async function GET() {
   try {
     const brief = await redis.get<MarketBriefPayload>(BRIEF_KEY)
     if (!brief) {
-      return NextResponse.json({ error: 'Market brief not yet generated' }, { status: 404 })
+      // No brief cached yet — return a neutral default rather than a hard error
+      const defaultPayload: MarketRiskPayload = {
+        score:     45,
+        level:     'MODERATE',
+        label:     'Moderate Risk',
+        color:     '#f59e0b',
+        factors:   ['Awaiting market brief data', 'Macro uncertainty remains', 'Monitor central bank signals'],
+        updatedAt: Date.now(),
+      }
+      return NextResponse.json(defaultPayload)
     }
 
     const score   = computeScore(brief)

@@ -260,6 +260,7 @@ export default function GeoMap() {
     }
 
     let map: import('maplibre-gl').Map
+    let failsafeTimer: ReturnType<typeof setTimeout>
 
     import('maplibre-gl').then((mgl) => {
       if (!containerRef.current) return
@@ -279,7 +280,19 @@ export default function GeoMap() {
       map.addControl(new mgl.AttributionControl({ compact: true }), 'bottom-right')
       mapRef.current = map
 
+      // If the tile server is unreachable or style fails, clear the loading spinner
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      map.on('error', (e: any) => {
+        console.warn('[GeoMap] map error:', e?.error?.message ?? e)
+        clearTimeout(failsafeTimer)
+        setMapReady(true)
+      })
+
+      // Hard failsafe: show map container after 12 s regardless
+      failsafeTimer = setTimeout(() => setMapReady(true), 12_000)
+
       map.on('load', () => {
+        clearTimeout(failsafeTimer)
         // Pipelines
         map.addSource('pipelines', { type: 'geojson', data: PIPELINES as import('maplibre-gl').GeoJSONSourceSpecification['data'] })
         map.addLayer({ id: 'pipelines-glow', type: 'line', source: 'pipelines',
@@ -346,6 +359,7 @@ export default function GeoMap() {
     })
 
     return () => {
+      clearTimeout(failsafeTimer)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ;(map as any)?.remove?.()
       mapRef.current     = null

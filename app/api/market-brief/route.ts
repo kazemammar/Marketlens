@@ -48,20 +48,23 @@ export async function GET() {
     }
   } catch { /* fall through */ }
 
-  // Fetch recent headlines
+  // Fetch recent headlines (non-fatal — proceed with fallback if unavailable)
   let headlines: string[] = []
   try {
     const articles = await getFinanceNews()
     headlines = articles.slice(0, 20).map((a) => a.headline)
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to fetch news headlines' },
-      { status: 503 },
-    )
-  }
+  } catch { /* proceed with empty headlines */ }
 
   if (headlines.length === 0) {
-    return NextResponse.json({ error: 'No headlines available' }, { status: 503 })
+    const fallback: MarketBriefPayload = {
+      brief:          'Market data feeds are temporarily unavailable. Key global markets continue to trade with activity driven by central bank policy expectations and macro developments. Monitor for breaking geopolitical and economic data releases.',
+      risks:          ['Data feed disruption', 'Central bank policy uncertainty', 'Geopolitical escalation risk'],
+      opportunities:  ['Defensive assets may offer near-term stability'],
+      affectedAssets: [],
+      generatedAt:    Date.now(),
+    }
+    redis.set(CACHE_KEY, fallback, { ex: 300 }).catch(() => {})
+    return NextResponse.json(fallback)
   }
 
   // Call Groq
@@ -100,6 +103,18 @@ export async function GET() {
     return NextResponse.json(payload)
   } catch (err) {
     console.error('[api/market-brief]', err)
-    return NextResponse.json({ error: 'AI analysis unavailable' }, { status: 503 })
+    const fallback: MarketBriefPayload = {
+      brief:          'AI analysis is temporarily unavailable. Markets are trading on continued macro themes — watch Federal Reserve communications, energy supply dynamics, and geopolitical risk factors for directional cues.',
+      risks:          ['AI service temporarily unavailable', 'Monitor for macro surprises', 'Geopolitical risk remains elevated'],
+      opportunities:  ['Commodities and safe-haven assets may benefit from uncertainty'],
+      affectedAssets: [
+        { symbol: 'GLD',   type: 'commodity', direction: 'up' },
+        { symbol: 'SPY',   type: 'etf',       direction: 'volatile' },
+        { symbol: 'USD/JPY', type: 'forex',   direction: 'volatile' },
+      ],
+      generatedAt: Date.now(),
+    }
+    redis.set(CACHE_KEY, fallback, { ex: 300 }).catch(() => {})
+    return NextResponse.json(fallback)
   }
 }

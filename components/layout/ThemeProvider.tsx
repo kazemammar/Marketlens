@@ -14,15 +14,75 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggle: () => {},
 })
 
+// ─── CSS variable maps ─────────────────────────────────────────────────────
+
+const DARK_VARS: Record<string, string> = {
+  '--bg':          '#09090b',
+  '--surface':     '#18181b',
+  '--surface-2':   '#1c1c1f',
+  '--surface-3':   '#222226',
+  '--border':      '#27272a',
+  '--text':        '#fafafa',
+  '--text-2':      '#a1a1aa',
+  '--text-muted':  '#71717a',
+  '--accent':      '#10b981',
+  '--accent-dim':  'rgba(16,185,129,0.12)',
+  '--accent-glow': 'rgba(16,185,129,0.22)',
+  '--danger':      '#ef4444',
+  '--danger-dim':  'rgba(239,68,68,0.12)',
+  '--warning':     '#f59e0b',
+  '--warning-dim': 'rgba(245,158,11,0.12)',
+  '--price-up':    '#00ff88',
+  '--price-down':  '#ff4444',
+  '--price-flat':  '#888888',
+}
+
+const LIGHT_VARS: Record<string, string> = {
+  '--bg':          '#f4f4f5',
+  '--surface':     '#ffffff',
+  '--surface-2':   '#e4e4e7',
+  '--surface-3':   '#d4d4d8',
+  '--border':      '#d1d5db',
+  '--text':        '#09090b',
+  '--text-2':      '#3f3f46',
+  '--text-muted':  '#71717a',
+  '--accent':      '#059669',
+  '--accent-dim':  'rgba(5,150,105,0.10)',
+  '--accent-glow': 'rgba(5,150,105,0.20)',
+  '--danger':      '#dc2626',
+  '--danger-dim':  'rgba(220,38,38,0.10)',
+  '--warning':     '#d97706',
+  '--warning-dim': 'rgba(217,119,6,0.10)',
+  '--price-up':    '#059669',
+  '--price-down':  '#dc2626',
+  '--price-flat':  '#6b7280',
+}
+
+function applyTheme(theme: Theme) {
+  const root = document.documentElement
+  const vars = theme === 'dark' ? DARK_VARS : LIGHT_VARS
+
+  // 1. Toggle .dark class (for Tailwind dark: utilities)
+  root.classList.toggle('dark', theme === 'dark')
+
+  // 2. Set color-scheme so browser chrome (scrollbars, inputs) matches
+  root.style.colorScheme = theme
+
+  // 3. Write every CSS variable directly as an inline style —
+  //    inline styles have highest specificity and bypass all cascade issues
+  Object.entries(vars).forEach(([prop, value]) => {
+    root.style.setProperty(prop, value)
+  })
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
 
-  // On mount: read saved preference, fall back to dark
   useEffect(() => {
-    const saved = localStorage.getItem('ml-theme') as Theme | null
-    const initial: Theme = saved ?? 'dark'
-    setTheme(initial)
-    applyTheme(initial)
+    // Read saved preference, apply immediately
+    const saved = (localStorage.getItem('ml-theme') as Theme | null) ?? 'dark'
+    setTheme(saved)
+    applyTheme(saved)
   }, [])
 
   const toggle = useCallback(() => {
@@ -43,13 +103,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme(): ThemeContextValue {
   return useContext(ThemeContext)
-}
-
-function applyTheme(theme: Theme) {
-  const root = document.documentElement
-  if (theme === 'dark') {
-    root.classList.add('dark')
-  } else {
-    root.classList.remove('dark')
-  }
 }

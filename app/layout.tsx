@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
+import { AuthProvider }  from '@/lib/hooks/useAuth'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 
@@ -65,11 +66,13 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
+          <AuthProvider>
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <div className="flex-1">{children}</div>
+              <Footer />
+            </div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

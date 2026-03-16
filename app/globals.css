@@ -3,31 +3,32 @@
 /* ─── Class-based dark mode (Tailwind v4) ────────────────────────────────── */
 @custom-variant dark (&:is(.dark, .dark *));
 
-/* ─── Obsidian Terminal Design Tokens ────────────────────────────────────── */
+/* ─── Design Tokens ───────────────────────────────────────────────────────── */
+
+/* Light mode (default when .dark class is absent) */
 :root {
-  /* Light mode fallback (same obsidian — this app is dark-only) */
-  --bg:          #09090b;
-  --surface:     #18181b;
-  --surface-2:   #1c1c1f;
-  --surface-3:   #222226;
-  --border:      #27272a;
-  --text:        #fafafa;
-  --text-2:      #a1a1aa;
+  --bg:          #f4f4f5;
+  --surface:     #ffffff;
+  --surface-2:   #e4e4e7;
+  --surface-3:   #d4d4d8;
+  --border:      #d1d5db;
+  --text:        #09090b;
+  --text-2:      #3f3f46;
   --text-muted:  #71717a;
 
   /* Accent system — emerald green is the brand */
-  --accent:      #10b981;
-  --accent-dim:  rgba(16, 185, 129, 0.12);
-  --accent-glow: rgba(16, 185, 129, 0.22);
-  --danger:      #ef4444;
-  --danger-dim:  rgba(239, 68, 68, 0.12);
-  --warning:     #f59e0b;
-  --warning-dim: rgba(245, 158, 11, 0.12);
+  --accent:      #059669;
+  --accent-dim:  rgba(5, 150, 105, 0.10);
+  --accent-glow: rgba(5, 150, 105, 0.20);
+  --danger:      #dc2626;
+  --danger-dim:  rgba(220, 38, 38, 0.10);
+  --warning:     #d97706;
+  --warning-dim: rgba(217, 119, 6, 0.10);
 
-  /* High-contrast price colors — Bloomberg-style */
-  --price-up:   #00ff88;
-  --price-down: #ff4444;
-  --price-flat: #888888;
+  /* High-contrast price colors */
+  --price-up:   #059669;
+  --price-down: #dc2626;
+  --price-flat: #6b7280;
 
   /* Font stack */
   --font-sans:  var(--font-inter), ui-sans-serif, system-ui, Arial, sans-serif;
@@ -36,7 +37,7 @@
   --font-geist-mono: var(--font-jetbrains-mono);
 }
 
-/* Dark mode is the default and only mode */
+/* Dark mode */
 .dark {
   --bg:          #09090b;
   --surface:     #18181b;
@@ -53,6 +54,9 @@
   --danger-dim:  rgba(239, 68, 68, 0.12);
   --warning:     #f59e0b;
   --warning-dim: rgba(245, 158, 11, 0.12);
+  --price-up:   #00ff88;
+  --price-down: #ff4444;
+  --price-flat: #888888;
 }
 
 /* ─── Base reset ──────────────────────────────────────────────────────────── */
@@ -60,6 +64,9 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
+}
+html.dark {
   color-scheme: dark;
 }
 
@@ -225,23 +232,7 @@ code, pre, kbd {
   border-top: 1px solid rgba(16, 185, 129, 0.15);
 }
 
-/* ─── Nav active indicator — emerald underline ────────────────────────────── */
-.nav-link-active {
-  position: relative;
-  color: var(--accent) !important;
-}
-.nav-link-active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  width: 60%;
-  height: 1.5px;
-  background: var(--accent);
-  border-radius: 1px 1px 0 0;
-  transform: translateX(-50%);
-  box-shadow: 0 0 6px var(--accent-glow);
-}
+/* Nav active state handled inline in Navbar component */
 
 /* ─── Asset card — hover lift ────────────────────────────────────────────── */
 .asset-card {

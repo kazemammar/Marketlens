@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { AssetType, AssetCardData } from '@/lib/utils/types'
 import { formatPrice, formatChange, formatPercent, changeColor } from '@/lib/utils/formatters'
+import WatchlistButton from './WatchlistButton'
 
 const TYPE_LABELS: Record<AssetType, string> = {
   stock: 'Stock', crypto: 'Crypto', forex: 'Forex', commodity: 'Commodity', etf: 'ETF',
@@ -53,8 +54,8 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
         </div>
       </div>
 
-      {/* Right: price */}
-      <div className="flex flex-col items-start sm:items-end">
+      {/* Right: price + watchlist */}
+      <div className="flex flex-col items-start sm:items-end gap-2">
         <p className="text-4xl font-bold font-mono tabular-nums text-[var(--text)]">
           {formatPrice(price, currency)}
         </p>
@@ -65,6 +66,7 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
           <span>({formatPercent(changePercent, false)})</span>
         </div>
         <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">15min delayed</span>
+        <WatchlistButton symbol={symbol} type={type} />
       </div>
     </div>
   )

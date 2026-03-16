@@ -64,6 +64,7 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
           </span>
           <span>({formatPercent(changePercent, false)})</span>
         </div>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">15min delayed</span>
       </div>
     </div>
   )

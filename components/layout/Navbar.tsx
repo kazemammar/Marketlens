@@ -1,45 +1,32 @@
 'use client'
 
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useTheme } from './ThemeProvider'
 import CommandPalette from './CommandPalette'
 
 const NAV_LINKS = [
-  { label: 'Stocks',      href: '/?tab=stock'     },
-  { label: 'Crypto',      href: '/?tab=crypto'    },
-  { label: 'Forex',       href: '/?tab=forex'     },
-  { label: 'Commodities', href: '/?tab=commodity' },
-  { label: 'ETFs',        href: '/?tab=etf'       },
-  { label: 'News',        href: '/news'            },
-  { label: 'Econ',        href: '/economics'       },
+  { label: 'Stocks',      href: '/stocks'      },
+  { label: 'Crypto',      href: '/crypto'      },
+  { label: 'Forex',       href: '/forex'       },
+  { label: 'Commodities', href: '/commodities' },
+  { label: 'ETFs',        href: '/etf'         },
+  { label: 'News',        href: '/news'        },
+  { label: 'Econ',        href: '/economics'   },
 ]
 
 function NavLinks() {
-  const pathname     = usePathname()
-  const searchParams = useSearchParams()
-  const activeHref   = pathname === '/'
-    ? `/?tab=${searchParams.get('tab') ?? 'stock'}`
-    : pathname
-
-  function handleNavClick() {
-    if (pathname === '/') {
-      setTimeout(() => {
-        document.getElementById('market-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 50)
-    }
-  }
+  const pathname = usePathname()
 
   return (
     <nav className="hidden items-center gap-0 lg:flex ml-4" aria-label="Main navigation">
       {NAV_LINKS.map(({ label, href }) => {
-        const isActive = href === activeHref
+        const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
         return (
           <Link
             key={href}
             href={href}
-            onClick={handleNavClick}
             className={`relative px-3 py-1.5 font-mono text-[10px] font-medium tracking-wide transition-colors duration-150 ${
               isActive ? 'nav-link-active' : 'text-[var(--text-muted)] hover:text-[var(--text-2)]'
             }`}

@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import AssetCard from './AssetCard'
 import { AssetCardData, AssetType } from '@/lib/utils/types'
 
@@ -133,6 +134,24 @@ export default function MarketTabs({
           )
         })}
       </div>
+
+      {/* ── View All link ── */}
+      {(() => {
+        const TAB_TO_PAGE: Record<string, string> = {
+          stock: '/stocks', crypto: '/crypto', forex: '/forex', commodity: '/commodities', etf: '/etf',
+        }
+        const activeLabel = TABS.find(t => t.id === activeTab)?.label ?? ''
+        return (
+          <div className="mb-4 flex justify-end">
+            <Link
+              href={TAB_TO_PAGE[activeTab] ?? '/'}
+              className="font-mono text-[9px] text-[var(--accent)] hover:underline"
+            >
+              View All {activeLabel} →
+            </Link>
+          </div>
+        )
+      })()}
 
       {/* ── Content ── */}
       {current.status === 'loading' && <SkeletonGrid />}

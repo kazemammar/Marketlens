@@ -1,4 +1,5 @@
 import { AnalystRecommendation } from '@/lib/utils/types'
+import { getRecommendations } from '@/lib/api/finnhub'
 
 interface AnalystRatingsProps {
   symbol: string
@@ -6,12 +7,7 @@ interface AnalystRatingsProps {
 
 async function fetchRecommendations(symbol: string): Promise<AnalystRecommendation[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/recommendations/${encodeURIComponent(symbol)}`, {
-      next: { revalidate: 3600 },
-    })
-    if (!res.ok) return []
-    return res.json()
+    return await getRecommendations(symbol)
   } catch {
     return []
   }

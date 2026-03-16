@@ -1,5 +1,7 @@
 import { CompanyFinancials, FinancialMetrics, EarningsData } from '@/lib/utils/types'
 import { formatCompact, formatNumber, formatPercent } from '@/lib/utils/formatters'
+import { getFinancials } from '@/lib/api/fmp'
+import { getFinancialMetrics, getEarnings } from '@/lib/api/finnhub'
 
 interface FinancialsData {
   financials: CompanyFinancials | null
@@ -12,15 +14,15 @@ interface FinancialsTableProps {
 }
 
 async function fetchFinancials(symbol: string): Promise<FinancialsData> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
-    const res = await fetch(`${baseUrl}/api/financials/${encodeURIComponent(symbol)}`, {
-      next: { revalidate: 86400 },
-    })
-    if (!res.ok) return { financials: null, metrics: null, earnings: [] }
-    return res.json()
-  } catch {
-    return { financials: null, metrics: null, earnings: [] }
+  const [financials, metrics, earnings] = await Promise.allSettled([
+    getFinancials(symbol, 'quarter'),
+    getFinancialMetrics(symbol),
+    getEarnings(symbol),
+  ])
+  return {
+    financials: financials.status === 'fulfilled' ? financials.value : null,
+    metrics:    metrics.status    === 'fulfilled' ? metrics.value    : null,
+    earnings:   earnings.status   === 'fulfilled' ? earnings.value   : [],
   }
 }
 
@@ -47,7 +49,7 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
       <section>
         <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Financials</h2>
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-8 text-center">
-          <p className="text-sm text-[var(--text-muted)]">Financial data unavailable.</p>
+          <p className="text-sm text-[var(--text-muted)]">Financial data temporarily unavailable — try again later.</p>
         </div>
       </section>
     )

@@ -276,7 +276,7 @@ export async function getCompanyNews(
         summary:        item.summary,
         source:         item.source,
         url:            item.url,
-        imageUrl:       (item.image && !item.image.includes('yimg.com/rz/stage')) ? item.image : undefined,
+        imageUrl:       (item.image && !['yimg.com/rz/stage', 'yahoo_finance_en-US', 's.yimg.com/uu/api/res'].some((p) => item.image.includes(p))) ? item.image : undefined,
         publishedAt:    item.datetime * 1_000,
         relatedSymbols: item.related ? item.related.split(',').map((s) => s.trim()) : [],
       }))

@@ -30,8 +30,9 @@ const parser = new Parser<CustomFeed, CustomItem>({
 
 // ─── Image extraction ─────────────────────────────────────────────────────
 
+const BAD_IMAGE_HOSTS = ['yimg.com/rz/stage', 'yahoo_finance_en-US', 's.yimg.com/uu/api/res']
 const isValidImage = (url: string) =>
-  url.startsWith('https://') && !url.includes('yimg.com/rz/stage')
+  url.startsWith('https://') && !BAD_IMAGE_HOSTS.some((p) => url.includes(p))
 
 function extractImage(item: Parser.Item & CustomItem): string | undefined {
   // 1. media:content url (most common for news sites)

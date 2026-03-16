@@ -99,7 +99,9 @@ export default function FXMonitor() {
                       {fmt(p.price, p.symbol)}
                     </span>
                     <span className={`w-14 text-right font-mono text-[10px] font-semibold tabular-nums ${textColor}`}>
-                      {p.changePercent >= 0 ? '+' : ''}{p.changePercent.toFixed(2)}%
+                      {p.changePercent === 0
+                        ? <span className="text-[var(--text-muted)] font-normal">—</span>
+                        : <>{p.changePercent >= 0 ? '+' : ''}{p.changePercent.toFixed(2)}%</>}
                     </span>
                   </div>
                 </div>

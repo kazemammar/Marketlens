@@ -1,6 +1,13 @@
 // Forex client — uses open.er-api.com (free tier, no API key required)
-// Provides currency pair rates with 1-hour granularity.
-// Note: 24h change is approximated by caching the previous hour's rates.
+// Provides currency pair rates with ~24h change calculation.
+//
+// 24h change strategy:
+//   "forex:baseline" is written ONCE with NX (only-if-not-exists) and a 25h TTL.
+//   Every request compares current rates against that baseline.
+//   After 25h the key expires naturally; the next request seeds a fresh baseline
+//   (change shows 0% for the first request of each new window, then diverges).
+const BASELINE_KEY = 'forex:baseline'
+const BASELINE_TTL = 25 * 3_600   // 25 h
 
 import { cachedFetch, cacheKey, redis } from '@/lib/cache/redis'
 import { TTL, EXCHANGE_RATE_BASE_URL, DEFAULT_FOREX_PAIRS } from '@/lib/utils/constants'
@@ -35,12 +42,12 @@ async function fetchUsdRates(): Promise<ExchangeRateResponse> {
  * Daily change is estimated by comparing with the previously cached rate.
  */
 export async function getForexCards(): Promise<AssetCardData[]> {
-  // Snapshot previous rates before we overwrite them (for change calculation)
-  const prevKey = 'forex:usd-rates:prev'
+  // Read the 25h baseline (may be null on very first call)
   let prevRates: Record<string, number> = {}
+  let hasPrev = false
   try {
-    const stored = await redis.get<Record<string, number>>(prevKey)
-    prevRates = stored ?? {}
+    const stored = await redis.get<Record<string, number>>(BASELINE_KEY)
+    if (stored) { prevRates = stored; hasPrev = true }
   } catch {
     // Redis unavailable — proceed without change data
   }
@@ -52,8 +59,12 @@ export async function getForexCards(): Promise<AssetCardData[]> {
     fetchUsdRates,
   )
 
-  // Persist current rates as the new "previous" snapshot (1h TTL)
-  redis.set(prevKey, data.rates, { ex: 3_600 }).catch(() => {})
+  // Seed baseline only if it doesn't exist yet (NX).
+  // Once set, it lives for 25h and is never overwritten — this is the stable
+  // comparison point for daily change.
+  if (!hasPrev) {
+    redis.set(BASELINE_KEY, data.rates, { ex: BASELINE_TTL, nx: true }).catch(() => {})
+  }
 
   const cards: AssetCardData[] = []
 
@@ -74,17 +85,20 @@ export async function getForexCards(): Promise<AssetCardData[]> {
       price = 1 / rate
     }
 
-    // Estimate 24h change from previous cached snapshot
-    let prevPrice = price
-    if (usdIsBase) {
-      prevPrice = prevRates[quote] ?? price
-    } else {
-      const prevRate = prevRates[base]
-      prevPrice = prevRate ? 1 / prevRate : price
+    // 24h change against baseline (0 if no baseline available yet)
+    let change = 0
+    let changePercent = 0
+    if (hasPrev) {
+      let prevPrice = price
+      if (usdIsBase) {
+        prevPrice = prevRates[quote] ?? price
+      } else {
+        const prevRate = prevRates[base]
+        prevPrice = prevRate ? 1 / prevRate : price
+      }
+      change        = price - prevPrice
+      changePercent = prevPrice !== 0 ? (change / prevPrice) * 100 : 0
     }
-
-    const change        = price - prevPrice
-    const changePercent = prevPrice !== 0 ? (change / prevPrice) * 100 : 0
 
     // Synthetic OHLC for the sparkline (±0.1% band around current price)
     const band = price * 0.001

@@ -8,6 +8,8 @@ import AuthModal from '@/components/auth/AuthModal'
 import AddPositionModal from '@/components/portfolio/AddPositionModal'
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary'
 import PositionsTable, { type QuoteData } from '@/components/portfolio/PositionsTable'
+import PortfolioBrief from '@/components/portfolio/PortfolioBrief'
+import PortfolioNewsFeed from '@/components/portfolio/PortfolioNewsFeed'
 
 // ─── Crypto symbol mapping ─────────────────────────────────────────────────
 
@@ -279,14 +281,23 @@ export default function PortfolioPage() {
         )}
 
         {!isLoading && positions.length > 0 && (
-          <div className="rounded-xl border border-[var(--border)] overflow-hidden">
-            <PositionsTable
-              positions={positions}
-              quotes={quotes}
-              onUpdate={updatePosition}
-              onDelete={removePosition}
-            />
-          </div>
+          <>
+            {/* AI Brief */}
+            <PortfolioBrief positionCount={positions.length} />
+
+            {/* Positions table */}
+            <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+              <PositionsTable
+                positions={positions}
+                quotes={quotes}
+                onUpdate={updatePosition}
+                onDelete={removePosition}
+              />
+            </div>
+
+            {/* News feed */}
+            <PortfolioNewsFeed positionCount={positions.length} />
+          </>
         )}
       </div>
 

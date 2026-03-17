@@ -6,33 +6,34 @@ import type { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
 
 const VERDICT_STYLE: Record<SignalVerdict, { bg: string; text: string; border: string; glow: string; label: string }> = {
-  BUY:   { bg: 'rgba(0,255,136,0.06)',  text: '#00ff88', border: 'rgba(0,255,136,0.25)',  glow: 'rgba(0,255,136,0.2)',   label: 'BUY'   },
-  CASH:  { bg: 'rgba(255,68,68,0.06)',  text: '#ff4444', border: 'rgba(255,68,68,0.25)',  glow: 'rgba(255,68,68,0.2)',   label: 'CASH'  },
-  MIXED: { bg: 'rgba(245,158,11,0.06)', text: '#f59e0b', border: 'rgba(245,158,11,0.2)',  glow: 'rgba(245,158,11,0.15)', label: 'MIXED' },
+  BUY:   { bg: 'var(--accent-dim)',   text: 'var(--price-up)',   border: 'var(--accent-glow)',  glow: 'var(--accent-glow)',  label: 'BUY'   },
+  CASH:  { bg: 'var(--danger-dim)',   text: 'var(--price-down)', border: 'var(--danger-dim)',   glow: 'var(--danger-dim)',   label: 'CASH'  },
+  MIXED: { bg: 'var(--warning-dim)',  text: 'var(--warning)',    border: 'var(--warning-dim)',  glow: 'var(--warning-dim)',  label: 'MIXED' },
 }
 
 const SIG_COLOR: Record<SignalVerdict, string> = {
-  BUY:   '#00ff88',
-  CASH:  '#ff4444',
-  MIXED: '#f59e0b',
+  BUY:   'var(--price-up)',
+  CASH:  'var(--price-down)',
+  MIXED: 'var(--warning)',
 }
 
 function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
   const abs   = Math.min(Math.abs(pct), 3) // cap at 3% for color intensity
   const ratio = abs / 3
   const isPos = pct >= 0
-  const bg    = isPos
-    ? `rgba(0,255,136,${0.1 + ratio * 0.32})`
-    : `rgba(255,68,68,${0.1 + ratio * 0.32})`
-  const chgColor = isPos ? '#00ff88' : '#ff4444'
+  const bgOpacity = 0.1 + ratio * 0.32
+  const bg        = isPos
+    ? `rgba(var(--price-up-rgb),${bgOpacity})`
+    : `rgba(var(--price-down-rgb),${bgOpacity})`
+  const chgColor = isPos ? 'var(--price-up)' : 'var(--price-down)'
   const sym = symbol.length <= 4 ? symbol : symbol.slice(0, 4)
   return (
     <div
       title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
       className="flex flex-col items-center justify-center rounded-sm gap-0"
-      style={{ background: bg, minHeight: '38px', border: '1px solid rgba(255,255,255,0.04)' }}
+      style={{ background: bg, minHeight: '38px', border: '1px solid var(--border)' }}
     >
-      <span className="font-mono font-bold text-white leading-none" style={{ fontSize: '8px' }}>{sym}</span>
+      <span className="font-mono font-bold text-[var(--text)] leading-none" style={{ fontSize: '8px' }}>{sym}</span>
       <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: '7px', color: chgColor }}>
         {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
       </span>

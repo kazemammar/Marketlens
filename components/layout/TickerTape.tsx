@@ -29,7 +29,7 @@ function TickerItem({
   if (!quote) {
     return (
       <div className="flex items-center gap-2 px-5">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: '#888888' }}>{label}</span>
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>{label}</span>
         <div className="skeleton h-2 w-14 rounded" />
       </div>
     )
@@ -41,10 +41,10 @@ function TickerItem({
 
   return (
     <div className="flex items-center gap-2 px-5">
-      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: '#888888' }}>
+      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>
         {label}
       </span>
-      <span className={`inline-block font-mono text-[11px] font-bold tabular-nums text-white ${flashCls}`}>
+      <span className={`inline-block font-mono text-[11px] font-bold tabular-nums text-[var(--text)] ${flashCls}`}>
         {formatPrice(quote.price, currency)}
       </span>
       <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color: chgColor }}>

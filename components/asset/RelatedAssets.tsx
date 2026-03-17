@@ -33,7 +33,7 @@ export default function RelatedAssets({ symbol, type }: Props) {
           <line x1="5" y1="7" x2="11" y2="4" stroke="currentColor" strokeWidth="1.2" />
           <line x1="5" y1="9" x2="11" y2="12" stroke="currentColor" strokeWidth="1.2" />
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Related Assets
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -59,7 +59,7 @@ export default function RelatedAssets({ symbol, type }: Props) {
                   {badge.label}
                 </span>
                 {/* Symbol */}
-                <span className="font-mono text-[13px] font-bold text-white group-hover:text-[var(--accent)] transition-colors truncate">
+                <span className="font-mono text-[13px] font-bold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">
                   {asset.symbol}
                 </span>
                 {/* Name */}

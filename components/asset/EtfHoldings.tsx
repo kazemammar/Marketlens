@@ -102,7 +102,7 @@ export default function EtfHoldings({ symbol }: { symbol: string }) {
           <rect x="9" y="3" width="3" height="12" rx="0.5" fill="currentColor" opacity="0.9"/>
           <rect x="13" y="1" width="2" height="14" rx="0.5" fill="currentColor"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           ETF Breakdown
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -154,7 +154,7 @@ export default function EtfHoldings({ symbol }: { symbol: string }) {
                             </td>
                             <td className="px-3 py-1.5">
                               <div className="flex flex-col items-end gap-0.5">
-                                <span className="font-mono text-[10px] font-semibold tabular-nums text-white">
+                                <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
                                   {(h.weight ?? 0).toFixed(2)}%
                                 </span>
                                 <div className="h-1 w-20 overflow-hidden rounded-full bg-[var(--surface-3)]">
@@ -179,7 +179,7 @@ export default function EtfHoldings({ symbol }: { symbol: string }) {
                   <span className="font-mono text-[8px] text-[var(--text-muted)]">
                     Top {data!.holdings.length} holdings
                   </span>
-                  <span className="font-mono text-[9px] font-semibold text-white">
+                  <span className="font-mono text-[9px] font-semibold text-[var(--text)]">
                     {data!.holdings.reduce((s, h) => s + (h.weight ?? 0), 0).toFixed(1)}% of fund
                   </span>
                 </div>
@@ -205,7 +205,7 @@ export default function EtfHoldings({ symbol }: { symbol: string }) {
                       <div key={s.sector}>
                         <div className="mb-0.5 flex items-center justify-between gap-2">
                           <span className="truncate font-mono text-[9px] text-[var(--text-muted)]">{s.sector}</span>
-                          <span className="shrink-0 font-mono text-[9px] font-semibold tabular-nums text-white">
+                          <span className="shrink-0 font-mono text-[9px] font-semibold tabular-nums text-[var(--text)]">
                             {(s.weight ?? 0).toFixed(1)}%
                           </span>
                         </div>

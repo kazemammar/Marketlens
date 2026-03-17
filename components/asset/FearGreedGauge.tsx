@@ -116,7 +116,7 @@ export default function FearGreedGauge() {
           <path d="M8 2v2M2 8h2M14 8h-2M8 14v-2M4.22 4.22l1.41 1.41M10.36 10.36l1.42 1.42M4.22 11.78l1.41-1.41" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Fear &amp; Greed
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />

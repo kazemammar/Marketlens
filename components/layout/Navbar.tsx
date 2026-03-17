@@ -83,8 +83,8 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
       }`}
       style={{
-        background: 'rgba(9,9,11,0.97)',
-        borderBottom: open ? '1px solid rgba(39,39,42,0.8)' : 'none',
+        background: 'var(--bg)',
+        borderBottom: open ? '1px solid var(--border)' : 'none',
       }}
     >
       <nav className="grid grid-cols-2 gap-1 p-3 sm:grid-cols-4">
@@ -134,11 +134,11 @@ export default function Navbar() {
       <header
         className="sticky top-0 z-[200] w-full"
         style={{
-          background:           '#09090b',
+          background:           'var(--bg)',
           backdropFilter:       'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          borderBottom:         '1px solid rgba(39,39,42,0.7)',
-          boxShadow:            '0 1px 0 rgba(16,185,129,0.06), 0 4px 24px rgba(0,0,0,0.4)',
+          borderBottom:         '1px solid var(--border)',
+          boxShadow:            '0 1px 0 rgba(16,185,129,0.06), 0 4px 24px rgba(0,0,0,0.15)',
           // Extend into the iOS status bar safe area
           paddingTop:           'env(safe-area-inset-top)',
           // Force own GPU compositing layer so iOS WebKit never paints
@@ -177,7 +177,7 @@ export default function Navbar() {
 
             {/* Wordmark */}
             <span className="hidden sm:flex items-baseline gap-0" style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.03em' }}>
-              <span style={{ color: '#fafafa' }}>Market</span>
+              <span style={{ color: 'var(--text)' }}>Market</span>
               <span style={{ color: '#10b981', textShadow: '0 0 16px rgba(16,185,129,0.5)' }}>Lens</span>
             </span>
 
@@ -201,7 +201,7 @@ export default function Navbar() {
           </span>
 
           {/* ── Separator ────────────────────────────────────────────── */}
-          <div className="hidden lg:block h-5 w-px shrink-0" style={{ background: 'rgba(63,63,70,0.6)' }} />
+          <div className="hidden lg:block h-5 w-px shrink-0" style={{ background: 'var(--border)' }} />
 
           {/* ── Nav links ────────────────────────────────────────────── */}
           <Suspense fallback={<NavLinksFallback />}>
@@ -218,7 +218,7 @@ export default function Navbar() {
             aria-label="Search (⌘K)"
             className="group flex h-8 items-center gap-2 rounded-lg px-3 font-mono text-[10px] transition-all duration-150 hover:bg-white/[0.06]"
             style={{
-              border: '1px solid rgba(63,63,70,0.6)',
+              border: '1px solid var(--border)',
               color: 'var(--text-muted)',
             }}
           >
@@ -229,8 +229,8 @@ export default function Navbar() {
             <kbd
               className="hidden sm:flex items-center rounded px-1 py-px text-[9px] font-mono"
               style={{
-                background: 'rgba(39,39,42,0.8)',
-                border: '1px solid rgba(63,63,70,0.6)',
+                background: 'var(--surface-2)',
+                border: '1px solid var(--border)',
                 color: 'var(--text-muted)',
               }}
             >
@@ -239,7 +239,7 @@ export default function Navbar() {
           </button>
 
           {/* Thin separator before icon buttons */}
-          <div className="h-5 w-px shrink-0" style={{ background: 'rgba(63,63,70,0.5)' }} />
+          <div className="h-5 w-px shrink-0" style={{ background: 'var(--border)' }} />
 
           {/* User menu */}
           <UserMenu />
@@ -249,7 +249,7 @@ export default function Navbar() {
             onClick={toggle}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/[0.06]"
-            style={{ border: '1px solid rgba(63,63,70,0.6)', color: 'var(--text-muted)' }}
+            style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
           >
             {theme === 'dark' ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-3.5 w-3.5" aria-hidden>
@@ -276,7 +276,7 @@ export default function Navbar() {
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/[0.06] lg:hidden"
-            style={{ border: '1px solid rgba(63,63,70,0.6)', color: 'var(--text-muted)' }}
+            style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4" aria-hidden>
               {mobileOpen ? (

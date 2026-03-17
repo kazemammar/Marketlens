@@ -45,7 +45,7 @@ export default function DefiTvl({ symbol }: { symbol: string }) {
         <span className="font-mono text-[13px] text-[var(--text-muted)]">—</span>
       ) : (
         <>
-          <span className="font-mono text-[15px] font-bold leading-tight tabular-nums text-white">
+          <span className="font-mono text-[15px] font-bold leading-tight tabular-nums text-[var(--text)]">
             {fmtTvl(data.tvl)}
           </span>
           <span className="font-mono text-[9px] text-[var(--text-muted)]">

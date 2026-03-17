@@ -76,7 +76,7 @@ export default function EtfOverview({ symbol }: { symbol: string }) {
           <rect x="1" y="9" width="6" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="9" y="9" width="6" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Fund Overview
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -92,7 +92,7 @@ export default function EtfOverview({ symbol }: { symbol: string }) {
                 <p className="mb-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                   Fund
                 </p>
-                <p className="font-mono text-[12px] font-bold text-white">{meta.name}</p>
+                <p className="font-mono text-[12px] font-bold text-[var(--text)]">{meta.name}</p>
                 <p className="mt-0.5 font-mono text-[9px] text-[var(--text-muted)]">{meta.fullName}</p>
                 <div className="mt-1.5 flex items-center gap-2">
                   <span
@@ -131,13 +131,13 @@ export default function EtfOverview({ symbol }: { symbol: string }) {
               <p className="mb-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Symbol
               </p>
-              <p className="font-mono text-[16px] font-bold text-white">{symbol.toUpperCase()}</p>
+              <p className="font-mono text-[16px] font-bold text-[var(--text)]">{symbol.toUpperCase()}</p>
             </div>
             <div className="bg-[var(--surface)] px-4 py-3">
               <p className="mb-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Type
               </p>
-              <p className="font-mono text-[12px] font-bold text-white">Exchange-Traded Fund</p>
+              <p className="font-mono text-[12px] font-bold text-[var(--text)]">Exchange-Traded Fund</p>
             </div>
             <div className="bg-[var(--surface)] px-4 py-3">
               <p className="font-mono text-[9px] text-[var(--text-muted)]">

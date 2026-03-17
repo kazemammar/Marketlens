@@ -24,9 +24,9 @@ function yesPct(p: number): number {
 
 function yesColor(p: number): string {
   const pct = yesPct(p)
-  if (pct >= 70) return '#00ff88'
-  if (pct >= 40) return '#f59e0b'
-  return '#ff4444'
+  if (pct >= 70) return 'var(--price-up)'
+  if (pct >= 40) return 'var(--warning)'
+  return 'var(--price-down)'
 }
 
 function MarketRow({ market }: { market: PolymarketMarket }) {
@@ -49,7 +49,7 @@ function MarketRow({ market }: { market: PolymarketMarket }) {
 
       {/* Question + meta */}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 font-mono text-[10px] leading-snug text-[#e0e0e0]" title={market.question}>
+        <p className="line-clamp-2 font-mono text-[10px] leading-snug text-[var(--text-2)]" title={market.question}>
           {market.question}
         </p>
         <div className="mt-0.5 flex items-center gap-2">
@@ -92,7 +92,7 @@ export default function PredictionMarkets() {
             <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
             <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Prediction Markets
           </span>
           <span className="rounded border border-[var(--border)] px-1.5 py-px font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">

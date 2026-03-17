@@ -22,7 +22,7 @@ const RISK_STYLE: Record<string, { label: string; text: string; border: string; 
 function ts(ms: number) {
   const d = new Date(ms)
   const pad = (n: number) => n.toString().padStart(2, '0')
-  return `${pad(d.getHours())}:${pad(d.getMinutes())} UTC`
+  return `Generated ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`
 }
 
 export default function MarketBrief() {
@@ -106,7 +106,7 @@ export default function MarketBrief() {
             {/* Risk pill */}
             <span
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${rs.text} ${rs.border}`}
-              style={{ background: 'rgba(0,0,0,0.3)' }}
+              style={{ background: 'var(--surface-2)' }}
             >
               <span
                 className="h-1.5 w-1.5 rounded-full"
@@ -116,7 +116,11 @@ export default function MarketBrief() {
             </span>
 
             {/* Timestamp */}
-            <span className="font-mono text-[9px] text-[var(--text-muted)]">
+            <span className="flex items-center gap-1 font-mono text-[9px] text-[var(--text-muted)]">
+              <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 shrink-0 opacity-60" aria-hidden>
+                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M6 3.5v2.75l1.5 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </svg>
               {ts(brief.generatedAt)}
             </span>
           </div>
@@ -124,7 +128,7 @@ export default function MarketBrief() {
           {/* ── Brief text ───────────────────────────────────────────────── */}
           <p
             className="min-w-0 flex-1 text-[13px] leading-relaxed"
-            style={{ color: '#d4d4d8' }}
+            style={{ color: 'var(--text-2)' }}
           >
             {brief.brief}
           </p>

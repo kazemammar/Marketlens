@@ -60,7 +60,7 @@ export default function CommodityStrip({
   return (
     <div
       className="flex h-10 items-center border-b border-[var(--border)] px-3"
-      style={{ background: '#111111' }}
+      style={{ background: 'var(--surface)' }}
     >
       <span className="mr-3 shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
         COMMODITIES
@@ -85,12 +85,12 @@ export default function CommodityStrip({
                 <Link
                   key={item.symbol}
                   href={`/asset/commodity/${encodeURIComponent(item.symbol)}`}
-                  className="flex shrink-0 items-center gap-2.5 border-r border-[var(--border)] px-4 py-0 transition-colors duration-150 hover:bg-white/5"
+                  className="flex shrink-0 items-center gap-2.5 border-r border-[var(--border)] px-4 py-0 transition-colors duration-150 hover:bg-[var(--surface-2)]"
                 >
-                  <span className="font-mono text-[10px] font-semibold text-white">
+                  <span className="font-mono text-[10px] font-semibold text-[var(--text)]">
                     {item.shortName}
                   </span>
-                  <span className={`inline-block font-mono text-[11px] font-bold tabular-nums text-white ${flashCls}`}>
+                  <span className={`inline-block font-mono text-[11px] font-bold tabular-nums text-[var(--text)] ${flashCls}`}>
                     ${item.price.toFixed(2)}
                   </span>
                   <span className="font-mono text-[10px] tabular-nums font-semibold" style={{ color: chgColor }}>

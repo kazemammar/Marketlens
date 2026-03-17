@@ -42,7 +42,7 @@ function impact(text: string): 'HIGH' | 'MED' | 'LOW' {
 const IMP_BADGE: Record<string, string> = {
   HIGH: 'text-white border-transparent bg-[#ff4444]',
   MED:  'text-black border-transparent bg-[#f59e0b]',
-  LOW:  'border-transparent bg-[#2a2a2a] text-[#888888]',
+  LOW:  'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)]',
 }
 
 const IMP_BORDER: Record<string, string> = {
@@ -55,7 +55,7 @@ const SEV_ACTIVE: Record<Severity, string> = {
   ALL:  'bg-[var(--accent)]/10 border-[var(--accent)]/30 text-[var(--accent)]',
   HIGH: 'border-transparent bg-[#ff4444] text-white',
   MED:  'border-transparent bg-[#f59e0b] text-black',
-  LOW:  'border-transparent bg-[#2a2a2a] text-[#888888]',
+  LOW:  'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)]',
 }
 
 const INACTIVE_PILL = 'border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:text-[var(--text-2)]'
@@ -327,7 +327,7 @@ export default function IntelPanel() {
                 >
                   <ArticleThumb headline={a.headline} imageUrl={a.imageUrl} />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[11px] font-medium leading-snug" style={{ color: '#e0e0e0' }}>
+                    <p className="line-clamp-2 text-[11px] font-medium leading-snug text-[var(--text-2)]">
                       {a.headline}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">

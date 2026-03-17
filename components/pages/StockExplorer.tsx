@@ -62,7 +62,7 @@ function IndexCard({ symbol, name, href, data }: { symbol: string; name: string;
       </div>
       <span className="font-mono text-[11px] text-[var(--text-muted)]">{name}</span>
       {data ? (
-        <span className="font-mono text-[18px] font-bold tabular-nums text-white">
+        <span className="font-mono text-[18px] font-bold tabular-nums text-[var(--text)]">
           {data.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       ) : (
@@ -97,7 +97,7 @@ function MarketIndices() {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
         </span>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Market Indices
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -179,7 +179,7 @@ export default function StockExplorer() {
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <path d="M2 14h12M4 10v4M8 7v7M12 4v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Stock Explorer
           </span>
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />

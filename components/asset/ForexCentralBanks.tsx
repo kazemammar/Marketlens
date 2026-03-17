@@ -71,7 +71,7 @@ function CbPanel({ side, align }: { side: CbSide; align: 'left' | 'right' }) {
       <div className={`flex items-center gap-1.5 ${align === 'right' ? 'flex-row-reverse' : ''}`}>
         <span className="text-lg leading-none">{flag}</span>
         <div className={textAlign}>
-          <div className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-white">
+          <div className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text)]">
             {side.currency}
           </div>
           <div className="font-mono text-[8px] text-[var(--text-muted)]">{side.bank}</div>
@@ -80,7 +80,7 @@ function CbPanel({ side, align }: { side: CbSide; align: 'left' | 'right' }) {
 
       {/* Rate */}
       <div className={`flex items-end gap-2 ${align === 'right' ? 'flex-row-reverse' : ''}`}>
-        <span className="font-mono text-[28px] font-bold leading-none tabular-nums text-white">
+        <span className="font-mono text-[28px] font-bold leading-none tabular-nums text-[var(--text)]">
           {fmtRate(side.rate)}
         </span>
         {/* Change badge */}
@@ -97,7 +97,7 @@ function CbPanel({ side, align }: { side: CbSide; align: 'left' | 'right' }) {
         <div className={`${textAlign}`}>
           <span className="font-mono text-[9px] text-[var(--text-muted)]">
             Next meeting:{' '}
-            <span className="text-white">{formatMeetingDate(side.nextMeeting)}</span>
+            <span className="text-[var(--text)]">{formatMeetingDate(side.nextMeeting)}</span>
             {days !== null && (
               <span className="ml-1 text-[var(--accent)]">({days}d)</span>
             )}
@@ -162,7 +162,7 @@ export default function ForexCentralBanks({ symbol }: { symbol: string }) {
           <rect x="1" y="4" width="14" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/>
           <path d="M5 8h6M8 6v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Central Bank Comparison
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -186,7 +186,7 @@ export default function ForexCentralBanks({ symbol }: { symbol: string }) {
               <span className="font-mono text-[9px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
                 Rate Differential
               </span>
-              <span className="font-mono text-[10px] text-white">
+              <span className="font-mono text-[10px] text-[var(--text)]">
                 {data.base.currency} {fmtRate(data.base.rate)}
                 <span className="mx-1.5 text-[var(--text-muted)]">vs</span>
                 {data.quote.currency} {fmtRate(data.quote.rate)}

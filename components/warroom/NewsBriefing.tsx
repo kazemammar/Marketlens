@@ -24,7 +24,7 @@ function severity(text: string): 'HIGH' | 'MED' | 'LOW' {
 const SEV_BADGE: Record<string, string> = {
   HIGH: 'bg-red-500 text-white border-transparent',
   MED:  'bg-amber-500 text-black border-transparent',
-  LOW:  'bg-[#2a2a2a] text-[#888] border-transparent',
+  LOW:  'bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)]',
 }
 
 function ago(ts: number | string) {
@@ -52,7 +52,7 @@ function ArticleRow({ article }: { article: Article }) {
       rel="noopener noreferrer"
       className="group flex flex-col gap-1 border-b border-[var(--border)] px-3 py-2.5 transition-colors hover:bg-[var(--surface-2)]"
     >
-      <p className="line-clamp-2 text-[11.5px] font-medium leading-snug text-[var(--text-2)] transition-colors group-hover:text-white">
+      <p className="line-clamp-2 text-[11.5px] font-medium leading-snug text-[var(--text-2)] transition-colors group-hover:text-[var(--text)]">
         {article.headline}
       </p>
       <div className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
@@ -91,14 +91,14 @@ export default function NewsBriefing() {
       .finally(() => setLoading(false))
   }, [])
 
-  // Distribute into category buckets — 5 per column
+  // Distribute into category buckets — up to 15 per column
   const byCategory: Record<NewsCategory, Article[]> = {
     GEOPOLITICAL: [], MARKETS: [], ENERGY: [], CRYPTO: [], TECH: [],
   }
   for (const a of articles) {
     const cat = categorizeArticle(a.headline)
-    if (byCategory[cat].length < 5) byCategory[cat].push(a)
-    if (Object.values(byCategory).every((arr) => arr.length >= 5)) break
+    if (byCategory[cat].length < 15) byCategory[cat].push(a)
+    if (Object.values(byCategory).every((arr) => arr.length >= 15)) break
   }
 
   return (
@@ -111,7 +111,7 @@ export default function NewsBriefing() {
             <rect x="1" y="7" width="10" height="2" rx="1" fill="currentColor" opacity=".6"/>
             <rect x="1" y="12" width="12" height="2" rx="1" fill="currentColor" opacity=".6"/>
           </svg>
-          <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+          <span className="font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
             News Briefing
           </span>
         </div>
@@ -134,18 +134,29 @@ export default function NewsBriefing() {
               </span>
             </div>
 
-            {/* Articles */}
-            {loading ? (
-              <ColumnSkeleton />
-            ) : byCategory[col.id].length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No articles</p>
-              </div>
-            ) : (
-              byCategory[col.id].map((a, i) => (
-                <ArticleRow key={i} article={a} />
-              ))
-            )}
+            {/* Articles — scrollable with fade */}
+            <div className="relative">
+              {loading ? (
+                <ColumnSkeleton />
+              ) : byCategory[col.id].length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No articles</p>
+                </div>
+              ) : (
+                <div className="scrollbar-hide overflow-y-auto" style={{ maxHeight: '420px' }}>
+                  {byCategory[col.id].map((a, i) => (
+                    <ArticleRow key={i} article={a} />
+                  ))}
+                </div>
+              )}
+              {/* Gradient fade at bottom */}
+              {!loading && byCategory[col.id].length > 5 && (
+                <div
+                  className="pointer-events-none absolute bottom-0 left-0 right-0 h-10"
+                  style={{ background: 'linear-gradient(to top, var(--surface), transparent)' }}
+                />
+              )}
+            </div>
           </div>
         ))}
       </div>

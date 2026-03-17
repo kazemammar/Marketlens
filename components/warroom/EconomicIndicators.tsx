@@ -68,7 +68,7 @@ function IndicatorCard({ ind }: { ind: EconomicIndicator }) {
 
       {/* Value */}
       <span
-        className="font-mono text-[18px] font-bold leading-none tabular-nums text-white"
+        className="font-mono text-[18px] font-bold leading-none tabular-nums text-[var(--text)]"
         style={{ fontFamily: 'var(--font-mono)' }}
       >
         {formatValue(ind)}
@@ -125,8 +125,11 @@ export default function EconomicIndicators() {
           <rect x="6" y="5" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
           <rect x="11" y="1" width="3" height="14" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Economic Indicators
+        </span>
+        <span className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-px font-mono text-[8px] text-[var(--text-muted)]">
+          🇺🇸 US Data
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         {inverted && (

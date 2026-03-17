@@ -49,7 +49,7 @@ function StatCard({ label, value, sub }: StatCardProps) {
       <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
         {label}
       </span>
-      <span className="font-mono text-[15px] font-bold leading-tight text-white tabular-nums">
+      <span className="font-mono text-[15px] font-bold leading-tight text-[var(--text)] tabular-nums">
         {value}
       </span>
       {sub && <span className="font-mono text-[9px] text-[var(--text-muted)]">{sub}</span>}
@@ -70,7 +70,7 @@ export default function CryptoStats({ symbol }: { symbol: string }) {
           <rect x="2" y="9" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="9" y="9" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Market Data
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -146,7 +146,7 @@ export default function CryptoStats({ symbol }: { symbol: string }) {
               {data.high24h > 0 && data.low24h > 0 && (
                 <span className="font-mono text-[8px] text-[var(--text-muted)]">
                   Position:{' '}
-                  <span className="text-white">
+                  <span className="text-[var(--text)]">
                     {(((data.price - data.low24h) / (data.high24h - data.low24h)) * 100).toFixed(0)}%
                   </span>
                 </span>

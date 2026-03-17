@@ -87,7 +87,7 @@ const PIPELINE_STATUS_COLOR: Record<string, string> = {
 function SectionHeader({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
-      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">{label}</span>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">{label}</span>
       <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
     </div>
   )
@@ -139,7 +139,7 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-50" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
         </span>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Commodity Intelligence — {sym}
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -165,7 +165,7 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
                   <RiskDot severity={zone.severity} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                      <span className="font-mono text-[12px] font-bold text-white">{zone.name}</span>
+                      <span className="font-mono text-[12px] font-bold text-[var(--text)]">{zone.name}</span>
                       <span
                         className="rounded-sm px-1.5 py-px font-mono text-[8px] font-bold uppercase"
                         style={{ background: `${sColor}18`, color: sColor, border: `1px solid ${sColor}33` }}
@@ -208,7 +208,7 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
               return (
                 <div key={cp.id} className="bg-[var(--surface)] px-4 py-3">
                   <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <span className="font-mono text-[11px] font-bold text-white">{cp.name}</span>
+                    <span className="font-mono text-[11px] font-bold text-[var(--text)]">{cp.name}</span>
                     {vesselCount != null && (
                       <span className="shrink-0 font-mono text-[9px] font-bold" style={{ color: congColor }}>
                         {vesselCount} vessels
@@ -216,8 +216,8 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
                     )}
                   </div>
                   <div className="flex gap-3 mb-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-                    <span>Oil: <span className="text-white">{cp.oilPct}</span></span>
-                    <span>LNG: <span className="text-white">{cp.lngPct}</span></span>
+                    <span>Oil: <span className="text-[var(--text)]">{cp.oilPct}</span></span>
+                    <span>LNG: <span className="text-[var(--text)]">{cp.lngPct}</span></span>
                     <span className="text-[var(--text-muted)]">{cp.traffic}</span>
                   </div>
                   <p className="font-mono text-[9px] leading-relaxed text-[var(--text-muted)] mb-2">
@@ -262,7 +262,7 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
                   <tbody className="divide-y divide-[var(--border)]">
                     {filteredShips.slice(0, 10).map(ship => (
                       <tr key={ship.id} className="hover:bg-[var(--surface-2)]">
-                        <td className="px-3 py-1.5 font-mono text-[10px] font-semibold text-white">{ship.name}</td>
+                        <td className="px-3 py-1.5 font-mono text-[10px] font-semibold text-[var(--text)]">{ship.name}</td>
                         <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--text-muted)]">{ship.flag}</td>
                         <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--text-muted)] capitalize">
                           {ship.chokepoint === 'babelMandeb' ? 'Bab el-Mandeb' : ship.chokepoint}
@@ -312,7 +312,7 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
                     <span className="block h-px w-1.5 rounded" style={{ background: pipe.color, opacity: 0.5 }} />
                     <span className="block h-px w-1 rounded" style={{ background: pipe.color, opacity: 0.3 }} />
                   </div>
-                  <span className="flex-1 font-mono text-[11px] font-bold text-white">{pipe.name}</span>
+                  <span className="flex-1 font-mono text-[11px] font-bold text-[var(--text)]">{pipe.name}</span>
                   <span className="font-mono text-[9px] text-[var(--text-muted)]">{pipe.capacity}</span>
                   <span
                     className="shrink-0 rounded-sm px-1.5 py-px font-mono text-[8px] font-bold uppercase"

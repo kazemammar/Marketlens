@@ -15,7 +15,7 @@ const SEV_BAR: Record<string, string> = {
 const SEV_BADGE: Record<string, string> = {
   HIGH: 'text-white border-transparent bg-[#ff4444]',
   MED:  'text-black border-transparent bg-[#f59e0b]',
-  LOW:  'border-transparent bg-[#2a2a2a] text-[#888888]',
+  LOW:  'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)]',
 }
 
 function getSignalIcon(text: string): { icon: LucideIcon; color: string } {
@@ -107,7 +107,7 @@ export default function SignalsPanel() {
                     return <Icon size={14} className="mt-0.5 shrink-0" style={{ color }} strokeWidth={2} />
                   })()}
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-medium leading-snug text-white">{sig.text}</p>
+                    <p className="text-[11px] font-medium leading-snug text-[var(--text)]">{sig.text}</p>
                     <div className="mt-1 flex items-center gap-2">
                       <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
                         {sig.severity}

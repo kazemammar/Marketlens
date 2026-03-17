@@ -56,7 +56,7 @@ export default async function HomePage({
         <div className="overflow-hidden lg:border-r border-[var(--border)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
-            <span className="truncate font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+            <span className="truncate font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Geopolitical Intelligence Map
             </span>
           </div>
@@ -69,7 +69,7 @@ export default async function HomePage({
         <div className="h-[300px] sm:h-[350px] lg:h-[500px] xl:h-[600px] flex flex-col overflow-hidden bg-[var(--surface)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-            <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+            <span className="font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Intelligence Feed
             </span>
           </div>
@@ -88,7 +88,7 @@ export default async function HomePage({
             <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
             <circle cx="8" cy="8" r="1" fill="currentColor"/>
           </svg>
-          <span className="truncate font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+          <span className="truncate font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
             Market Intelligence
           </span>
         </div>
@@ -135,7 +135,7 @@ export default async function HomePage({
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: 'var(--accent)' }} aria-hidden>
             <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '12px', letterSpacing: '0.05em' }}>
+          <span className="font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '12px', letterSpacing: '0.05em' }}>
             Market Overview
           </span>
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />

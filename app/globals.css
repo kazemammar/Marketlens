@@ -26,9 +26,12 @@
   --warning-dim: rgba(217, 119, 6, 0.10);
 
   /* High-contrast price colors */
-  --price-up:   #059669;
-  --price-down: #dc2626;
-  --price-flat: #6b7280;
+  --price-up:      #059669;
+  --price-down:    #dc2626;
+  --price-flat:    #6b7280;
+  /* RGB channels for rgba() usage */
+  --price-up-rgb:   5, 150, 105;
+  --price-down-rgb: 220, 38, 38;
 
   /* Font stack */
   --font-sans:  var(--font-inter), ui-sans-serif, system-ui, Arial, sans-serif;
@@ -54,9 +57,12 @@
   --danger-dim:  rgba(239, 68, 68, 0.12);
   --warning:     #f59e0b;
   --warning-dim: rgba(245, 158, 11, 0.12);
-  --price-up:   #00ff88;
-  --price-down: #ff4444;
-  --price-flat: #888888;
+  --price-up:      #00ff88;
+  --price-down:    #ff4444;
+  --price-flat:    #888888;
+  /* RGB channels for rgba() usage */
+  --price-up-rgb:   0, 255, 136;
+  --price-down-rgb: 255, 68, 68;
 }
 
 /* ─── Base reset ──────────────────────────────────────────────────────────── */
@@ -65,10 +71,11 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
-  background-color: #09090b; /* fills status bar area on iOS before paint */
+  background-color: var(--bg);
 }
 html.dark {
   color-scheme: dark;
+  background-color: var(--bg); /* #09090b — fills status bar area on iOS */
 }
 
 body {
@@ -97,7 +104,7 @@ body::after {
 /* ─── Global selection ───────────────────────────────────────────────────── */
 ::selection {
   background: rgba(16, 185, 129, 0.28);
-  color: #fafafa;
+  color: var(--text);
 }
 
 /* ─── Focus outline — emerald green ─────────────────────────────────────── */
@@ -129,8 +136,8 @@ code, pre, kbd {
 /* ─── Custom scrollbar — thin zinc ──────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track  { background: var(--surface); }
-::-webkit-scrollbar-thumb  { background: #3f3f46; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #52525b; }
+::-webkit-scrollbar-thumb  { background: var(--surface-3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ─── Ticker tape animation ──────────────────────────────────────────────── */
 @keyframes ticker {
@@ -221,7 +228,7 @@ code, pre, kbd {
 /* ─── Intelligence Feed — article left borders ─────────────────────────── */
 .intel-item-HIGH { border-left: 2px solid rgba(239, 68, 68, 0.7); }
 .intel-item-MED  { border-left: 2px solid rgba(245, 158, 11, 0.6); }
-.intel-item-LOW  { border-left: 2px solid #27272a; }
+.intel-item-LOW  { border-left: 2px solid var(--border); }
 
 /* ─── AI brief gradient bar ──────────────────────────────────────────────── */
 .ai-brief-bar {
@@ -242,8 +249,8 @@ code, pre, kbd {
 }
 .asset-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-glow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--accent-dim);
 }
 
 /* ─── War room panel dividers ────────────────────────────────────────────── */
@@ -289,38 +296,38 @@ code, pre, kbd {
   box-shadow: 0 0 14px rgba(245,158,11,0.7);
 }
 
-/* ─── MapLibre dark theme overrides ─────────────────────────────────────── */
+/* ─── MapLibre popup overrides (uses CSS vars so light/dark both work) ─── */
 .maplibregl-popup-content {
-  background: #18181b !important;
-  border: 1px solid #27272a !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 6px !important;
   padding: 10px 12px !important;
-  color: #fafafa !important;
+  color: var(--text) !important;
   font-family: var(--font-sans) !important;
   font-size: 12px !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.7) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
   max-width: 240px !important;
 }
 .maplibregl-popup-tip {
-  border-top-color:    #18181b !important;
-  border-bottom-color: #18181b !important;
+  border-top-color:    var(--surface) !important;
+  border-bottom-color: var(--surface) !important;
 }
 .maplibregl-popup-close-button {
-  color: #71717a !important;
+  color: var(--text-muted) !important;
   font-size: 14px !important;
   padding: 2px 6px !important;
   top: 4px !important; right: 4px !important;
 }
-.maplibregl-popup-close-button:hover { color: #fafafa !important; background: transparent !important; }
+.maplibregl-popup-close-button:hover { color: var(--text) !important; background: transparent !important; }
 .maplibregl-ctrl-group {
-  background: #18181b !important;
-  border: 1px solid #27272a !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 4px !important;
 }
 .maplibregl-ctrl-group button { background-color: transparent !important; }
 .maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(0.75) !important; }
-.maplibregl-ctrl-attrib { background: rgba(9,9,11,0.8) !important; color: #52525b !important; font-size: 9px !important; }
-.maplibregl-ctrl-attrib a { color: #71717a !important; }
+.maplibregl-ctrl-attrib { background: rgba(0,0,0,0.5) !important; color: var(--text-muted) !important; font-size: 9px !important; }
+.maplibregl-ctrl-attrib a { color: var(--text-muted) !important; }
 
 /* ─── TradingView widget ─────────────────────────────────────────────────── */
 .tv-chart { height: 400px; }

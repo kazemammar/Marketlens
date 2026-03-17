@@ -53,14 +53,14 @@ function PeerCard({ peer }: { peer: PeerInfo }) {
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
         ) : null}
-        <span className="font-mono text-[13px] font-bold text-white">{peer.symbol}</span>
+        <span className="font-mono text-[13px] font-bold text-[var(--text)]">{peer.symbol}</span>
       </div>
       <p className="truncate font-mono text-[9px] text-[var(--text-muted)]">{peer.name}</p>
 
       {/* Price — shows skeleton until quote arrives */}
       {quote ? (
         <>
-          <span className="font-mono text-[15px] font-bold tabular-nums text-white">
+          <span className="font-mono text-[15px] font-bold tabular-nums text-[var(--text)]">
             {formatPrice(quote.price)}
           </span>
           <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color }}>
@@ -92,7 +92,7 @@ export default function PeersTable({ symbol }: { symbol: string }) {
           <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
           <circle cx="8" cy="8" r="1" fill="currentColor"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Sector Peers
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />

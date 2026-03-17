@@ -72,7 +72,7 @@ export default function UserMenu() {
       {/* Dropdown */}
       {dropdownOpen && (
         <div className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--border)] shadow-2xl shadow-black/60"
-          style={{ background: 'rgba(9,9,11,0.97)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
+          style={{ background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
         >
           {/* Email header */}
           <div className="border-b border-[var(--border)] px-3.5 py-3">

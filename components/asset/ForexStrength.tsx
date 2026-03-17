@@ -64,7 +64,7 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
           <path d="M2 10l3-4 3 2 3-5 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M14 4v3h-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Pair Overview
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -78,7 +78,7 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
             <p className="mb-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
               Pair
             </p>
-            <p className="font-mono text-[13px] font-bold text-white">
+            <p className="font-mono text-[13px] font-bold text-[var(--text)]">
               {info?.fullName ?? symbol}
             </p>
             <div className="mt-1.5 flex items-center gap-2">

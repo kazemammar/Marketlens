@@ -64,7 +64,7 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <polyline points="1,12 4,8 7,10 10,5 13,3 15,3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Technical Analysis
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -165,7 +165,7 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
                 </span>
                 {pc.targetMedian && (
                   <span className="font-mono text-[8px] text-[var(--text-muted)]">
-                    Target: <span className="text-white">{formatPrice(pc.targetMedian)}</span>
+                    Target: <span className="text-[var(--text)]">{formatPrice(pc.targetMedian)}</span>
                   </span>
                 )}
               </div>

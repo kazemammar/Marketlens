@@ -15,7 +15,7 @@ export default function Footer() {
                 <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" aria-hidden>
                   <polyline
                     points="1,12 5,7 8,9 11,4 15,2"
-                    stroke="white"
+                    stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"

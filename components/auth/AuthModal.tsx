@@ -80,7 +80,7 @@ function Field({
           placeholder={placeholder}
           autoComplete={autoComplete}
           spellCheck={false}
-          className={`h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-white outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 ${isPassword ? 'pr-10 pl-3.5' : 'px-3.5'}`}
+          className={`h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 ${isPassword ? 'pr-10 pl-3.5' : 'px-3.5'}`}
         />
         {isPassword && (
           <button
@@ -193,8 +193,8 @@ export default function AuthModal({
       <div
         className="relative w-full mx-4 max-w-[420px] overflow-y-auto rounded-xl shadow-2xl"
         style={{
-          backgroundColor: '#09090b',
-          border:          '1px solid rgba(255,255,255,0.08)',
+          backgroundColor: 'var(--surface)',
+          border:          '1px solid var(--border)',
           maxHeight:       '90vh',
           boxShadow:       '0 0 60px rgba(16,185,129,0.06), 0 25px 50px rgba(0,0,0,0.8)',
           opacity:         visible ? 1 : 0,
@@ -235,7 +235,7 @@ export default function AuthModal({
                 </svg>
               </div>
               <span style={{ fontSize: 16, letterSpacing: '-0.02em', fontWeight: 600 }}>
-                <span style={{ color: '#fafafa' }}>Market</span>
+                <span style={{ color: 'var(--text)' }}>Market</span>
                 <span style={{ color: '#10b981', textShadow: '0 0 12px rgba(16,185,129,0.35)' }}>Lens</span>
               </span>
             </div>
@@ -258,7 +258,7 @@ export default function AuthModal({
                   onClick={() => switchTab(t)}
                   className={`flex-1 rounded-md py-2 font-mono text-[11px] font-semibold transition-all duration-150 ${
                     active
-                      ? 'bg-[var(--surface-2)] text-white shadow-sm'
+                      ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
                       : 'text-[var(--text-muted)] hover:text-[var(--text)]'
                   }`}
                 >
@@ -285,7 +285,7 @@ export default function AuthModal({
                 </svg>
               </div>
               <div>
-                <p className="font-mono text-[14px] font-semibold text-white">Check your email</p>
+                <p className="font-mono text-[14px] font-semibold text-[var(--text)]">Check your email</p>
                 <p className="mt-1.5 font-mono text-[11px] leading-relaxed text-[var(--text-muted)]">
                   We&apos;ve sent a confirmation link to{' '}
                   <span className="text-[var(--text)]">{email}</span>.
@@ -359,7 +359,7 @@ export default function AuthModal({
               <button
                 type="submit"
                 disabled={state === 'busy'}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 font-mono text-sm font-semibold text-white transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 font-mono text-sm font-semibold text-[var(--text)] transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {state === 'busy' && (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

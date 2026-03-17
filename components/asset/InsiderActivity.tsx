@@ -25,7 +25,7 @@ export default function InsiderActivity({ symbol }: { symbol: string }) {
           <circle cx="8" cy="4" r="2" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M4 14c0-2.21 1.79-4 4-4s4 1.79 4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Insider Activity
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -56,7 +56,7 @@ export default function InsiderActivity({ symbol }: { symbol: string }) {
                 style={{ borderLeft: `2px solid ${borderColor}22` }}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-mono text-[10px] font-medium text-white">{t.name}</p>
+                  <p className="truncate font-mono text-[10px] font-medium text-[var(--text)]">{t.name}</p>
                 </div>
                 <span className="w-16 shrink-0 font-mono text-[9px] font-bold uppercase" style={{ color: typeColor }}>
                   {t.type}
@@ -64,7 +64,7 @@ export default function InsiderActivity({ symbol }: { symbol: string }) {
                 <span className="w-16 shrink-0 text-right font-mono text-[10px] tabular-nums text-[var(--text-muted)]">
                   {formatShares(t.shares)}
                 </span>
-                <span className="hidden sm:inline-block w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-white">
+                <span className="hidden sm:inline-block w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-[var(--text)]">
                   {t.price > 0 ? `$${t.price.toFixed(2)}` : '—'}
                 </span>
                 <span className="hidden sm:inline-block w-16 shrink-0 text-right font-mono text-[9px] text-[var(--text-muted)]">

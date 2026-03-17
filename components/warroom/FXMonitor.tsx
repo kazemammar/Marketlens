@@ -12,7 +12,7 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
   const range = high - low
   if (range <= 0) return null
   const pct = Math.min(Math.max(((price - low) / range) * 100, 0), 100)
-  const color = pct >= 60 ? '#00ff88' : pct >= 40 ? '#f59e0b' : '#ff4444'
+  const color = pct >= 60 ? 'var(--price-up)' : pct >= 40 ? 'var(--warning)' : 'var(--price-down)'
   return (
     <div className="flex items-center gap-1.5 px-3 pb-1.5 pt-0.5">
       <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 w-10 text-right">{fmt(low, '')}</span>
@@ -82,14 +82,14 @@ export default function FXMonitor() {
                 <div key={p.symbol} className={`border-b border-[var(--border)] transition ${crit ? 'bg-[rgba(255,68,68,0.04)]' : warn ? 'bg-[rgba(245,158,11,0.03)]' : ''}`}>
                   <div className="flex items-center justify-between px-3 py-1.5">
                     <div className="flex items-center gap-1.5">
-                      {crit  && <span className="h-1.5 w-1.5 rounded-full bg-[#ff4444] shrink-0" />}
-                      {!crit && <span className={`h-1 w-1 rounded-full ${warn ? 'bg-[#f59e0b]' : 'bg-[var(--surface-3)]'}`} />}
-                      <span className="font-mono text-[11px] font-semibold text-white">
+                      {crit  && <span className="h-1.5 w-1.5 rounded-full bg-[var(--price-down)] shrink-0" />}
+                      {!crit && <span className={`h-1 w-1 rounded-full ${warn ? 'bg-[var(--warning)]' : 'bg-[var(--surface-3)]'}`} />}
+                      <span className="font-mono text-[11px] font-semibold text-[var(--text)]">
                         {p.symbol}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-[11px] tabular-nums text-white">
+                      <span className="font-mono text-[11px] tabular-nums text-[var(--text)]">
                         {fmt(p.price, p.symbol)}
                       </span>
                       <span className="w-14 text-right font-mono text-[10px] font-semibold tabular-nums" style={{ color: chgColor }}>

@@ -31,7 +31,7 @@ export default function StockSearch() {
           value={value}
           onChange={e => setValue(e.target.value)}
           placeholder="Search ticker… e.g. AAPL"
-          className="flex-1 bg-transparent font-mono text-[11px] text-white outline-none placeholder:text-[var(--text-muted)]"
+          className="flex-1 bg-transparent font-mono text-[11px] text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
@@ -40,7 +40,7 @@ export default function StockSearch() {
           <button
             type="button"
             onClick={() => setValue('')}
-            className="font-mono text-[9px] text-[var(--text-muted)] hover:text-white"
+            className="font-mono text-[9px] text-[var(--text-muted)] hover:text-[var(--text)]"
             aria-label="Clear"
           >
             ✕
@@ -49,7 +49,7 @@ export default function StockSearch() {
       </div>
       <button
         type="submit"
-        className="flex h-9 items-center rounded-md px-3 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-white transition"
+        className="flex h-9 items-center rounded-md px-3 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--text)] transition"
         style={{ background: 'var(--accent)', opacity: value.trim() ? 1 : 0.4 }}
         disabled={!value.trim()}
       >

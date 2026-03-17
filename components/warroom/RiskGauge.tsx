@@ -25,7 +25,7 @@ function RingGauge({ score, color }: { score: number; color: string }) {
       <circle
         cx={CX} cy={CY} r={R}
         fill="none"
-        stroke="rgba(255,255,255,0.05)"
+        stroke="var(--surface-3)"
         strokeWidth="6"
       />
 

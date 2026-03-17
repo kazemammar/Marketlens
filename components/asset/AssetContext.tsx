@@ -51,7 +51,7 @@ function CatIcon({ category }: { category: AssetContextFactor['category'] }) {
 }
 
 const SEV_BADGE: Record<AssetContextFactor['severity'], string> = {
-  HIGH: 'text-white border-transparent bg-[#ff4444]',
+  HIGH: 'text-[var(--text)] border-transparent bg-[#ff4444]',
   MED:  'text-black border-transparent bg-[#f59e0b]',
   LOW:  'border-[var(--border)] bg-transparent text-[var(--text-muted)]',
 }
@@ -83,7 +83,7 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
           <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.4"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           What&apos;s Affecting {symbol}
         </span>
         <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
@@ -148,7 +148,7 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                 {/* Content */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-0.5 flex flex-wrap items-center gap-1.5">
-                    <span className="font-mono text-[11px] font-bold text-white">{factor.title}</span>
+                    <span className="font-mono text-[11px] font-bold text-[var(--text)]">{factor.title}</span>
                     <span
                       className="rounded px-1.5 py-px font-mono text-[7px] font-bold uppercase tracking-[0.08em]"
                       style={{ background: cat.bg, color: cat.color }}

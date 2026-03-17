@@ -59,7 +59,7 @@ export default function MaritimePanel() {
                   {label}
                 </span>
                 <div className="flex items-end gap-2">
-                  <span className="font-mono text-[20px] font-bold leading-none tabular-nums text-white">
+                  <span className="font-mono text-[20px] font-bold leading-none tabular-nums text-[var(--text)]">
                     {count}
                   </span>
                   <span className="mb-0.5 font-mono text-[8px] text-[var(--text-muted)]">vessels</span>
@@ -89,7 +89,7 @@ export default function MaritimePanel() {
               <div key={cat} className="flex items-center gap-1">
                 <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: color }} />
                 <span className="font-mono text-[9px] text-[var(--text-muted)]">{label}</span>
-                <span className="font-mono text-[9px] font-semibold text-white">{count}</span>
+                <span className="font-mono text-[9px] font-semibold text-[var(--text)]">{count}</span>
               </div>
             )
           })}

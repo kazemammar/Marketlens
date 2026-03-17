@@ -40,20 +40,19 @@ function Sparkline({
     d += ` C ${cpx},${prev.y} ${cpx},${cur.y} ${cur.x},${cur.y}`
   }
 
-  const fillD     = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
-  const stroke    = isPositive ? '#00ff88' : '#ff4444'
-  const stopColor = isPositive ? '#00ff88' : '#ff4444'
+  const fillD   = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
+  const clrVar  = isPositive ? 'var(--price-up)' : 'var(--price-down)'
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="shrink-0" aria-hidden>
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={stopColor} stopOpacity="0.22" />
-          <stop offset="100%" stopColor={stopColor} stopOpacity="0" />
+          <stop offset="0%" style={{ stopColor: clrVar, stopOpacity: 0.22 }} />
+          <stop offset="100%" style={{ stopColor: clrVar, stopOpacity: 0 }} />
         </linearGradient>
       </defs>
       <path d={fillD} fill={`url(#${gradientId})`} />
-      <path d={d} fill="none" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" style={{ stroke: clrVar }} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -74,10 +73,10 @@ export default function AssetCard({ asset }: { asset: AssetCardData }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <span className="block truncate font-mono font-bold text-white" style={{ fontSize: '15px' }}>
+          <span className="block truncate font-mono font-bold text-[var(--text)]" style={{ fontSize: '15px' }}>
             {symbol}
           </span>
-          <p className="mt-0.5 truncate text-[11px]" style={{ color: '#888888' }}>{name}</p>
+          <p className="mt-0.5 truncate text-[11px]" style={{ color: 'var(--text-muted)' }}>{name}</p>
         </div>
         <Sparkline
           open={open} high={high} low={low} price={price}
@@ -86,7 +85,7 @@ export default function AssetCard({ asset }: { asset: AssetCardData }) {
       </div>
 
       <div className="flex items-end justify-between">
-        <p className="font-mono font-bold tabular-nums text-white" style={{ fontSize: '18px' }}>
+        <p className="font-mono font-bold tabular-nums text-[var(--text)]" style={{ fontSize: '18px' }}>
           {formatPrice(price, currency)}
         </p>
         <div className="flex items-center gap-1 font-mono text-[12px] font-semibold tabular-nums" style={{ color: chgColor }}>

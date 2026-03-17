@@ -17,11 +17,52 @@ const SIG_COLOR: Record<SignalVerdict, string> = {
   MIXED: 'var(--warning)',
 }
 
-function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
-  const abs   = Math.min(Math.abs(pct), 3) // cap at 3% for color intensity
+// Approximate relative market caps (weights) for DEFAULT_STOCKS.
+// Used to size treemap cells proportionally. Refreshed periodically but
+// exact accuracy is not critical — visual proportionality is the goal.
+const MCAP_WEIGHT: Record<string, number> = {
+  AAPL: 350, MSFT: 320, NVDA: 295, GOOGL: 220, AMZN: 215,
+  META: 145,  TSLA: 105, 'BRK.B': 92,  JPM: 65,   V:    60,
+  UNH:  52,   XOM:  50,  JNJ:  40,   MA:   44,  PG:   38,
+}
+
+// Build strip-treemap rows from stocks sorted by weight.
+// Returns rows of {symbol, pct, flex} where flex is the item's proportional width inside its row.
+function buildTreemapRows(stocks: AssetCardData[]): Array<Array<{ symbol: string; pct: number; flex: number }>> {
+  const sorted = [...stocks]
+    .sort((a, b) => (MCAP_WEIGHT[b.symbol] ?? 10) - (MCAP_WEIGHT[a.symbol] ?? 10))
+    .slice(0, 15)
+
+  if (sorted.length === 0) return []
+
+  // Divide into 3 rows with target row heights: 35%, 35%, 30% (by combined weight)
+  const totalWeight = sorted.reduce((s, x) => s + (MCAP_WEIGHT[x.symbol] ?? 10), 0)
+  const rows: Array<typeof sorted> = [[], [], []]
+  const rowTargets = [0.35, 0.35, 0.30].map(r => r * totalWeight)
+  let ri = 0
+  let rowAcc = 0
+  for (const stock of sorted) {
+    const w = MCAP_WEIGHT[stock.symbol] ?? 10
+    rows[ri].push(stock)
+    rowAcc += w
+    if (ri < 2 && rowAcc >= rowTargets[ri]) { ri++; rowAcc = 0 }
+  }
+
+  return rows.filter(r => r.length > 0).map(row => {
+    const rowTotal = row.reduce((s, x) => s + (MCAP_WEIGHT[x.symbol] ?? 10), 0)
+    return row.map(stock => ({
+      symbol: stock.symbol,
+      pct:    stock.changePercent,
+      flex:   ((MCAP_WEIGHT[stock.symbol] ?? 10) / rowTotal) * 100,
+    }))
+  })
+}
+
+function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height: number }) {
+  const abs   = Math.min(Math.abs(pct), 3)
   const ratio = abs / 3
   const isPos = pct >= 0
-  const bgOpacity = 0.1 + ratio * 0.32
+  const bgOpacity = 0.1 + ratio * 0.35
   const bg        = isPos
     ? `rgba(var(--price-up-rgb),${bgOpacity})`
     : `rgba(var(--price-down-rgb),${bgOpacity})`
@@ -30,11 +71,11 @@ function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
   return (
     <div
       title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
-      className="flex flex-col items-center justify-center rounded-sm gap-0"
-      style={{ background: bg, minHeight: '38px', border: '1px solid var(--border)' }}
+      className="flex flex-col items-center justify-center overflow-hidden"
+      style={{ background: bg, height: `${height}px`, border: '1px solid var(--border)' }}
     >
-      <span className="font-mono font-bold text-[var(--text)] leading-none" style={{ fontSize: '8px' }}>{sym}</span>
-      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: '7px', color: chgColor }}>
+      <span className="font-mono font-bold text-[var(--text)] leading-none" style={{ fontSize: height > 30 ? '9px' : '7px' }}>{sym}</span>
+      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: height > 30 ? '8px' : '6px', color: chgColor }}>
         {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
       </span>
     </div>
@@ -132,19 +173,29 @@ export default function MarketRadar({
         )}
       </div>
 
-      {/* Mini stock heatmap */}
-      {stocks.length > 0 && (
-        <div className="border-t border-[var(--border)] px-3 py-2">
-          <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] opacity-60">
-            Heatmap
-          </p>
-          <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${Math.min(stocks.length, 6)}, 1fr)` }}>
-            {stocks.slice(0, 12).map((s) => (
-              <HeatCell key={s.symbol} symbol={s.symbol} pct={s.changePercent} />
-            ))}
+      {/* Treemap heatmap — sized by market cap */}
+      {stocks.length > 0 && (() => {
+        const rows = buildTreemapRows(stocks)
+        const ROW_HEIGHTS = [42, 38, 32] // px per row — taller = higher market cap row
+        return (
+          <div className="border-t border-[var(--border)] px-3 py-2">
+            <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] opacity-60">
+              Heatmap · S&amp;P 500
+            </p>
+            <div className="flex flex-col gap-px overflow-hidden rounded-sm">
+              {rows.map((row, ri) => (
+                <div key={ri} className="flex gap-px">
+                  {row.map(({ symbol, pct, flex }) => (
+                    <div key={symbol} style={{ flex: `${flex} 0 0` }}>
+                      <HeatCell symbol={symbol} pct={pct} height={ROW_HEIGHTS[ri] ?? 32} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

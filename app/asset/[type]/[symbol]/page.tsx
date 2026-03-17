@@ -251,7 +251,7 @@ async function getCommodityData(symbol: string): Promise<{ asset: AssetCardData 
 
 function SectionSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="space-y-2.5 rounded border border-[var(--border)] bg-[var(--surface)] p-3">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="h-4 w-full animate-pulse rounded bg-[var(--surface-2)]" />
       ))}
@@ -370,8 +370,8 @@ export default async function AssetPage({ params }: AssetPageProps) {
       </div>
 
       {/* ── Content — constrained, tight padding ── */}
-      <main className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[65fr_35fr] lg:gap-5">
+      <main className="mx-auto max-w-screen-xl px-4 py-3 sm:px-6">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[65fr_35fr]">
           {/* ── Left 65%: News + Insider Activity (stock only) ── */}
           <div className="col-span-1">
             <Suspense fallback={<SectionSkeleton rows={6} />}>
@@ -383,7 +383,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
           </div>
 
           {/* ── Right 35%: Sentiment → Analyst → Financials ── */}
-          <div className="col-span-1 space-y-4">
+          <div className="col-span-1 space-y-3">
             {showSentiment && (
               <SentimentCard symbol={symbol} type={type} />
             )}

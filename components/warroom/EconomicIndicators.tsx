@@ -117,9 +117,9 @@ export default function EconomicIndicators() {
   const inverted = indicators.find((i) => i.id === 'YIELD_SPREAD' && (i.value ?? 0) < 0)
 
   return (
-    <div className="px-3 py-3 sm:px-4">
+    <div className="px-3 py-2 sm:px-4">
       {/* Section header */}
-      <div className="mb-2.5 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="9" width="3" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
           <rect x="6" y="5" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>

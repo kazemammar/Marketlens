@@ -5,8 +5,8 @@ export default function Footer() {
 
   return (
     <footer className="mt-auto border-t border-[var(--border)] bg-[var(--surface)]">
-      <div className="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mx-auto max-w-screen-2xl px-4 py-4 sm:px-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
           {/* Brand */}
           <div className="space-y-2">
@@ -50,7 +50,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 flex flex-col gap-2 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-4 flex flex-col gap-2 border-t border-[var(--border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[var(--text-muted)]">
             © {year} MarketLens. Built by <span className="text-[var(--text-2)]">Kazem Ammar</span>. All rights reserved.
           </p>

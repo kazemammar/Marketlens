@@ -511,7 +511,7 @@ export default function GeoMap() {
   ]
 
   return (
-    <div className="flex flex-col" style={{ height: 'clamp(400px, 55vw, 600px)' }}>
+    <div className="flex h-full flex-col">
       {/* Map canvas */}
       <div className="relative flex-1 overflow-hidden">
         <div ref={containerRef} className="absolute inset-0 h-full w-full" />

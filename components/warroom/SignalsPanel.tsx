@@ -5,6 +5,7 @@ import { Flame, TrendingUp, TrendingDown, AlertTriangle, ArrowLeftRight, Shield,
 import type { LucideIcon } from 'lucide-react'
 import type { Signal } from '@/app/api/signals/route'
 import { useFetch } from '@/lib/hooks/useFetch'
+import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 const SEV_BAR: Record<string, string> = {
   HIGH: 'bg-[#ff4444]',
@@ -95,9 +96,17 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
   const { data: raw, loading } = useFetch<Signal[]>('/api/signals', { refreshInterval: 2 * 60_000 })
   const signals = raw ?? []
 
-  const [newIds, setNewIds] = useState<Set<string>>(new Set())
+  const [newIds,    setNewIds]    = useState<Set<string>>(new Set())
   const prevIds = useRef<Set<string>>(new Set())
-  const [filter, setFilter] = useState<CatFilter>('all')
+  const [filter,    setFilter]    = useState<CatFilter>('all')
+  const [updatedAt, setUpdatedAt] = useState(0)
+  const prevRaw = useRef<Signal[] | null>(null)
+  useEffect(() => {
+    if (raw && raw !== prevRaw.current) {
+      prevRaw.current = raw
+      setUpdatedAt(Date.now())
+    }
+  }, [raw])
 
   // Detect brand-new signal IDs on each refresh
   useEffect(() => {
@@ -146,9 +155,20 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
           </div>
 
           <div className="flex-1" />
-          <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-            {filtered.length} signals
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+              {filtered.length} signals
+            </span>
+            {updatedAt > 0 && (
+              <span
+                className="font-mono text-[8px] tabular-nums"
+                style={{ color: stalenessColor(updatedAt) }}
+                title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+              >
+                {timeAgo(updatedAt)}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Full-width single-column feed — text always visible, wraps freely */}
@@ -193,9 +213,20 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
             Signals
           </span>
         </div>
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-          {signals.length} active
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+            {signals.length} active
+          </span>
+          {updatedAt > 0 && (
+            <span
+              className="font-mono text-[8px] tabular-nums"
+              style={{ color: stalenessColor(updatedAt) }}
+              title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+            >
+              {timeAgo(updatedAt)}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">

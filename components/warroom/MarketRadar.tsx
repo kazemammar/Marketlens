@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { MarketRadarPayload, SignalVerdict } from '@/lib/api/homepage'
 import type { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
+import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 const VERDICT_STYLE: Record<SignalVerdict, { bg: string; text: string; border: string; glow: string; label: string }> = {
   BUY:   { bg: 'var(--accent-dim)',   text: 'var(--price-up)',   border: 'var(--accent-glow)',  glow: 'var(--accent-glow)',  label: 'BUY'   },
@@ -106,25 +107,29 @@ export default function MarketRadar({
   const { data: refreshed, loading: fetchLoading } = useFetch<MarketRadarPayload>('/api/market-radar', { refreshInterval: 5 * 60_000 })
   const data    = refreshed ?? initialData
   const loading = data === null && fetchLoading
-  const [timeStr, setTimeStr] = useState('')
-
-  useEffect(() => {
-    if (data?.updatedAt) {
-      setTimeStr(new Date(data.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
-    }
-  }, [data?.updatedAt])
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
-        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
-          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-          <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
-          <circle cx="8" cy="8" r="1" fill="currentColor"/>
-        </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-          Market Radar
-        </span>
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
+        <div className="flex items-center gap-1.5">
+          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
+            <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
+            <circle cx="8" cy="8" r="1" fill="currentColor"/>
+          </svg>
+          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            Market Radar
+          </span>
+        </div>
+        {data?.updatedAt ? (
+          <span
+            className="font-mono text-[8px] tabular-nums"
+            style={{ color: stalenessColor(data.updatedAt) }}
+            title={`Last updated: ${new Date(data.updatedAt).toLocaleTimeString()}`}
+          >
+            {timeAgo(data.updatedAt)}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex-1 px-3 py-2.5 overflow-y-auto">
@@ -178,9 +183,6 @@ export default function MarketRadar({
               ))}
             </div>
 
-            <p className="mt-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
-              Updated {timeStr || '--:--'}
-            </p>
 
             {/* Market breadth mini bar */}
             {(() => {

@@ -1,6 +1,5 @@
 import { NextResponse }      from 'next/server'
 import { getQuotesBatched }  from '@/lib/api/finnhub'
-import { redis }             from '@/lib/cache/redis'
 import type {
   SignalVerdict,
   RadarSignal,
@@ -12,16 +11,14 @@ export type { SignalVerdict, RadarSignal, MarketRadarPayload }
 
 export const dynamic = 'force-dynamic'
 
-const CACHE_KEY = 'market-radar:v2'
-const CACHE_TTL = 300 // 5 min
+// No route-level cache — always recompute from per-symbol Redis quote cache
+// (TTL.QUOTE = 900s) so prices always match the latest available data.
+// This prevents MarketRadar from showing stale % changes after the underlying
+// quote cache is refreshed by another route (e.g. market:v4:etf).
 
 const SYMBOLS = ['SPY', 'QQQ', 'GLD', 'USO', 'VXX', 'TLT', 'BTC']
 
 export async function GET() {
-  try {
-    const cached = await redis.get<MarketRadarPayload>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
-  } catch { /* fall through */ }
 
   const symbols = SYMBOLS.filter((s) => s !== 'BTC')
   const quotes  = await getQuotesBatched(symbols)
@@ -112,10 +109,6 @@ export async function GET() {
     signals,
     updatedAt: Date.now(),
   }
-
-  try {
-    await redis.set(CACHE_KEY, payload, { ex: CACHE_TTL })
-  } catch { /* non-fatal */ }
 
   return NextResponse.json(payload)
 }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { CommodityStripItem } from '@/lib/api/homepage'
+import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 export type { CommodityStripItem }
 
@@ -15,9 +16,10 @@ export default function CommodityStrip({
 }: {
   initialData?: CommodityStripItem[]
 }) {
-  const [items,   setItems]   = useState<CommodityStripItem[]>(initialData ?? [])
-  const [loading, setLoading] = useState(!initialData || initialData.length === 0)
-  const [flash,   setFlash]   = useState<Record<string, 'up' | 'down'>>({})
+  const [items,     setItems]     = useState<CommodityStripItem[]>(initialData ?? [])
+  const [loading,   setLoading]   = useState(!initialData || initialData.length === 0)
+  const [flash,     setFlash]     = useState<Record<string, 'up' | 'down'>>({})
+  const [updatedAt, setUpdatedAt] = useState<number>(initialData && initialData.length > 0 ? Date.now() : 0)
   const prevPrices = useRef<Record<string, number>>({})
 
   async function load() {
@@ -39,6 +41,7 @@ export default function CommodityStrip({
       }
 
       setItems(d)
+      setUpdatedAt(Date.now())
     } catch { /* silent */ }
     setLoading(false)
   }
@@ -62,9 +65,20 @@ export default function CommodityStrip({
       className="flex h-10 items-center border-b border-[var(--border)] px-3"
       style={{ background: 'var(--surface)' }}
     >
-      <span className="mr-3 shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
-        COMMODITIES
-      </span>
+      <div className="mr-3 shrink-0 flex items-center gap-1.5">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+          COMMODITIES
+        </span>
+        {updatedAt > 0 && (
+          <span
+            className="font-mono text-[7px] tabular-nums"
+            style={{ color: stalenessColor(updatedAt) }}
+            title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+          >
+            {timeAgo(updatedAt)}
+          </span>
+        )}
+      </div>
       <div className="flex flex-1 items-center gap-0 overflow-x-auto scrollbar-hide">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (

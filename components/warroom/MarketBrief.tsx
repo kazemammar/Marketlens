@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { MarketBriefPayload } from '@/app/api/market-brief/route'
 import { MarketRiskPayload }  from '@/app/api/market-risk/route'
+import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 const DIR_COLOR: Record<string, string> = {
   up:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
@@ -19,11 +20,6 @@ const RISK_STYLE: Record<string, { label: string; text: string; border: string; 
   CRITICAL: { label: 'CRITICAL RISK', text: 'text-red-400',     border: 'border-red-500/30',     dot: '#ef4444' },
 }
 
-function ts(ms: number) {
-  const d = new Date(ms)
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  return `Generated ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`
-}
 
 export default function MarketBrief() {
   const [brief, setBrief] = useState<MarketBriefPayload | null>(null)
@@ -113,12 +109,12 @@ export default function MarketBrief() {
             </span>
 
             {/* Timestamp */}
-            <span className="flex items-center gap-1 font-mono text-[9px] text-[var(--text-muted)]">
-              <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 shrink-0 opacity-60" aria-hidden>
-                <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M6 3.5v2.75l1.5 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-              </svg>
-              {ts(brief.generatedAt)}
+            <span
+              className="font-mono text-[9px] tabular-nums"
+              style={{ color: stalenessColor(brief.generatedAt) }}
+              title={`Generated at ${new Date(brief.generatedAt).toLocaleTimeString()}`}
+            >
+              {timeAgo(brief.generatedAt)}
             </span>
           </div>
 

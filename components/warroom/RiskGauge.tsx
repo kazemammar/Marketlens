@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import type { MarketRiskPayload, BreakdownItem, CategoryDetail, HistoryPoint, AffectedAsset } from '@/app/api/market-risk/route'
 import { useFetch } from '@/lib/hooks/useFetch'
+import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 // ─── Asset chip (clickable, navigates to asset page) ──────────────────────
 
@@ -572,19 +573,6 @@ const LEVEL_LABEL: Record<string, string> = {
   LOW: 'LOW RISK', MODERATE: 'MODERATE', HIGH: 'ELEVATED', CRITICAL: 'CRITICAL',
 }
 
-function dataAge(updatedAt: number): string {
-  const m = Math.floor((Date.now() - updatedAt) / 60_000)
-  if (m < 1)  return 'just now'
-  if (m < 60) return `${m}m ago`
-  return `${Math.floor(m / 60)}h ago`
-}
-
-function stalenessColor(updatedAt: number): string {
-  const m = Math.floor((Date.now() - updatedAt) / 60_000)
-  if (m < 10) return 'var(--price-up)'
-  if (m < 20) return 'var(--warning)'
-  return 'var(--price-down)'
-}
 
 // ─── Main component ────────────────────────────────────────────────────────
 
@@ -657,7 +645,7 @@ export default function RiskGauge() {
             style={{ color: stalenessColor(data.updatedAt) }}
             title={`Last updated: ${new Date(data.updatedAt).toLocaleTimeString()}`}
           >
-            {dataAge(data.updatedAt)}
+            {timeAgo(data.updatedAt)}
           </span>
         )}
       </div>

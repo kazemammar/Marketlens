@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
+import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 function fmt(price: number, sym: string): string {
   if (sym.includes('JPY') || sym.includes('CNY')) return price.toFixed(2)
@@ -45,6 +46,14 @@ export default function FXMonitor() {
   const { data, loading } = useFetch<AssetCardData[]>('/api/market?tab=forex', { refreshInterval: 60_000 })
   const pairs = data ?? []
   const [tooltipOpen, setTooltipOpen] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState(0)
+  const prevData = useRef<AssetCardData[] | null>(null)
+  useEffect(() => {
+    if (data && data !== prevData.current) {
+      prevData.current = data
+      setUpdatedAt(Date.now())
+    }
+  }, [data])
 
   const alertPairs   = pairs.filter((p) => Math.abs(p.changePercent) >= 0.5)
   const stressed1pct = alertPairs.filter((p) => Math.abs(p.changePercent) >= 1).length
@@ -67,7 +76,17 @@ export default function FXMonitor() {
             title="Live rates — refreshed every 5 minutes"
           />
         </div>
-        {!loading && alertPairs.length > 0 && (
+        <div className="flex items-center gap-2">
+          {updatedAt > 0 && (
+            <span
+              className="font-mono text-[8px] tabular-nums"
+              style={{ color: stalenessColor(updatedAt) }}
+              title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+            >
+              {timeAgo(updatedAt)}
+            </span>
+          )}
+          {!loading && alertPairs.length > 0 && (
           <div
             className="relative"
             onMouseEnter={() => setTooltipOpen(true)}
@@ -115,7 +134,8 @@ export default function FXMonitor() {
               </div>
             )}
           </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">

@@ -70,7 +70,7 @@ export default function PortfolioSummary({
     totalCost  += costBasis
 
     // Today's change: for longs, positive when price up; for shorts, flip
-    const todayChange = qty * Math.abs(q.change)
+    const todayChange = qty * q.change
     todayPnl += p.direction === 'long' ? todayChange : -todayChange
   }
 

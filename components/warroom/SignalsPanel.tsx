@@ -45,7 +45,7 @@ function SignalCard({ sig, isNew }: { sig: Signal; isNew: boolean }) {
   const { icon: Icon, color } = getSignalIcon(sig.text)
   return (
     <div
-      className={`flex w-[260px] shrink-0 items-center gap-2 border-r border-[var(--border)] bg-[var(--surface)] px-3 py-2 transition-colors hover:bg-[var(--surface-2)] ${isNew ? 'signal-new' : ''}`}
+      className={`flex items-center gap-2 bg-[var(--surface)] px-3 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isNew ? 'signal-new' : ''}`}
     >
       <div className={`w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
       <Icon size={13} className="shrink-0" style={{ color }} strokeWidth={2} />
@@ -88,17 +88,6 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
   if (layout === 'horizontal') {
     const filtered = filter === 'all' ? signals : signals.filter((s) => s.category === filter)
 
-    // Ensure enough items to fill two full rows even on quiet days
-    const MIN_PER_ROW = 8
-    const padded = filtered.length < MIN_PER_ROW * 2 && filtered.length > 0
-      ? Array.from({ length: Math.ceil((MIN_PER_ROW * 2) / filtered.length) }).flatMap(() => filtered)
-      : filtered
-
-    // Split into two rows
-    const half  = Math.ceil(padded.length / 2)
-    const row1  = padded.slice(0, half)
-    const row2  = padded.slice(half)
-
     return (
       <div className="flex flex-col">
         {/* Header */}
@@ -133,47 +122,31 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
           </span>
         </div>
 
-        {/* Dual-row ticker */}
+        {/* Static grid — fills full width, wraps into rows */}
         {loading ? (
-          <div className="flex flex-col gap-px border-t border-[var(--border)]">
-            {[0, 1].map((rowIdx) => (
-              <div key={rowIdx} className="flex gap-px overflow-hidden">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex w-[260px] shrink-0 items-center gap-2 bg-[var(--surface)] px-3 py-2">
-                    <div className="skeleton h-3 w-3 rounded shrink-0" />
-                    <div className="flex-1 space-y-1">
-                      <div className="skeleton h-2 w-full rounded" />
-                    </div>
-                    <div className="skeleton h-2 w-10 rounded shrink-0" />
-                  </div>
-                ))}
+          <div className="grid gap-px bg-[var(--border)] p-px" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-2 bg-[var(--surface)] px-3 py-2.5">
+                <div className="skeleton h-3 w-3 rounded shrink-0" />
+                <div className="flex-1"><div className="skeleton h-2.5 w-full rounded" /></div>
+                <div className="skeleton h-2 w-10 rounded shrink-0" />
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex items-center justify-center gap-2 py-5 bg-[var(--surface)]">
-            <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No {filter === 'all' ? '' : filter + ' '}signals active</p>
+          <div className="flex items-center justify-center gap-2 py-6 bg-[var(--surface)]">
+            <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">
+              No {filter === 'all' ? '' : filter + ' '}signals active
+            </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-px overflow-hidden border-t border-[var(--border)]">
-            {/* Row 1 — scrolls at normal speed */}
-            <div className="overflow-hidden">
-              <div className="ticker-track flex" style={{ animationDuration: `${Math.max(20, row1.length * 4)}s` }}>
-                {[...row1, ...row1].map((sig, i) => (
-                  <SignalCard key={`r1-${i}`} sig={sig} isNew={i < row1.length && newIds.has(sig.id)} />
-                ))}
-              </div>
-            </div>
-            {/* Row 2 — scrolls 30% slower for depth */}
-            {row2.length > 0 && (
-              <div className="overflow-hidden border-t border-[var(--border)]">
-                <div className="ticker-track flex" style={{ animationDuration: `${Math.max(26, row2.length * 5)}s`, animationDirection: 'reverse' }}>
-                  {[...row2, ...row2].map((sig, i) => (
-                    <SignalCard key={`r2-${i}`} sig={sig} isNew={i < row2.length && newIds.has(sig.id)} />
-                  ))}
-                </div>
-              </div>
-            )}
+          <div
+            className="grid gap-px bg-[var(--border)] p-px"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' }}
+          >
+            {filtered.slice(0, 16).map((sig, i) => (
+              <SignalCard key={`${sig.id}-${i}`} sig={sig} isNew={newIds.has(sig.id)} />
+            ))}
           </div>
         )}
       </div>

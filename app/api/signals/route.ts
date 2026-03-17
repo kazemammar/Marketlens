@@ -5,7 +5,7 @@ import { getFinanceNews }    from '@/lib/api/rss'
 
 export const dynamic = 'force-dynamic'
 
-const CACHE_KEY = 'signals:v3'
+const CACHE_KEY = 'signals:v4'
 const CACHE_TTL = 300 // 5 min
 
 export interface Signal {
@@ -156,7 +156,7 @@ export async function GET() {
       if (seen.has(key)) continue
       seen.add(key)
 
-      const truncated = a.headline.length > 80 ? a.headline.slice(0, 80) + '…' : a.headline
+      const truncated = a.headline.length > 160 ? a.headline.slice(0, 160) + '…' : a.headline
       signals.push({
         id:        `news-${a.id ?? a.url}`,
         icon:      newsIcon(a.headline),

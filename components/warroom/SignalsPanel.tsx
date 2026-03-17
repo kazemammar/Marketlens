@@ -40,33 +40,52 @@ function ago(ts: number) {
 // Category filter type
 type CatFilter = 'all' | 'price' | 'news'
 
-const SEV_BG: Record<string, string> = {
-  HIGH: 'bg-[rgba(255,68,68,0.04)]',
-  MED:  'bg-[rgba(245,158,11,0.03)]',
-  LOW:  '',
+const CAT_LABEL: Record<string, string> = {
+  price:     'PRICE',
+  news:      'NEWS',
+  technical: 'TECH',
+  macro:     'MACRO',
 }
 
-// Render a single signal row
+const CAT_COLOR: Record<string, string> = {
+  price:     'text-[var(--accent)] bg-[var(--accent-dim)]',
+  news:      'text-blue-400 bg-blue-500/10',
+  technical: 'text-purple-400 bg-purple-500/10',
+  macro:     'text-amber-400 bg-amber-500/10',
+}
+
+// Single signal row — full-width, text always wraps, never truncates
 function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
   const { icon: Icon, color } = getSignalIcon(sig.text)
+  const isHigh = sig.severity === 'HIGH'
   return (
     <div
-      className={`flex items-center gap-3 border-b border-[var(--border)] px-4 py-3 transition-colors hover:bg-[var(--surface-2)] ${SEV_BG[sig.severity] ?? ''} ${isNew ? 'signal-new' : ''}`}
+      className={`group flex items-start gap-3 border-b border-[var(--border)] px-4 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isHigh ? 'bg-[rgba(255,68,68,0.03)]' : ''} ${isNew ? 'signal-new' : ''}`}
     >
       {/* Severity bar */}
-      <div className={`w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
+      <div className={`mt-1 w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
       {/* Icon */}
-      <Icon size={15} className="shrink-0 opacity-80" style={{ color }} strokeWidth={1.8} />
-      {/* Signal text — wraps to 2 lines if needed */}
-      <p className="min-w-0 flex-1 text-[12px] font-medium leading-snug text-[var(--text)]">
+      <Icon
+        size={14}
+        className="mt-0.5 shrink-0"
+        style={{ color, opacity: isHigh ? 1 : 0.75 }}
+        strokeWidth={2}
+      />
+      {/* Full signal text — no truncation, wraps freely */}
+      <p className={`flex-1 leading-snug ${isHigh ? 'text-[13px] font-semibold text-[var(--text)]' : 'text-[12px] font-medium text-[var(--text-2)]'}`}>
         {sig.text}
       </p>
-      {/* Meta */}
-      <div className="flex shrink-0 flex-col items-end gap-1">
+      {/* Right meta: category tag · severity badge · time */}
+      <div className="flex shrink-0 items-center gap-2 pt-0.5">
+        <span className={`rounded px-1.5 py-px font-mono text-[7px] font-bold uppercase ${CAT_COLOR[sig.category] ?? CAT_COLOR.news}`}>
+          {CAT_LABEL[sig.category] ?? sig.category}
+        </span>
         <span className={`rounded border px-1.5 py-px font-mono text-[7px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
           {sig.severity}
         </span>
-        <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50">{ago(sig.timestamp)}</span>
+        <span className="w-10 text-right font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50">
+          {ago(sig.timestamp)}
+        </span>
       </div>
     </div>
   )
@@ -132,32 +151,30 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
           </span>
         </div>
 
-        {/* 2-column list — each item gets ~half the page width, full text visible */}
+        {/* Full-width single-column feed — text always visible, wraps freely */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[var(--border)] p-px">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 bg-[var(--surface)] px-4 py-3">
+          <div className="divide-y divide-[var(--border)]">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="skeleton h-3.5 w-3.5 rounded shrink-0" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="skeleton h-3 w-full rounded" />
-                  <div className="skeleton h-2.5 w-2/3 rounded" />
-                </div>
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                <div className="skeleton h-3 flex-1 rounded" />
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="skeleton h-2.5 w-10 rounded" />
                   <div className="skeleton h-2.5 w-8 rounded" />
-                  <div className="skeleton h-2 w-6 rounded" />
+                  <div className="skeleton h-2 w-8 rounded" />
                 </div>
               </div>
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex items-center justify-center gap-2 py-8 bg-[var(--surface)]">
+          <div className="flex items-center justify-center gap-2 py-8">
             <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">
               No {filter === 'all' ? '' : filter + ' '}signals active
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[var(--border)] p-px">
-            {filtered.slice(0, 12).map((sig, i) => (
+          <div>
+            {filtered.slice(0, 14).map((sig, i) => (
               <SignalRow key={`${sig.id}-${i}`} sig={sig} isNew={newIds.has(sig.id)} />
             ))}
           </div>

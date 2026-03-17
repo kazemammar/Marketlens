@@ -116,7 +116,7 @@ export default async function HomePage({
         <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0 max-h-[350px] sm:max-h-none">
           <FXMonitor />
         </div>
-        <div className="min-w-0 overflow-hidden h-full flex flex-col max-h-[350px] sm:max-h-none">
+        <div className="min-w-0 overflow-hidden h-full flex flex-col">
           <HeatmapPanel stocks={homepage?.stocks ?? []} />
         </div>
       </div>

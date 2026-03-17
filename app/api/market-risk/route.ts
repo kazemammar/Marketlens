@@ -190,7 +190,17 @@ async function appendHistory(point: HistoryPoint): Promise<void> {
     await redis.lpush(HISTORY_KEY, serialized)
     await redis.ltrim(HISTORY_KEY, 0, HISTORY_MAX - 1)
     await redis.expire(HISTORY_KEY, 86400) // 24h
-  } catch { /* non-fatal */ }
+  } catch (err) {
+    // WRONGTYPE error: key exists with wrong type — delete and retry once
+    const msg = (err as Error).message ?? ''
+    if (msg.includes('WRONGTYPE')) {
+      try {
+        await redis.del(HISTORY_KEY)
+        await redis.lpush(HISTORY_KEY, JSON.stringify(point))
+        await redis.expire(HISTORY_KEY, 86400)
+      } catch { /* non-fatal */ }
+    }
+  }
 }
 
 // ─── Internal brief fetch (resolves race condition) ───────────────────────
@@ -221,7 +231,10 @@ export async function GET(req: Request) {
       const latest = history[0]
       const elapsed = latest ? Date.now() - latest.timestamp : Infinity
       if (elapsed > 4 * 60_000) {
-        appendHistory({ score: cached.score, timestamp: Date.now() }).catch(() => {})
+        await appendHistory({ score: cached.score, timestamp: Date.now() })
+        // Re-read so the response includes the just-appended point
+        const freshHistory = await readHistory()
+        return NextResponse.json({ ...cached, history: freshHistory })
       }
       return NextResponse.json({ ...cached, history })
     }
@@ -277,8 +290,8 @@ export async function GET(req: Request) {
       updatedAt:      brief.generatedAt,
     }
 
-    // Write to history (non-blocking)
-    appendHistory({ score: overallScore, timestamp: Date.now() }).catch(() => {})
+    // Write to history (awaited so readHistory below sees it immediately)
+    await appendHistory({ score: overallScore, timestamp: Date.now() })
 
     // Cache payload (without history — history is always fetched fresh)
     redis.set(RISK_KEY, payload, { ex: CACHE_TTL }).catch(() => {})

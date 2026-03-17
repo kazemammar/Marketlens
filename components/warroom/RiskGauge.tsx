@@ -48,7 +48,7 @@ function TooltipPortal({ tip }: { tip: TooltipState }) {
 function InfoDot() {
   return (
     <span
-      className="pointer-events-none flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-3)] font-mono text-[8px] font-bold text-[var(--text-muted)] opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+      className="pointer-events-none hidden sm:flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-3)] font-mono text-[8px] font-bold text-[var(--text-muted)] opacity-0 transition-opacity duration-150 group-hover:opacity-100"
       aria-hidden
     >
       i
@@ -361,7 +361,7 @@ function RingGauge({ score, color }: { score: number; color: string }) {
   const filled        = (score / 100) * circumference
 
   return (
-    <svg viewBox="0 0 96 96" className="h-[140px] w-[140px]" aria-hidden>
+    <svg viewBox="0 0 96 96" className="h-[110px] w-[110px] sm:h-[140px] sm:w-[140px]" aria-hidden>
       <defs>
         <filter id="ring-glow">
           <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -460,7 +460,7 @@ export default function RiskGauge() {
   }, [])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-[260px] sm:min-h-0">
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-amber-400" aria-hidden>
@@ -487,7 +487,7 @@ export default function RiskGauge() {
         {loading ? (
           <div className="space-y-3">
             <div className="flex gap-3">
-              <div className="skeleton h-[140px] w-[140px] shrink-0 rounded-full" />
+              <div className="skeleton h-[110px] w-[110px] sm:h-[140px] sm:w-[140px] shrink-0 rounded-full" />
               <div className="flex-1 flex flex-col justify-center gap-3">
                 {[1,2,3,4].map((i) => (
                   <div key={i} className="space-y-1">
@@ -504,7 +504,7 @@ export default function RiskGauge() {
               {[1,2].map((i) => (
                 <div key={i} className="space-y-1">
                   <div className="skeleton h-2 w-20 rounded" />
-                  <div className="grid grid-cols-3 gap-x-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-3">
                     {[1,2,3].map((j) => <div key={j} className="skeleton h-2 w-full rounded" />)}
                   </div>
                 </div>
@@ -519,7 +519,7 @@ export default function RiskGauge() {
 
               {/* Ring — hoverable */}
               <div
-                className="group relative h-[140px] w-[140px] shrink-0 cursor-default"
+                className="group relative h-[110px] w-[110px] sm:h-[140px] sm:w-[140px] shrink-0 cursor-default"
                 onMouseEnter={(e) => showTip(e, <ScoreTooltipContent data={data} />)}
                 onMouseLeave={hideTip}
               >
@@ -527,7 +527,7 @@ export default function RiskGauge() {
                 {/* Score overlay */}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                   <span
-                    className="font-mono text-[48px] font-bold leading-none tabular-nums"
+                    className="font-mono text-[36px] sm:text-[48px] font-bold leading-none tabular-nums"
                     style={{ color: 'var(--text)', textShadow: `0 0 24px ${scoreColor}70` }}
                   >
                     {data.score}
@@ -582,7 +582,7 @@ export default function RiskGauge() {
                 <div className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--price-up)]">
                   Opportunities
                 </div>
-                <div className="grid grid-cols-3 gap-x-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-1 gap-x-3">
                   {(data.opportunities?.length ? data.opportunities : ['No signals yet']).slice(0, 3).map((item, i) => (
                     <div
                       key={i}
@@ -603,7 +603,7 @@ export default function RiskGauge() {
                 <div className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--price-down)]">
                   Threats
                 </div>
-                <div className="grid grid-cols-3 gap-x-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-1 gap-x-3">
                   {(data.threats?.length ? data.threats : data.factors ?? ['No signals yet']).slice(0, 3).map((item, i) => (
                     <div
                       key={i}

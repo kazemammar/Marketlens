@@ -103,10 +103,10 @@ export default async function HomePage({
 
       {/* ══ DATA PANELS — Row 1: Market Radar | Risk Gauge ══════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
-        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0">
+        <div className="war-panel min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full">
           <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={[]} showHeatmap={false} />
         </div>
-        <div className="min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0">
+        <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full">
           <RiskGauge />
         </div>
       </div>

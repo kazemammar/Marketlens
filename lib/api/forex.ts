@@ -14,7 +14,7 @@ import { AssetCardData } from '@/lib/utils/types'
 // ─── Constants ────────────────────────────────────────────────────────────
 
 const FRANKFURTER_BASE  = 'https://api.frankfurter.app'
-const FX_CACHE_KEY      = 'forex:frankfurter:v1'
+const FX_CACHE_KEY      = 'forex:frankfurter:v2'
 const FX_CURRENCIES     = ['EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY']
 
 // ─── Raw API response shapes ──────────────────────────────────────────────
@@ -32,6 +32,7 @@ interface FxRateSnapshot {
   current:     Record<string, number>  // currency → USD-based rate
   previous:    Record<string, number>  // previous trading day (may be empty on first ever call)
   currentDate: string                  // YYYY-MM-DD of the current rates
+  allRates:    Record<string, Record<string, number>>  // date → currency → rate (7-day range)
 }
 
 // ─── Internal fetch ───────────────────────────────────────────────────────
@@ -59,6 +60,7 @@ async function fetchFxSnapshot(): Promise<FxRateSnapshot> {
     current:     data.rates[currentDate],
     previous:    prevDate ? data.rates[prevDate] : {},
     currentDate,
+    allRates:    data.rates,
   }
 }
 
@@ -71,8 +73,9 @@ async function fetchFxSnapshot(): Promise<FxRateSnapshot> {
 export async function getForexCards(): Promise<AssetCardData[]> {
   const snapshot = await cachedFetch<FxRateSnapshot>(FX_CACHE_KEY, TTL.FOREX, fetchFxSnapshot)
 
-  const { current, previous } = snapshot
-  const hasPrev = Object.keys(previous).length > 0
+  const { current, previous, allRates } = snapshot
+  const hasPrev    = Object.keys(previous).length > 0
+  const allDayRates = Object.values(allRates)  // array of {currency → raw rate} per day
 
   const cards: AssetCardData[] = []
 
@@ -108,8 +111,20 @@ export async function getForexCards(): Promise<AssetCardData[]> {
       changePercent = prevPrice !== 0 ? (change / prevPrice) * 100 : 0
     }
 
-    // Synthetic OHLC for sparkline (±0.1% band around current price)
-    const band = price * 0.001
+    // Compute real 7-day high/low from all fetched trading days
+    const prices7d = allDayRates
+      .map((dayRates) => {
+        if (usdIsBase) {
+          const r = dayRates[quote]; return r ? r : null
+        } else {
+          const r = dayRates[base];  return r ? 1 / r : null
+        }
+      })
+      .filter((v): v is number => v !== null)
+
+    const high7d = prices7d.length > 0 ? Math.max(...prices7d) : price * 1.002
+    const low7d  = prices7d.length > 0 ? Math.min(...prices7d) : price * 0.998
+
     cards.push({
       symbol,
       name:          label,
@@ -118,9 +133,9 @@ export async function getForexCards(): Promise<AssetCardData[]> {
       change:        parseFloat(change.toFixed(6)),
       changePercent: parseFloat(changePercent.toFixed(4)),
       currency:      quote,
-      open:          price - band,
-      high:          price + band * 2,
-      low:           price - band * 2,
+      open:          price - change,
+      high:          parseFloat(high7d.toFixed(6)),
+      low:           parseFloat(low7d.toFixed(6)),
     })
   }
 

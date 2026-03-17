@@ -11,21 +11,36 @@ export interface BreakdownItem {
   color:    string
 }
 
-export interface MarketRiskPayload {
-  score:          number   // 0–100 (higher = more risk)
-  level:          'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
-  label:          string
-  color:          string
-  factors:        string[]
-  opportunities?: string[]
-  threats?:       string[]
-  breakdown:      BreakdownItem[]
-  updatedAt:      number
+export interface CategoryDetail {
+  keywords: string[]   // top matched keywords (up to 4)
+  drivers:  string[]   // risk strings containing those keywords (up to 2)
+  weight:   number     // scoring weight (0.15–0.30)
 }
 
-const BRIEF_KEY = 'market-brief:daily'
-const RISK_KEY  = 'market-risk:v4'
-const CACHE_TTL = 300 // 5 minutes — aligned with brief TTL
+export interface HistoryPoint {
+  score:     number
+  timestamp: number
+}
+
+export interface MarketRiskPayload {
+  score:           number   // 0–100 (higher = more risk)
+  level:           'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
+  label:           string
+  color:           string
+  factors:         string[]
+  opportunities?:  string[]
+  threats?:        string[]
+  breakdown:       BreakdownItem[]
+  categoryDetails?: Record<string, CategoryDetail>
+  history?:        HistoryPoint[]
+  updatedAt:       number
+}
+
+const BRIEF_KEY   = 'market-brief:daily'
+const RISK_KEY    = 'market-risk:v4'
+const HISTORY_KEY = 'market-risk:history'
+const CACHE_TTL   = 300   // 5 minutes
+const HISTORY_MAX = 12    // ~1 hour at 5-min intervals
 
 // ─── Category keyword lists ────────────────────────────────────────────────
 
@@ -62,57 +77,59 @@ const CMD_KEYWORDS = [
 
 // ─── Score computation ─────────────────────────────────────────────────────
 
-function computeCategoryScores(brief: MarketBriefPayload): { breakdown: BreakdownItem[]; overallScore: number } {
-  // Corpus: brief text + risks only (opportunities excluded — positive signals
-  // would inflate risk scores via commodity/market keyword matches)
+function computeCategoryScores(brief: MarketBriefPayload): {
+  breakdown:       BreakdownItem[]
+  overallScore:    number
+  categoryDetails: Record<string, CategoryDetail>
+} {
   const corpus = (brief.brief + ' ' + brief.risks.join(' ')).toLowerCase()
 
   // ── Geopolitical ──
-  const geoKeyHits   = GEO_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const geoMatched   = GEO_KEYWORDS.filter((w) => corpus.includes(w))
   const geoAssetHits = brief.affectedAssets.filter((a) =>
     ['GLD', 'SLV', 'GC=F', 'USO', 'CL=F', 'USD/JPY'].includes(a.symbol)
   ).length
-  const geoScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(geoKeyHits) * 12 + geoAssetHits * 5)))
+  const geoScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(geoMatched.length) * 12 + geoAssetHits * 5)))
+  const geoDrivers = brief.risks.filter((r) => geoMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
 
   // ── Market ──
-  const mktKeyHits   = MKT_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const mktMatched    = MKT_KEYWORDS.filter((w) => corpus.includes(w))
   const bearishEquity = brief.affectedAssets.filter((a) =>
     (a.type === 'stock' || a.type === 'etf') &&
     (a.direction === 'down' || a.direction === 'volatile')
   ).length
-  const vixBonus = brief.affectedAssets.some((a) => a.symbol === 'VIX') ? 8 : 0
-  const mktScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mktKeyHits) * 10 + bearishEquity * 6 + vixBonus)))
+  const vixBonus   = brief.affectedAssets.some((a) => a.symbol === 'VIX') ? 8 : 0
+  const mktScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mktMatched.length) * 10 + bearishEquity * 6 + vixBonus)))
+  const mktDrivers = brief.risks.filter((r) => mktMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
 
   // ── Macro ──
-  const mcrKeyHits  = MCR_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const mcrMatched  = MCR_KEYWORDS.filter((w) => corpus.includes(w))
   const macroAssets = brief.affectedAssets.filter((a) =>
     a.type === 'forex' || ['TLT', 'VIX'].includes(a.symbol)
   ).length
-  const mcrScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mcrKeyHits) * 9 + macroAssets * 5)))
+  const mcrScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mcrMatched.length) * 9 + macroAssets * 5)))
+  const mcrDrivers = brief.risks.filter((r) => mcrMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
 
   // ── Commodity ──
-  const cmdKeyHits = CMD_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const cmdMatched = CMD_KEYWORDS.filter((w) => corpus.includes(w))
   const cmdSymbols = new Set<string>()
   brief.affectedAssets.forEach((a) => {
     if (a.type === 'commodity') cmdSymbols.add(a.symbol)
     if (['USO', 'GLD', 'SLV', 'GC=F', 'CL=F'].includes(a.symbol)) cmdSymbols.add(a.symbol)
   })
-  const cmdScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(cmdKeyHits) * 11 + cmdSymbols.size * 6)))
+  const cmdScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(cmdMatched.length) * 11 + cmdSymbols.size * 6)))
+  const cmdDrivers = brief.risks.filter((r) => cmdMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
 
-  // ── Overall score ──────────────────────────────────────────────────────
-  // Base: weighted average (geo/mkt 30%, macro 25%, commodity 15%)
+  // ── Overall ──
   const weightedAvg = Math.round(
     geoScore * 0.30 +
     mktScore * 0.30 +
     mcrScore * 0.25 +
     cmdScore * 0.15
   )
-  // Crisis amplifier: if one category is dominant, pull the overall up.
-  // 0.85 means a category at 90 floors overall at ~76 (CRITICAL). Previously
-  // 0.75 only reached 67 (HIGH) — too low for an active conflict scenario.
   const maxCatScore  = Math.max(geoScore, mktScore, mcrScore, cmdScore)
   const amplified    = Math.round(maxCatScore * 0.85)
-  const overallScore = Math.max(weightedAvg, amplified)
+  const overallScore = Math.max(10, Math.min(95, Math.max(weightedAvg, amplified)))
 
   return {
     breakdown: [
@@ -121,7 +138,13 @@ function computeCategoryScores(brief: MarketBriefPayload): { breakdown: Breakdow
       { key: 'mcr', category: 'Macro',        score: mcrScore, color: '#f97316' },
       { key: 'cmd', category: 'Commodity',    score: cmdScore, color: '#22d3ee' },
     ],
-    overallScore: Math.max(10, Math.min(95, overallScore)),
+    overallScore,
+    categoryDetails: {
+      geo: { keywords: geoMatched.slice(0, 4), drivers: geoDrivers, weight: 0.30 },
+      mkt: { keywords: mktMatched.slice(0, 4), drivers: mktDrivers, weight: 0.30 },
+      mcr: { keywords: mcrMatched.slice(0, 4), drivers: mcrDrivers, weight: 0.25 },
+      cmd: { keywords: cmdMatched.slice(0, 4), drivers: cmdDrivers, weight: 0.15 },
+    },
   }
 }
 
@@ -139,17 +162,47 @@ const LEVEL_META: Record<MarketRiskPayload['level'], { label: string; color: str
   CRITICAL: { label: 'Critical',      color: '#ef4444' },
 }
 
+// ─── History helpers ───────────────────────────────────────────────────────
+
+async function readHistory(): Promise<HistoryPoint[]> {
+  try {
+    const raw = await redis.lrange(HISTORY_KEY, 0, -1)
+    return (raw as unknown[]).map((entry) => {
+      if (typeof entry === 'string') return JSON.parse(entry) as HistoryPoint
+      return entry as HistoryPoint
+    })
+  } catch {
+    return []
+  }
+}
+
+async function appendHistory(point: HistoryPoint): Promise<void> {
+  try {
+    const serialized = JSON.stringify(point)
+    await redis.lpush(HISTORY_KEY, serialized)
+    await redis.ltrim(HISTORY_KEY, 0, HISTORY_MAX - 1)
+    await redis.expire(HISTORY_KEY, 86400) // 24h
+  } catch { /* non-fatal */ }
+}
+
+// ─── Route handler ─────────────────────────────────────────────────────────
+
 export async function GET() {
   // Return cached risk score if available
   try {
     const cached = await redis.get<MarketRiskPayload>(RISK_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) {
+      // Always attach fresh history to cached payload
+      const history = await readHistory()
+      return NextResponse.json({ ...cached, history })
+    }
   } catch { /* fall through */ }
 
   // Derive from cached market brief (no extra AI call)
   try {
     const brief = await redis.get<MarketBriefPayload>(BRIEF_KEY)
     if (!brief) {
+      const history = await readHistory()
       const defaultPayload: MarketRiskPayload = {
         score:         45,
         level:         'MODERATE',
@@ -164,29 +217,37 @@ export async function GET() {
           { key: 'mcr', category: 'Macro',        score: 40, color: '#f97316' },
           { key: 'cmd', category: 'Commodity',    score: 30, color: '#22d3ee' },
         ],
+        history,
         updatedAt: Date.now(),
       }
       return NextResponse.json(defaultPayload)
     }
 
-    const { breakdown, overallScore } = computeCategoryScores(brief)
+    const { breakdown, overallScore, categoryDetails } = computeCategoryScores(brief)
     const level = scoreToLevel(overallScore)
     const meta  = LEVEL_META[level]
 
     const payload: MarketRiskPayload = {
-      score:         overallScore,
+      score:          overallScore,
       level,
-      label:         meta.label,
-      color:         meta.color,
-      factors:       brief.risks,
-      opportunities: brief.opportunities,
-      threats:       brief.risks,
+      label:          meta.label,
+      color:          meta.color,
+      factors:        brief.risks,
+      opportunities:  brief.opportunities,
+      threats:        brief.risks,
       breakdown,
-      updatedAt:     brief.generatedAt,
+      categoryDetails,
+      updatedAt:      brief.generatedAt,
     }
 
+    // Write to history (non-blocking)
+    appendHistory({ score: overallScore, timestamp: Date.now() }).catch(() => {})
+
+    // Cache payload (without history — history is always fetched fresh)
     redis.set(RISK_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(payload)
+
+    const history = await readHistory()
+    return NextResponse.json({ ...payload, history })
   } catch (err) {
     console.error('[api/market-risk]', err)
     return NextResponse.json({ error: 'Risk score unavailable' }, { status: 503 })

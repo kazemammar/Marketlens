@@ -6,14 +6,14 @@ import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const CACHE_KEY = 'market-brief:daily'
 const CACHE_TTL = 300 // 5 minutes
-const RISK_KEY  = 'market-risk:v4'
+const RISK_KEY  = 'market-risk:v6'
 
 const BREAKING_KEYWORDS = [
   'war', 'attack', 'missile', 'explosion', 'sanction', 'crash',
   'collapse', 'emergency', 'assassination', 'invasion', 'default',
 ]
 
-interface AffectedAsset {
+export interface AffectedAsset {
   symbol:    string
   type:      'stock' | 'crypto' | 'forex' | 'commodity' | 'etf'
   direction: 'up' | 'down' | 'volatile'

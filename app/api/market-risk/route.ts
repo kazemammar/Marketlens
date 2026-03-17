@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { redis } from '@/lib/cache/redis'
-import { MarketBriefPayload } from '@/app/api/market-brief/route'
+import type { MarketBriefPayload, AffectedAsset } from '@/app/api/market-brief/route'
+
+export type { AffectedAsset }
 
 export const dynamic = 'force-dynamic'
 
@@ -23,21 +25,23 @@ export interface HistoryPoint {
 }
 
 export interface MarketRiskPayload {
-  score:           number   // 0–100 (higher = more risk)
-  level:           'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
-  label:           string
-  color:           string
-  factors:         string[]
-  opportunities?:  string[]
-  threats?:        string[]
-  breakdown:       BreakdownItem[]
+  score:            number   // 0–100 (higher = more risk)
+  level:            'LOW' | 'MODERATE' | 'HIGH' | 'CRITICAL'
+  label:            string
+  color:            string
+  factors:          string[]
+  opportunities?:   string[]
+  threats?:         string[]
+  breakdown:        BreakdownItem[]
   categoryDetails?: Record<string, CategoryDetail>
-  history?:        HistoryPoint[]
-  updatedAt:       number
+  history?:         HistoryPoint[]
+  briefText?:       string
+  affectedAssets?:  AffectedAsset[]
+  updatedAt:        number
 }
 
 const BRIEF_KEY   = 'market-brief:daily'
-const RISK_KEY    = 'market-risk:v5'
+const RISK_KEY    = 'market-risk:v6'
 const HISTORY_KEY = 'market-risk:history'
 const CACHE_TTL   = 300   // 5 minutes
 const HISTORY_MAX = 12    // ~1 hour at 5-min intervals
@@ -189,9 +193,25 @@ async function appendHistory(point: HistoryPoint): Promise<void> {
   } catch { /* non-fatal */ }
 }
 
+// ─── Internal brief fetch (resolves race condition) ───────────────────────
+
+async function fetchBrief(reqUrl: string): Promise<MarketBriefPayload | null> {
+  try {
+    const briefUrl = new URL('/api/market-brief', reqUrl).toString()
+    const resp = await fetch(briefUrl, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
+    })
+    if (!resp.ok) return null
+    return await resp.json() as MarketBriefPayload
+  } catch {
+    return null
+  }
+}
+
 // ─── Route handler ─────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
   // Return cached risk score if available
   try {
     const cached = await redis.get<MarketRiskPayload>(RISK_KEY)
@@ -209,7 +229,13 @@ export async function GET() {
 
   // Derive from cached market brief (no extra AI call)
   try {
-    const brief = await redis.get<MarketBriefPayload>(BRIEF_KEY)
+    let brief = await redis.get<MarketBriefPayload>(BRIEF_KEY)
+
+    // Race condition fix: if brief not cached yet, trigger generation and wait
+    if (!brief) {
+      brief = await fetchBrief(req.url)
+    }
+
     if (!brief) {
       const history = await readHistory()
       const defaultPayload: MarketRiskPayload = {
@@ -246,6 +272,8 @@ export async function GET() {
       threats:        brief.risks,
       breakdown,
       categoryDetails,
+      briefText:      brief.brief,
+      affectedAssets: brief.affectedAssets,
       updatedAt:      brief.generatedAt,
     }
 

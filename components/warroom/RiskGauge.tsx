@@ -2,19 +2,77 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import type { MarketRiskPayload, BreakdownItem, CategoryDetail, HistoryPoint } from '@/app/api/market-risk/route'
+import Link from 'next/link'
+import type { MarketRiskPayload, BreakdownItem, CategoryDetail, HistoryPoint, AffectedAsset } from '@/app/api/market-risk/route'
 import { useFetch } from '@/lib/hooks/useFetch'
+
+// ─── Asset chip (clickable, navigates to asset page) ──────────────────────
+
+const DIR_ARROW: Record<string, string> = { up: '↑', down: '↓', volatile: '↔' }
+const DIR_COLOR: Record<string, string> = {
+  up: 'var(--price-up)', down: 'var(--price-down)', volatile: 'var(--warning)',
+}
+
+function AssetChip({ symbol, type, direction }: AffectedAsset) {
+  const color      = DIR_COLOR[direction] ?? 'var(--warning)'
+  const assetType  = (type as string) === 'equity' ? 'stock' : type
+  return (
+    <Link
+      href={`/asset/${assetType}/${encodeURIComponent(symbol)}`}
+      className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[8px] font-semibold transition-all duration-100 hover:opacity-70 active:scale-95"
+      style={{ color, background: `${color}18`, border: `1px solid ${color}35` }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <span>{DIR_ARROW[direction] ?? '↔'}</span>
+      <span>{symbol}</span>
+    </Link>
+  )
+}
+
+// ─── Category → asset filter ───────────────────────────────────────────────
+
+function filterAssetsForCategory(assets: AffectedAsset[], catKey: string): AffectedAsset[] {
+  const seen = new Set<string>()
+  const dedup = (arr: AffectedAsset[]) => arr.filter(a => {
+    if (seen.has(a.symbol)) return false
+    seen.add(a.symbol); return true
+  })
+  switch (catKey) {
+    case 'geo': return dedup(assets.filter(a =>
+      ['GLD', 'SLV', 'GC=F', 'USO', 'CL=F', 'USD/JPY'].includes(a.symbol)
+    ))
+    case 'mkt': return dedup(assets.filter(a =>
+      a.type === 'stock' || a.type === 'etf' || (a.type as string) === 'equity'
+    ))
+    case 'mcr': return dedup(assets.filter(a =>
+      a.type === 'forex' || ['TLT', 'VIX'].includes(a.symbol)
+    ))
+    case 'cmd': return dedup(assets.filter(a =>
+      a.type === 'commodity' || ['USO', 'GLD', 'SLV', 'GC=F', 'CL=F'].includes(a.symbol)
+    ))
+    default: return []
+  }
+}
 
 // ─── Tooltip portal ────────────────────────────────────────────────────────
 
 interface TooltipState {
-  content:   React.ReactNode
-  x:         number
-  y:         number
-  placement: 'top' | 'bottom'
+  content:     React.ReactNode
+  x:           number
+  y:           number
+  placement:   'top' | 'bottom'
+  interactive: boolean
 }
 
-function TooltipPortal({ tip }: { tip: TooltipState }) {
+function TooltipPortal({
+  tip,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  tip:          TooltipState
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+}) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
   if (!mounted) return null
@@ -24,17 +82,22 @@ function TooltipPortal({ tip }: { tip: TooltipState }) {
     left:          tip.x,
     zIndex:        9999,
     transform:     'translateX(-50%)',
-    pointerEvents: 'none',
+    pointerEvents: tip.interactive ? 'auto' : 'none',
     ...(tip.placement === 'top'
       ? { bottom: window.innerHeight - tip.y + 10 }
       : { top:    tip.y + 10 }),
   }
 
   return createPortal(
-    <div style={style} className="animate-fade-up w-[240px]">
+    <div
+      style={style}
+      className="animate-fade-up w-[280px]"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       <div
         className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-2)]"
-        style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)' }}
+        style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.4)' }}
       >
         {tip.content}
       </div>
@@ -43,7 +106,7 @@ function TooltipPortal({ tip }: { tip: TooltipState }) {
   )
 }
 
-// ─── Info indicator (fades in on hover via parent group) ───────────────────
+// ─── Info indicator ────────────────────────────────────────────────────────
 
 function InfoDot() {
   return (
@@ -56,33 +119,40 @@ function InfoDot() {
   )
 }
 
-// ─── Tooltip content: AI brief style ──────────────────────────────────────
+// ─── Level colors ──────────────────────────────────────────────────────────
 
 const LEVEL_COLOR: Record<string, string> = {
   LOW: 'var(--price-up)', MODERATE: 'var(--warning)', HIGH: '#f97316', CRITICAL: 'var(--price-down)',
 }
+
+// ─── ScoreTooltipContent ──────────────────────────────────────────────────
 
 function ScoreTooltipContent({ data }: { data: MarketRiskPayload }) {
   const sorted   = [...data.breakdown].sort((a, b) => b.score - a.score)
   const dominant = sorted[0]
   const elevated = sorted.filter((c) => c.score >= 55)
 
-  // Count total keyword signals across all categories
   const totalSignals = data.categoryDetails
     ? Object.values(data.categoryDetails).reduce((n, d) => n + d.keywords.length, 0)
     : 0
 
-  // Top driver keywords for display
-  const dominantDetail = dominant && data.categoryDetails?.[dominant.key]
-  const topKeywords    = dominantDetail?.keywords.slice(0, 3) ?? []
+  const topKeywords = (dominant && data.categoryDetails?.[dominant.key])?.keywords.slice(0, 3) ?? []
 
-  // Primary driver sentence from dominant category
-  const primaryDriver  = dominantDetail?.drivers[0] ?? null
+  // AI brief excerpt — first ~130 chars
+  const briefExcerpt = data.briefText
+    ? data.briefText.length > 130
+      ? data.briefText.slice(0, 130).replace(/\s+\S*$/, '') + '…'
+      : data.briefText
+    : null
+
+  const assets = data.affectedAssets ?? []
 
   return (
     <div>
-      <div className="h-[3px] w-full" style={{ background: data.color }} />
+      <div className="h-[3px] w-full" style={{ background: `linear-gradient(90deg, ${data.color}, ${data.color}50)` }} />
       <div className="p-3 space-y-2.5">
+
+        {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: data.color }}>
             {data.label} · {data.score}/100
@@ -92,24 +162,28 @@ function ScoreTooltipContent({ data }: { data: MarketRiskPayload }) {
           </span>
         </div>
 
-        {/* Dynamic narrative built from real data */}
+        {/* Signal narrative */}
         <p className="font-mono text-[10px] leading-relaxed text-[var(--text)]">
           {totalSignals > 0
-            ? `${totalSignals} active signal${totalSignals !== 1 ? 's' : ''} detected across ${elevated.length > 0 ? elevated.length : 'all'} categor${elevated.length !== 1 ? 'ies' : 'y'}. `
+            ? `${totalSignals} signal${totalSignals !== 1 ? 's' : ''} · ${elevated.length > 0 ? `${elevated.length} elevated categor${elevated.length === 1 ? 'y' : 'ies'}` : 'all categories normal'}. `
             : ''}
-          {dominant
-            ? `${dominant.category} is the primary driver (${dominant.score}/100)${topKeywords.length > 0 ? ` — flagged on ${topKeywords.join(', ')}` : ''}.`
+          {dominant && topKeywords.length > 0
+            ? `${dominant.category} leads on ${topKeywords.join(', ')}.`
             : ''}
         </p>
 
-        {primaryDriver && (
-          <p className="font-mono text-[9px] leading-snug text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-            {primaryDriver}
+        {/* AI brief excerpt */}
+        {briefExcerpt && (
+          <p
+            className="font-mono text-[9px] leading-snug text-[var(--text-muted)] italic border-l-2 pl-2"
+            style={{ borderColor: `${data.color}60` }}
+          >
+            "{briefExcerpt}"
           </p>
         )}
 
-        {/* Category breakdown mini-list */}
-        <div className="border-t border-[var(--border)] pt-2 space-y-1">
+        {/* Category mini-chart */}
+        <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
           {sorted.map((cat) => (
             <div key={cat.key} className="flex items-center gap-2">
               <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: cat.color }} />
@@ -117,42 +191,67 @@ function ScoreTooltipContent({ data }: { data: MarketRiskPayload }) {
               <div className="w-16 h-1 rounded-full bg-[var(--surface-3)] overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${cat.score}%`, background: cat.color }} />
               </div>
-              <span className="w-5 font-mono text-[9px] font-bold tabular-nums text-right" style={{ color: cat.color }}>{cat.score}</span>
+              <span className="w-5 font-mono text-[9px] font-bold tabular-nums text-right" style={{ color: cat.color }}>
+                {cat.score}
+              </span>
             </div>
           ))}
         </div>
+
+        {/* Moving Now — all affected assets */}
+        {assets.length > 0 && (
+          <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
+            <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              Moving Now
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {assets.map((a, i) => <AssetChip key={i} {...a} />)}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )
 }
 
-function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: CategoryDetail }) {
+// ─── CategoryTooltipContent ───────────────────────────────────────────────
+
+function CategoryTooltipContent({
+  cat, detail, allAssets,
+}: {
+  cat:       BreakdownItem
+  detail?:   CategoryDetail
+  allAssets?: AffectedAsset[]
+}) {
   const level      = cat.score >= 75 ? 'CRITICAL' : cat.score >= 55 ? 'HIGH' : cat.score >= 35 ? 'MODERATE' : 'LOW'
   const levelColor = LEVEL_COLOR[level]
+  const filtered   = allAssets ? filterAssetsForCategory(allAssets, cat.key) : []
 
   return (
     <div>
       <div className="h-[3px] w-full" style={{ background: cat.color }} />
       <div className="p-3 space-y-2.5">
+
+        {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             {cat.category}
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: cat.color }}>
-              {cat.score}
-            </span>
+            <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: cat.color }}>{cat.score}</span>
             <span className="rounded px-1.5 py-px font-mono text-[8px] font-bold uppercase" style={{ color: levelColor, background: `${levelColor}20` }}>
               {level}
             </span>
           </div>
         </div>
 
+        {/* Score bar */}
         <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
           <div className="h-full rounded-full" style={{ width: `${cat.score}%`, background: cat.color }} />
         </div>
 
-        {/* Keywords chips — colored with category color */}
+        {/* Keyword chips */}
         {detail?.keywords && detail.keywords.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {detail.keywords.map((kw) => (
@@ -169,7 +268,7 @@ function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: 
           <p className="font-mono text-[9px] text-[var(--text-muted)]">No active signals detected.</p>
         )}
 
-        {/* Driver sentences — verbatim from AI brief, as primary content */}
+        {/* Driver sentences */}
         {detail?.drivers && detail.drivers.length > 0 && (
           <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
             {detail.drivers.map((d, i) => (
@@ -181,6 +280,19 @@ function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: 
           </div>
         )}
 
+        {/* Exposed assets for this category */}
+        {filtered.length > 0 && (
+          <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
+            <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              Exposed Assets
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {filtered.map((a, i) => <AssetChip key={i} {...a} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Weight footer */}
         {detail && (
           <div className="flex items-center justify-between border-t border-[var(--border)] pt-1.5">
             <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-60">
@@ -188,34 +300,83 @@ function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: 
             </span>
           </div>
         )}
+
       </div>
     </div>
   )
 }
 
-function ItemTooltipContent({ text, kind }: { text: string; kind: 'opportunity' | 'threat' }) {
+// ─── ItemTooltipContent ────────────────────────────────────────────────────
+
+function ItemTooltipContent({
+  text, kind, allAssets,
+}: {
+  text:       string
+  kind:       'opportunity' | 'threat'
+  allAssets?: AffectedAsset[]
+}) {
   const isOpp = kind === 'opportunity'
   const color = isOpp ? 'var(--price-up)' : 'var(--price-down)'
-  const label = isOpp ? 'Opportunity' : 'Threat'
+  const lower = text.toLowerCase()
 
-  const lower   = text.toLowerCase()
+  // Severity badge
+  const severeWords   = ['invasion', 'war', 'crash', 'collapse', 'default', 'emergency', 'explosion']
+  const moderateWords = ['escalat', 'sanction', 'conflict', 'recession', 'tariff', 'shortage']
+  const severity = severeWords.some((w) => lower.includes(w)) ? 'SEVERE'
+    : moderateWords.some((w) => lower.includes(w))            ? 'MODERATE'
+    : 'MONITOR'
+  const sevColor = severity === 'SEVERE' ? 'var(--price-down)' : severity === 'MODERATE' ? '#f97316' : 'var(--warning)'
+
+  // Category linkage
   const related: string[] = []
-  if (/gold|oil|crude|commodit|metal|energy|lng|opec/.test(lower))             related.push('Commodity')
-  if (/fed|rate|inflation|bond|yield|dollar|macro|gdp|cpi/.test(lower))        related.push('Macro')
-  if (/equity|stock|market|nasdaq|earnings|vix|volatil/.test(lower))           related.push('Market')
+  if (/gold|oil|crude|commodit|metal|energy|lng|opec/.test(lower))                related.push('Commodity')
+  if (/fed|rate|inflation|bond|yield|dollar|macro|gdp|cpi/.test(lower))           related.push('Macro')
+  if (/equity|stock|market|nasdaq|earnings|vix|volatil/.test(lower))              related.push('Market')
   if (/geopolit|conflict|sanction|war|china|russia|iran|tariff|tension/.test(lower)) related.push('Geopolitical')
+
+  // Matching assets for impact vector
+  const impactAssets = (allAssets ?? []).filter((a) => {
+    const sl = a.symbol.toLowerCase()
+    return (related.includes('Commodity') && ['gld', 'uso', 'gc=f', 'cl=f', 'slv'].includes(sl))
+      || (related.includes('Macro')       && (a.type === 'forex' || ['tlt', 'vix'].includes(sl)))
+      || (related.includes('Market')      && (a.type === 'stock' || a.type === 'etf'))
+      || (related.includes('Geopolitical') && ['gld', 'uso', 'gc=f', 'cl=f', 'usd/jpy'].includes(sl))
+  })
 
   return (
     <div>
       <div className="h-[3px] w-full" style={{ background: color }} />
       <div className="p-3 space-y-2">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color }}>
-          {label}
-        </span>
-        {/* Full text — verbatim from AI brief, no truncation */}
-        <p className="font-mono text-[10px] leading-relaxed text-[var(--text)]">
-          {text}
-        </p>
+
+        {/* Header row */}
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color }}>
+            {isOpp ? 'Opportunity' : 'Threat'}
+          </span>
+          <span
+            className="rounded px-1.5 py-px font-mono text-[8px] font-bold uppercase"
+            style={{ color: sevColor, background: `${sevColor}18` }}
+          >
+            {severity}
+          </span>
+        </div>
+
+        {/* Full verbatim text */}
+        <p className="font-mono text-[10px] leading-relaxed text-[var(--text)]">{text}</p>
+
+        {/* Trade expression / impact vector */}
+        {impactAssets.length > 0 && (
+          <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
+            <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+              {isOpp ? 'Trade Expression' : 'Impact Vector'}
+            </span>
+            <div className="flex flex-wrap gap-1">
+              {impactAssets.map((a, i) => <AssetChip key={i} {...a} />)}
+            </div>
+          </div>
+        )}
+
+        {/* Category linkage */}
         {related.length > 0 && (
           <div className="flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
             <span className="font-mono text-[8px] text-[var(--text-muted)]">Linked to:</span>
@@ -230,13 +391,22 @@ function ItemTooltipContent({ text, kind }: { text: string; kind: 'opportunity' 
             ))}
           </div>
         )}
+
       </div>
     </div>
   )
 }
 
-function TrendTooltipContent({ score, history }: { score: number; history?: HistoryPoint[] }) {
-  const now  = Date.now()
+// ─── TrendTooltipContent ──────────────────────────────────────────────────
+
+function TrendTooltipContent({
+  score, history, data,
+}: {
+  score:    number
+  history?: HistoryPoint[]
+  data:     MarketRiskPayload
+}) {
+  const now   = Date.now()
   const SLOTS = [
     { label: 'Now',  ms: 0 },
     { label: '−5m',  ms: 5  * 60_000 },
@@ -258,43 +428,41 @@ function TrendTooltipContent({ score, history }: { score: number; history?: Hist
     return best?.score ?? null
   }
 
-  const points = SLOTS.map((s) => ({
-    label: s.label,
-    value: s.ms === 0 ? score : closest(s.ms),
-  }))
-
+  const points      = SLOTS.map((s) => ({ label: s.label, value: s.ms === 0 ? score : closest(s.ms) }))
   const validPoints = points.filter((p) => p.value !== null)
   const oldest      = validPoints[validPoints.length - 1]?.value ?? score
   const delta       = score - oldest
   const direction   = validPoints.length < 2 ? '→ Collecting' : delta > 3 ? '↑ Rising' : delta < -3 ? '↓ Easing' : '→ Stable'
   const dirColor    = validPoints.length < 2 ? 'var(--text-muted)' : delta > 3 ? 'var(--price-down)' : delta < -3 ? 'var(--price-up)' : 'var(--warning)'
 
+  const allScores  = validPoints.map((p) => p.value as number)
+  const sessionMin = allScores.length > 1 ? Math.min(...allScores) : null
+  const sessionMax = allScores.length > 1 ? Math.max(...allScores) : null
+
+  const topCat  = [...data.breakdown].sort((a, b) => b.score - a.score)[0]
   const outlook = validPoints.length < 2
     ? 'History accumulates every 5 minutes. Check back shortly for trend analysis.'
-    : delta > 5
-      ? 'Risk momentum is building. If geopolitical or macro catalysts persist, expect further elevation.'
-      : delta < -5
-        ? 'Risk is easing. The market is digesting earlier stress signals. Conditions may be improving.'
-        : 'Risk is relatively stable. No strong directional momentum detected across the tracked period.'
+    : delta > 5  ? `Risk building — driven by ${topCat?.category ?? 'multiple factors'}.`
+    : delta < -5 ? 'Risk is easing. Market conditions may be improving.'
+    : `Risk stable. ${topCat?.category ?? 'No single category'} remains the primary contributor.`
 
   return (
     <div>
       <div className="h-[3px] w-full" style={{ background: 'var(--accent)' }} />
       <div className="p-3 space-y-2.5">
+
+        {/* Header */}
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
             Risk Trend
           </span>
-          <span className="font-mono text-[10px] font-bold" style={{ color: dirColor }}>
-            {direction}
-          </span>
+          <span className="font-mono text-[10px] font-bold" style={{ color: dirColor }}>{direction}</span>
         </div>
 
-        {/* Always render the timeline chart — shows '—' for missing slots */}
+        {/* Timeline */}
         <div className="space-y-2">
           {points.map((pt) => {
             const v        = pt.value
-            const barPct   = v != null ? v : 0
             const barColor = v != null
               ? (v >= 75 ? 'var(--price-down)' : v >= 55 ? '#f97316' : v >= 35 ? 'var(--warning)' : 'var(--price-up)')
               : 'var(--surface-3)'
@@ -302,9 +470,11 @@ function TrendTooltipContent({ score, history }: { score: number; history?: Hist
               <div key={pt.label} className="flex items-center gap-2">
                 <span className="w-9 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">{pt.label}</span>
                 <div className="flex-1 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%`, background: barColor, opacity: v != null ? 1 : 0 }} />
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${v ?? 0}%`, background: barColor, opacity: v != null ? 1 : 0 }} />
                 </div>
-                <span className="w-6 font-mono text-[9px] tabular-nums text-right font-bold" style={{ color: v != null ? barColor : 'var(--text-muted)' }}>
+                <span className="w-6 font-mono text-[9px] tabular-nums text-right font-bold"
+                  style={{ color: v != null ? barColor : 'var(--text-muted)' }}>
                   {v ?? '—'}
                 </span>
               </div>
@@ -312,6 +482,22 @@ function TrendTooltipContent({ score, history }: { score: number; history?: Hist
           })}
         </div>
 
+        {/* Session range */}
+        {sessionMin !== null && sessionMax !== null && (
+          <div className="flex items-center gap-2 border-t border-[var(--border)] pt-2">
+            <div className="flex items-center gap-1">
+              <span className="font-mono text-[8px] text-[var(--text-muted)]">Session Low</span>
+              <span className="font-mono text-[9px] font-bold tabular-nums" style={{ color: 'var(--price-up)' }}>{sessionMin}</span>
+            </div>
+            <div className="h-px flex-1 bg-[var(--border)]" />
+            <div className="flex items-center gap-1">
+              <span className="font-mono text-[8px] text-[var(--text-muted)]">High</span>
+              <span className="font-mono text-[9px] font-bold tabular-nums" style={{ color: 'var(--price-down)' }}>{sessionMax}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Outlook */}
         <p className="font-mono text-[10px] leading-relaxed text-[var(--text)] border-t border-[var(--border)] pt-2">
           {outlook}
         </p>
@@ -321,6 +507,7 @@ function TrendTooltipContent({ score, history }: { score: number; history?: Hist
             {delta > 0 ? '+' : ''}{delta.toFixed(0)} pts over tracked period
           </span>
         )}
+
       </div>
     </div>
   )
@@ -409,33 +596,50 @@ export default function RiskGauge() {
     : 'var(--price-up)'
 
   const breakdown = data?.breakdown ?? []
+  const assets    = data?.affectedAssets ?? []
 
-  // ── Tooltip ──────────────────────────────────────────────────────────
+  // ── Tooltip state ──────────────────────────────────────────────────────
   const [tip, setTip]  = useState<TooltipState | null>(null)
   const enterTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const leaveTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const showTip = useCallback((e: React.MouseEvent, content: React.ReactNode) => {
+  const showTip = useCallback((
+    e: React.MouseEvent,
+    content: React.ReactNode,
+    interactive = false,
+  ) => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current)
     if (enterTimer.current) clearTimeout(enterTimer.current)
-    const rect        = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const TOOLTIP_W   = 240
-    const MARGIN      = 8
-    const rawCx       = rect.left + rect.width / 2
-    // Clamp so tooltip never overflows either edge of the viewport
-    const cx          = Math.min(Math.max(rawCx, TOOLTIP_W / 2 + MARGIN), window.innerWidth - TOOLTIP_W / 2 - MARGIN)
-    const spaceBelow  = window.innerHeight - rect.bottom
-    const placement: 'top' | 'bottom' = spaceBelow < 200 ? 'top' : 'bottom'
+    const rect       = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const TOOLTIP_W  = 280
+    const MARGIN     = 8
+    const rawCx      = rect.left + rect.width / 2
+    const cx         = Math.min(Math.max(rawCx, TOOLTIP_W / 2 + MARGIN), window.innerWidth - TOOLTIP_W / 2 - MARGIN)
+    const spaceBelow = window.innerHeight - rect.bottom
+    const placement: 'top' | 'bottom' = spaceBelow < 240 ? 'top' : 'bottom'
     enterTimer.current = setTimeout(() => {
-      setTip({ content, x: cx, y: placement === 'top' ? rect.top : rect.bottom, placement })
+      setTip({ content, x: cx, y: placement === 'top' ? rect.top : rect.bottom, placement, interactive })
     }, 130)
   }, [])
 
   const hideTip = useCallback(() => {
     if (enterTimer.current) clearTimeout(enterTimer.current)
+    // Short delay so interactive tooltips can receive pointer
+    leaveTimer.current = setTimeout(() => setTip(null), 80)
+  }, [])
+
+  const cancelHide = useCallback(() => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current)
+  }, [])
+
+  const immediateHide = useCallback(() => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current)
     setTip(null)
   }, [])
 
   return (
     <div className="flex flex-col h-full min-h-[260px] sm:min-h-0">
+
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-amber-400" aria-hidden>
@@ -492,14 +696,13 @@ export default function RiskGauge() {
             {/* ── ROW 1: Ring + Breakdown ── */}
             <div className="flex gap-3">
 
-              {/* Ring — hoverable */}
+              {/* Ring — hoverable, interactive tooltip */}
               <div
                 className="group relative h-[140px] w-[140px] shrink-0 cursor-default"
-                onMouseEnter={(e) => showTip(e, <ScoreTooltipContent data={data} />)}
+                onMouseEnter={(e) => showTip(e, <ScoreTooltipContent data={data} />, true)}
                 onMouseLeave={hideTip}
               >
                 <RingGauge score={data.score} color={scoreColor} />
-                {/* Score overlay */}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                   <span
                     className="font-mono text-[48px] font-bold leading-none tabular-nums"
@@ -511,20 +714,20 @@ export default function RiskGauge() {
                     {LEVEL_LABEL[data.level] ?? data.level}
                   </span>
                 </div>
-                {/* Info indicator bottom-right of ring */}
                 <div className="absolute bottom-2 right-2 pointer-events-none">
                   <InfoDot />
                 </div>
               </div>
 
-              {/* Category bars — each hoverable */}
+              {/* Category bars — each has interactive tooltip */}
               <div className="flex flex-1 flex-col justify-center gap-3">
                 {breakdown.map((cat) => (
                   <div
                     key={cat.key}
                     className="group cursor-default"
                     onMouseEnter={(e) => showTip(e,
-                      <CategoryTooltipContent cat={cat} detail={data.categoryDetails?.[cat.key]} />
+                      <CategoryTooltipContent cat={cat} detail={data.categoryDetails?.[cat.key]} allAssets={assets} />,
+                      true,
                     )}
                     onMouseLeave={hideTip}
                   >
@@ -562,7 +765,10 @@ export default function RiskGauge() {
                     <div
                       key={i}
                       className="group flex items-start gap-1 cursor-default"
-                      onMouseEnter={(e) => showTip(e, <ItemTooltipContent text={item} kind="opportunity" />)}
+                      onMouseEnter={(e) => showTip(e,
+                        <ItemTooltipContent text={item} kind="opportunity" allAssets={assets} />,
+                        true,
+                      )}
                       onMouseLeave={hideTip}
                     >
                       <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-up)' }} />
@@ -583,7 +789,10 @@ export default function RiskGauge() {
                     <div
                       key={i}
                       className="group flex items-start gap-1 cursor-default"
-                      onMouseEnter={(e) => showTip(e, <ItemTooltipContent text={item} kind="threat" />)}
+                      onMouseEnter={(e) => showTip(e,
+                        <ItemTooltipContent text={item} kind="threat" allAssets={assets} />,
+                        true,
+                      )}
                       onMouseLeave={hideTip}
                     >
                       <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-down)' }} />
@@ -597,10 +806,13 @@ export default function RiskGauge() {
 
             </div>
 
-            {/* ── ROW 3: Risk Trend — hoverable ── */}
+            {/* ── ROW 3: Risk Trend ── */}
             <div
               className="group mt-2 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1.5 cursor-default hover:border-[var(--accent)]/30 transition-colors duration-150"
-              onMouseEnter={(e) => showTip(e, <TrendTooltipContent score={data.score} history={data.history} />)}
+              onMouseEnter={(e) => showTip(e,
+                <TrendTooltipContent score={data.score} history={data.history} data={data} />,
+                false,
+              )}
               onMouseLeave={hideTip}
             >
               <div className="flex items-center justify-between">
@@ -637,7 +849,13 @@ export default function RiskGauge() {
       </div>
 
       {/* Portal tooltip — always last, rendered outside overflow */}
-      {tip && <TooltipPortal tip={tip} />}
+      {tip && (
+        <TooltipPortal
+          tip={tip}
+          onMouseEnter={cancelHide}
+          onMouseLeave={immediateHide}
+        />
+      )}
     </div>
   )
 }

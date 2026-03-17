@@ -59,7 +59,7 @@ export default function SignalsPanel() {
   }, [raw])
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
@@ -97,7 +97,7 @@ export default function SignalsPanel() {
               const isNew = newIds.has(sig.id)
               return (
                 <div
-                  key={sig.id}
+                  key={`${sig.id}-${i}`}
                   className={`flex gap-2 border-b border-[var(--border)] px-3 py-2.5 transition-all duration-150 hover:bg-[var(--surface-2)] hover:translate-x-0.5 ${isNew ? 'animate-slide-right signal-new' : 'animate-slide-in'}`}
                   style={{ animationDelay: isNew ? '0ms' : `${i * 40}ms` }}
                 >

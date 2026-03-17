@@ -34,14 +34,19 @@ function MarketRow({ market }: { market: PolymarketMarket }) {
   const color = yesColor(market.yesPrice)
 
   return (
-    <div className="flex items-center gap-3 bg-[var(--surface)] px-3 py-2 transition hover:bg-[var(--surface-2)]">
-      {/* YES % ring */}
+    <a
+      href={`https://polymarket.com/event/${market.slug ?? market.id}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-start gap-3 bg-[var(--surface)] px-3 py-2.5 transition hover:bg-[var(--surface-2)] cursor-pointer"
+    >
+      {/* YES % ring — 48px */}
       <div
-        className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+        className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
         style={{ background: `conic-gradient(${color} ${pct}%, var(--surface-3) ${pct}%)` }}
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface)]">
-          <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color }}>
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface)] group-hover:bg-[var(--surface-2)] transition-colors">
+          <span className="font-mono text-[11px] font-bold tabular-nums" style={{ color }}>
             {pct}%
           </span>
         </div>
@@ -49,30 +54,39 @@ function MarketRow({ market }: { market: PolymarketMarket }) {
 
       {/* Question + meta */}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 font-mono text-[10px] leading-snug text-[var(--text-2)]" title={market.question}>
+        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-2)] group-hover:text-[var(--text)] transition-colors" title={market.question}>
           {market.question}
         </p>
-        <div className="mt-0.5 flex items-center gap-2">
+        {/* Probability bar */}
+        <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${pct}%`, background: color }}
+          />
+        </div>
+        <div className="mt-1 flex items-center gap-2">
           <span className="font-mono text-[8px] text-[var(--text-muted)]">
-            {formatVolume(market.volume)}
+            {formatVolume(market.volume)} vol
           </span>
           {market.endDate && (
             <span className="font-mono text-[8px] text-[var(--text-muted)]">
-              · {formatEndDate(market.endDate)}
+              · ends {formatEndDate(market.endDate)}
             </span>
           )}
         </div>
       </div>
-    </div>
+    </a>
   )
 }
 
 function SkeletonRow() {
   return (
-    <div className="flex items-center gap-3 bg-[var(--surface)] px-3 py-2">
-      <div className="skeleton h-10 w-10 shrink-0 rounded-full" />
-      <div className="flex-1 space-y-1">
-        <div className="skeleton h-2.5 w-full rounded" />
+    <div className="flex items-start gap-3 bg-[var(--surface)] px-3 py-2.5">
+      <div className="skeleton h-12 w-12 shrink-0 rounded-full" />
+      <div className="flex-1 space-y-1.5 pt-1">
+        <div className="skeleton h-3 w-full rounded" />
+        <div className="skeleton h-2.5 w-3/4 rounded" />
+        <div className="skeleton h-1 w-full rounded-full" />
         <div className="skeleton h-2 w-1/3 rounded" />
       </div>
     </div>

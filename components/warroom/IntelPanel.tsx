@@ -327,7 +327,7 @@ export default function IntelPanel() {
                 >
                   <ArticleThumb headline={a.headline} imageUrl={a.imageUrl} />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[11px] font-medium leading-snug text-[var(--text-2)]">
+                    <p className="line-clamp-2 text-[12px] font-medium leading-snug text-[var(--text-2)]">
                       {a.headline}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">

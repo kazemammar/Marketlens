@@ -17,7 +17,7 @@ function ArticleIcon({ category }: { category: string }) {
   const cfg = CAT_ICON[category] ?? CAT_ICON.MARKETS
   return (
     <div
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br text-[16px] ${cfg.gradient}`}
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br text-[12px] ${cfg.gradient}`}
       style={{ border: '1px solid var(--border)' }}
       aria-hidden
     >
@@ -73,7 +73,7 @@ function ArticleRow({ article, category }: { article: Article; category: string 
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-start gap-2.5 border-b border-[var(--border)] px-3 py-2.5 transition-colors hover:bg-[var(--surface-2)]"
+      className="group flex items-start gap-2.5 border-b border-[var(--border)] px-3 py-2 transition-colors hover:bg-[var(--surface-2)]"
     >
       <ArticleIcon category={category} />
       <div className="min-w-0 flex-1">
@@ -95,8 +95,8 @@ function ColumnSkeleton() {
   return (
     <div className="flex flex-col">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-start gap-2.5 border-b border-[var(--border)] px-3 py-2.5">
-          <div className="skeleton h-9 w-9 shrink-0 rounded-md" />
+        <div key={i} className="flex items-start gap-2.5 border-b border-[var(--border)] px-3 py-2">
+          <div className="skeleton h-7 w-7 shrink-0 rounded-md" />
           <div className="flex-1 space-y-1.5 pt-0.5">
             <div className="skeleton h-2.5 w-full rounded" />
             <div className="skeleton h-2.5 w-3/4 rounded" />
@@ -124,10 +124,22 @@ export default function NewsBriefing() {
   const byCategory: Record<NewsCategory, Article[]> = {
     GEOPOLITICAL: [], MARKETS: [], ENERGY: [], CRYPTO: [], TECH: [],
   }
+  // First pass: fill buckets
   for (const a of articles) {
     const cat = categorizeArticle(a.headline)
     if (byCategory[cat].length < 15) byCategory[cat].push(a)
-    if (Object.values(byCategory).every((arr) => arr.length >= 15)) break
+  }
+  // Sort each bucket: HIGH severity first, then by recency
+  const sevOrder = { HIGH: 0, MED: 1, LOW: 2 }
+  for (const cat of Object.keys(byCategory) as NewsCategory[]) {
+    byCategory[cat].sort((a, b) => {
+      const sa = sevOrder[severity(`${a.headline} ${a.summary}`)]
+      const sb = sevOrder[severity(`${b.headline} ${b.summary}`)]
+      if (sa !== sb) return sa - sb
+      const ta = typeof a.publishedAt === 'number' ? a.publishedAt : new Date(a.publishedAt).getTime()
+      const tb = typeof b.publishedAt === 'number' ? b.publishedAt : new Date(b.publishedAt).getTime()
+      return tb - ta
+    })
   }
 
   return (

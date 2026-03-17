@@ -90,7 +90,7 @@ export default function RiskGauge() {
     : 'var(--price-up)'
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-amber-400" aria-hidden>
@@ -103,7 +103,7 @@ export default function RiskGauge() {
         </span>
       </div>
 
-      <div className="flex-1 px-3 py-3">
+      <div className="flex-1 px-3 py-3 overflow-y-auto">
         {loading ? (
           <div className="flex flex-col items-center gap-3">
             <div className="skeleton h-28 w-28 rounded-full" />
@@ -144,6 +144,33 @@ export default function RiskGauge() {
                 ))}
               </ul>
             )}
+
+            {/* Risk trend */}
+            <div className="mt-3 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--text-muted)]">Risk Trend</span>
+                <span
+                  className="font-mono text-[9px] font-bold"
+                  style={{ color: data.score >= 60 ? 'var(--price-down)' : data.score >= 30 ? 'var(--warning)' : 'var(--price-up)' }}
+                >
+                  {data.score >= 60 ? '↑ RISING' : data.score >= 30 ? '→ STABLE' : '↓ EASING'}
+                </span>
+              </div>
+              <div className="mt-1 flex h-1 gap-px overflow-hidden rounded-full">
+                {[20, 40, 60, 80, 100].map((threshold, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-sm transition-all duration-700"
+                    style={{
+                      background: data.score >= threshold
+                        ? scoreColor
+                        : 'var(--surface-3)',
+                      opacity: data.score >= threshold ? (0.4 + i * 0.15) : 0.3,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           </>
         ) : (
           <div className="py-6 text-center">

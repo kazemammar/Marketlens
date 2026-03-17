@@ -101,13 +101,13 @@ export default async function HomePage({
       </div>
 
       {/* ══ DATA PANELS — 4-column row (2x2 on mobile) ══════════════════ */}
-      <div className="grid grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] lg:grid-cols-4">
-        <div className="war-panel min-w-0 overflow-hidden">
+      <div className="grid grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] lg:grid-cols-4 lg:h-[520px]">
+        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col">
           <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={homepage?.stocks ?? []} />
         </div>
-        <div className="war-panel min-w-0 overflow-hidden"><FXMonitor /></div>
-        <div className="war-panel min-w-0 overflow-hidden"><RiskGauge /></div>
-        <div className="min-w-0 overflow-hidden"><SignalsPanel /></div>
+        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col"><FXMonitor /></div>
+        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col"><RiskGauge /></div>
+        <div className="min-w-0 overflow-hidden h-full flex flex-col"><SignalsPanel /></div>
       </div>
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}

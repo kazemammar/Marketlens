@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { QuoteRaw } from '@/lib/api/finnhub'
 import { formatPrice, formatPercent } from '@/lib/utils/formatters'
 
@@ -15,6 +16,18 @@ const TICKER_SYMBOLS = [
   { symbol: 'GC=F',            label: 'GOLD',       currency: 'USD' },
   { symbol: 'CL=F',            label: 'OIL',        currency: 'USD' },
 ]
+
+const SYMBOL_LINK: Record<string, string> = {
+  'SPY':             '/asset/etf/SPY',
+  'DIA':             '/asset/etf/DIA',
+  'QQQ':             '/asset/etf/QQQ',
+  'IWM':             '/asset/etf/IWM',
+  'BINANCE:BTCUSDT': '/asset/crypto/BTC',
+  'BINANCE:ETHUSDT': '/asset/crypto/ETH',
+  'BINANCE:SOLUSDT': '/asset/crypto/SOL',
+  'GC=F':            '/asset/commodity/GC%3DF',
+  'CL=F':            '/asset/commodity/CL%3DF',
+}
 
 const SYMBOL_LIST = TICKER_SYMBOLS.map((t) => t.symbol).join(',')
 
@@ -39,8 +52,9 @@ function TickerItem({
   const chgColor   = isPositive ? 'var(--price-up)' : 'var(--price-down)'
   const flashCls   = flash === 'up' ? 'price-flash-up' : flash === 'down' ? 'price-flash-down' : ''
 
-  return (
-    <div className="flex items-center gap-2 px-5">
+  const href = SYMBOL_LINK[symbol]
+  const inner = (
+    <div className="flex items-center gap-2 px-5 py-0.5 rounded transition-colors hover:bg-[var(--surface-2)]">
       <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>
         {label}
       </span>
@@ -48,10 +62,15 @@ function TickerItem({
         {formatPrice(quote.price, currency)}
       </span>
       <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color: chgColor }}>
-        {isPositive ? '+' : ''}{formatPercent(quote.changePercent, false)}
+        {formatPercent(quote.changePercent, false)}
       </span>
     </div>
   )
+
+  if (href) {
+    return <Link href={href} className="cursor-pointer">{inner}</Link>
+  }
+  return inner
 }
 
 function Dot() {

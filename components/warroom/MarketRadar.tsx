@@ -59,26 +59,38 @@ function buildTreemapRows(stocks: AssetCardData[]): Array<Array<{ symbol: string
 }
 
 function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height: number }) {
-  const abs   = Math.min(Math.abs(pct), 3)
-  const ratio = abs / 3
+  const abs   = Math.abs(pct)
   const isPos = pct >= 0
-  const bgOpacity = 0.1 + ratio * 0.35
-  const bg        = isPos
-    ? `rgba(var(--price-up-rgb),${bgOpacity})`
-    : `rgba(var(--price-down-rgb),${bgOpacity})`
-  const chgColor = isPos ? 'var(--price-up)' : 'var(--price-down)'
+
+  // Tiered vivid colors
+  let bg: string
+  let textColor: string
+  if (isPos) {
+    if (abs >= 2)      { bg = 'rgba(var(--price-up-rgb), 0.90)'; textColor = '#ffffff' }
+    else if (abs >= 1) { bg = 'rgba(var(--price-up-rgb), 0.55)'; textColor = 'var(--text)' }
+    else               { bg = 'rgba(var(--price-up-rgb), 0.22)'; textColor = 'var(--text)' }
+  } else if (pct === 0) {
+    bg = 'var(--surface-2)'; textColor = 'var(--text-muted)'
+  } else {
+    if (abs >= 2)      { bg = 'rgba(var(--price-down-rgb), 0.90)'; textColor = '#ffffff' }
+    else if (abs >= 1) { bg = 'rgba(var(--price-down-rgb), 0.55)'; textColor = 'var(--text)' }
+    else               { bg = 'rgba(var(--price-down-rgb), 0.22)'; textColor = 'var(--text)' }
+  }
+
+  const chgColor = isPos ? 'var(--price-up)' : pct < 0 ? 'var(--price-down)' : 'var(--text-muted)'
   const sym = symbol.length <= 4 ? symbol : symbol.slice(0, 4)
   return (
-    <div
+    <a
+      href={`/asset/stock/${symbol}`}
       title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
-      className="flex flex-col items-center justify-center overflow-hidden"
+      className="flex flex-col items-center justify-center overflow-hidden transition-opacity hover:opacity-80"
       style={{ background: bg, height: `${height}px`, border: '1px solid var(--border)' }}
     >
-      <span className="font-mono font-bold text-[var(--text)] leading-none" style={{ fontSize: height > 30 ? '9px' : '7px' }}>{sym}</span>
-      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: height > 30 ? '8px' : '6px', color: chgColor }}>
+      <span className="font-mono font-bold leading-none" style={{ fontSize: height > 36 ? '9px' : '7px', color: abs >= 2 ? '#ffffff' : 'var(--text)' }}>{sym}</span>
+      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: height > 36 ? '8px' : '6px', color: abs >= 2 ? '#ffffffcc' : chgColor }}>
         {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
       </span>
-    </div>
+    </a>
   )
 }
 
@@ -101,7 +113,7 @@ export default function MarketRadar({
   }, [data?.updatedAt])
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
@@ -113,7 +125,7 @@ export default function MarketRadar({
         </span>
       </div>
 
-      <div className="flex-1 px-3 py-2.5">
+      <div className="flex-1 px-3 py-2.5 overflow-y-auto">
         {loading ? (
           <div className="space-y-2">
             <div className="skeleton h-14 w-full rounded-lg" />
@@ -167,6 +179,30 @@ export default function MarketRadar({
             <p className="mt-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
               Updated {timeStr || '--:--'}
             </p>
+
+            {/* Market breadth mini bar */}
+            {(() => {
+              // derive from signals heuristic
+              const upCount  = stocks.filter(s => s.changePercent > 0).length
+              const dnCount  = stocks.filter(s => s.changePercent < 0).length
+              const total    = upCount + dnCount
+              if (total === 0) return null
+              const upPct = Math.round((upCount / total) * 100)
+              return (
+                <div className="mt-2 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--text-muted)]">Breadth</span>
+                    <span className="font-mono text-[8px] tabular-nums" style={{ color: upPct >= 50 ? 'var(--price-up)' : 'var(--price-down)' }}>{upPct}% up</span>
+                  </div>
+                  <div className="flex h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${upPct}%`, background: 'var(--price-up)' }} />
+                  </div>
+                  <div className="mt-0.5 flex justify-between font-mono text-[7px] text-[var(--text-muted)] opacity-50">
+                    <span>{upCount} up</span><span>{dnCount} dn</span>
+                  </div>
+                </div>
+              )
+            })()}
           </>
         ) : (
           <p className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">Unavailable</p>

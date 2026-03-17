@@ -39,7 +39,7 @@ export default function FXMonitor() {
   const stressed05   = pairs.filter((p) => Math.abs(p.changePercent) >= 0.5 && Math.abs(p.changePercent) < 1).length
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
@@ -56,7 +56,7 @@ export default function FXMonitor() {
         )}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         {loading
           ? Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="border-b border-[var(--border)] px-3 py-2">
@@ -105,6 +105,33 @@ export default function FXMonitor() {
                 </div>
               )
             })}
+
+        {/* Currency strength mini-ranking */}
+        {!loading && pairs.length > 0 && (() => {
+          const sorted = [...pairs].sort((a, b) => b.changePercent - a.changePercent)
+          const strongest = sorted[0]
+          const weakest   = sorted[sorted.length - 1]
+          if (!strongest || !weakest) return null
+          return (
+            <div className="border-t border-[var(--border)] px-3 py-2">
+              <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-60">
+                Today&apos;s Move
+              </p>
+              <div className="flex gap-1.5">
+                <div className="flex-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
+                  <p className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Strongest</p>
+                  <p className="font-mono text-[10px] font-bold text-[var(--text)]">{strongest.symbol}</p>
+                  <p className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--price-up)' }}>+{strongest.changePercent.toFixed(2)}%</p>
+                </div>
+                <div className="flex-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
+                  <p className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Weakest</p>
+                  <p className="font-mono text-[10px] font-bold text-[var(--text)]">{weakest.symbol}</p>
+                  <p className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--price-down)' }}>{weakest.changePercent.toFixed(2)}%</p>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

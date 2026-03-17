@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PortfolioNewsArticle } from '@/app/api/portfolio/news/route'
 import { timeAgo }                   from '@/lib/utils/timeago'
 
@@ -93,10 +93,17 @@ function SkeletonRows() {
 
 const PAGE_SIZE = 20
 
-export default function PortfolioNewsFeed({ positionCount }: { positionCount: number }) {
+export default function PortfolioNewsFeed({
+  positionCount,
+  refreshTrigger,
+}: {
+  positionCount:   number
+  refreshTrigger?: number
+}) {
   const [articles, setArticles] = useState<PortfolioNewsArticle[]>([])
   const [loading,  setLoading]  = useState(true)
   const [shown,    setShown]    = useState(PAGE_SIZE)
+  const prevTrigger = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (positionCount === 0) { setLoading(false); return }
@@ -113,6 +120,22 @@ export default function PortfolioNewsFeed({ positionCount }: { positionCount: nu
     const id = setInterval(fetchNews, 5 * 60 * 1_000)
     return () => clearInterval(id)
   }, [positionCount])
+
+  // Cache-bust + refetch when parent increments refreshTrigger
+  useEffect(() => {
+    if (refreshTrigger === undefined) return
+    if (prevTrigger.current === undefined) { prevTrigger.current = refreshTrigger; return }
+    if (refreshTrigger === prevTrigger.current) return
+    prevTrigger.current = refreshTrigger
+    fetch('/api/portfolio/news', { method: 'DELETE' })
+      .catch(() => {})
+      .finally(() => {
+        fetch('/api/portfolio/news')
+          .then((r) => r.ok ? r.json() as Promise<{ articles: PortfolioNewsArticle[] }> : null)
+          .then((d) => { if (d) setArticles(d.articles) })
+          .catch(() => {})
+      })
+  }, [refreshTrigger])
 
   if (positionCount === 0) return null
 

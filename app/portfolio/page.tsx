@@ -123,9 +123,10 @@ export default function PortfolioPage() {
   const { user, loading: authLoading } = useAuth()
   const { positions, loading: posLoading, addPosition, updatePosition, removePosition, refetch } = usePortfolio()
 
-  const [quotes,   setQuotes]   = useState<Record<string, QuoteData>>({})
-  const [addOpen,  setAddOpen]  = useState(false)
-  const [authOpen, setAuthOpen] = useState(false)
+  const [quotes,       setQuotes]       = useState<Record<string, QuoteData>>({})
+  const [addOpen,      setAddOpen]      = useState(false)
+  const [authOpen,     setAuthOpen]     = useState(false)
+  const [briefTrigger, setBriefTrigger] = useState(0)
 
   // ── Fetch live prices ─────────────────────────────────────────────────
   const fetchQuotes = useCallback(async () => {
@@ -257,7 +258,7 @@ export default function PortfolioPage() {
       <PortfolioSummary positions={positions} quotes={quotes} />
 
       {/* ══ AI BRIEF ═════════════════════════════════════════════════════ */}
-      <PortfolioBrief positionCount={positions.length} />
+      <PortfolioBrief positionCount={positions.length} refreshTrigger={briefTrigger} />
 
       {/* ══ LOADING ══════════════════════════════════════════════════════ */}
       {isLoading && <LoadingSkeleton />}
@@ -343,8 +344,16 @@ export default function PortfolioPage() {
             <PositionsTable
               positions={positions}
               quotes={quotes}
-              onUpdate={updatePosition}
-              onDelete={removePosition}
+              onUpdate={async (id, data) => {
+                const ok = await updatePosition(id, data)
+                if (ok) setBriefTrigger((n) => n + 1)
+                return ok
+              }}
+              onDelete={async (id) => {
+                const ok = await removePosition(id)
+                if (ok) setBriefTrigger((n) => n + 1)
+                return ok
+              }}
             />
           </div>
 
@@ -359,7 +368,7 @@ export default function PortfolioPage() {
 
           {/* ── News feed ────────────────────────────────────────────────── */}
           <div className="max-h-[500px] overflow-y-auto">
-            <PortfolioNewsFeed positionCount={positions.length} />
+            <PortfolioNewsFeed positionCount={positions.length} refreshTrigger={briefTrigger} />
           </div>
         </>
       )}
@@ -377,7 +386,7 @@ export default function PortfolioPage() {
             data.avgCost,
             data.notes,
           )
-          if (ok) { await refetch() }
+          if (ok) { await refetch(); setBriefTrigger((n) => n + 1) }
           return ok
         }}
       />

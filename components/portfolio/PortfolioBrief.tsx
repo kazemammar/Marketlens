@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Link                    from 'next/link'
-import type { PortfolioBriefPayload } from '@/app/api/portfolio/brief/route'
-import { timeAgo }             from '@/lib/utils/timeago'
+import { useEffect, useRef, useState } from 'react'
+import Link                             from 'next/link'
+import type { PortfolioBriefPayload }   from '@/app/api/portfolio/brief/route'
+import { timeAgo }                      from '@/lib/utils/timeago'
 
 // ─── Sentiment styles ─────────────────────────────────────────────────────
 
@@ -30,25 +30,61 @@ const SENTIMENT_STYLE = {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export default function PortfolioBrief({ positionCount }: { positionCount: number }) {
-  const [brief,   setBrief]   = useState<PortfolioBriefPayload | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function PortfolioBrief({
+  positionCount,
+  refreshTrigger,
+}: {
+  positionCount:   number
+  refreshTrigger?: number
+}) {
+  const [brief,      setBrief]      = useState<PortfolioBriefPayload | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const prevTrigger = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (positionCount === 0) { setLoading(false); return }
 
-    function fetchBrief() {
-      fetch('/api/portfolio/brief')
+    function fetchBrief(forceRefresh = false) {
+      const url = forceRefresh ? '/api/portfolio/brief?refresh=true' : '/api/portfolio/brief'
+      fetch(url)
         .then((r) => r.ok ? r.json() as Promise<PortfolioBriefPayload> : null)
         .then((d) => { if (d) setBrief(d) })
         .catch(() => {})
         .finally(() => setLoading(false))
     }
 
+    // On mount or positionCount change — normal fetch
     fetchBrief()
-    const id = setInterval(fetchBrief, 15 * 60 * 1_000)
+    const id = setInterval(fetchBrief, 30 * 60 * 1_000)
     return () => clearInterval(id)
   }, [positionCount])
+
+  // Cache-bust when parent increments refreshTrigger
+  useEffect(() => {
+    if (refreshTrigger === undefined) return
+    if (prevTrigger.current === undefined) { prevTrigger.current = refreshTrigger; return }
+    if (refreshTrigger === prevTrigger.current) return
+    prevTrigger.current = refreshTrigger
+    // Bust cache then refetch
+    fetch('/api/portfolio/brief', { method: 'DELETE' })
+      .catch(() => {})
+      .finally(() => {
+        fetch('/api/portfolio/brief?refresh=true')
+          .then((r) => r.ok ? r.json() as Promise<PortfolioBriefPayload> : null)
+          .then((d) => { if (d) setBrief(d) })
+          .catch(() => {})
+      })
+  }, [refreshTrigger])
+
+  async function handleManualRefresh() {
+    setRefreshing(true)
+    try {
+      const r = await fetch('/api/portfolio/brief?refresh=true')
+      if (r.ok) setBrief(await r.json() as PortfolioBriefPayload)
+    } catch { /* silent */ }
+    setRefreshing(false)
+  }
 
   if (positionCount === 0) return null
 
@@ -114,6 +150,36 @@ export default function PortfolioBrief({ positionCount }: { positionCount: numbe
           >
             {timeAgo(brief.generatedAt)}
           </span>
+
+          {/* Refresh button */}
+          <button
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="flex items-center justify-center rounded p-0.5 text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-40"
+            title="Refresh AI brief"
+            aria-label="Refresh AI brief"
+          >
+            <svg
+              viewBox="0 0 12 12"
+              fill="none"
+              className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`}
+              aria-hidden
+            >
+              <path
+                d="M10 6A4 4 0 1 1 6 2a4 4 0 0 1 2.83 1.17L10 4"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+              <polyline
+                points="8,1 10,4 7,4"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         </div>
 
         {/* Brief text + alerts */}

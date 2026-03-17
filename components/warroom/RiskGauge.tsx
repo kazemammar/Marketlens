@@ -62,54 +62,22 @@ const LEVEL_COLOR: Record<string, string> = {
   LOW: 'var(--price-up)', MODERATE: 'var(--warning)', HIGH: '#f97316', CRITICAL: 'var(--price-down)',
 }
 
-const LEVEL_BRIEF: Record<string, string> = {
-  LOW:      'Market conditions are calm. Risk factors remain contained across all major categories. This is a constructive environment for risk assets.',
-  MODERATE: 'Some uncertainty is present in the market. At least one category is showing elevated signals. Stay alert but no immediate defensive action is required.',
-  HIGH:     'Elevated stress detected across multiple categories. Institutional investors are likely reducing exposure. Consider hedging or rotating into defensive assets.',
-  CRITICAL: 'Multiple high-risk signals are firing simultaneously. This typically precedes sharp market moves. Defensive positioning is strongly advised.',
-}
-
-const CAT_BRIEF: Record<string, (score: number, detail?: CategoryDetail) => string> = {
-  geo: (score) =>
-    score >= 75
-      ? 'Geopolitical flashpoints are at extreme levels. Active conflicts, sanctions, or diplomatic breakdowns are driving safe-haven demand for gold, yen, and Treasuries.'
-      : score >= 55
-        ? 'Geopolitical tensions are elevated. Trade disputes, regional conflicts, or election uncertainty are weighing on investor sentiment.'
-        : score >= 35
-          ? 'Moderate geopolitical noise present. Some headline risk exists but markets are largely pricing it in.'
-          : 'Geopolitical conditions are relatively calm. No major flashpoints are currently driving risk premiums.',
-  mkt: (score) =>
-    score >= 75
-      ? 'Market structure is under severe stress. Volatility is spiking, equity selloffs are accelerating, and liquidity conditions are deteriorating.'
-      : score >= 55
-        ? 'Equity markets are showing signs of stress. Earnings risk, sector rotation, or elevated VIX readings are flagging caution.'
-        : score >= 35
-          ? 'Markets are mixed. Some sectors are under pressure but broader indices remain contained. Watch volatility closely.'
-          : 'Market conditions are healthy. Equities are advancing and volatility is suppressed — a favorable environment.',
-  mcr: (score) =>
-    score >= 75
-      ? 'Macro risk is critical. Central bank policy uncertainty, a potential recession signal, or severe currency stress is dominating the macro landscape.'
-      : score >= 55
-        ? 'Macro headwinds are building. Inflation, rate expectations, or yield curve dynamics are creating uncertainty for asset allocators.'
-        : score >= 35
-          ? 'The macro backdrop has some moving parts. Keep an eye on upcoming Fed communications and key economic releases.'
-          : 'The macro environment is supportive. Inflation is contained, policy is accommodative, and growth indicators are positive.',
-  cmd: (score) =>
-    score >= 75
-      ? 'Commodity markets are in crisis mode. A severe supply shock or demand collapse is sending ripple effects through energy, metals, and food supply chains.'
-      : score >= 55
-        ? 'Commodity stress is elevated. Oil, gold, or grain markets are signaling supply/demand imbalances that could feed into broader inflation.'
-        : score >= 35
-          ? 'Some commodity markets are moving but not yet disruptive. Monitor energy and metals for early warning signals.'
-          : 'Commodity markets are stable. Supply chains are functioning normally and no significant disruptions are currently flagged.',
-}
-
 function ScoreTooltipContent({ data }: { data: MarketRiskPayload }) {
-  const dominant = [...data.breakdown].sort((a, b) => b.score - a.score)[0]
-  const isAmpActive = dominant && Math.round(dominant.score * 0.85) > data.breakdown.reduce((s, c) => {
-    const w = { geo: 0.30, mkt: 0.30, mcr: 0.25, cmd: 0.15 }[c.key] ?? 0
-    return s + c.score * w
-  }, 0)
+  const sorted   = [...data.breakdown].sort((a, b) => b.score - a.score)
+  const dominant = sorted[0]
+  const elevated = sorted.filter((c) => c.score >= 55)
+
+  // Count total keyword signals across all categories
+  const totalSignals = data.categoryDetails
+    ? Object.values(data.categoryDetails).reduce((n, d) => n + d.keywords.length, 0)
+    : 0
+
+  // Top driver keywords for display
+  const dominantDetail = dominant && data.categoryDetails?.[dominant.key]
+  const topKeywords    = dominantDetail?.keywords.slice(0, 3) ?? []
+
+  // Primary driver sentence from dominant category
+  const primaryDriver  = dominantDetail?.drivers[0] ?? null
 
   return (
     <div>
@@ -124,39 +92,43 @@ function ScoreTooltipContent({ data }: { data: MarketRiskPayload }) {
           </span>
         </div>
 
+        {/* Dynamic narrative built from real data */}
         <p className="font-mono text-[10px] leading-relaxed text-[var(--text)]">
-          {LEVEL_BRIEF[data.level]}
+          {totalSignals > 0
+            ? `${totalSignals} active signal${totalSignals !== 1 ? 's' : ''} detected across ${elevated.length > 0 ? elevated.length : 'all'} categor${elevated.length !== 1 ? 'ies' : 'y'}. `
+            : ''}
+          {dominant
+            ? `${dominant.category} is the primary driver (${dominant.score}/100)${topKeywords.length > 0 ? ` — flagged on ${topKeywords.join(', ')}` : ''}.`
+            : ''}
         </p>
 
-        {dominant && (
-          <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
-            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--text-muted)]">
-              Top driver
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: dominant.color }} />
-              <span className="font-mono text-[10px] text-[var(--text)]">{dominant.category}</span>
-              <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: dominant.color }}>
-                {dominant.score}
-              </span>
-            </div>
-            {isAmpActive && (
-              <p className="font-mono text-[9px] text-[var(--warning)] leading-snug">
-                ⚡ Crisis amplifier active — a dominant category is pulling the overall score higher.
-              </p>
-            )}
-          </div>
+        {primaryDriver && (
+          <p className="font-mono text-[9px] leading-snug text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
+            {primaryDriver}
+          </p>
         )}
+
+        {/* Category breakdown mini-list */}
+        <div className="border-t border-[var(--border)] pt-2 space-y-1">
+          {sorted.map((cat) => (
+            <div key={cat.key} className="flex items-center gap-2">
+              <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: cat.color }} />
+              <span className="flex-1 font-mono text-[9px] text-[var(--text-muted)]">{cat.category}</span>
+              <div className="w-16 h-1 rounded-full bg-[var(--surface-3)] overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${cat.score}%`, background: cat.color }} />
+              </div>
+              <span className="w-5 font-mono text-[9px] font-bold tabular-nums text-right" style={{ color: cat.color }}>{cat.score}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
 function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: CategoryDetail }) {
-  const level = cat.score >= 75 ? 'CRITICAL' : cat.score >= 55 ? 'HIGH' : cat.score >= 35 ? 'MODERATE' : 'LOW'
+  const level      = cat.score >= 75 ? 'CRITICAL' : cat.score >= 55 ? 'HIGH' : cat.score >= 35 ? 'MODERATE' : 'LOW'
   const levelColor = LEVEL_COLOR[level]
-  const briefFn = CAT_BRIEF[cat.key]
-  const brief = briefFn ? briefFn(cat.score, detail) : ''
 
   return (
     <div>
@@ -180,33 +152,40 @@ function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: 
           <div className="h-full rounded-full" style={{ width: `${cat.score}%`, background: cat.color }} />
         </div>
 
-        <p className="font-mono text-[10px] leading-relaxed text-[var(--text)]">
-          {brief}
-        </p>
+        {/* Keywords chips — colored with category color */}
+        {detail?.keywords && detail.keywords.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {detail.keywords.map((kw) => (
+              <span
+                key={kw}
+                className="rounded px-1.5 py-0.5 font-mono text-[8px] font-semibold"
+                style={{ color: cat.color, background: `${cat.color}18`, border: `1px solid ${cat.color}30` }}
+              >
+                {kw}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="font-mono text-[9px] text-[var(--text-muted)]">No active signals detected.</p>
+        )}
 
-        {detail?.keywords && detail.keywords.length > 0 && (
+        {/* Driver sentences — verbatim from AI brief, as primary content */}
+        {detail?.drivers && detail.drivers.length > 0 && (
           <div className="border-t border-[var(--border)] pt-2 space-y-1.5">
-            <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--text-muted)]">
-              Active signals
-            </span>
-            <div className="flex flex-wrap gap-1">
-              {detail.keywords.map((kw) => (
-                <span key={kw} className="rounded bg-[var(--surface-3)] px-1.5 py-0.5 font-mono text-[8px] text-[var(--text)]">
-                  {kw}
-                </span>
-              ))}
-            </div>
+            {detail.drivers.map((d, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <span className="mt-[5px] h-1 w-1 shrink-0 rounded-full" style={{ background: cat.color }} />
+                <span className="font-mono text-[10px] leading-snug text-[var(--text)]">{d}</span>
+              </div>
+            ))}
           </div>
         )}
 
-        {detail?.drivers && detail.drivers.length > 0 && (
-          <div className="space-y-1">
-            {detail.drivers.map((d, i) => (
-              <div key={i} className="flex items-start gap-1.5">
-                <span className="mt-[4px] h-1 w-1 shrink-0 rounded-full" style={{ background: cat.color }} />
-                <span className="font-mono text-[9px] leading-snug text-[var(--text-muted)]">{d}</span>
-              </div>
-            ))}
+        {detail && (
+          <div className="flex items-center justify-between border-t border-[var(--border)] pt-1.5">
+            <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-60">
+              Weight {Math.round(detail.weight * 100)}% of overall score
+            </span>
           </div>
         )}
       </div>
@@ -215,39 +194,39 @@ function CategoryTooltipContent({ cat, detail }: { cat: BreakdownItem; detail?: 
 }
 
 function ItemTooltipContent({ text, kind }: { text: string; kind: 'opportunity' | 'threat' }) {
-  const isOpp  = kind === 'opportunity'
-  const color  = isOpp ? 'var(--price-up)' : 'var(--price-down)'
-  const label  = isOpp ? 'Opportunity' : 'Threat'
+  const isOpp = kind === 'opportunity'
+  const color = isOpp ? 'var(--price-up)' : 'var(--price-down)'
+  const label = isOpp ? 'Opportunity' : 'Threat'
 
-  const lower    = text.toLowerCase()
+  const lower   = text.toLowerCase()
   const related: string[] = []
-  if (/gold|oil|crude|commodit|metal|energy|lng|opec/.test(lower)) related.push('Commodity')
-  if (/fed|rate|inflation|bond|yield|dollar|macro|gdp|cpi/.test(lower)) related.push('Macro')
-  if (/equity|stock|market|nasdaq|earnings|vix|volatil/.test(lower)) related.push('Market')
+  if (/gold|oil|crude|commodit|metal|energy|lng|opec/.test(lower))             related.push('Commodity')
+  if (/fed|rate|inflation|bond|yield|dollar|macro|gdp|cpi/.test(lower))        related.push('Macro')
+  if (/equity|stock|market|nasdaq|earnings|vix|volatil/.test(lower))           related.push('Market')
   if (/geopolit|conflict|sanction|war|china|russia|iran|tariff|tension/.test(lower)) related.push('Geopolitical')
-
-  const why = isOpp
-    ? 'This signal suggests a potential alpha opportunity given current market conditions. Monitor closely for confirmation before acting.'
-    : 'This risk factor has been identified in the latest market brief as a potential headwind. Consider its impact on your current positions.'
 
   return (
     <div>
       <div className="h-[3px] w-full" style={{ background: color }} />
-      <div className="p-3 space-y-2.5">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color }}>
-          {label} Signal
+      <div className="p-3 space-y-2">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color }}>
+          {label}
         </span>
+        {/* Full text — verbatim from AI brief, no truncation */}
         <p className="font-mono text-[10px] leading-relaxed text-[var(--text)]">
           {text}
         </p>
-        <p className="font-mono text-[9px] leading-snug text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-          {why}
-        </p>
         {related.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="font-mono text-[9px] text-[var(--text-muted)]">Linked to:</span>
+          <div className="flex flex-wrap items-center gap-1 border-t border-[var(--border)] pt-2">
+            <span className="font-mono text-[8px] text-[var(--text-muted)]">Linked to:</span>
             {related.map((r) => (
-              <span key={r} className="rounded bg-[var(--surface-3)] px-1.5 py-0.5 font-mono text-[8px] text-[var(--text)]">{r}</span>
+              <span
+                key={r}
+                className="rounded px-1.5 py-0.5 font-mono text-[8px]"
+                style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}
+              >
+                {r}
+              </span>
             ))}
           </div>
         )}
@@ -285,17 +264,18 @@ function TrendTooltipContent({ score, history }: { score: number; history?: Hist
   }))
 
   const validPoints = points.filter((p) => p.value !== null)
-  const hasHistory  = validPoints.length >= 2
   const oldest      = validPoints[validPoints.length - 1]?.value ?? score
   const delta       = score - oldest
-  const direction   = delta > 3 ? '↑ Rising' : delta < -3 ? '↓ Easing' : '→ Stable'
-  const dirColor    = delta > 3 ? 'var(--price-down)' : delta < -3 ? 'var(--price-up)' : 'var(--warning)'
+  const direction   = validPoints.length < 2 ? '→ Collecting' : delta > 3 ? '↑ Rising' : delta < -3 ? '↓ Easing' : '→ Stable'
+  const dirColor    = validPoints.length < 2 ? 'var(--text-muted)' : delta > 3 ? 'var(--price-down)' : delta < -3 ? 'var(--price-up)' : 'var(--warning)'
 
-  const outlook = delta > 5
-    ? 'Risk momentum is building. If geopolitical or macro catalysts persist, expect further elevation. Consider reducing exposure to volatile assets.'
-    : delta < -5
-      ? 'Risk is easing. The market is digesting earlier stress signals. Conditions may be improving for risk assets over the near term.'
-      : 'Risk is relatively stable. No strong directional momentum. Continue monitoring key categories for any sudden shifts.'
+  const outlook = validPoints.length < 2
+    ? 'History accumulates every 5 minutes. Check back shortly for trend analysis.'
+    : delta > 5
+      ? 'Risk momentum is building. If geopolitical or macro catalysts persist, expect further elevation.'
+      : delta < -5
+        ? 'Risk is easing. The market is digesting earlier stress signals. Conditions may be improving.'
+        : 'Risk is relatively stable. No strong directional momentum detected across the tracked period.'
 
   return (
     <div>
@@ -310,38 +290,33 @@ function TrendTooltipContent({ score, history }: { score: number; history?: Hist
           </span>
         </div>
 
-        {!hasHistory ? (
-          <p className="font-mono text-[10px] text-[var(--text-muted)] leading-relaxed">
-            Collecting historical data — trend will appear after ~10 minutes of activity.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {points.map((pt) => {
-              const v        = pt.value
-              const barPct   = v != null ? v : 0
-              const barColor = v != null
-                ? (v >= 75 ? 'var(--price-down)' : v >= 55 ? '#f97316' : v >= 35 ? 'var(--warning)' : 'var(--price-up)')
-                : 'var(--surface-3)'
-              return (
-                <div key={pt.label} className="flex items-center gap-2">
-                  <span className="w-9 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">{pt.label}</span>
-                  <div className="flex-1 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
-                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%`, background: barColor }} />
-                  </div>
-                  <span className="w-6 font-mono text-[9px] tabular-nums text-right font-bold" style={{ color: barColor }}>
-                    {v ?? '—'}
-                  </span>
+        {/* Always render the timeline chart — shows '—' for missing slots */}
+        <div className="space-y-2">
+          {points.map((pt) => {
+            const v        = pt.value
+            const barPct   = v != null ? v : 0
+            const barColor = v != null
+              ? (v >= 75 ? 'var(--price-down)' : v >= 55 ? '#f97316' : v >= 35 ? 'var(--warning)' : 'var(--price-up)')
+              : 'var(--surface-3)'
+            return (
+              <div key={pt.label} className="flex items-center gap-2">
+                <span className="w-9 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">{pt.label}</span>
+                <div className="flex-1 h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
+                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${barPct}%`, background: barColor, opacity: v != null ? 1 : 0 }} />
                 </div>
-              )
-            })}
-          </div>
-        )}
+                <span className="w-6 font-mono text-[9px] tabular-nums text-right font-bold" style={{ color: v != null ? barColor : 'var(--text-muted)' }}>
+                  {v ?? '—'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
 
         <p className="font-mono text-[10px] leading-relaxed text-[var(--text)] border-t border-[var(--border)] pt-2">
           {outlook}
         </p>
 
-        {hasHistory && delta !== 0 && (
+        {validPoints.length >= 2 && delta !== 0 && (
           <span className="font-mono text-[9px] font-bold tabular-nums" style={{ color: dirColor }}>
             {delta > 0 ? '+' : ''}{delta.toFixed(0)} pts over tracked period
           </span>
@@ -361,7 +336,7 @@ function RingGauge({ score, color }: { score: number; color: string }) {
   const filled        = (score / 100) * circumference
 
   return (
-    <svg viewBox="0 0 96 96" className="h-[110px] w-[110px] sm:h-[140px] sm:w-[140px]" aria-hidden>
+    <svg viewBox="0 0 96 96" className="h-[140px] w-[140px]" aria-hidden>
       <defs>
         <filter id="ring-glow">
           <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -487,7 +462,7 @@ export default function RiskGauge() {
         {loading ? (
           <div className="space-y-3">
             <div className="flex gap-3">
-              <div className="skeleton h-[110px] w-[110px] sm:h-[140px] sm:w-[140px] shrink-0 rounded-full" />
+              <div className="skeleton h-[140px] w-[140px] shrink-0 rounded-full" />
               <div className="flex-1 flex flex-col justify-center gap-3">
                 {[1,2,3,4].map((i) => (
                   <div key={i} className="space-y-1">
@@ -519,7 +494,7 @@ export default function RiskGauge() {
 
               {/* Ring — hoverable */}
               <div
-                className="group relative h-[110px] w-[110px] sm:h-[140px] sm:w-[140px] shrink-0 cursor-default"
+                className="group relative h-[140px] w-[140px] shrink-0 cursor-default"
                 onMouseEnter={(e) => showTip(e, <ScoreTooltipContent data={data} />)}
                 onMouseLeave={hideTip}
               >
@@ -527,7 +502,7 @@ export default function RiskGauge() {
                 {/* Score overlay */}
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                   <span
-                    className="font-mono text-[36px] sm:text-[48px] font-bold leading-none tabular-nums"
+                    className="font-mono text-[48px] font-bold leading-none tabular-nums"
                     style={{ color: 'var(--text)', textShadow: `0 0 24px ${scoreColor}70` }}
                   >
                     {data.score}

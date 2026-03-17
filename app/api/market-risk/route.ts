@@ -37,7 +37,7 @@ export interface MarketRiskPayload {
 }
 
 const BRIEF_KEY   = 'market-brief:daily'
-const RISK_KEY    = 'market-risk:v4'
+const RISK_KEY    = 'market-risk:v5'
 const HISTORY_KEY = 'market-risk:history'
 const CACHE_TTL   = 300   // 5 minutes
 const HISTORY_MAX = 12    // ~1 hour at 5-min intervals
@@ -89,8 +89,9 @@ function computeCategoryScores(brief: MarketBriefPayload): {
   const geoAssetHits = brief.affectedAssets.filter((a) =>
     ['GLD', 'SLV', 'GC=F', 'USO', 'CL=F', 'USD/JPY'].includes(a.symbol)
   ).length
-  const geoScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(geoMatched.length) * 12 + geoAssetHits * 5)))
-  const geoDrivers = brief.risks.filter((r) => geoMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
+  const geoScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(geoMatched.length) * 12 + geoAssetHits * 5)))
+  const geoDriversRaw = brief.risks.filter((r) => geoMatched.some((kw) => r.toLowerCase().includes(kw)))
+  const geoDrivers    = (geoDriversRaw.length > 0 ? geoDriversRaw : brief.risks).slice(0, 2)
 
   // ── Market ──
   const mktMatched    = MKT_KEYWORDS.filter((w) => corpus.includes(w))
@@ -99,16 +100,18 @@ function computeCategoryScores(brief: MarketBriefPayload): {
     (a.direction === 'down' || a.direction === 'volatile')
   ).length
   const vixBonus   = brief.affectedAssets.some((a) => a.symbol === 'VIX') ? 8 : 0
-  const mktScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mktMatched.length) * 10 + bearishEquity * 6 + vixBonus)))
-  const mktDrivers = brief.risks.filter((r) => mktMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
+  const mktScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mktMatched.length) * 10 + bearishEquity * 6 + vixBonus)))
+  const mktDriversRaw = brief.risks.filter((r) => mktMatched.some((kw) => r.toLowerCase().includes(kw)))
+  const mktDrivers    = (mktDriversRaw.length > 0 ? mktDriversRaw : brief.risks).slice(0, 2)
 
   // ── Macro ──
   const mcrMatched  = MCR_KEYWORDS.filter((w) => corpus.includes(w))
   const macroAssets = brief.affectedAssets.filter((a) =>
     a.type === 'forex' || ['TLT', 'VIX'].includes(a.symbol)
   ).length
-  const mcrScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mcrMatched.length) * 9 + macroAssets * 5)))
-  const mcrDrivers = brief.risks.filter((r) => mcrMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
+  const mcrScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mcrMatched.length) * 9 + macroAssets * 5)))
+  const mcrDriversRaw = brief.risks.filter((r) => mcrMatched.some((kw) => r.toLowerCase().includes(kw)))
+  const mcrDrivers    = (mcrDriversRaw.length > 0 ? mcrDriversRaw : brief.risks).slice(0, 2)
 
   // ── Commodity ──
   const cmdMatched = CMD_KEYWORDS.filter((w) => corpus.includes(w))
@@ -117,8 +120,9 @@ function computeCategoryScores(brief: MarketBriefPayload): {
     if (a.type === 'commodity') cmdSymbols.add(a.symbol)
     if (['USO', 'GLD', 'SLV', 'GC=F', 'CL=F'].includes(a.symbol)) cmdSymbols.add(a.symbol)
   })
-  const cmdScore   = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(cmdMatched.length) * 11 + cmdSymbols.size * 6)))
-  const cmdDrivers = brief.risks.filter((r) => cmdMatched.some((kw) => r.toLowerCase().includes(kw))).slice(0, 2)
+  const cmdScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(cmdMatched.length) * 11 + cmdSymbols.size * 6)))
+  const cmdDriversRaw = brief.risks.filter((r) => cmdMatched.some((kw) => r.toLowerCase().includes(kw)))
+  const cmdDrivers    = (cmdDriversRaw.length > 0 ? cmdDriversRaw : brief.risks).slice(0, 2)
 
   // ── Overall ──
   const weightedAvg = Math.round(
@@ -192,8 +196,13 @@ export async function GET() {
   try {
     const cached = await redis.get<MarketRiskPayload>(RISK_KEY)
     if (cached) {
-      // Always attach fresh history to cached payload
       const history = await readHistory()
+      // Dedup-aware: append to history if last point is >4 minutes old
+      const latest = history[0]
+      const elapsed = latest ? Date.now() - latest.timestamp : Infinity
+      if (elapsed > 4 * 60_000) {
+        appendHistory({ score: cached.score, timestamp: Date.now() }).catch(() => {})
+      }
       return NextResponse.json({ ...cached, history })
     }
   } catch { /* fall through */ }

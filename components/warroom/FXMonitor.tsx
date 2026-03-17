@@ -15,19 +15,27 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
   const pct = Math.min(Math.max(((price - low) / range) * 100, 0), 100)
   const color = pct >= 60 ? 'var(--price-up)' : pct >= 40 ? 'var(--warning)' : 'var(--price-down)'
   return (
-    <div className="flex items-center gap-1.5 px-3 pb-1.5 pt-0.5">
-      <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 w-10 text-right">{fmt(low, '')}</span>
-      <div className="relative flex-1 h-1 rounded-full bg-[var(--surface-3)]">
-        <div
-          className="absolute top-0 h-1 rounded-full"
-          style={{ left: `${pct}%`, width: '3px', background: color, marginLeft: '-1.5px', boxShadow: `0 0 4px ${color}80` }}
-        />
-        <div
-          className="absolute top-0 left-0 h-1 rounded-full opacity-25"
-          style={{ width: `${pct}%`, background: color }}
-        />
+    <div className="px-3 pb-1.5 pt-0.5">
+      <div className="flex items-center gap-1.5">
+        <div className="flex flex-col items-end w-10 gap-px">
+          <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-40 leading-none">7d L</span>
+          <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{fmt(low, '')}</span>
+        </div>
+        <div className="relative flex-1 h-1 rounded-full bg-[var(--surface-3)]">
+          <div
+            className="absolute top-0 h-1 rounded-full"
+            style={{ left: `${pct}%`, width: '3px', background: color, marginLeft: '-1.5px', boxShadow: `0 0 4px ${color}80` }}
+          />
+          <div
+            className="absolute top-0 left-0 h-1 rounded-full opacity-25"
+            style={{ width: `${pct}%`, background: color }}
+          />
+        </div>
+        <div className="flex flex-col items-start w-10 gap-px">
+          <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-40 leading-none">7d H</span>
+          <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{fmt(high, '')}</span>
+        </div>
       </div>
-      <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 w-10">{fmt(high, '')}</span>
     </div>
   )
 }

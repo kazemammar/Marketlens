@@ -117,24 +117,7 @@ export default function PortfolioNewsFeed({ positionCount }: { positionCount: nu
   if (positionCount === 0) return null
 
   return (
-    <div className="mt-6 rounded-xl border border-[var(--border)] overflow-hidden">
-
-      {/* Section header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
-        <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text)]">
-          Portfolio News
-        </span>
-        {!loading && articles.length > 0 && (
-          <>
-            <span className="h-3 w-px bg-[var(--border)]" />
-            <span className="font-mono text-[10px] text-[var(--text-muted)]">
-              {articles.length} articles
-            </span>
-          </>
-        )}
-      </div>
-
+    <div>
       {/* Content */}
       {loading && <SkeletonRows />}
 

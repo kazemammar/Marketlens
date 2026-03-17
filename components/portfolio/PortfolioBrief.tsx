@@ -58,9 +58,8 @@ export default function PortfolioBrief({ positionCount }: { positionCount: numbe
   if (loading) {
     return (
       <div
-        className="mb-4 rounded-xl border overflow-hidden"
         style={{
-          borderColor:  'rgba(16,185,129,0.2)',
+          borderBottom: '1px solid var(--border)',
           borderLeft:   '3px solid rgba(16,185,129,0.3)',
           background:   'linear-gradient(to right, rgba(16,185,129,0.06), rgba(16,185,129,0.02) 60%, transparent)',
         }}
@@ -80,11 +79,12 @@ export default function PortfolioBrief({ positionCount }: { positionCount: numbe
 
   return (
     <div
-      className="mb-4 rounded-xl border overflow-hidden animate-fade-up"
+      className="animate-fade-up"
       style={{
-        borderColor:  'rgba(0,0,0,0.1)',
+        borderBottom: '1px solid var(--border)',
         borderLeft:   `3px solid ${style.border}`,
         background:   style.background,
+        boxShadow:    'inset 3px 0 20px rgba(0,0,0,0.04)',
       }}
     >
       <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
@@ -116,9 +116,9 @@ export default function PortfolioBrief({ positionCount }: { positionCount: numbe
           </span>
         </div>
 
-        {/* Brief text */}
+        {/* Brief text + alerts */}
         <div className="min-w-0 flex-1">
-          <p className="font-mono text-[12px] sm:text-[13px] leading-relaxed text-[var(--text-2)]">
+          <p className="font-mono text-[12px] sm:text-[13px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
             {brief.brief}
           </p>
 
@@ -131,12 +131,12 @@ export default function PortfolioBrief({ positionCount }: { positionCount: numbe
                   href={`/asset/${encodeURIComponent(alert.symbol)}`}
                   className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 ${
                     alert.type === 'risk'
-                      ? 'border-red-500/30 bg-red-500/8 text-red-400'
-                      : 'border-emerald-500/30 bg-emerald-500/8 text-emerald-400'
+                      ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                      : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                   }`}
                 >
                   <span className="font-bold">{alert.symbol}</span>
-                  <span className="text-[var(--text-muted)] opacity-80">{alert.message}</span>
+                  <span className="opacity-80">{alert.message}</span>
                 </Link>
               ))}
             </div>

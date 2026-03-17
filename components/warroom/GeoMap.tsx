@@ -3,6 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Ship, MaritimeData } from '@/lib/api/maritime'
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 // ─── Static data ──────────────────────────────────────────────────────────
 
 const CONFLICT_ZONES = [
@@ -167,17 +176,17 @@ function shipColor(category: string): string {
 function shipPopup(s: Ship): string {
   const color  = shipColor(s.category)
   const status = s.status === 'REROUTED'
-    ? `<span style="background:#ef444420;border:1px solid #ef444440;color:#fca5a5;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${s.status}</span>`
-    : `<span style="background:#10b98120;border:1px solid #10b98130;color:#6ee7b7;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${s.status}</span>`
+    ? `<span style="background:#ef444420;border:1px solid #ef444440;color:#fca5a5;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${escapeHtml(s.status)}</span>`
+    : `<span style="background:#10b98120;border:1px solid #10b98130;color:#6ee7b7;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${escapeHtml(s.status)}</span>`
   return `
     <div style="min-width:190px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <div style="width:8px;height:8px;background:${color};clip-path:polygon(50% 0%,100% 100%,0% 100%);transform:rotate(${s.heading}deg);flex-shrink:0"></div>
-        <span style="font-weight:700;font-size:12px;color:#f1f5f9">${s.name}</span>
+        <span style="font-weight:700;font-size:12px;color:#f1f5f9">${escapeHtml(s.name)}</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px;margin-bottom:6px">
-        <div style="color:#64748b">Type: <span style="color:#e2e8f0">${s.type}</span></div>
-        <div style="color:#64748b">Flag: <span style="color:#e2e8f0">${s.flag}</span></div>
+        <div style="color:#64748b">Type: <span style="color:#e2e8f0">${escapeHtml(s.type)}</span></div>
+        <div style="color:#64748b">Flag: <span style="color:#e2e8f0">${escapeHtml(s.flag)}</span></div>
         <div style="color:#64748b">Speed: <span style="color:#e2e8f0">${s.speed} kn</span></div>
         <div style="color:#64748b">HDG: <span style="color:#e2e8f0">${s.heading}°</span></div>
         <div style="color:#64748b">Cargo: <span style="color:#e2e8f0">${s.cargo}</span></div>

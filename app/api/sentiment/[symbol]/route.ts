@@ -3,13 +3,17 @@ import { getCompanyNews } from '@/lib/api/finnhub'
 import { getNewsForSymbol, getRelatedNewsForAsset } from '@/lib/api/rss'
 import { analyzeSentiment } from '@/lib/api/groq'
 import { AssetType } from '@/lib/utils/types'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
+  const limited = withRateLimit(req, 20)
+  if (limited) return limited
+
   const { symbol } = await params
-  const url  = new URL(_req.url)
+  const url  = new URL(req.url)
   const type = (url.searchParams.get('type') ?? 'stock') as AssetType
 
   try {

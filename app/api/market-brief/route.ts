@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getFinanceNews } from '@/lib/api/rss'
 import { redis } from '@/lib/cache/redis'
 import Groq from 'groq-sdk'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const CACHE_KEY = 'market-brief:daily'
 const CACHE_TTL = 1_800 // 30 minutes
@@ -39,7 +40,10 @@ Rules:
 - direction is "up", "down", or "volatile"
 - Include 3-6 affected assets`
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 10)
+  if (limited) return limited
+
   // Check cache
   try {
     const cached = await redis.get<MarketBriefPayload>(CACHE_KEY)

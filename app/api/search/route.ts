@@ -3,8 +3,12 @@ import { searchSymbols } from '@/lib/api/finnhub'
 import { searchCrypto } from '@/lib/api/coingecko'
 import { DEFAULT_FOREX_PAIRS, DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import { Asset } from '@/lib/utils/types'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 export async function GET(req: NextRequest) {
+  const limited = withRateLimit(req, 30)
+  if (limited) return limited
+
   const q     = req.nextUrl.searchParams.get('q')?.trim() ?? ''
   const limit = parseInt(req.nextUrl.searchParams.get('limit') ?? '20', 10)
 

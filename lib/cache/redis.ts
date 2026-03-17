@@ -21,6 +21,8 @@ function memSet(key: string, value: unknown, ttlSecs: number): void {
   memCache.set(key, { value, expires: Date.now() + ttlSecs * 1_000 })
 }
 
+const DEBUG = process.env.NODE_ENV === 'development'
+
 // ─── Client ───────────────────────────────────────────────────────────────
 
 export const redis = new Redis({
@@ -46,21 +48,21 @@ export async function cachedFetch<T>(
   try {
     const cached = await redis.get<T>(key)
     if (cached !== null) {
-      console.log(`[cache] HIT  ${key}`)
+      if (DEBUG) console.log(`[cache] HIT  ${key}`)
       return cached
     }
   } catch (err) {
-    console.warn(`[cache] Redis read failed for "${key}":`, (err as Error).message)
+    if (DEBUG) console.warn(`[cache] Redis read failed for "${key}":`, (err as Error).message)
     // Redis down — try in-memory fallback before hitting the API
     const mem = memGet<T>(key)
     if (mem !== null) {
-      console.log(`[cache] MEM-HIT  ${key}`)
+      if (DEBUG) console.log(`[cache] MEM-HIT  ${key}`)
       return mem
     }
   }
 
   // 2. Cache miss (or Redis error) — call the real API
-  console.log(`[cache] MISS ${key}`)
+  if (DEBUG) console.log(`[cache] MISS ${key}`)
   const data = await fetcher()
 
   // 3. Store in both Redis and in-memory (fire-and-forget for Redis)

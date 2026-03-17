@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const errorDescription = searchParams.get('error_description')
 
   if (error) {
-    console.error('[auth/callback] OAuth error:', error, errorDescription)
+    if (process.env.NODE_ENV === 'development') console.error('[auth/callback] OAuth error:', error, errorDescription)
     return NextResponse.redirect(
       new URL(`/?auth_error=${encodeURIComponent(errorDescription ?? error)}`, origin),
     )
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
     if (exchangeError) {
-      console.error('[auth/callback] exchange failed:', exchangeError.message)
+      if (process.env.NODE_ENV === 'development') console.error('[auth/callback] exchange failed:', exchangeError.message)
       return NextResponse.redirect(
         new URL(`/?auth_error=${encodeURIComponent(exchangeError.message)}`, origin),
       )

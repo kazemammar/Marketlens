@@ -134,15 +134,17 @@ export default function Navbar() {
       <header
         className="sticky top-0 z-[200] w-full"
         style={{
-          background: '#09090b',
-          backdropFilter: 'blur(24px) saturate(180%)',
+          background:           '#09090b',
+          backdropFilter:       'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          borderBottom: '1px solid rgba(39,39,42,0.7)',
-          boxShadow: '0 1px 0 rgba(16,185,129,0.06), 0 4px 24px rgba(0,0,0,0.4)',
+          borderBottom:         '1px solid rgba(39,39,42,0.7)',
+          boxShadow:            '0 1px 0 rgba(16,185,129,0.06), 0 4px 24px rgba(0,0,0,0.4)',
+          // Extend into the iOS status bar safe area
+          paddingTop:           'env(safe-area-inset-top)',
           // Force own GPU compositing layer so iOS WebKit never paints
-          // transformed page elements (maps, charts, animations) above the nav
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)',
+          // transformed page elements above the nav
+          transform:            'translateZ(0)',
+          WebkitTransform:      'translateZ(0)',
         }}
       >
         <div className="flex h-[52px] items-center gap-3 px-3 sm:px-4">

@@ -65,6 +65,7 @@
 html {
   scroll-behavior: smooth;
   color-scheme: light;
+  background-color: #09090b; /* fills status bar area on iOS before paint */
 }
 html.dark {
   color-scheme: dark;

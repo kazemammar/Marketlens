@@ -75,10 +75,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor:           '#10b981',
-  width:                'device-width',
-  initialScale:         1,
-  maximumScale:         5,
+  themeColor:    '#09090b',
+  width:         'device-width',
+  initialScale:  1,
+  maximumScale:  5,
+  viewportFit:   'cover',
 }
 
 export default function RootLayout({
@@ -89,7 +90,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-[#09090b]`}
         suppressHydrationWarning
       >
         <ThemeProvider>

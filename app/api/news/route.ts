@@ -23,7 +23,7 @@ function matchesCategory(article: NewsArticle, category: string): boolean {
 export async function GET(req: NextRequest) {
   const category = req.nextUrl.searchParams.get('category')?.toLowerCase() ?? 'all'
   const page     = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') ?? '1', 10))
-  const perPage  = 20
+  const perPage  = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') ?? '20', 10)))
 
   try {
     const all      = await getFinanceNews()

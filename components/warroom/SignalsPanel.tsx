@@ -73,7 +73,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
             {signals.length} active
           </span>
         </div>
-        <div className="scrollbar-hide flex overflow-x-auto gap-px bg-[var(--border)] px-px py-px">
+        <div className="flex overflow-x-auto gap-px bg-[var(--border)] px-px pt-px pb-[4px]">
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex min-w-[220px] shrink-0 gap-2 bg-[var(--surface)] px-3 py-2.5">

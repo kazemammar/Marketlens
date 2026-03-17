@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { categorizeArticle, type NewsCategory } from '@/lib/utils/news-helpers'
 
 // ─── Category icon thumbnails ─────────────────────────────────────────────
@@ -62,9 +62,11 @@ function ago(ts: number | string) {
 
 const COLUMNS: { id: NewsCategory; label: string; icon: string }[] = [
   { id: 'GEOPOLITICAL', label: 'Geopolitical',         icon: '🌍' },
-  { id: 'MARKETS',      label: 'Markets & Economy',   icon: '📈' },
+  { id: 'MARKETS',      label: 'Markets & Economy',    icon: '📈' },
   { id: 'ENERGY',       label: 'Energy & Commodities', icon: '⚡' },
 ]
+
+const SEV_ORDER = { HIGH: 0, MED: 1, LOW: 2 } as const
 
 function ArticleRow({ article, category }: { article: Article; category: string }) {
   const sev = severity(`${article.headline} ${article.summary}`)
@@ -77,15 +79,15 @@ function ArticleRow({ article, category }: { article: Article; category: string 
     >
       <ArticleIcon category={category} />
       <div className="min-w-0 flex-1">
-      <p className="line-clamp-2 text-[11px] font-medium leading-snug text-[var(--text-2)] transition-colors group-hover:text-[var(--text)]">
-        {article.headline}
-      </p>
-      <div className="mt-1 flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-        <span className={`rounded border px-1 py-px text-[8px] font-bold uppercase ${SEV_BADGE[sev]}`}>{sev}</span>
-        <span className="font-semibold">{article.source}</span>
-        <span className="opacity-40">·</span>
-        <span>{ago(article.publishedAt)}</span>
-      </div>
+        <p className="line-clamp-2 text-[11px] font-medium leading-snug text-[var(--text-2)] transition-colors group-hover:text-[var(--text)]">
+          {article.headline}
+        </p>
+        <div className="mt-1 flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
+          <span className={`rounded border px-1 py-px text-[8px] font-bold uppercase ${SEV_BADGE[sev]}`}>{sev}</span>
+          <span className="font-semibold">{article.source}</span>
+          <span className="opacity-40">·</span>
+          <span>{ago(article.publishedAt)}</span>
+        </div>
       </div>
     </a>
   )
@@ -109,32 +111,43 @@ function ColumnSkeleton() {
 }
 
 export default function NewsBriefing() {
-  const [articles, setArticles] = useState<Article[]>([])
-  const [loading,  setLoading]  = useState(true)
+  const [articles,     setArticles]     = useState<Article[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [loadingMore,  setLoadingMore]  = useState(false)
+  const [page,         setPage]         = useState(1)
+  const [hasMore,      setHasMore]      = useState(false)
 
-  useEffect(() => {
-    fetch('/api/news?page=1&limit=80')
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.articles) setArticles(d.articles) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+  const fetchPage = useCallback(async (p: number) => {
+    if (p === 1) setLoading(true)
+    else         setLoadingMore(true)
+
+    try {
+      const res  = await fetch(`/api/news?page=${p}&limit=80`)
+      const data = await res.json() as { articles: Article[]; hasMore: boolean }
+      if (data?.articles) {
+        setArticles((prev) => p === 1 ? data.articles : [...prev, ...data.articles])
+        setHasMore(data.hasMore)
+        setPage(p)
+      }
+    } catch { /* silent */ }
+
+    setLoading(false)
+    setLoadingMore(false)
   }, [])
 
-  // Distribute into category buckets — up to 15 per column
+  useEffect(() => { fetchPage(1) }, [fetchPage])
+
+  // Distribute into category buckets and sort each by severity → recency
   const byCategory: Record<NewsCategory, Article[]> = {
     GEOPOLITICAL: [], MARKETS: [], ENERGY: [], CRYPTO: [], TECH: [],
   }
-  // First pass: fill buckets
   for (const a of articles) {
-    const cat = categorizeArticle(a.headline)
-    if (byCategory[cat].length < 15) byCategory[cat].push(a)
+    byCategory[categorizeArticle(a.headline)].push(a)
   }
-  // Sort each bucket: HIGH severity first, then by recency
-  const sevOrder = { HIGH: 0, MED: 1, LOW: 2 }
   for (const cat of Object.keys(byCategory) as NewsCategory[]) {
     byCategory[cat].sort((a, b) => {
-      const sa = sevOrder[severity(`${a.headline} ${a.summary}`)]
-      const sb = sevOrder[severity(`${b.headline} ${b.summary}`)]
+      const sa = SEV_ORDER[severity(`${a.headline} ${a.summary}`)]
+      const sb = SEV_ORDER[severity(`${b.headline} ${b.summary}`)]
       if (sa !== sb) return sa - sb
       const ta = typeof a.publishedAt === 'number' ? a.publishedAt : new Date(a.publishedAt).getTime()
       const tb = typeof b.publishedAt === 'number' ? b.publishedAt : new Date(b.publishedAt).getTime()
@@ -157,7 +170,9 @@ export default function NewsBriefing() {
           </span>
         </div>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">Top Stories by Category</span>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+          {loading ? 'Loading…' : `${articles.length} stories · by category`}
+        </span>
       </div>
 
       {/* 3-column grid */}
@@ -173,9 +188,14 @@ export default function NewsBriefing() {
               <span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
                 {col.label}
               </span>
+              {!loading && (
+                <span className="ml-auto font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+                  {byCategory[col.id].length}
+                </span>
+              )}
             </div>
 
-            {/* Articles — scrollable with fade */}
+            {/* Articles */}
             <div className="relative">
               {loading ? (
                 <ColumnSkeleton />
@@ -200,6 +220,28 @@ export default function NewsBriefing() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Load more */}
+      <div className="flex items-center justify-center border-t border-[var(--border)] bg-[var(--surface)] py-3">
+        {loadingMore ? (
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 animate-spin rounded-full border border-[var(--text-muted)] border-t-transparent" />
+            <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">Loading more stories…</span>
+          </div>
+        ) : hasMore ? (
+          <button
+            onClick={() => fetchPage(page + 1)}
+            className="flex items-center gap-1.5 rounded border border-[var(--border)] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)] hover:text-[var(--accent)]"
+          >
+            <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5" aria-hidden>
+              <path d="M6 2v8M2 7l4 4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Load More Stories
+          </button>
+        ) : !loading && articles.length > 0 ? (
+          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-30">All stories loaded</span>
+        ) : null}
       </div>
     </div>
   )

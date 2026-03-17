@@ -37,12 +37,38 @@ function ago(ts: number) {
   return `${Math.floor(m / 60)}h ago`
 }
 
+// Category filter type
+type CatFilter = 'all' | 'price' | 'news'
+
+// Render a single signal card for the ticker
+function SignalCard({ sig, isNew }: { sig: Signal; isNew: boolean }) {
+  const { icon: Icon, color } = getSignalIcon(sig.text)
+  return (
+    <div
+      className={`flex w-[260px] shrink-0 items-center gap-2 border-r border-[var(--border)] bg-[var(--surface)] px-3 py-2 transition-colors hover:bg-[var(--surface-2)] ${isNew ? 'signal-new' : ''}`}
+    >
+      <div className={`w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
+      <Icon size={13} className="shrink-0" style={{ color }} strokeWidth={2} />
+      <p className="min-w-0 flex-1 truncate text-[10px] font-medium leading-snug text-[var(--text)]">
+        {sig.text}
+      </p>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <span className={`rounded border px-1 py-px font-mono text-[7px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
+          {sig.severity}
+        </span>
+        <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50">{ago(sig.timestamp)}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertical' | 'horizontal' }) {
   const { data: raw, loading } = useFetch<Signal[]>('/api/signals', { refreshInterval: 2 * 60_000 })
   const signals = raw ?? []
 
   const [newIds, setNewIds] = useState<Set<string>>(new Set())
   const prevIds = useRef<Set<string>>(new Set())
+  const [filter, setFilter] = useState<CatFilter>('all')
 
   // Detect brand-new signal IDs on each refresh
   useEffect(() => {
@@ -60,67 +86,96 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
 
   // ─── Horizontal strip layout ────────────────────────────────────────────
   if (layout === 'horizontal') {
+    const filtered = filter === 'all' ? signals : signals.filter((s) => s.category === filter)
+
+    // Ensure enough items to fill two full rows even on quiet days
+    const MIN_PER_ROW = 8
+    const padded = filtered.length < MIN_PER_ROW * 2 && filtered.length > 0
+      ? Array.from({ length: Math.ceil((MIN_PER_ROW * 2) / filtered.length) }).flatMap(() => filtered)
+      : filtered
+
+    // Split into two rows
+    const half  = Math.ceil(padded.length / 2)
+    const row1  = padded.slice(0, half)
+    const row2  = padded.slice(half)
+
     return (
       <div className="flex flex-col">
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
+        {/* Header */}
+        <div className="flex items-center gap-3 border-b border-[var(--border)] px-3 py-2">
           <div className="flex items-center gap-1.5">
             <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
               Live Signals
             </span>
           </div>
+
+          {/* Category filter tabs */}
+          <div className="flex items-center gap-px">
+            {(['all', 'price', 'news'] as CatFilter[]).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-2 py-px font-mono text-[8px] font-bold uppercase rounded transition-colors ${
+                  filter === cat
+                    ? 'bg-[var(--accent)] text-[var(--bg)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1" />
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-            {signals.length} active
+            {filtered.length} signals
           </span>
         </div>
-        <div
-          className="overflow-x-auto pb-[6px]"
-          style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}
-        >
-          <div
-            className="grid gap-px bg-[var(--border)] px-px pt-px"
-            style={{ gridTemplateRows: 'auto auto', gridAutoFlow: 'column', gridAutoColumns: 'minmax(210px, 240px)' }}
-          >
-          {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex gap-2 bg-[var(--surface)] px-3 py-2.5">
-                <div className="skeleton h-4 w-4 rounded shrink-0" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="skeleton h-2.5 w-full rounded" />
-                  <div className="skeleton h-2 w-16 rounded" />
+
+        {/* Dual-row ticker */}
+        {loading ? (
+          <div className="flex flex-col gap-px border-t border-[var(--border)]">
+            {[0, 1].map((rowIdx) => (
+              <div key={rowIdx} className="flex gap-px overflow-hidden">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex w-[260px] shrink-0 items-center gap-2 bg-[var(--surface)] px-3 py-2">
+                    <div className="skeleton h-3 w-3 rounded shrink-0" />
+                    <div className="flex-1 space-y-1">
+                      <div className="skeleton h-2 w-full rounded" />
+                    </div>
+                    <div className="skeleton h-2 w-10 rounded shrink-0" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex items-center justify-center gap-2 py-5 bg-[var(--surface)]">
+            <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No {filter === 'all' ? '' : filter + ' '}signals active</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-px overflow-hidden border-t border-[var(--border)]">
+            {/* Row 1 — scrolls at normal speed */}
+            <div className="overflow-hidden">
+              <div className="ticker-track flex" style={{ animationDuration: `${Math.max(20, row1.length * 4)}s` }}>
+                {[...row1, ...row1].map((sig, i) => (
+                  <SignalCard key={`r1-${i}`} sig={sig} isNew={i < row1.length && newIds.has(sig.id)} />
+                ))}
+              </div>
+            </div>
+            {/* Row 2 — scrolls 30% slower for depth */}
+            {row2.length > 0 && (
+              <div className="overflow-hidden border-t border-[var(--border)]">
+                <div className="ticker-track flex" style={{ animationDuration: `${Math.max(26, row2.length * 5)}s`, animationDirection: 'reverse' }}>
+                  {[...row2, ...row2].map((sig, i) => (
+                    <SignalCard key={`r2-${i}`} sig={sig} isNew={i < row2.length && newIds.has(sig.id)} />
+                  ))}
                 </div>
               </div>
-            ))
-          ) : signals.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 py-4 px-4 bg-[var(--surface)]" style={{ gridRow: '1 / span 2', gridColumn: '1' }}>
-              <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No active signals</p>
-            </div>
-          ) : (
-            signals.map((sig, i) => {
-              const isNew = newIds.has(sig.id)
-              const { icon: Icon, color } = getSignalIcon(sig.text)
-              return (
-                <div
-                  key={`${sig.id}-${i}`}
-                  className={`flex gap-2 bg-[var(--surface)] px-3 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isNew ? 'animate-slide-right signal-new' : ''}`}
-                >
-                  <div className={`w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
-                  <Icon size={13} className="mt-0.5 shrink-0" style={{ color }} strokeWidth={2} />
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[10px] font-medium leading-snug text-[var(--text)]">{sig.text}</p>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className={`rounded border px-1 py-px font-mono text-[7px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
-                        {sig.severity}
-                      </span>
-                      <span className="font-mono text-[8px] text-[var(--text-muted)]">{ago(sig.timestamp)}</span>
-                    </div>
-                  </div>
-                </div>
-              )
-            })
-          )}
+            )}
           </div>
-        </div>
+        )}
       </div>
     )
   }

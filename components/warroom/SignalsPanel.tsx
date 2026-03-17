@@ -8,34 +8,27 @@ import { useFetch } from '@/lib/hooks/useFetch'
 import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 const SEV_BAR: Record<string, string> = {
-  HIGH: 'bg-[#ff4444]',
-  MED:  'bg-[#f59e0b]',
+  HIGH: 'bg-[var(--price-down)]',
+  MED:  'bg-[var(--warning)]',
   LOW:  'bg-[var(--border)]',
 }
 
 const SEV_BADGE: Record<string, string> = {
-  HIGH: 'text-white border-transparent bg-[#ff4444]',
-  MED:  'text-black border-transparent bg-[#f59e0b]',
+  HIGH: 'text-white border-transparent bg-[var(--price-down)]',
+  MED:  'text-black border-transparent bg-[var(--warning)]',
   LOW:  'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)]',
 }
 
 function getSignalIcon(text: string): { icon: LucideIcon; color: string } {
   const t = text.toLowerCase()
   if (/oil|crude|wti|brent|opec|petroleum/.test(t))       return { icon: Flame,          color: '#f97316' }
-  if (/war|military|conflict|geopolit|sanction|attack/.test(t)) return { icon: Shield,    color: '#ff4444' }
+  if (/war|military|conflict|geopolit|sanction|attack/.test(t)) return { icon: Shield,    color: 'var(--price-down)' }
   if (/vix|volatil|fear/.test(t))                          return { icon: AlertTriangle,  color: '#f59e0b' }
   if (/forex|currency|dollar|yen|euro|pound|yuan|fx/.test(t))  return { icon: ArrowLeftRight, color: '#22d3ee' }
   if (/gas|wheat|corn|commodity|natural gas|copper/.test(t))   return { icon: Fuel,       color: '#eab308' }
-  if (/-\d|\bdown\b|sell|drop|fall|crash|decline/.test(t)) return { icon: TrendingDown,  color: '#ff4444' }
-  if (/\+\d|\bup\b|buy|rise|rally|surge|gain/.test(t))    return { icon: TrendingUp,     color: '#00ff88' }
+  if (/-\d|\bdown\b|sell|drop|fall|crash|decline/.test(t)) return { icon: TrendingDown,  color: 'var(--price-down)' }
+  if (/\+\d|\bup\b|buy|rise|rally|surge|gain/.test(t))    return { icon: TrendingUp,     color: 'var(--price-up)' }
   return { icon: Activity, color: 'var(--accent)' }
-}
-
-function ago(ts: number) {
-  const m = Math.floor((Date.now() - ts) / 60_000)
-  if (m < 1) return 'now'
-  if (m < 60) return `${m}m ago`
-  return `${Math.floor(m / 60)}h ago`
 }
 
 // Category filter type
@@ -61,7 +54,7 @@ function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
   const isHigh = sig.severity === 'HIGH'
   return (
     <div
-      className={`group flex items-start gap-3 border-b border-[var(--border)] px-4 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isHigh ? 'bg-[rgba(255,68,68,0.03)]' : ''} ${isNew ? 'signal-new' : ''}`}
+      className={`group flex items-start gap-3 border-b border-[var(--border)] px-4 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isHigh ? 'bg-[var(--danger-dim)]' : ''} ${isNew ? 'signal-new' : ''}`}
     >
       {/* Severity bar */}
       <div className={`mt-1 w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
@@ -84,8 +77,8 @@ function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
         <span className={`rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
           {sig.severity}
         </span>
-        <span className="w-10 text-right font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50">
-          {ago(sig.timestamp)}
+        <span className="w-10 text-right font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50" suppressHydrationWarning>
+          {timeAgo(sig.timestamp)}
         </span>
       </div>
     </div>
@@ -272,7 +265,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
                       <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
                         {sig.severity}
                       </span>
-                      <span className="font-mono text-[9px] text-[var(--text-muted)]">{ago(sig.timestamp)}</span>
+                      <span className="font-mono text-[9px] text-[var(--text-muted)]" suppressHydrationWarning>{timeAgo(sig.timestamp)}</span>
                     </div>
                   </div>
                 </div>

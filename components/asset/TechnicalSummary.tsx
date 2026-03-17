@@ -126,7 +126,7 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
               />
               <div
                 className="h-full transition-all duration-700"
-                style={{ width: `${100 - bullPct - bearPct}%`, background: '#f59e0b' }}
+                style={{ width: `${100 - bullPct - bearPct}%`, background: 'var(--warning)' }}
               />
               <div
                 className="h-full transition-all duration-700"
@@ -190,7 +190,7 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
                 {targetPct !== null && (
                   <div
                     className="absolute top-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 rounded-full opacity-70"
-                    style={{ left: `${targetPct}%`, background: '#f59e0b' }}
+                    style={{ left: `${targetPct}%`, background: 'var(--warning)' }}
                     title={`Target: ${formatPrice(pc.targetMedian!)}`}
                   />
                 )}

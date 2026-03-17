@@ -16,41 +16,41 @@ function getMarketStatus(type: AssetType): MarketStatus {
   const day      = now.getUTCDay() // 0=Sun, 6=Sat
 
   if (type === 'crypto') {
-    return { status: 'OPEN 24/7', color: '#10b981' }
+    return { status: 'OPEN 24/7', color: 'var(--accent)' }
   }
 
   if (type === 'forex') {
     // Forex: Sun 22:00 UTC to Fri 22:00 UTC
-    if (day === 0 && utcTime < 22 * 60) return { status: 'CLOSED', color: '#ef4444' }
-    if (day === 6)                       return { status: 'CLOSED', color: '#ef4444' }
-    if (day === 5 && utcTime >= 22 * 60) return { status: 'CLOSED', color: '#ef4444' }
-    return { status: 'OPEN', color: '#10b981' }
+    if (day === 0 && utcTime < 22 * 60) return { status: 'CLOSED', color: 'var(--danger)' }
+    if (day === 6)                       return { status: 'CLOSED', color: 'var(--danger)' }
+    if (day === 5 && utcTime >= 22 * 60) return { status: 'CLOSED', color: 'var(--danger)' }
+    return { status: 'OPEN', color: 'var(--accent)' }
   }
 
   if (type === 'stock' || type === 'etf') {
-    if (day === 0 || day === 6) return { status: 'CLOSED', color: '#ef4444' }
+    if (day === 0 || day === 6) return { status: 'CLOSED', color: 'var(--danger)' }
     const preOpen      = 9 * 60 + 30  // 09:30 UTC (4:30 AM ET — approx pre-market)
     const marketOpen   = 14 * 60 + 30 // 14:30 UTC (9:30 AM ET)
     const marketClose  = 21 * 60      // 21:00 UTC (4:00 PM ET)
     const afterClose   = 25 * 60      // 01:00 UTC next day (8:00 PM ET)
 
-    if (utcTime >= marketOpen  && utcTime < marketClose) return { status: 'OPEN',        color: '#10b981' }
-    if (utcTime >= preOpen     && utcTime < marketOpen)  return { status: 'PRE-MARKET',  color: '#f59e0b' }
-    if (utcTime >= marketClose && utcTime < afterClose)  return { status: 'AFTER-HOURS', color: '#f59e0b' }
-    return { status: 'CLOSED', color: '#ef4444' }
+    if (utcTime >= marketOpen  && utcTime < marketClose) return { status: 'OPEN',        color: 'var(--accent)' }
+    if (utcTime >= preOpen     && utcTime < marketOpen)  return { status: 'PRE-MARKET',  color: 'var(--warning)' }
+    if (utcTime >= marketClose && utcTime < afterClose)  return { status: 'AFTER-HOURS', color: 'var(--warning)' }
+    return { status: 'CLOSED', color: 'var(--danger)' }
   }
 
   if (type === 'commodity') {
     // CME futures: nearly 24h Sun-Fri with a ~1h break around 22:00-23:00 UTC
-    if (day === 0 && utcTime < 23 * 60) return { status: 'CLOSED', color: '#ef4444' }
-    if (day === 6)                       return { status: 'CLOSED', color: '#ef4444' }
-    if (day === 5 && utcTime >= 22 * 60) return { status: 'CLOSED', color: '#ef4444' }
+    if (day === 0 && utcTime < 23 * 60) return { status: 'CLOSED', color: 'var(--danger)' }
+    if (day === 6)                       return { status: 'CLOSED', color: 'var(--danger)' }
+    if (day === 5 && utcTime >= 22 * 60) return { status: 'CLOSED', color: 'var(--danger)' }
     // Daily maintenance break: 22:00–23:00 UTC
-    if (utcTime >= 22 * 60 && utcTime < 23 * 60) return { status: 'BREAK', color: '#f59e0b' }
-    return { status: 'OPEN', color: '#10b981' }
+    if (utcTime >= 22 * 60 && utcTime < 23 * 60) return { status: 'BREAK', color: 'var(--warning)' }
+    return { status: 'OPEN', color: 'var(--accent)' }
   }
 
-  return { status: 'UNKNOWN', color: '#71717a' }
+  return { status: 'UNKNOWN', color: 'var(--text-muted)' }
 }
 
 interface Props {

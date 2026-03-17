@@ -88,7 +88,7 @@ function getArticleIcon(headline: string): IconCategory {
     return { icon: Fuel,           gradient: 'from-yellow-950 to-yellow-900', color: '#eab308' }
   if (/stock|shares|market|s&p|dow|nasdaq|equity|earnings|ipo/.test(h))
     return { icon: TrendingUp,     gradient: 'from-emerald-950 to-emerald-900', color: '#10b981' }
-  return   { icon: Globe,          gradient: 'from-zinc-900 to-zinc-800',     color: '#888888' }
+  return   { icon: Globe,          gradient: 'from-zinc-900 to-zinc-800',     color: 'var(--text-muted)' }
 }
 
 function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: string }) {
@@ -109,7 +109,7 @@ function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: str
   return (
     <div
       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${gradient}`}
-      style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ border: '1px solid var(--border)' }}
       aria-hidden
     >
       <Icon size={20} style={{ color }} strokeWidth={1.5} />

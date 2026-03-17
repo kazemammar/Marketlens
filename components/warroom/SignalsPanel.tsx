@@ -112,7 +112,7 @@ export default function SignalsPanel() {
                       <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
                         {sig.severity}
                       </span>
-                      <span className="font-mono text-[9px]" style={{ color: '#666666' }}>{ago(sig.timestamp)}</span>
+                      <span className="font-mono text-[9px] text-[var(--text-muted)]">{ago(sig.timestamp)}</span>
                     </div>
                   </div>
                 </div>

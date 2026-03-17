@@ -17,6 +17,7 @@ import NewsBriefing         from '@/components/warroom/NewsBriefing'
 import MaritimePanel        from '@/components/warroom/MaritimePanel'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
+import SectionReveal        from '@/components/layout/SectionReveal'
 import { AssetType }        from '@/lib/utils/types'
 import { getHomepageData }  from '@/lib/api/homepage'
 
@@ -110,16 +111,16 @@ export default async function HomePage({
       </div>
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}
-      <PredictionMarkets />
+      <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>
 
       {/* ══ NEWS BRIEFING — top stories by category ═══════════════════════ */}
-      <NewsBriefing />
+      <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
 
       {/* ══ ECONOMIC INDICATORS ═══════════════════════════════════════════ */}
-      <EconomicIndicators />
+      <SectionReveal delay={0}><EconomicIndicators /></SectionReveal>
 
       {/* ══ MARITIME PANEL ════════════════════════════════════════════════ */}
-      <MaritimePanel />
+      <SectionReveal delay={0}><MaritimePanel /></SectionReveal>
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
       <div className="h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />

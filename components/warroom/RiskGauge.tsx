@@ -86,8 +86,8 @@ export default function RiskGauge() {
   const { data, loading } = useFetch<MarketRiskPayload>('/api/market-risk', { refreshInterval: 2 * 60_000 })
 
   const scoreColor = data
-    ? (data.score >= 80 ? '#ff4444' : data.score >= 60 ? '#f97316' : data.score >= 30 ? '#f59e0b' : '#00ff88')
-    : '#00ff88'
+    ? (data.score >= 80 ? 'var(--price-down)' : data.score >= 60 ? 'var(--danger)' : data.score >= 30 ? 'var(--warning)' : 'var(--price-up)')
+    : 'var(--price-up)'
 
   return (
     <div className="flex flex-col">
@@ -117,7 +117,7 @@ export default function RiskGauge() {
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                 <span
                   className="font-mono text-[48px] font-bold leading-none tabular-nums"
-                  style={{ color: '#ffffff', textShadow: `0 0 24px ${scoreColor}70` }}
+                  style={{ color: 'var(--text)', textShadow: `0 0 24px ${scoreColor}70` }}
                 >
                   {data.score}
                 </span>

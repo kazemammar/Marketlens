@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
 
@@ -34,9 +35,11 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
 export default function FXMonitor() {
   const { data, loading } = useFetch<AssetCardData[]>('/api/market?tab=forex', { refreshInterval: 60_000 })
   const pairs = data ?? []
+  const [tooltipOpen, setTooltipOpen] = useState(false)
 
-  const stressed1pct = pairs.filter((p) => Math.abs(p.changePercent) >= 1).length
-  const stressed05   = pairs.filter((p) => Math.abs(p.changePercent) >= 0.5 && Math.abs(p.changePercent) < 1).length
+  const alertPairs  = pairs.filter((p) => Math.abs(p.changePercent) >= 0.5)
+  const stressed1pct = alertPairs.filter((p) => Math.abs(p.changePercent) >= 1).length
+  const stressed05   = alertPairs.filter((p) => Math.abs(p.changePercent) >= 0.5 && Math.abs(p.changePercent) < 1).length
 
   return (
     <div className="flex flex-col h-full">
@@ -49,10 +52,56 @@ export default function FXMonitor() {
             FX Monitor
           </span>
         </div>
-        {!loading && (stressed1pct > 0 || stressed05 > 0) && (
-          <span className="rounded border border-amber-500/25 bg-amber-500/10 px-1.5 py-px font-mono text-[8px] font-bold text-amber-400">
-            {stressed1pct + stressed05} ALERTS
-          </span>
+        {!loading && alertPairs.length > 0 && (
+          <div
+            className="relative"
+            onMouseEnter={() => setTooltipOpen(true)}
+            onMouseLeave={() => setTooltipOpen(false)}
+          >
+            <span className="cursor-default rounded border border-amber-500/25 bg-amber-500/10 px-1.5 py-px font-mono text-[8px] font-bold text-amber-400">
+              {stressed1pct + stressed05} ALERTS
+            </span>
+            {tooltipOpen && (
+              <div
+                className="absolute right-0 top-full z-50 mt-1.5 w-56 rounded border border-[var(--border)] bg-[var(--surface-2)] shadow-lg"
+                style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+              >
+                <div className="border-b border-[var(--border)] px-3 py-2">
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">FX Alerts</p>
+                </div>
+                <div className="px-3 py-2 space-y-1.5">
+                  {alertPairs.map((p) => {
+                    const abs  = Math.abs(p.changePercent)
+                    const crit = abs >= 1
+                    const pos  = p.changePercent >= 0
+                    return (
+                      <div key={p.symbol} className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] font-semibold text-[var(--text)]">{p.symbol}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="font-mono text-[10px] tabular-nums font-semibold"
+                            style={{ color: pos ? 'var(--price-up)' : 'var(--price-down)' }}
+                          >
+                            {pos ? '+' : ''}{p.changePercent.toFixed(2)}%
+                          </span>
+                          <span
+                            className={`rounded px-1 py-px font-mono text-[7px] font-bold uppercase ${crit ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}
+                          >
+                            {crit ? 'Critical' : 'Elevated'}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="border-t border-[var(--border)] px-3 py-2">
+                  <p className="font-mono text-[8px] leading-relaxed text-[var(--text-muted)] opacity-60">
+                    Pairs showing unusual intraday moves may signal macro shifts or central bank action.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

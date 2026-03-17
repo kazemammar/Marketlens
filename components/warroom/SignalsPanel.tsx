@@ -73,10 +73,17 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
             {signals.length} active
           </span>
         </div>
-        <div className="flex overflow-x-auto gap-px bg-[var(--border)] px-px pt-px pb-[4px]">
+        <div
+          className="overflow-x-auto pb-[6px]"
+          style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}
+        >
+          <div
+            className="grid gap-px bg-[var(--border)] px-px pt-px"
+            style={{ gridTemplateRows: 'auto auto', gridAutoFlow: 'column', gridAutoColumns: 'minmax(210px, 240px)' }}
+          >
           {loading ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex min-w-[220px] shrink-0 gap-2 bg-[var(--surface)] px-3 py-2.5">
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-2 bg-[var(--surface)] px-3 py-2.5">
                 <div className="skeleton h-4 w-4 rounded shrink-0" />
                 <div className="flex-1 space-y-1.5">
                   <div className="skeleton h-2.5 w-full rounded" />
@@ -85,7 +92,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
               </div>
             ))
           ) : signals.length === 0 ? (
-            <div className="flex w-full items-center justify-center gap-2 py-4 px-4 bg-[var(--surface)]">
+            <div className="flex items-center justify-center gap-2 py-4 px-4 bg-[var(--surface)]" style={{ gridRow: '1 / span 2', gridColumn: '1' }}>
               <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No active signals</p>
             </div>
           ) : (
@@ -95,7 +102,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
               return (
                 <div
                   key={`${sig.id}-${i}`}
-                  className={`flex min-w-[220px] max-w-[280px] shrink-0 gap-2 bg-[var(--surface)] px-3 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isNew ? 'animate-slide-right signal-new' : ''}`}
+                  className={`flex gap-2 bg-[var(--surface)] px-3 py-2.5 transition-colors hover:bg-[var(--surface-2)] ${isNew ? 'animate-slide-right signal-new' : ''}`}
                 >
                   <div className={`w-[3px] shrink-0 self-stretch rounded-full ${SEV_BAR[sig.severity] ?? SEV_BAR.LOW}`} />
                   <Icon size={13} className="mt-0.5 shrink-0" style={{ color }} strokeWidth={2} />
@@ -112,6 +119,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
               )
             })
           )}
+          </div>
         </div>
       </div>
     )

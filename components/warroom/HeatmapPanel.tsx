@@ -37,7 +37,10 @@ function buildTreemapRows(stocks: AssetCardData[]): Array<Array<{ symbol: string
   })
 }
 
-function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height: number }) {
+// Row flex weights — top rows are taller (higher market cap stocks)
+const ROW_FLEX = [35, 35, 30]
+
+function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
   const abs   = Math.abs(pct)
   const isPos = pct >= 0
 
@@ -54,24 +57,26 @@ function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height
     else               bg = 'rgba(var(--price-down-rgb), 0.22)'
   }
 
-  const chgColor = isPos ? 'var(--price-up)' : pct < 0 ? 'var(--price-down)' : 'var(--text-muted)'
-  const sym = symbol.length <= 4 ? symbol : symbol.slice(0, 4)
+  const chgColor  = isPos ? 'var(--price-up)' : pct < 0 ? 'var(--price-down)' : 'var(--text-muted)'
+  const textWhite = abs >= 2
+  const sym       = symbol.length <= 4 ? symbol : symbol.slice(0, 4)
+
   return (
     <a
       href={`/asset/stock/${symbol}`}
       title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
-      className="flex flex-col items-center justify-center overflow-hidden transition-opacity hover:opacity-80"
-      style={{ background: bg, height: `${height}px`, border: '1px solid var(--border)' }}
+      className="flex h-full flex-col items-center justify-center overflow-hidden transition-opacity hover:opacity-80"
+      style={{ background: bg, border: '1px solid var(--border)' }}
     >
       <span
         className="font-mono font-bold leading-none"
-        style={{ fontSize: height > 50 ? '10px' : '8px', color: abs >= 2 ? '#ffffff' : 'var(--text)' }}
+        style={{ fontSize: '11px', color: textWhite ? '#ffffff' : 'var(--text)' }}
       >
         {sym}
       </span>
       <span
-        className="font-mono tabular-nums leading-none mt-0.5"
-        style={{ fontSize: height > 50 ? '9px' : '7px', color: abs >= 2 ? '#ffffffcc' : chgColor }}
+        className="mt-0.5 font-mono tabular-nums leading-none"
+        style={{ fontSize: '10px', color: textWhite ? '#ffffffcc' : chgColor }}
       >
         {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
       </span>
@@ -81,7 +86,6 @@ function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height
 
 export default function HeatmapPanel({ stocks = [] }: { stocks?: AssetCardData[] }) {
   const rows = buildTreemapRows(stocks)
-  const ROW_HEIGHTS = [64, 56, 48]
 
   return (
     <div className="flex flex-col h-full">
@@ -98,18 +102,18 @@ export default function HeatmapPanel({ stocks = [] }: { stocks?: AssetCardData[]
         </span>
       </div>
 
-      {/* Treemap */}
+      {/* Treemap — fills all remaining height proportionally */}
       {rows.length === 0 ? (
         <div className="flex flex-1 items-center justify-center">
           <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No data</p>
         </div>
       ) : (
-        <div className="flex-1 px-3 py-3 flex flex-col gap-px overflow-hidden">
+        <div className="flex flex-1 flex-col gap-px overflow-hidden p-1">
           {rows.map((row, ri) => (
-            <div key={ri} className="flex gap-px">
+            <div key={ri} className="flex min-h-0 gap-px" style={{ flex: `${ROW_FLEX[ri] ?? 30} 0 0` }}>
               {row.map(({ symbol, pct, flex }) => (
-                <div key={symbol} style={{ flex: `${flex} 0 0` }}>
-                  <HeatCell symbol={symbol} pct={pct} height={ROW_HEIGHTS[ri] ?? 48} />
+                <div key={symbol} className="min-w-0" style={{ flex: `${flex} 0 0` }}>
+                  <HeatCell symbol={symbol} pct={pct} />
                 </div>
               ))}
             </div>

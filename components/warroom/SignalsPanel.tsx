@@ -58,7 +58,7 @@ function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
       {/* Icon */}
       <Icon size={15} className="shrink-0 opacity-80" style={{ color }} strokeWidth={1.8} />
       {/* Signal text — wraps to 2 lines if needed */}
-      <p className="min-w-0 flex-1 text-[12px] font-medium leading-snug text-[var(--text)] line-clamp-2">
+      <p className="min-w-0 flex-1 text-[12px] font-medium leading-snug text-[var(--text)]">
         {sig.text}
       </p>
       {/* Meta */}

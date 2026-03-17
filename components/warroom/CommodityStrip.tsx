@@ -19,7 +19,7 @@ export default function CommodityStrip({
   const [items,     setItems]     = useState<CommodityStripItem[]>(initialData ?? [])
   const [loading,   setLoading]   = useState(!initialData || initialData.length === 0)
   const [flash,     setFlash]     = useState<Record<string, 'up' | 'down'>>({})
-  const [updatedAt, setUpdatedAt] = useState<number>(initialData && initialData.length > 0 ? Date.now() : 0)
+  const [updatedAt, setUpdatedAt] = useState(0)
   const prevPrices = useRef<Record<string, number>>({})
 
   async function load() {
@@ -74,6 +74,7 @@ export default function CommodityStrip({
             className="font-mono text-[7px] tabular-nums"
             style={{ color: stalenessColor(updatedAt) }}
             title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+            suppressHydrationWarning
           >
             {timeAgo(updatedAt)}
           </span>

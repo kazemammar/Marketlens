@@ -164,6 +164,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
                 className="font-mono text-[8px] tabular-nums"
                 style={{ color: stalenessColor(updatedAt) }}
                 title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+                suppressHydrationWarning
               >
                 {timeAgo(updatedAt)}
               </span>

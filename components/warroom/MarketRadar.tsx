@@ -126,6 +126,7 @@ export default function MarketRadar({
             className="font-mono text-[8px] tabular-nums"
             style={{ color: stalenessColor(data.updatedAt) }}
             title={`Last updated: ${new Date(data.updatedAt).toLocaleTimeString()}`}
+            suppressHydrationWarning
           >
             {timeAgo(data.updatedAt)}
           </span>

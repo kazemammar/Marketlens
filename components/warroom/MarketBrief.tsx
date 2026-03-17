@@ -113,6 +113,7 @@ export default function MarketBrief() {
               className="font-mono text-[9px] tabular-nums"
               style={{ color: stalenessColor(brief.generatedAt) }}
               title={`Generated at ${new Date(brief.generatedAt).toLocaleTimeString()}`}
+              suppressHydrationWarning
             >
               {timeAgo(brief.generatedAt)}
             </span>

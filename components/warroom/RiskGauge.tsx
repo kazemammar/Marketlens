@@ -98,7 +98,7 @@ function stalenessColor(updatedAt: number): string {
 }
 
 export default function RiskGauge() {
-  const { data, loading } = useFetch<MarketRiskPayload>('/api/market-risk', { refreshInterval: 2 * 60_000 })
+  const { data, loading } = useFetch<MarketRiskPayload>('/api/market-risk', { refreshInterval: 5 * 60_000 })
 
   const scoreColor = data
     ? (data.score >= 80 ? 'var(--price-down)' : data.score >= 60 ? 'var(--danger)' : data.score >= 30 ? 'var(--warning)' : 'var(--price-up)')
@@ -147,16 +147,22 @@ export default function RiskGauge() {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
+            <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="skeleton h-2 w-20 rounded" />
-                <div className="skeleton h-2 w-full rounded" />
-                <div className="skeleton h-2 w-4/5 rounded" />
+                <div className="grid grid-cols-3 gap-x-3">
+                  <div className="skeleton h-2 w-full rounded" />
+                  <div className="skeleton h-2 w-full rounded" />
+                  <div className="skeleton h-2 w-4/5 rounded" />
+                </div>
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="skeleton h-2 w-14 rounded" />
-                <div className="skeleton h-2 w-full rounded" />
-                <div className="skeleton h-2 w-3/4 rounded" />
+                <div className="grid grid-cols-3 gap-x-3">
+                  <div className="skeleton h-2 w-full rounded" />
+                  <div className="skeleton h-2 w-full rounded" />
+                  <div className="skeleton h-2 w-3/4 rounded" />
+                </div>
               </div>
             </div>
             <div className="skeleton h-8 w-full rounded" />
@@ -210,37 +216,37 @@ export default function RiskGauge() {
 
             </div>
 
-            {/* ── ROW 2: Opportunities (left) + Threats (right) ── */}
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            {/* ── ROW 2: Opportunities + Threats — 2 rows × 3 columns ── */}
+            <div className="mt-2 space-y-2">
 
-              {/* Opportunities */}
-              <div className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
-                <div className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--price-up)]">
+              {/* Opportunities row */}
+              <div>
+                <div className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--price-up)]">
                   Opportunities
                 </div>
-                <ul className="space-y-1.5">
-                  {(data.opportunities?.length ? data.opportunities : ['No signals yet']).slice(0, 2).map((item, i) => (
-                    <li key={i} className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-up)' }} />
+                <div className="grid grid-cols-3 gap-x-3">
+                  {(data.opportunities?.length ? data.opportunities : ['No signals yet']).slice(0, 3).map((item, i) => (
+                    <div key={i} className="flex items-start gap-1">
+                      <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-up)' }} />
                       <span className="line-clamp-2 font-mono text-[9px] leading-snug text-[var(--text)]">{item}</span>
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
-              {/* Threats */}
-              <div className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
-                <div className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--price-down)]">
+              {/* Threats row */}
+              <div>
+                <div className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--price-down)]">
                   Threats
                 </div>
-                <ul className="space-y-1.5">
-                  {(data.threats?.length ? data.threats : data.factors ?? ['No signals yet']).slice(0, 2).map((item, i) => (
-                    <li key={i} className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-down)' }} />
+                <div className="grid grid-cols-3 gap-x-3">
+                  {(data.threats?.length ? data.threats : data.factors ?? ['No signals yet']).slice(0, 3).map((item, i) => (
+                    <div key={i} className="flex items-start gap-1">
+                      <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-down)' }} />
                       <span className="line-clamp-2 font-mono text-[9px] leading-snug text-[var(--text)]">{item}</span>
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
 
             </div>

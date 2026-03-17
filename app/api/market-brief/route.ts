@@ -5,7 +5,13 @@ import Groq from 'groq-sdk'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const CACHE_KEY = 'market-brief:daily'
-const CACHE_TTL = 900 // 15 minutes
+const CACHE_TTL = 300 // 5 minutes
+const RISK_KEY  = 'market-risk:v4'
+
+const BREAKING_KEYWORDS = [
+  'war', 'attack', 'missile', 'explosion', 'sanction', 'crash',
+  'collapse', 'emergency', 'assassination', 'invasion', 'default',
+]
 
 interface AffectedAsset {
   symbol:    string
@@ -101,8 +107,27 @@ export async function GET(req: Request) {
       generatedAt:    Date.now(),
     }
 
-    // Cache
+    // ── Breaking-news detection: read old brief BEFORE overwriting ──
+    let prevBrief: MarketBriefPayload | null = null
+    try {
+      prevBrief = await redis.get<MarketBriefPayload>(CACHE_KEY)
+    } catch { /* non-fatal */ }
+
+    // Cache new brief
     redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
+
+    // Bust risk cache if a new breaking keyword appeared
+    if (prevBrief) {
+      const prevCorpus = (prevBrief.brief + ' ' + prevBrief.risks.join(' ')).toLowerCase()
+      const newCorpus  = (payload.brief  + ' ' + payload.risks.join(' ')).toLowerCase()
+      const hasNewBreaking = BREAKING_KEYWORDS.some(
+        (kw) => newCorpus.includes(kw) && !prevCorpus.includes(kw)
+      )
+      if (hasNewBreaking) {
+        redis.del(RISK_KEY).catch(() => {})
+        console.log('[market-brief] Breaking keyword detected — risk cache invalidated')
+      }
+    }
 
     return NextResponse.json(payload)
   } catch (err) {
@@ -112,9 +137,9 @@ export async function GET(req: Request) {
       risks:          ['AI service temporarily unavailable', 'Monitor for macro surprises', 'Geopolitical risk remains elevated'],
       opportunities:  ['Commodities and safe-haven assets may benefit from uncertainty'],
       affectedAssets: [
-        { symbol: 'GLD',   type: 'commodity', direction: 'up' },
-        { symbol: 'SPY',   type: 'etf',       direction: 'volatile' },
-        { symbol: 'USD/JPY', type: 'forex',   direction: 'volatile' },
+        { symbol: 'GLD',     type: 'commodity', direction: 'up' },
+        { symbol: 'SPY',     type: 'etf',       direction: 'volatile' },
+        { symbol: 'USD/JPY', type: 'forex',     direction: 'volatile' },
       ],
       generatedAt: Date.now(),
     }

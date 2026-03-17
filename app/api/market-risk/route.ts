@@ -25,7 +25,7 @@ export interface MarketRiskPayload {
 
 const BRIEF_KEY = 'market-brief:daily'
 const RISK_KEY  = 'market-risk:v4'
-const CACHE_TTL = 1_800
+const CACHE_TTL = 300 // 5 minutes — aligned with brief TTL
 
 // ─── Category keyword lists ────────────────────────────────────────────────
 
@@ -63,34 +63,32 @@ const CMD_KEYWORDS = [
 // ─── Score computation ─────────────────────────────────────────────────────
 
 function computeCategoryScores(brief: MarketBriefPayload): { breakdown: BreakdownItem[]; overallScore: number } {
-  const corpus = (
-    brief.brief + ' ' +
-    brief.risks.join(' ') + ' ' +
-    brief.opportunities.join(' ')
-  ).toLowerCase()
+  // Corpus: brief text + risks only (opportunities excluded — positive signals
+  // would inflate risk scores via commodity/market keyword matches)
+  const corpus = (brief.brief + ' ' + brief.risks.join(' ')).toLowerCase()
 
   // ── Geopolitical ──
-  const geoKeyHits = GEO_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const geoKeyHits   = GEO_KEYWORDS.filter((w) => corpus.includes(w)).length
   const geoAssetHits = brief.affectedAssets.filter((a) =>
     ['GLD', 'SLV', 'GC=F', 'USO', 'CL=F', 'USD/JPY'].includes(a.symbol)
   ).length
-  const geoScore = Math.round(Math.max(15, Math.min(95, 15 + geoKeyHits * 4.5 + geoAssetHits * 5)))
+  const geoScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(geoKeyHits) * 12 + geoAssetHits * 5)))
 
   // ── Market ──
-  const mktKeyHits = MKT_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const mktKeyHits   = MKT_KEYWORDS.filter((w) => corpus.includes(w)).length
   const bearishEquity = brief.affectedAssets.filter((a) =>
     (a.type === 'stock' || a.type === 'etf') &&
     (a.direction === 'down' || a.direction === 'volatile')
   ).length
   const vixBonus = brief.affectedAssets.some((a) => a.symbol === 'VIX') ? 8 : 0
-  const mktScore = Math.round(Math.max(15, Math.min(95, 15 + mktKeyHits * 3.5 + bearishEquity * 6 + vixBonus)))
+  const mktScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mktKeyHits) * 10 + bearishEquity * 6 + vixBonus)))
 
   // ── Macro ──
-  const mcrKeyHits = MCR_KEYWORDS.filter((w) => corpus.includes(w)).length
+  const mcrKeyHits  = MCR_KEYWORDS.filter((w) => corpus.includes(w)).length
   const macroAssets = brief.affectedAssets.filter((a) =>
     a.type === 'forex' || ['TLT', 'VIX'].includes(a.symbol)
   ).length
-  const mcrScore = Math.round(Math.max(15, Math.min(95, 15 + mcrKeyHits * 3.0 + macroAssets * 5)))
+  const mcrScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mcrKeyHits) * 9 + macroAssets * 5)))
 
   // ── Commodity ──
   const cmdKeyHits = CMD_KEYWORDS.filter((w) => corpus.includes(w)).length
@@ -99,7 +97,7 @@ function computeCategoryScores(brief: MarketBriefPayload): { breakdown: Breakdow
     if (a.type === 'commodity') cmdSymbols.add(a.symbol)
     if (['USO', 'GLD', 'SLV', 'GC=F', 'CL=F'].includes(a.symbol)) cmdSymbols.add(a.symbol)
   })
-  const cmdScore = Math.round(Math.max(15, Math.min(95, 15 + cmdKeyHits * 4.0 + cmdSymbols.size * 6)))
+  const cmdScore = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(cmdKeyHits) * 11 + cmdSymbols.size * 6)))
 
   // ── Overall score ──────────────────────────────────────────────────────
   // Base: weighted average (geo/mkt 30%, macro 25%, commodity 15%)
@@ -109,10 +107,11 @@ function computeCategoryScores(brief: MarketBriefPayload): { breakdown: Breakdow
     mcrScore * 0.25 +
     cmdScore * 0.15
   )
-  // Crisis amplifier: a single dominant category (e.g. active conflict) should
-  // pull the overall up — otherwise weighted avg suppresses real extremes.
-  const maxCatScore = Math.max(geoScore, mktScore, mcrScore, cmdScore)
-  const amplified   = Math.round(maxCatScore * 0.75)
+  // Crisis amplifier: if one category is dominant, pull the overall up.
+  // 0.85 means a category at 90 floors overall at ~76 (CRITICAL). Previously
+  // 0.75 only reached 67 (HIGH) — too low for an active conflict scenario.
+  const maxCatScore  = Math.max(geoScore, mktScore, mcrScore, cmdScore)
+  const amplified    = Math.round(maxCatScore * 0.85)
   const overallScore = Math.max(weightedAvg, amplified)
 
   return {

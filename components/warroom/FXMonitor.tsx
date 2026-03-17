@@ -59,6 +59,7 @@ export default function FXMonitor() {
           <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             FX Monitor
           </span>
+          <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">5 MIN CACHE</span>
         </div>
         {!loading && alertPairs.length > 0 && (
           <div
@@ -114,6 +115,21 @@ export default function FXMonitor() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
+        {/* Column headers */}
+        {!loading && pairs.length > 0 && (
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-1 bg-[var(--surface-2)]">
+            <span className="font-mono text-[7px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-50">Pair</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                <span className="font-mono text-[7px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-50">Price</span>
+                <span className="rounded bg-[var(--surface-3)] px-1 py-px font-mono text-[6px] uppercase text-[var(--text-muted)] opacity-40">Live</span>
+              </div>
+              <div className="flex items-center gap-1 w-14 justify-end">
+                <span className="font-mono text-[7px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-50">vs prev day</span>
+              </div>
+            </div>
+          </div>
+        )}
         {loading
           ? Array.from({ length: 7 }).map((_, i) => (
               <div key={i} className="border-b border-[var(--border)] px-3 py-2">

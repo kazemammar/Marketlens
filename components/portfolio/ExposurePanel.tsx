@@ -36,6 +36,68 @@ function PanelHeader() {
   )
 }
 
+// ─── Position mini-card ───────────────────────────────────────────────────
+
+function PositionCard({
+  position,
+  quote,
+  typeColor,
+}: {
+  position:  PortfolioPosition
+  quote:     QuoteData | undefined
+  typeColor: string
+}) {
+  const changePercent  = quote?.changePercent ?? 0
+  const isUp           = changePercent >= 0
+  const changeColor    = isUp ? '#22c55e' : '#ef4444'
+  const hasQuote       = quote != null
+
+  return (
+    <Link
+      href={`/asset/${position.asset_type}/${encodeURIComponent(position.symbol)}`}
+      className="group flex min-w-[64px] flex-col gap-0.5 rounded-md p-1.5 transition-all duration-150"
+      style={{
+        background: `${typeColor}08`,
+        border:     `1px solid ${typeColor}20`,
+      }}
+      onMouseEnter={(e) => {
+        ;(e.currentTarget as HTMLAnchorElement).style.borderColor = `${typeColor}50`
+        ;(e.currentTarget as HTMLAnchorElement).style.background  = `${typeColor}12`
+      }}
+      onMouseLeave={(e) => {
+        ;(e.currentTarget as HTMLAnchorElement).style.borderColor = `${typeColor}20`
+        ;(e.currentTarget as HTMLAnchorElement).style.background  = `${typeColor}08`
+      }}
+    >
+      {/* Symbol + direction */}
+      <div className="flex items-center gap-0.5">
+        <span
+          className="font-mono text-[8px] font-bold leading-none"
+          style={{ color: position.direction === 'long' ? '#22c55e' : '#ef4444' }}
+        >
+          {position.direction === 'long' ? '▲' : '▼'}
+        </span>
+        <span
+          className="font-mono text-[9px] font-bold leading-none truncate"
+          style={{ color: 'var(--accent)' }}
+        >
+          {position.symbol}
+        </span>
+      </div>
+
+      {/* Day change */}
+      {hasQuote && (
+        <span
+          className="font-mono text-[8px] tabular-nums leading-none"
+          style={{ color: changeColor, textShadow: `0 0 6px ${changeColor}50` }}
+        >
+          {isUp ? '+' : ''}{changePercent.toFixed(2)}%
+        </span>
+      )}
+    </Link>
+  )
+}
+
 // ─── Component ────────────────────────────────────────────────────────────
 
 export default function ExposurePanel({
@@ -56,9 +118,8 @@ export default function ExposurePanel({
     )
   }
 
-  // ── Net direction gauge ──────────────────────────────────────────────
-  // Use market value weighting if available, else count
-  let netScore = 0 // -100 (all short) to +100 (all long)
+  // ── Net direction ─────────────────────────────────────────────────────
+  let netScore = 0
   const hasValueData = positions.some((p) => p.quantity != null && quotes[p.symbol])
 
   if (hasValueData) {
@@ -77,12 +138,13 @@ export default function ExposurePanel({
     netScore = positions.length > 0 ? ((longCount - shortCount) / positions.length) * 100 : 0
   }
 
-  const absNet   = Math.abs(netScore)
-  const isLong   = netScore >= 0
-  const fillPct  = absNet / 2  // each side is 50% of bar width
-  const netLabel = `Net: ${absNet.toFixed(0)}% ${isLong ? 'Long' : 'Short'}`
+  const absNet        = Math.abs(netScore)
+  const isLong        = netScore >= 0
+  const fillPct       = absNet / 2   // each side is 50% of bar width
+  const fillColor     = isLong ? '#22c55e' : '#ef4444'
+  const directionWord = isLong ? 'Long' : 'Short'
 
-  // ── Group positions by asset type ─────────────────────────────────────
+  // ── Group by asset type ───────────────────────────────────────────────
   const byType: Record<string, PortfolioPosition[]> = {}
   for (const p of positions) {
     if (!byType[p.asset_type]) byType[p.asset_type] = []
@@ -94,81 +156,100 @@ export default function ExposurePanel({
       <PanelHeader />
       <div className="flex-1 overflow-y-auto px-3 py-2.5 space-y-3">
 
-        {/* Direction gauge */}
+        {/* ── Direction gauge ──────────────────────────────────────── */}
         <div>
           <p className="mb-1.5 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Net Direction</p>
-          <div className="relative flex h-3 w-full overflow-hidden rounded-sm bg-[var(--surface-2)]">
-            {/* Center mark */}
-            <div className="absolute left-1/2 top-0 h-full w-px z-10" style={{ background: 'var(--border)' }} />
-            {/* Fill bar — from center outward */}
+
+          {/* Gauge bar */}
+          <div
+            className="relative h-4 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
+            style={{ boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.25)' }}
+          >
+            {/* Center marker */}
+            <div
+              className="absolute left-1/2 top-0 z-10 h-full w-0.5 -translate-x-0.5"
+              style={{ background: 'rgba(255,255,255,0.25)', boxShadow: '0 0 4px rgba(255,255,255,0.15)' }}
+            />
+
+            {/* Fill from center */}
             {isLong ? (
               <div
-                className="absolute top-0 h-full"
+                className="absolute top-0 h-full transition-all duration-700"
                 style={{
                   left:       '50%',
                   width:      `${fillPct}%`,
-                  background: 'var(--price-up)',
-                  opacity:    0.85,
+                  background: `linear-gradient(to right, ${fillColor}70, ${fillColor})`,
+                  boxShadow:  `inset 0 0 8px ${fillColor}30`,
                 }}
               />
             ) : (
               <div
-                className="absolute top-0 h-full"
+                className="absolute top-0 h-full transition-all duration-700"
                 style={{
                   right:      '50%',
                   width:      `${fillPct}%`,
-                  background: 'var(--price-down)',
-                  opacity:    0.85,
+                  background: `linear-gradient(to left, ${fillColor}70, ${fillColor})`,
+                  boxShadow:  `inset 0 0 8px ${fillColor}30`,
                 }}
               />
             )}
           </div>
-          <div className="mt-1 flex items-center justify-between">
-            <span className="font-mono text-[9px]" style={{ color: 'var(--price-down)' }}>SHORT</span>
+
+          {/* Labels */}
+          <div className="mt-1.5 flex items-center justify-between">
+            <span className="font-mono text-[9px] font-medium" style={{ color: '#ef4444', opacity: 0.7 }}>SHORT</span>
+
+            {/* Net label pill */}
             <span
-              className="font-mono text-[10px] font-semibold tabular-nums"
-              style={{ color: isLong ? 'var(--price-up)' : 'var(--price-down)' }}
+              className="rounded-full px-2 py-0.5 font-mono text-[10px] font-bold tabular-nums"
+              style={{
+                color:      fillColor,
+                background: `${fillColor}15`,
+                textShadow: `0 0 8px ${fillColor}60`,
+              }}
             >
-              {netLabel}
+              {absNet.toFixed(0)}% {directionWord}
             </span>
-            <span className="font-mono text-[9px]" style={{ color: 'var(--price-up)' }}>LONG</span>
+
+            <span className="font-mono text-[9px] font-medium" style={{ color: '#22c55e', opacity: 0.7 }}>LONG</span>
           </div>
         </div>
 
-        {/* Positions by asset class */}
+        {/* ── Positions by class ────────────────────────────────────── */}
         <div>
           <p className="mb-1.5 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Positions by Class</p>
-          <div className="space-y-1.5">
-            {Object.entries(byType).map(([type, posns]) => (
-              <div key={type} className="flex items-start gap-2">
-                {/* Type label */}
-                <span
-                  className="mt-0.5 shrink-0 rounded px-1 py-px font-mono text-[8px] font-bold uppercase"
-                  style={{
-                    color:      TYPE_COLORS[type] ?? '#6b7280',
-                    background: `${TYPE_COLORS[type] ?? '#6b7280'}18`,
-                  }}
-                >
-                  {TYPE_LABEL[type] ?? type}
-                </span>
-                {/* Position pills */}
-                <div className="flex flex-wrap gap-1">
-                  {posns.map((p) => (
-                    <Link
-                      key={`${p.id}-${p.direction}`}
-                      href={`/asset/${p.asset_type}/${encodeURIComponent(p.symbol)}`}
-                      className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold transition hover:opacity-80 ${
-                        p.direction === 'long'
-                          ? 'bg-emerald-500/10 text-emerald-400'
-                          : 'bg-red-500/10 text-red-400'
-                      }`}
+          <div className="space-y-2">
+            {Object.entries(byType).map(([type, posns]) => {
+              const color = TYPE_COLORS[type] ?? '#6b7280'
+              return (
+                <div key={type}>
+                  {/* Class label */}
+                  <div className="mb-1 flex items-center gap-1.5">
+                    <span
+                      className="h-1.5 w-1.5 rounded-full shrink-0"
+                      style={{ background: color, boxShadow: `0 0 4px ${color}70` }}
+                    />
+                    <span
+                      className="font-mono text-[8px] font-bold uppercase tracking-wide"
+                      style={{ color }}
                     >
-                      {p.direction === 'long' ? '▲' : '▼'} {p.symbol}
-                    </Link>
-                  ))}
+                      {TYPE_LABEL[type] ?? type}
+                    </span>
+                  </div>
+                  {/* Position cards */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {posns.map((p) => (
+                      <PositionCard
+                        key={`${p.id}-${p.direction}`}
+                        position={p}
+                        quote={quotes[p.symbol]}
+                        typeColor={color}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 

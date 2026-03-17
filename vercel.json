@@ -3,6 +3,14 @@
     {
       "path": "/api/init",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/market-brief",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/market-risk",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

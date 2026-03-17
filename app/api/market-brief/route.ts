@@ -5,7 +5,7 @@ import Groq from 'groq-sdk'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const CACHE_KEY = 'market-brief:daily'
-const CACHE_TTL = 1_800 // 30 minutes
+const CACHE_TTL = 900 // 15 minutes
 
 interface AffectedAsset {
   symbol:    string
@@ -27,8 +27,8 @@ You write concise, actionable morning briefings for professional traders.
 Respond with valid JSON only — no markdown fences, no explanation:
 {
   "brief": "<4-6 sentence morning briefing. Be direct, specific, and mention real asset names and price directions. Cover: what is driving markets today, key geopolitical risks, and one clear actionable insight.>",
-  "risks": ["<risk 1>", "<risk 2>", "<risk 3>"],
-  "opportunities": ["<opportunity 1>", "<opportunity 2>"],
+  "risks": ["<risk 1>", "<risk 2>", "<risk 3>", "<risk 4>"],
+  "opportunities": ["<opportunity 1>", "<opportunity 2>", "<opportunity 3>"],
   "affectedAssets": [
     { "symbol": "GLD",     "type": "commodity", "direction": "up" },
     { "symbol": "USD/JPY", "type": "forex",     "direction": "down" }

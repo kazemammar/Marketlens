@@ -84,7 +84,7 @@ export default function CommodityStrip({
               return (
                 <Link
                   key={item.symbol}
-                  href={`/asset/commodity/${item.symbol}`}
+                  href={`/asset/commodity/${encodeURIComponent(item.symbol)}`}
                   className="flex shrink-0 items-center gap-2.5 border-r border-[var(--border)] px-4 py-0 transition-colors duration-150 hover:bg-white/5"
                 >
                   <span className="font-mono text-[10px] font-semibold text-white">

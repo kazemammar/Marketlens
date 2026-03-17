@@ -12,8 +12,8 @@ const TICKER_SYMBOLS = [
   { symbol: 'BINANCE:BTCUSDT', label: 'BTC',        currency: 'USD' },
   { symbol: 'BINANCE:ETHUSDT', label: 'ETH',        currency: 'USD' },
   { symbol: 'BINANCE:SOLUSDT', label: 'SOL',        currency: 'USD' },
-  { symbol: 'GLD',             label: 'GOLD',       currency: 'USD' },
-  { symbol: 'USO',             label: 'OIL',        currency: 'USD' },
+  { symbol: 'GC=F',            label: 'GOLD',       currency: 'USD' },
+  { symbol: 'CL=F',            label: 'OIL',        currency: 'USD' },
 ]
 
 const SYMBOL_LIST = TICKER_SYMBOLS.map((t) => t.symbol).join(',')

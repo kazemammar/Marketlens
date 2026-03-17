@@ -22,7 +22,7 @@ const TRENDING: Asset[] = [
   { symbol: 'BTC',     name: 'Bitcoin',              type: 'crypto'    },
   { symbol: 'ETH',     name: 'Ethereum',             type: 'crypto'    },
   { symbol: 'EUR/USD', name: 'Euro / US Dollar',     type: 'forex'     },
-  { symbol: 'GLD',     name: 'SPDR Gold Shares',     type: 'commodity' },
+  { symbol: 'GC=F',    name: 'Gold Futures',          type: 'commodity' },
 ]
 
 // ─── Debounce hook ────────────────────────────────────────────────────────

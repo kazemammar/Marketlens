@@ -197,6 +197,7 @@ export interface AssetCardData {
   open:          number
   high:          number
   low:           number
+  sparkline?:    number[]   // optional historical closes for the sparkline path
 }
 
 // ─── RSS ──────────────────────────────────────────────────────────────────

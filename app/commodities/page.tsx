@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import AssetCard from '@/components/dashboard/AssetCard'
 import GlobalSearch from '@/components/search/GlobalSearch'
-import { getQuotesBatched } from '@/lib/api/finnhub'
+import { getYahooQuotesBatch, getYahooSparkline } from '@/lib/api/yahoo'
 import { DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import { AssetCardData } from '@/lib/utils/types'
 
@@ -14,25 +14,28 @@ export const metadata: Metadata = {
 
 export default async function CommoditiesPage() {
   const symbols = DEFAULT_COMMODITIES.map((c) => c.symbol)
-  const quotes  = await getQuotesBatched(symbols, 2, 1_500).catch(() => new Map<string, never>())
+  const [quotes, ...sparklines] = await Promise.all([
+    getYahooQuotesBatch(symbols).catch(() => [] as Awaited<ReturnType<typeof getYahooQuotesBatch>>),
+    ...symbols.map((s) => getYahooSparkline(s).catch(() => [] as number[])),
+  ])
 
   const assets: AssetCardData[] = []
-  for (const cfg of DEFAULT_COMMODITIES) {
-    const q = quotes.get(cfg.symbol)
-    if (!q) continue
-    const price = q.price > 0 ? q.price : q.previousClose
-    if (price <= 0) continue
+  for (let i = 0; i < DEFAULT_COMMODITIES.length; i++) {
+    const cfg = DEFAULT_COMMODITIES[i]
+    const q   = quotes.find((qq) => qq.symbol === cfg.symbol)
+    if (!q || q.price <= 0) continue
     assets.push({
       symbol:        cfg.symbol,
       name:          cfg.name,
       type:          'commodity',
-      price,
-      change:        q.price > 0 ? q.change        : 0,
-      changePercent: q.price > 0 ? q.changePercent : 0,
+      price:         q.price,
+      change:        q.change,
+      changePercent: q.changePercent,
       currency:      'USD',
-      open:  q.open  > 0 ? q.open  : price,
-      high:  q.high  > 0 ? q.high  : price,
-      low:   q.low   > 0 ? q.low   : price,
+      open:          q.price,
+      high:          q.price,
+      low:           q.price,
+      sparkline:     sparklines[i] ?? [],
     })
   }
 

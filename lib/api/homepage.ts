@@ -4,12 +4,12 @@
  * Single source of truth for all data the homepage needs.
  *
  * getHomepageData():
- *  1. Checks "homepage:init" Redis key — instant on warm cache (600 s TTL).
- *  2. On miss: fetches ALL ~29 Finnhub symbols in one coordinated batch
- *     (3 per batch, 1 000 ms between batches → max ~10 calls/minute).
+ *  1. Checks "homepage:init:v2" Redis key — instant on warm cache (600 s TTL).
+ *  2. On miss: fetches stock/ETF/radar symbols via Finnhub and commodity
+ *     futures via Yahoo Finance concurrently.
  *  3. Also fetches BTC/ETH/SOL via CoinGecko (no Finnhub, no rate limit).
  *  4. Assembles stocks, commodityStrip, tickerQuotes, marketRadar and
- *     stores the full result under "homepage:init" for 600 seconds.
+ *     stores the full result under "homepage:init:v2" for 600 seconds.
  *
  * All shared types (CommodityStripItem, MarketRadarPayload …) live here so
  * route files and components both import from one place with no circular deps.
@@ -17,6 +17,7 @@
 
 import { redis }                     from '@/lib/cache/redis'
 import { getQuotesBatched, QuoteRaw } from './finnhub'
+import { getYahooQuotesBatch }       from './yahoo'
 import { getCryptoByIds }            from './coingecko'
 import { DEFAULT_STOCKS }            from '@/lib/utils/constants'
 import { AssetCardData }             from '@/lib/utils/types'
@@ -57,21 +58,42 @@ export interface HomepageData {
   cachedAt:       number
 }
 
-// ─── Symbol configuration ─────────────────────────────────────────────────
+// ─── Commodity futures strip — fetched via Yahoo Finance ──────────────────
 
 const STRIP_CONFIG = [
-  { symbol: 'USO',  name: 'WTI Crude Oil', shortName: 'WTI'     },
-  { symbol: 'BNO',  name: 'Brent Crude',   shortName: 'Brent'   },
-  { symbol: 'UNG',  name: 'Natural Gas',   shortName: 'Nat Gas' },
-  { symbol: 'GLD',  name: 'Gold',          shortName: 'Gold'    },
-  { symbol: 'SLV',  name: 'Silver',        shortName: 'Silver'  },
-  { symbol: 'CPER', name: 'Copper',        shortName: 'Copper'  },
-  { symbol: 'WEAT', name: 'Wheat',         shortName: 'Wheat'   },
-  { symbol: 'URA',  name: 'Uranium',       shortName: 'Uranium' },
+  { symbol: 'CL=F',  name: 'WTI Crude Oil',  shortName: 'WTI'     },
+  { symbol: 'BZ=F',  name: 'Brent Crude',    shortName: 'Brent'   },
+  { symbol: 'NG=F',  name: 'Natural Gas',    shortName: 'Nat Gas' },
+  { symbol: 'GC=F',  name: 'Gold',           shortName: 'Gold'    },
+  { symbol: 'SI=F',  name: 'Silver',         shortName: 'Silver'  },
+  { symbol: 'HG=F',  name: 'Copper',         shortName: 'Copper'  },
+  { symbol: 'ZW=F',  name: 'Wheat',          shortName: 'Wheat'   },
+  { symbol: 'ZC=F',  name: 'Corn',           shortName: 'Corn'    },
+  { symbol: 'UX1!',  name: 'Uranium',        shortName: 'Uranium' },
 ]
 
-// Finnhub symbols for the ticker tape (non-crypto)
-export const TICKER_FINNHUB_SYMBOLS = ['SPY', 'DIA', 'QQQ', 'IWM', 'GLD', 'USO']
+async function buildCommodityStrip(): Promise<CommodityStripItem[]> {
+  const quotes = await getYahooQuotesBatch(STRIP_CONFIG.map((s) => s.symbol))
+  return STRIP_CONFIG.flatMap((cfg): CommodityStripItem[] => {
+    const q = quotes.find((qq) => qq.symbol === cfg.symbol)
+    if (!q || q.price <= 0) return []
+    return [{
+      symbol:        cfg.symbol,
+      name:          cfg.name,
+      shortName:     cfg.shortName,
+      price:         q.price,
+      change:        q.change,
+      changePercent: q.changePercent,
+      currency:      'USD',
+    }]
+  })
+}
+
+// ─── Finnhub symbol configuration ────────────────────────────────────────
+
+// Ticker tape — stocks/ETFs via Finnhub, futures via Yahoo (fetched separately)
+export const TICKER_FINNHUB_SYMBOLS  = ['SPY', 'DIA', 'QQQ', 'IWM']
+const TICKER_FUTURES_SYMBOLS = ['GC=F', 'CL=F']   // Gold + WTI Crude
 
 // CoinGecko IDs → BINANCE: symbol keys used by TickerTape
 const TICKER_CRYPTO: Array<{ id: string; binanceKey: string }> = [
@@ -80,6 +102,7 @@ const TICKER_CRYPTO: Array<{ id: string; binanceKey: string }> = [
   { id: 'solana',   binanceKey: 'BINANCE:SOLUSDT'  },
 ]
 
+// Radar uses ETF proxies (GLD/USO still useful as risk-off signals)
 const RADAR_SYMBOLS = ['SPY', 'QQQ', 'GLD', 'USO', 'VXX', 'TLT']
 
 const STOCK_NAMES: Record<string, string> = {
@@ -94,10 +117,10 @@ const STOCK_NAMES: Record<string, string> = {
 }
 
 // De-duplicated union of every Finnhub symbol the homepage needs
+// Note: commodity futures are NOT here — they go through Yahoo Finance
 export const ALL_HOMEPAGE_SYMBOLS: string[] = (() => {
   const seen = new Set<string>()
   return [
-    ...STRIP_CONFIG.map((s) => s.symbol),
     ...TICKER_FINNHUB_SYMBOLS,
     ...RADAR_SYMBOLS,
     ...DEFAULT_STOCKS,
@@ -106,7 +129,7 @@ export const ALL_HOMEPAGE_SYMBOLS: string[] = (() => {
 
 // ─── Cache config ─────────────────────────────────────────────────────────
 
-export const HOMEPAGE_CACHE_KEY = 'homepage:init'
+export const HOMEPAGE_CACHE_KEY = 'homepage:init:v2'
 export const HOMEPAGE_CACHE_TTL = 600   // 10 min
 
 // ─── Data builders ────────────────────────────────────────────────────────
@@ -132,29 +155,26 @@ function buildStocks(quotes: Map<string, QuoteRaw>): AssetCardData[] {
   })
 }
 
-function buildCommodityStrip(quotes: Map<string, QuoteRaw>): CommodityStripItem[] {
-  return STRIP_CONFIG.flatMap((cfg): CommodityStripItem[] => {
-    const q = quotes.get(cfg.symbol)
-    if (!q) return []
-    const price = q.price > 0 ? q.price : q.previousClose
-    if (price <= 0) return []
-    return [{
-      symbol:        cfg.symbol,
-      name:          cfg.name,
-      shortName:     cfg.shortName,
-      price,
-      change:        q.price > 0 ? q.change        : 0,
-      changePercent: q.price > 0 ? q.changePercent : 0,
-      currency:      'USD',
-    }]
-  })
-}
-
-function buildTickerQuotes(quotes: Map<string, QuoteRaw>): Record<string, QuoteRaw> {
+function buildTickerQuotes(
+  quotes:        Map<string, QuoteRaw>,
+  futuresQuotes: import('./yahoo').YahooQuote[],
+): Record<string, QuoteRaw> {
   const result: Record<string, QuoteRaw> = {}
   for (const sym of TICKER_FINNHUB_SYMBOLS) {
     const q = quotes.get(sym)
     if (q) result[sym] = q
+  }
+  for (const q of futuresQuotes) {
+    result[q.symbol] = {
+      price:         q.price,
+      previousClose: q.previousClose,
+      change:        q.change,
+      changePercent: q.changePercent,
+      high:          q.price,
+      low:           q.price,
+      open:          q.previousClose,
+      timestamp:     Date.now(),
+    }
   }
   return result
 }
@@ -237,15 +257,18 @@ export async function getHomepageData(): Promise<HomepageData> {
 
   console.log('[homepage] cache MISS — fetching all symbols')
 
-  // Fetch all Finnhub symbols in one coordinated batch.
-  // 3 per batch × 1 000 ms delay → ≤10 Finnhub req/min for a full cold start.
-  // Phase-1 Redis check inside getQuotesBatched catches already-warm symbols.
-  const quotes = await getQuotesBatched(ALL_HOMEPAGE_SYMBOLS, 3, 1_000)
+  // Fetch Finnhub (stocks/ETFs/radar), Yahoo commodity strip, and Yahoo ticker
+  // futures all concurrently
+  const [quotes, commodityStrip, tickerFutures] = await Promise.all([
+    getQuotesBatched(ALL_HOMEPAGE_SYMBOLS, 3, 1_000),
+    buildCommodityStrip(),
+    getYahooQuotesBatch(TICKER_FUTURES_SYMBOLS),
+  ])
 
   const data: HomepageData = {
     stocks:         buildStocks(quotes),
-    commodityStrip: buildCommodityStrip(quotes),
-    tickerQuotes:   buildTickerQuotes(quotes),
+    commodityStrip,
+    tickerQuotes:   buildTickerQuotes(quotes, tickerFutures),
     marketRadar:    buildMarketRadar(quotes),
     cachedAt:       Date.now(),
   }

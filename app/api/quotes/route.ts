@@ -1,20 +1,19 @@
-// GET /api/quotes?symbols=SPY,QQQ,GLD,BINANCE:BTCUSDT
+// GET /api/quotes?symbols=SPY,QQQ,GC=F,BINANCE:BTCUSDT
 // Batch quote fetch — returns { [symbol]: QuoteRaw } map.
 //
 // Routing logic:
-//  - BINANCE:* symbols → CoinGecko (free, no rate limit, 1 API call for all)
-//  - Everything else  → Finnhub via getQuotesBatched
-//    (checks Redis first; only calls Finnhub for cache misses, 4 at a time)
+//  - BINANCE:* symbols       → CoinGecko (free, no rate limit, 1 API call for all)
+//  - Futures (contains =, !) → Yahoo Finance
+//  - Everything else         → Finnhub via getQuotesBatched
 //
 // Route-level Redis cache: the full response for a given sorted symbol set is
-// cached under `quotes:batch:{key}` for 90 seconds. Concurrent requests for
-// the same symbol set (e.g. TickerTape firing twice on hot-reload) return the
-// cached payload without touching Finnhub at all.
+// cached under `quotes:batch:{key}` for 90 seconds.
 
 import { NextRequest } from 'next/server'
 import { getQuotesBatched, QuoteRaw } from '@/lib/api/finnhub'
-import { getCryptoByIds } from '@/lib/api/coingecko'
-import { redis } from '@/lib/cache/redis'
+import { getYahooQuotesBatch }        from '@/lib/api/yahoo'
+import { getCryptoByIds }             from '@/lib/api/coingecko'
+import { redis }                      from '@/lib/cache/redis'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +29,10 @@ const BINANCE_TO_CG: Record<string, string> = {
   'BINANCE:ADAUSDT':  'cardano',
   'BINANCE:AVAXUSDT': 'avalanche-2',
   'BINANCE:DOGEUSDT': 'dogecoin',
+}
+
+function isFutures(sym: string) {
+  return sym.includes('=') || sym.includes('!')
 }
 
 export async function GET(req: NextRequest) {
@@ -48,77 +51,77 @@ export async function GET(req: NextRequest) {
   try {
     const cached = await redis.get<Record<string, QuoteRaw>>(routeKey)
     if (cached) {
-      console.log(`[/api/quotes] route cache HIT (${symbols.length} symbols)`)
       return Response.json(cached, {
         headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
       })
     }
   } catch { /* fall through */ }
 
-  // ── Split: crypto (CoinGecko) vs Finnhub ────────────────────────────────
+  // ── Split by source ──────────────────────────────────────────────────────
   const cryptoSymbols:  string[] = []
+  const futuresSymbols: string[] = []
   const finnhubSymbols: string[] = []
 
   for (const sym of symbols) {
-    if (BINANCE_TO_CG[sym]) {
-      cryptoSymbols.push(sym)
-    } else {
-      finnhubSymbols.push(sym)
-    }
+    if (BINANCE_TO_CG[sym])  cryptoSymbols.push(sym)
+    else if (isFutures(sym)) futuresSymbols.push(sym)
+    else                     finnhubSymbols.push(sym)
   }
 
   const quotes: Record<string, QuoteRaw> = {}
 
-  // ── Fetch crypto via CoinGecko (1 request, no Finnhub calls) ────────────
+  // ── Fetch crypto via CoinGecko ───────────────────────────────────────────
   if (cryptoSymbols.length > 0) {
-    const cgIds = cryptoSymbols.map((s) => BINANCE_TO_CG[s])
     try {
-      const coins = await getCryptoByIds(cgIds)
-      const idToSymbol = Object.fromEntries(
-        cryptoSymbols.map((s) => [BINANCE_TO_CG[s], s]),
-      )
+      const cgIds      = cryptoSymbols.map((s) => BINANCE_TO_CG[s])
+      const coins      = await getCryptoByIds(cgIds)
+      const idToSymbol = Object.fromEntries(cryptoSymbols.map((s) => [BINANCE_TO_CG[s], s]))
       for (const coin of coins) {
         const sym = idToSymbol[coin.id]
         if (!sym) continue
         const price = coin.currentPrice
         const prev  = price - coin.priceChange24h
         quotes[sym] = {
-          price,
-          previousClose: prev,
-          change:        coin.priceChange24h,
-          changePercent: coin.priceChangePercent24h,
-          high:          coin.high24h,
-          low:           coin.low24h,
-          open:          prev,
+          price, previousClose: prev,
+          change: coin.priceChange24h, changePercent: coin.priceChangePercent24h,
+          high: coin.high24h, low: coin.low24h, open: prev,
+          timestamp: Date.now(),
+        }
+      }
+    } catch { /* non-fatal */ }
+  }
+
+  // ── Fetch futures via Yahoo Finance ─────────────────────────────────────
+  if (futuresSymbols.length > 0) {
+    try {
+      const yahooQuotes = await getYahooQuotesBatch(futuresSymbols)
+      for (const q of yahooQuotes) {
+        quotes[q.symbol] = {
+          price:         q.price,
+          previousClose: q.previousClose,
+          change:        q.change,
+          changePercent: q.changePercent,
+          high:          q.price,
+          low:           q.price,
+          open:          q.previousClose,
           timestamp:     Date.now(),
         }
       }
-      console.log(`[/api/quotes] crypto: ${Object.values(quotes).length}/${cryptoSymbols.length} via CoinGecko`)
-    } catch (err) {
-      console.error('[/api/quotes] CoinGecko failed:', err)
-    }
+    } catch { /* non-fatal */ }
   }
 
-  // ── Fetch Finnhub symbols via batched, cache-first fetcher ───────────────
+  // ── Fetch stocks/ETFs via Finnhub ────────────────────────────────────────
   if (finnhubSymbols.length > 0) {
     try {
       const finnhubMap = await getQuotesBatched(finnhubSymbols)
-      let hits = 0
       for (const [sym, q] of finnhubMap) {
-        // Market closed: Finnhub c=0 → fall back to previousClose
         const price = q.price > 0 ? q.price : q.previousClose
-        if (price > 0) {
-          quotes[sym] = { ...q, price }
-          hits++
-        }
+        if (price > 0) quotes[sym] = { ...q, price }
       }
-      console.log(`[/api/quotes] finnhub: ${hits}/${finnhubSymbols.length}`)
-    } catch (err) {
-      console.error('[/api/quotes] Finnhub batch failed:', err)
-    }
+    } catch { /* non-fatal */ }
   }
 
-  // Cache the full response so concurrent/repeat calls skip all the above
+  // Cache the full response
   if (Object.keys(quotes).length > 0) {
     redis.set(routeKey, quotes, { ex: ROUTE_CACHE_TTL }).catch(() => {})
   }

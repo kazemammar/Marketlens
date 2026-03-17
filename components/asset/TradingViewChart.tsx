@@ -18,8 +18,25 @@ function toTvSymbol(type: AssetType, symbol: string): string {
     }
     case 'forex':     return `FX:${symbol.replace('/', '')}`
     case 'commodity': {
+      // TVC:* symbols work on the free TradingView widget; exchange-specific
+      // futures (NYMEX:CL1!) require a paid plan and show "symbol unavailable"
+      const tvMap: Record<string, string> = {
+        'CL=F': 'TVC:USOIL',          // WTI Crude Oil
+        'BZ=F': 'TVC:UKOIL',          // Brent Crude
+        'GC=F': 'TVC:GOLD',           // Gold
+        'SI=F': 'TVC:SILVER',         // Silver
+        'NG=F': 'PEPPERSTONE:NATGAS', // Natural Gas
+        'HG=F': 'TVC:COPPER',         // Copper
+        'ZW=F': 'CBOT:ZW1!',          // Wheat
+        'ZC=F': 'CBOT:ZC1!',          // Corn
+        'ZS=F': 'CBOT:ZS1!',          // Soybeans
+        'PL=F': 'TVC:PLATINUM',       // Platinum
+      }
+      const up = symbol.toUpperCase()
+      if (tvMap[up]) return tvMap[up]
+      // Legacy ETF-proxy commodities
       const amex = ['GLD','SLV','USO','UNG','CPER','PPLT','WEAT','CORN','BNO','URA']
-      return amex.includes(symbol.toUpperCase()) ? `AMEX:${symbol.toUpperCase()}` : symbol.toUpperCase()
+      return amex.includes(up) ? `AMEX:${up}` : up
     }
     default: return symbol.toUpperCase()
   }

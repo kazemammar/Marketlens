@@ -1,25 +1,26 @@
-import { NextResponse }                          from 'next/server'
-import { getQuotesBatched }                      from '@/lib/api/finnhub'
-import { redis }                                 from '@/lib/cache/redis'
-import type { CommodityStripItem }               from '@/lib/api/homepage'
+import { NextResponse }             from 'next/server'
+import { getYahooQuotesBatch }      from '@/lib/api/yahoo'
+import { redis }                    from '@/lib/cache/redis'
+import type { CommodityStripItem }  from '@/lib/api/homepage'
 
 // Re-export so existing imports of this type from this route still work
 export type { CommodityStripItem }
 
 export const dynamic = 'force-dynamic'
 
-const CACHE_KEY = 'commodities-strip:v2'
+const CACHE_KEY = 'commodities-strip:v3'
 const CACHE_TTL = 300
 
 const STRIP = [
-  { symbol: 'USO',  name: 'WTI Crude Oil',  shortName: 'WTI'     },
-  { symbol: 'BNO',  name: 'Brent Crude',    shortName: 'Brent'   },
-  { symbol: 'UNG',  name: 'Natural Gas',    shortName: 'Nat Gas' },
-  { symbol: 'GLD',  name: 'Gold',           shortName: 'Gold'    },
-  { symbol: 'SLV',  name: 'Silver',         shortName: 'Silver'  },
-  { symbol: 'CPER', name: 'Copper',         shortName: 'Copper'  },
-  { symbol: 'WEAT', name: 'Wheat',          shortName: 'Wheat'   },
-  { symbol: 'URA',  name: 'Uranium',        shortName: 'Uranium' },
+  { symbol: 'CL=F',  name: 'WTI Crude Oil',  shortName: 'WTI'     },
+  { symbol: 'BZ=F',  name: 'Brent Crude',    shortName: 'Brent'   },
+  { symbol: 'NG=F',  name: 'Natural Gas',    shortName: 'Nat Gas' },
+  { symbol: 'GC=F',  name: 'Gold',           shortName: 'Gold'    },
+  { symbol: 'SI=F',  name: 'Silver',         shortName: 'Silver'  },
+  { symbol: 'HG=F',  name: 'Copper',         shortName: 'Copper'  },
+  { symbol: 'ZW=F',  name: 'Wheat',          shortName: 'Wheat'   },
+  { symbol: 'ZC=F',  name: 'Corn',           shortName: 'Corn'    },
+  { symbol: 'UX1!',  name: 'Uranium',        shortName: 'Uranium' },
 ]
 
 export async function GET() {
@@ -28,19 +29,18 @@ export async function GET() {
     if (cached) return NextResponse.json(cached)
   } catch { /* fall through */ }
 
-  const map   = await getQuotesBatched(STRIP.map((s) => s.symbol))
+  const quotes = await getYahooQuotesBatch(STRIP.map((s) => s.symbol))
+
   const items = STRIP.flatMap((cfg): CommodityStripItem[] => {
-    const q = map.get(cfg.symbol)
-    if (!q) return []
-    const price = q.price > 0 ? q.price : q.previousClose
-    if (price <= 0) return []
+    const q = quotes.find((qq) => qq.symbol === cfg.symbol)
+    if (!q || q.price <= 0) return []
     return [{
       symbol:        cfg.symbol,
       name:          cfg.name,
       shortName:     cfg.shortName,
-      price,
-      change:        q.price > 0 ? q.change        : 0,
-      changePercent: q.price > 0 ? q.changePercent : 0,
+      price:         q.price,
+      change:        q.change,
+      changePercent: q.changePercent,
       currency:      'USD',
     }]
   })

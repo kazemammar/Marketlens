@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const symbol     = typeof body.symbol     === 'string' ? body.symbol.trim().toUpperCase()     : ''
   const asset_type = typeof body.asset_type === 'string' ? body.asset_type.trim().toLowerCase() : ''
 
-  if (!symbol || symbol.length > 20 || !/^[A-Z0-9/.\-]+$/.test(symbol)) {
+  if (!symbol || symbol.length > 20 || !/^[A-Z0-9/.\-=!]+$/.test(symbol)) {
     return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
   }
   if (!VALID_TYPES.includes(asset_type)) {

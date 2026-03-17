@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { AssetType, AssetCardData } from '@/lib/utils/types'
 import { formatPrice, formatChange, formatPercent, changeColor } from '@/lib/utils/formatters'
 import WatchlistButton from './WatchlistButton'
+import MarketStatusBadge from './MarketStatusBadge'
 
 const TYPE_LABELS: Record<AssetType, string> = {
   stock: 'Stock', crypto: 'Crypto', forex: 'Forex', commodity: 'Commodity', etf: 'ETF',
@@ -65,6 +66,7 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
           </span>
           <span>({formatPercent(changePercent, false)})</span>
         </div>
+        <MarketStatusBadge type={type} />
         <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">15min delayed</span>
         <WatchlistButton symbol={symbol} type={type} />
       </div>

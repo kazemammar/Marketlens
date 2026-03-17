@@ -19,7 +19,7 @@ const POPULAR = [
   { symbol: 'BTC',     name: 'Bitcoin',         type: 'crypto'    },
   { symbol: 'ETH',     name: 'Ethereum',        type: 'crypto'    },
   { symbol: 'EUR/USD', name: 'Euro/Dollar',     type: 'forex'     },
-  { symbol: 'GLD',     name: 'Gold ETF',        type: 'commodity' },
+  { symbol: 'GC=F',    name: 'Gold Futures',    type: 'commodity' },
   { symbol: 'SPY',     name: 'S&P 500 ETF',     type: 'etf'       },
 ] as const
 

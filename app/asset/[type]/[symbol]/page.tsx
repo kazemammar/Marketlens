@@ -6,6 +6,8 @@ import { CRYPTO_SYMBOL_TO_CG_ID } from '@/lib/utils/constants'
 import { getQuote, getCompanyProfile } from '@/lib/api/finnhub'
 import { getCryptoDetail } from '@/lib/api/coingecko'
 import { getForexCards } from '@/lib/api/forex'
+import { getYahooQuote } from '@/lib/api/yahoo'
+import { DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import AssetHeader from '@/components/asset/AssetHeader'
 import TradingViewChart from '@/components/asset/TradingViewChart'
 import NewsSection from '@/components/asset/NewsSection'
@@ -193,6 +195,34 @@ async function getForexData(symbol: string): Promise<{ asset: AssetCardData } | 
 }
 
 async function getCommodityData(symbol: string): Promise<{ asset: AssetCardData } | null> {
+  const cfg  = DEFAULT_COMMODITIES.find((c) => c.symbol === symbol)
+  const name = cfg?.name ?? symbol
+
+  // Futures symbols (contain '=' or '!') → Yahoo Finance
+  if (symbol.includes('=') || symbol.includes('!')) {
+    try {
+      const q = await getYahooQuote(symbol)
+      if (!q || q.price <= 0) return null
+      return {
+        asset: {
+          symbol,
+          name,
+          type:          'commodity',
+          price:         q.price,
+          change:        q.change,
+          changePercent: q.changePercent,
+          currency:      'USD',
+          open:          q.price,
+          high:          q.price,
+          low:           q.price,
+        },
+      }
+    } catch {
+      return null
+    }
+  }
+
+  // Legacy ETF-proxy commodities → Finnhub
   try {
     const q = await getQuote(symbol)
     if (q === null) return null
@@ -201,7 +231,7 @@ async function getCommodityData(symbol: string): Promise<{ asset: AssetCardData 
     return {
       asset: {
         symbol,
-        name:          symbol,
+        name,
         type:          'commodity',
         price,
         change:        q.price > 0 ? q.change        : 0,

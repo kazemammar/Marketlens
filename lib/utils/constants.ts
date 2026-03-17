@@ -52,17 +52,18 @@ export const DEFAULT_ETFS = [
   'ARKK', // ARK Innovation
 ]
 
-// Commodity ETF proxies — Finnhub free tier supports these via the stocks endpoint
-// (Futures symbols like GCUSD/CLUSD require a premium plan)
+// Real commodity futures — fetched via Yahoo Finance (free, no key required)
 export const DEFAULT_COMMODITIES = [
-  { symbol: 'GLD',  name: 'Gold',         currency: 'USD', underlying: 'Gold Spot' },
-  { symbol: 'SLV',  name: 'Silver',       currency: 'USD', underlying: 'Silver Spot' },
-  { symbol: 'USO',  name: 'Crude Oil',    currency: 'USD', underlying: 'WTI Crude Oil' },
-  { symbol: 'UNG',  name: 'Natural Gas',  currency: 'USD', underlying: 'Henry Hub Nat. Gas' },
-  { symbol: 'CPER', name: 'Copper',       currency: 'USD', underlying: 'Copper Index' },
-  { symbol: 'PPLT', name: 'Platinum',     currency: 'USD', underlying: 'Platinum Spot' },
-  { symbol: 'WEAT', name: 'Wheat',        currency: 'USD', underlying: 'Chicago Wheat' },
-  { symbol: 'CORN', name: 'Corn',         currency: 'USD', underlying: 'Chicago Corn' },
+  { symbol: 'CL=F',  name: 'WTI Crude Oil',  currency: 'USD', underlying: 'WTI Crude Futures' },
+  { symbol: 'BZ=F',  name: 'Brent Crude',    currency: 'USD', underlying: 'Brent Crude Futures' },
+  { symbol: 'NG=F',  name: 'Natural Gas',    currency: 'USD', underlying: 'Henry Hub Nat Gas Futures' },
+  { symbol: 'GC=F',  name: 'Gold',           currency: 'USD', underlying: 'Gold Futures' },
+  { symbol: 'SI=F',  name: 'Silver',         currency: 'USD', underlying: 'Silver Futures' },
+  { symbol: 'HG=F',  name: 'Copper',         currency: 'USD', underlying: 'Copper Futures' },
+  { symbol: 'ZW=F',  name: 'Wheat',          currency: 'USD', underlying: 'Wheat Futures' },
+  { symbol: 'ZC=F',  name: 'Corn',           currency: 'USD', underlying: 'Corn Futures' },
+  { symbol: 'ZS=F',  name: 'Soybeans',       currency: 'USD', underlying: 'Soybean Futures' },
+  { symbol: 'PL=F',  name: 'Platinum',       currency: 'USD', underlying: 'Platinum Futures' },
 ]
 
 // Forex pairs — uses open.er-api.com (free, no key required)
@@ -264,7 +265,7 @@ export const RELATED_ASSETS: Record<string, RelatedAsset[]> = {
     { symbol: 'CVX',     name: 'Chevron',      type: 'stock' },
     { symbol: 'COP',     name: 'ConocoPhillips', type: 'stock' },
     { symbol: 'BP',      name: 'BP',           type: 'stock' },
-    { symbol: 'USO',     name: 'Crude Oil',    type: 'commodity' },
+    { symbol: 'CL=F',    name: 'WTI Crude Oil', type: 'commodity' },
     { symbol: 'XLE',     name: 'Energy ETF',   type: 'etf'   },
   ],
   // ── Crypto ──────────────────────────────────────────────────────────────
@@ -272,7 +273,7 @@ export const RELATED_ASSETS: Record<string, RelatedAsset[]> = {
     { symbol: 'ETH',     name: 'Ethereum',     type: 'crypto' },
     { symbol: 'SOL',     name: 'Solana',       type: 'crypto' },
     { symbol: 'BNB',     name: 'BNB',          type: 'crypto' },
-    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+    { symbol: 'GC=F',    name: 'Gold',         type: 'commodity' },
     { symbol: 'MSTR',    name: 'MicroStrategy', type: 'stock' },
   ],
   ETH:   [
@@ -316,7 +317,7 @@ export const RELATED_ASSETS: Record<string, RelatedAsset[]> = {
     { symbol: 'USD/CHF', name: 'Swissie',      type: 'forex' },
     { symbol: 'USD/JPY', name: 'Dollar Yen',   type: 'forex' },
     { symbol: 'AUD/USD', name: 'Aussie',       type: 'forex' },
-    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+    { symbol: 'GC=F',    name: 'Gold',         type: 'commodity' },
   ],
   'GBP/USD': [
     { symbol: 'EUR/USD', name: 'Fiber',        type: 'forex' },
@@ -333,24 +334,24 @@ export const RELATED_ASSETS: Record<string, RelatedAsset[]> = {
     { symbol: 'NZD/USD', name: 'Kiwi',         type: 'forex' },
   ],
   // ── Commodities ──────────────────────────────────────────────────────────
-  GLD:   [
-    { symbol: 'SLV',     name: 'Silver',       type: 'commodity' },
+  'GC=F': [
+    { symbol: 'SI=F',    name: 'Silver',       type: 'commodity' },
     { symbol: 'GDX',     name: 'Gold Miners',  type: 'etf'   },
     { symbol: 'EUR/USD', name: 'EUR/USD',      type: 'forex' },
     { symbol: 'BTC',     name: 'Bitcoin',      type: 'crypto' },
     { symbol: 'TLT',     name: 'Long Bonds',   type: 'etf'   },
   ],
-  SLV:   [
-    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
-    { symbol: 'PPLT',    name: 'Platinum',     type: 'commodity' },
-    { symbol: 'CPER',    name: 'Copper',       type: 'commodity' },
+  'SI=F': [
+    { symbol: 'GC=F',    name: 'Gold',         type: 'commodity' },
+    { symbol: 'PL=F',    name: 'Platinum',     type: 'commodity' },
+    { symbol: 'HG=F',    name: 'Copper',       type: 'commodity' },
     { symbol: 'GDX',     name: 'Gold Miners',  type: 'etf'   },
     { symbol: 'XOM',     name: 'Exxon',        type: 'stock' },
   ],
-  USO:   [
+  'CL=F': [
     { symbol: 'XOM',     name: 'Exxon',        type: 'stock' },
     { symbol: 'CVX',     name: 'Chevron',      type: 'stock' },
-    { symbol: 'UNG',     name: 'Natural Gas',  type: 'commodity' },
+    { symbol: 'NG=F',    name: 'Natural Gas',  type: 'commodity' },
     { symbol: 'XLE',     name: 'Energy ETF',   type: 'etf'   },
     { symbol: 'EUR/USD', name: 'EUR/USD',      type: 'forex' },
   ],
@@ -371,7 +372,7 @@ export const RELATED_ASSETS: Record<string, RelatedAsset[]> = {
   ],
   TLT:   [
     { symbol: 'SPY',     name: 'S&P 500',      type: 'etf'   },
-    { symbol: 'GLD',     name: 'Gold',         type: 'commodity' },
+    { symbol: 'GC=F',    name: 'Gold',         type: 'commodity' },
     { symbol: 'HYG',     name: 'High Yield',   type: 'etf'   },
     { symbol: 'IEF',     name: '7-10yr Bond',  type: 'etf'   },
     { symbol: 'EUR/USD', name: 'EUR/USD',      type: 'forex' },

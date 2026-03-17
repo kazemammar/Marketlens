@@ -14,10 +14,11 @@
 //     (or an empty array), never an error that crashes the UI.
 
 import { NextRequest } from 'next/server'
-import { getQuotesBatched } from '@/lib/api/finnhub'
-import { getCryptoMarkets } from '@/lib/api/coingecko'
-import { getForexCards }    from '@/lib/api/forex'
-import { redis }            from '@/lib/cache/redis'
+import { getQuotesBatched }                      from '@/lib/api/finnhub'
+import { getYahooQuotesBatch, getYahooSparkline } from '@/lib/api/yahoo'
+import { getCryptoMarkets }                      from '@/lib/api/coingecko'
+import { getForexCards }       from '@/lib/api/forex'
+import { redis }               from '@/lib/cache/redis'
 import {
   DEFAULT_STOCKS,
   DEFAULT_ETFS,
@@ -49,7 +50,7 @@ const ETF_NAMES: Record<string, string> = {
 // ─── Route-level cache config ─────────────────────────────────────────────
 
 // Keys for the full pre-assembled tab result (includes fetchedAt timestamp)
-const TAB_CACHE_KEY  = (tab: string) => `market:v2:${tab}`
+const TAB_CACHE_KEY  = (tab: string) => `market:v4:${tab}`
 const TAB_LOCK_KEY   = (tab: string) => `market:lock:${tab}`
 const TAB_CACHE_TTL  = 1_800           // keep stale data for 30 min
 const REFRESH_AFTER  = 900_000         // refresh in background if > 15 min old
@@ -120,12 +121,32 @@ async function buildTabData(tab: AssetType): Promise<AssetCardData[]> {
     case 'forex':
       return getForexCards()
 
-    case 'commodity':
-      return quotesToCards(
-        DEFAULT_COMMODITIES.map((c) => c.symbol),
-        (s) => DEFAULT_COMMODITIES.find((c) => c.symbol === s)?.name ?? s,
-        'commodity',
-      )
+    case 'commodity': {
+      const symbols = DEFAULT_COMMODITIES.map((c) => c.symbol)
+      const [quotes, ...sparklines] = await Promise.all([
+        getYahooQuotesBatch(symbols),
+        ...symbols.map((s) => getYahooSparkline(s)),
+      ])
+      return DEFAULT_COMMODITIES
+        .map((c, i): AssetCardData => {
+          const q     = quotes.find((qq) => qq.symbol === c.symbol)
+          const price = q?.price ?? 0
+          return {
+            symbol:        c.symbol,
+            name:          c.name,
+            type:          'commodity',
+            price,
+            change:        q?.change        ?? 0,
+            changePercent: q?.changePercent ?? 0,
+            currency:      'USD',
+            open:          price,
+            high:          price,
+            low:           price,
+            sparkline:     sparklines[i] ?? [],
+          }
+        })
+        .filter((a) => a.price > 0)
+    }
 
     case 'etf':
       return quotesToCards(DEFAULT_ETFS, (s) => ETF_NAMES[s] ?? s, 'etf')
@@ -161,10 +182,6 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
   const tab = req.nextUrl.searchParams.get('tab') as AssetType | null
-
-  console.log('[market] FINNHUB_API_KEY exists:', !!process.env.FINNHUB_API_KEY)
-  console.log('[market] FINNHUB_API_KEY length:', process.env.FINNHUB_API_KEY?.length)
-  console.log('[market] UPSTASH_REDIS_REST_URL exists:', !!process.env.UPSTASH_REDIS_REST_URL)
 
   if (!tab) {
     return Response.json({ error: 'Missing tab param' }, { status: 400 })

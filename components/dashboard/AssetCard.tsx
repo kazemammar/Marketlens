@@ -6,16 +6,22 @@ export type { AssetCardData }
 
 // ─── Sparkline ────────────────────────────────────────────────────────────
 
+// Renders either real historical closes (sparkline array) or a synthetic
+// OHLC curve when no history is available.
 function Sparkline({
-  open, high, low, price, isPositive, gradientId,
+  open, high, low, price, isPositive, gradientId, sparkline,
 }: {
-  open: number; high: number; low: number; price: number; isPositive: boolean; gradientId: string
+  open: number; high: number; low: number; price: number
+  isPositive: boolean; gradientId: string; sparkline?: number[]
 }) {
   const W = 72, H = 28, PAD = 2
 
-  const pts: number[] = isPositive
-    ? [open, (open + low) / 2,  low,  (low  + price) / 2, price]
-    : [open, (open + high) / 2, high, (high + price) / 2, price]
+  // Build the point array: prefer real history, fall back to OHLC synthetic
+  const pts: number[] = (sparkline && sparkline.length >= 3)
+    ? sparkline
+    : isPositive
+      ? [open, (open + low) / 2,  low,  (low  + price) / 2, price]
+      : [open, (open + high) / 2, high, (high + price) / 2, price]
 
   const min   = Math.min(...pts)
   const max   = Math.max(...pts)
@@ -34,8 +40,8 @@ function Sparkline({
     d += ` C ${cpx},${prev.y} ${cpx},${cur.y} ${cur.x},${cur.y}`
   }
 
-  const fillD    = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
-  const stroke   = isPositive ? '#00ff88' : '#ff4444'
+  const fillD     = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
+  const stroke    = isPositive ? '#00ff88' : '#ff4444'
   const stopColor = isPositive ? '#00ff88' : '#ff4444'
 
   return (
@@ -55,7 +61,7 @@ function Sparkline({
 // ─── Card ─────────────────────────────────────────────────────────────────
 
 export default function AssetCard({ asset }: { asset: AssetCardData }) {
-  const { symbol, name, type, price, change, changePercent, currency, open, high, low } = asset
+  const { symbol, name, type, price, change, changePercent, currency, open, high, low, sparkline } = asset
   const isPositive = change >= 0
   const chgColor   = changePercent === 0 ? 'var(--price-flat)' : isPositive ? 'var(--price-up)' : 'var(--price-down)'
   const href       = `/asset/${type}/${encodeURIComponent(symbol)}`
@@ -75,7 +81,7 @@ export default function AssetCard({ asset }: { asset: AssetCardData }) {
         </div>
         <Sparkline
           open={open} high={high} low={low} price={price}
-          isPositive={isPositive} gradientId={gradientId}
+          isPositive={isPositive} gradientId={gradientId} sparkline={sparkline}
         />
       </div>
 

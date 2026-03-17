@@ -60,7 +60,7 @@ export default async function HomePage({
               Geopolitical Intelligence Map
             </span>
           </div>
-          <div className="h-[240px] sm:h-[320px] lg:h-auto overflow-hidden">
+          <div className="h-[240px] sm:h-[320px] lg:h-[500px] xl:h-[600px] overflow-hidden" style={{ isolation: 'isolate' }}>
             <GeoMap />
           </div>
         </div>

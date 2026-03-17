@@ -386,6 +386,16 @@ code, pre, kbd {
   transform: translateY(0);
 }
 
+/* ─── PWA install banner ─────────────────────────────────────────────────── */
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* Safe area padding for phones with home indicator */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
 /* ─── Scrollbar hide utility ─────────────────────────────────────────────── */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

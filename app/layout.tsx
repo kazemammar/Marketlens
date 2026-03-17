@@ -5,6 +5,8 @@ import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { AuthProvider }  from '@/lib/hooks/useAuth'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister'
+import InstallPrompt         from '@/components/layout/InstallPrompt'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -50,9 +52,21 @@ export const metadata: Metadata = {
     description: 'Real-time financial intelligence. AI-powered analysis across stocks, crypto, forex, commodities & ETFs.',
     images:      ['/og-image.png'],
   },
+  manifest: '/manifest.json',
   icons: {
     icon:  '/favicon-32x32.png',
     apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable:         true,
+    statusBarStyle:  'black-translucent',
+    title:           'MarketLens',
+  },
+  other: {
+    'mobile-web-app-capable':            'yes',
+    'apple-mobile-web-app-capable':      'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'apple-mobile-web-app-title':        'MarketLens',
   },
   robots: {
     index:  true,
@@ -61,10 +75,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: dark)',  color: '#09090b' },
-    { media: '(prefers-color-scheme: light)', color: '#09090b' },
-  ],
+  themeColor:           '#10b981',
+  width:                'device-width',
+  initialScale:         1,
+  maximumScale:         5,
 }
 
 export default function RootLayout({
@@ -87,6 +101,8 @@ export default function RootLayout({
             </div>
           </AuthProvider>
         </ThemeProvider>
+        <ServiceWorkerRegister />
+        <InstallPrompt />
       </body>
     </html>
   )

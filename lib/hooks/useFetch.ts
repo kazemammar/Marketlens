@@ -75,19 +75,47 @@ export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): 
       return
     }
 
-    // If we have cached data, don't show loading — just silently refetch
+    // Initial fetch — silent if we have fresh cache, show loading only if no cache at all
     if (cached && !isStale) {
-      doFetch(false) // silent background refresh
+      doFetch(false)
     } else {
-      doFetch(!cached) // show loading only if no cached data at all
+      doFetch(!cached)
     }
 
-    // Set up interval for ongoing refreshes
-    const id = setInterval(() => doFetch(false), refreshInterval)
+    if (!refreshInterval) return
+
+    // Interval management with visibility-based pausing.
+    // When the tab is hidden we stop polling — no point hitting the server for
+    // data nobody is looking at. When the tab becomes visible again we
+    // immediately re-fetch (catch up on missed updates) then restart the interval.
+    let id: ReturnType<typeof setInterval> | null = null
+
+    function startInterval() {
+      id = setInterval(() => doFetch(false), refreshInterval)
+    }
+
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        if (id !== null) { clearInterval(id); id = null }
+      } else {
+        // Immediately fetch on return — user sees fresh data instantly
+        doFetch(false)
+        if (id !== null) clearInterval(id)
+        startInterval()
+      }
+    }
+
+    // Only start the interval if the tab is currently visible
+    if (!document.hidden) {
+      startInterval()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       mountedRef.current = false
-      clearInterval(id)
+      if (id !== null) clearInterval(id)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [url, enabled, refreshInterval]) // eslint-disable-line react-hooks/exhaustive-deps
 

@@ -73,7 +73,7 @@ async function fetchFxSnapshot(): Promise<FxRateSnapshot> {
 export async function getForexCards(): Promise<AssetCardData[]> {
   const snapshot = await cachedFetch<FxRateSnapshot>(FX_CACHE_KEY, TTL.FOREX, fetchFxSnapshot)
 
-  const { current, previous, allRates } = snapshot
+  const { current, previous, allRates, currentDate } = snapshot
   const hasPrev    = Object.keys(previous).length > 0
   const allDayRates = Object.values(allRates)  // array of {currency → raw rate} per day
 
@@ -136,6 +136,7 @@ export async function getForexCards(): Promise<AssetCardData[]> {
       open:          price - change,
       high:          parseFloat(high7d.toFixed(6)),
       low:           parseFloat(low7d.toFixed(6)),
+      dataAsOf:      currentDate,  // ECB publication date (YYYY-MM-DD)
     })
   }
 

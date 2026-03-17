@@ -198,6 +198,7 @@ export interface AssetCardData {
   high:          number
   low:           number
   sparkline?:    number[]   // optional historical closes for the sparkline path
+  dataAsOf?:     string     // ISO date (YYYY-MM-DD) of the underlying data — used by forex to surface ECB publication date
 }
 
 // ─── RSS ──────────────────────────────────────────────────────────────────

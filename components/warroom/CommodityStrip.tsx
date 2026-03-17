@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { CommodityStripItem } from '@/lib/api/homepage'
+import type { CommodityStripResponse } from '@/app/api/commodities-strip/route'
 import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
 
 export type { CommodityStripItem }
 
-const REFRESH_MS = 60_000
+const REFRESH_MS = 3 * 60_000  // 3 min — server cache is 5 min, Yahoo has intraday data
 
 function pct(n: number) { return (n >= 0 ? '+' : '') + n.toFixed(2) + '%' }
 
@@ -25,7 +26,8 @@ export default function CommodityStrip({
   async function load() {
     try {
       const r = await fetch('/api/commodities-strip')
-      const d = await r.json() as CommodityStripItem[]
+      const body = await r.json() as CommodityStripResponse
+      const d = body.items
 
       const newFlash: Record<string, 'up' | 'down'> = {}
       for (const item of d) {
@@ -41,7 +43,7 @@ export default function CommodityStrip({
       }
 
       setItems(d)
-      setUpdatedAt(Date.now())
+      setUpdatedAt(body.updatedAt)
     } catch { /* silent */ }
     setLoading(false)
   }

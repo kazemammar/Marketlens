@@ -23,7 +23,7 @@ export const TTL = {
   RECOMMENDATIONS:  3_600,     // analyst recs — 1 h
   CRYPTO_MARKETS:   300,       // crypto list — 5 min
   CRYPTO_DETAIL:    300,       // single coin — 5 min
-  FOREX:            300,       // forex rate — 5 min
+  FOREX:            3_600,     // forex rate — 1 h (ECB reference rates published once/day)
   COMMODITIES:      300,       // commodities — 5 min
   PROFILE:          86_400,    // company profile — 24 h
   RATIOS:           86_400,    // financial ratios — 24 h

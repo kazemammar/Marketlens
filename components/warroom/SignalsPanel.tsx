@@ -93,7 +93,7 @@ function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
 }
 
 export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertical' | 'horizontal' }) {
-  const { data: raw, loading } = useFetch<Signal[]>('/api/signals', { refreshInterval: 2 * 60_000 })
+  const { data: raw, loading } = useFetch<Signal[]>('/api/signals', { refreshInterval: 5 * 60_000 })
   const signals = raw ?? []
 
   const [newIds,    setNewIds]    = useState<Set<string>>(new Set())
@@ -104,7 +104,8 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
   useEffect(() => {
     if (raw && raw !== prevRaw.current) {
       prevRaw.current = raw
-      setUpdatedAt(Date.now())
+      // Use the most-recent signal timestamp — not client receipt time
+      setUpdatedAt(raw.length > 0 ? Math.max(...raw.map((s) => s.timestamp)) : 0)
     }
   }, [raw])
 
@@ -223,6 +224,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
               className="font-mono text-[8px] tabular-nums"
               style={{ color: stalenessColor(updatedAt) }}
               title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
+              suppressHydrationWarning
             >
               {timeAgo(updatedAt)}
             </span>

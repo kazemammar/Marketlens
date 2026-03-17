@@ -1,5 +1,6 @@
 import { NextResponse }      from 'next/server'
 import { getQuotesBatched }  from '@/lib/api/finnhub'
+import { redis }             from '@/lib/cache/redis'
 import type {
   SignalVerdict,
   RadarSignal,
@@ -11,14 +12,20 @@ export type { SignalVerdict, RadarSignal, MarketRadarPayload }
 
 export const dynamic = 'force-dynamic'
 
-// No route-level cache — always recompute from per-symbol Redis quote cache
-// (TTL.QUOTE = 900s) so prices always match the latest available data.
-// This prevents MarketRadar from showing stale % changes after the underlying
-// quote cache is refreshed by another route (e.g. market:v4:etf).
+// Short 90s route cache — protects Redis from concurrent users all triggering
+// 6 simultaneous quote reads. 90s is negligible vs the 15-min Finnhub quote TTL
+// so prices remain consistent with other components reading the same quote cache.
+const CACHE_KEY = 'market-radar:v3'
+const CACHE_TTL = 90
 
 const SYMBOLS = ['SPY', 'QQQ', 'GLD', 'USO', 'VXX', 'TLT', 'BTC']
 
 export async function GET() {
+  // Return cached payload if fresh
+  try {
+    const cached = await redis.get<MarketRadarPayload>(CACHE_KEY)
+    if (cached) return NextResponse.json(cached)
+  } catch { /* fall through */ }
 
   const symbols = SYMBOLS.filter((s) => s !== 'BTC')
   const quotes  = await getQuotesBatched(symbols)
@@ -109,6 +116,9 @@ export async function GET() {
     signals,
     updatedAt: Date.now(),
   }
+
+  // Cache for 90s to absorb concurrent requests
+  redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
 
   return NextResponse.json(payload)
 }

@@ -4,7 +4,21 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
-import { timeAgo, stalenessColor } from '@/lib/utils/timeago'
+
+// Shows the ECB publication date as a human-readable label.
+// ECB reference rates are published once per trading day at ~16:00 CET.
+// "just now" / "X min ago" would be misleading — the rate is from yesterday's close.
+function ecbDateLabel(dateStr: string | undefined): { label: string; color: string } {
+  if (!dateStr) return { label: '', color: 'var(--text-muted)' }
+  const today     = new Date().toISOString().slice(0, 10)
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10)
+  if (dateStr === today)      return { label: "Today's rates",     color: 'var(--price-up)' }
+  if (dateStr === yesterday)  return { label: "Yesterday's rates", color: 'var(--warning)' }
+  // Older — show the date (e.g. "Mar 14 rates")
+  const d = new Date(dateStr + 'T12:00:00Z')
+  const formatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  return { label: `${formatted} rates`, color: 'var(--price-down)' }
+}
 
 function fmt(price: number, sym: string): string {
   if (sym.includes('JPY') || sym.includes('CNY')) return price.toFixed(2)
@@ -43,17 +57,11 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
 }
 
 export default function FXMonitor() {
-  const { data, loading } = useFetch<AssetCardData[]>('/api/market?tab=forex', { refreshInterval: 60_000 })
+  const { data, loading } = useFetch<AssetCardData[]>('/api/market?tab=forex', { refreshInterval: 30 * 60_000 })
   const pairs = data ?? []
   const [tooltipOpen, setTooltipOpen] = useState(false)
-  const [updatedAt, setUpdatedAt] = useState(0)
-  const prevData = useRef<AssetCardData[] | null>(null)
-  useEffect(() => {
-    if (data && data !== prevData.current) {
-      prevData.current = data
-      setUpdatedAt(Date.now())
-    }
-  }, [data])
+  // Use ECB publication date from the data itself — more accurate than client clock
+  const rateDate = pairs[0]?.dataAsOf
 
   const alertPairs   = pairs.filter((p) => Math.abs(p.changePercent) >= 0.5)
   const stressed1pct = alertPairs.filter((p) => Math.abs(p.changePercent) >= 1).length
@@ -69,24 +77,27 @@ export default function FXMonitor() {
           <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             FX Monitor
           </span>
-          {/* Live indicator dot — tooltip explains refresh cadence */}
+          {/* Indicator dot — ECB reference rates, daily publication */}
           <span
-            className="live-dot h-1 w-1 rounded-full"
-            style={{ background: 'var(--accent)', opacity: 0.5 }}
-            title="Live rates — refreshed every 5 minutes"
+            className="h-1 w-1 rounded-full"
+            style={{ background: 'var(--accent)', opacity: 0.4 }}
+            title="ECB reference rates — updated once per trading day at ~16:00 CET"
           />
         </div>
         <div className="flex items-center gap-2">
-          {updatedAt > 0 && (
-            <span
-              className="font-mono text-[8px] tabular-nums"
-              style={{ color: stalenessColor(updatedAt) }}
-              title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
-              suppressHydrationWarning
-            >
-              {timeAgo(updatedAt)}
-            </span>
-          )}
+          {rateDate && (() => {
+            const { label, color } = ecbDateLabel(rateDate)
+            return (
+              <span
+                className="font-mono text-[8px]"
+                style={{ color }}
+                title={`ECB reference rates published on ${rateDate}`}
+                suppressHydrationWarning
+              >
+                {label}
+              </span>
+            )
+          })()}
           {!loading && alertPairs.length > 0 && (
           <div
             className="relative"
@@ -129,7 +140,7 @@ export default function FXMonitor() {
                 </div>
                 <div className="border-t border-[var(--border)] px-3 py-2">
                   <p className="font-mono text-[8px] leading-relaxed text-[var(--text-muted)] opacity-60">
-                    Pairs showing unusual intraday moves may signal macro shifts or central bank action.
+                    Pairs with notable daily moves vs prior close may signal macro shifts or central bank action. Rates are ECB reference rates, published once per trading day.
                   </p>
                 </div>
               </div>
@@ -179,7 +190,7 @@ export default function FXMonitor() {
                     <div className="flex items-center gap-3">
                       <span
                         className="font-mono text-[11px] tabular-nums text-[var(--text)]"
-                        title={`${p.symbol} spot rate (live)`}
+                        title={`${p.symbol} ECB reference rate`}
                       >
                         {fmt(p.price, p.symbol)}
                       </span>

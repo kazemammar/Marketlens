@@ -8,8 +8,15 @@ export type { CommodityStripItem }
 
 export const dynamic = 'force-dynamic'
 
-const CACHE_KEY = 'commodities-strip:v3'
+// v4 — response shape changed to { items, updatedAt } so components can show
+// server-side data freshness instead of a misleading client-receipt timestamp
+const CACHE_KEY = 'commodities-strip:v4'
 const CACHE_TTL = 300
+
+export interface CommodityStripResponse {
+  items:     CommodityStripItem[]
+  updatedAt: number  // ms — when Yahoo data was fetched on the server
+}
 
 const STRIP = [
   { symbol: 'CL=F',  name: 'WTI Crude Oil',  shortName: 'WTI'     },
@@ -25,11 +32,12 @@ const STRIP = [
 
 export async function GET() {
   try {
-    const cached = await redis.get<CommodityStripItem[]>(CACHE_KEY)
+    const cached = await redis.get<CommodityStripResponse>(CACHE_KEY)
     if (cached) return NextResponse.json(cached)
   } catch { /* fall through */ }
 
   const quotes = await getYahooQuotesBatch(STRIP.map((s) => s.symbol))
+  const updatedAt = Date.now()
 
   const items = STRIP.flatMap((cfg): CommodityStripItem[] => {
     const q = quotes.find((qq) => qq.symbol === cfg.symbol)
@@ -45,6 +53,7 @@ export async function GET() {
     }]
   })
 
-  try { await redis.set(CACHE_KEY, items, { ex: CACHE_TTL }) } catch { /* */ }
-  return NextResponse.json(items)
+  const payload: CommodityStripResponse = { items, updatedAt }
+  try { await redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }) } catch { /* */ }
+  return NextResponse.json(payload)
 }

@@ -104,7 +104,7 @@ export default function MarketRadar({
   stocks?: AssetCardData[]
   showHeatmap?: boolean
 }) {
-  const { data: refreshed, loading: fetchLoading } = useFetch<MarketRadarPayload>('/api/market-radar', { refreshInterval: 5 * 60_000 })
+  const { data: refreshed, loading: fetchLoading } = useFetch<MarketRadarPayload>('/api/market-radar', { refreshInterval: 15 * 60_000 })
   const data    = refreshed ?? initialData
   const loading = data === null && fetchLoading
 

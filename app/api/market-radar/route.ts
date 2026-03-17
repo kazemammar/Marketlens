@@ -70,7 +70,7 @@ export async function GET() {
   const uso = quotes.get('USO')
   if (uso) {
     const inflPressure = uso.changePercent > 2.5
-    const v: SignalVerdict = inflPressure ? 'MIXED' : 'BUY'
+    const v: SignalVerdict = inflPressure ? 'CASH' : 'BUY'
     inflPressure ? cashVotes++ : buyVotes++
     signals.push({ name: 'WTI Oil', verdict: v, value: `${uso.changePercent > 0 ? '+' : ''}${uso.changePercent.toFixed(2)}%`, reason: inflPressure ? 'High oil = inflation risk' : 'Oil stable — inflation contained' })
   }
@@ -81,7 +81,8 @@ export async function GET() {
     const bondRally = tlt.changePercent > 0.8
     const v: SignalVerdict = bondRally ? 'CASH' : 'BUY'
     bondRally ? cashVotes++ : buyVotes++
-    signals.push({ name: 'US Bonds (TLT)', verdict: v, value: `${tlt.changePercent > 0 ? '+' : ''}${tlt.changePercent.toFixed(2)}%`, reason: bondRally ? 'Bond rally = risk-off' : 'Bonds weak — money in equities' })
+    const tltReason = bondRally ? 'Bond rally = risk-off' : tlt.changePercent < 0 ? 'Bonds weak — money in equities' : 'Bonds stable — no flight to safety'
+    signals.push({ name: 'US Bonds (TLT)', verdict: v, value: `${tlt.changePercent > 0 ? '+' : ''}${tlt.changePercent.toFixed(2)}%`, reason: tltReason })
   }
 
   // ── BTC from CoinGecko (risk-on proxy) ───────────────────────────

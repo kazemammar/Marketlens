@@ -97,9 +97,11 @@ function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height
 export default function MarketRadar({
   initialData = null,
   stocks = [],
+  showHeatmap = true,
 }: {
   initialData?: MarketRadarPayload | null
   stocks?: AssetCardData[]
+  showHeatmap?: boolean
 }) {
   const { data: refreshed, loading: fetchLoading } = useFetch<MarketRadarPayload>('/api/market-radar', { refreshInterval: 5 * 60_000 })
   const data    = refreshed ?? initialData
@@ -210,7 +212,7 @@ export default function MarketRadar({
       </div>
 
       {/* Treemap heatmap — sized by market cap */}
-      {stocks.length > 0 && (() => {
+      {showHeatmap && stocks.length > 0 && (() => {
         const rows = buildTreemapRows(stocks)
         const ROW_HEIGHTS = [42, 38, 32] // px per row — taller = higher market cap row
         return (

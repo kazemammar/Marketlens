@@ -46,7 +46,7 @@ function MarketRow({ market }: { market: PolymarketMarket }) {
         style={{ background: `conic-gradient(${color} ${pct}%, var(--surface-3) ${pct}%)` }}
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface)] group-hover:bg-[var(--surface-2)] transition-colors">
-          <span className="font-mono text-[11px] font-bold tabular-nums" style={{ color }}>
+          <span className="font-mono text-[13px] font-bold tabular-nums" style={{ color }}>
             {pct}%
           </span>
         </div>
@@ -54,7 +54,7 @@ function MarketRow({ market }: { market: PolymarketMarket }) {
 
       {/* Question + meta */}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-2)] group-hover:text-[var(--text)] transition-colors" title={market.question}>
+        <p className="line-clamp-2 text-[12px] font-medium leading-snug text-[var(--text-2)] group-hover:text-[var(--text)] transition-colors" title={market.question}>
           {market.question}
         </p>
         {/* Probability bar */}

@@ -6,11 +6,11 @@ import { categorizeArticle, type NewsCategory } from '@/lib/utils/news-helpers'
 // ─── Category icon thumbnails ─────────────────────────────────────────────
 
 const CAT_ICON: Record<string, { emoji: string; gradient: string }> = {
-  GEOPOLITICAL: { emoji: '⚔️',  gradient: 'from-red-950 to-red-900'       },
-  MARKETS:      { emoji: '📈',  gradient: 'from-emerald-950 to-emerald-900' },
-  ENERGY:       { emoji: '🛢️', gradient: 'from-orange-950 to-orange-900'  },
-  CRYPTO:       { emoji: '₿',   gradient: 'from-purple-950 to-purple-900'  },
-  TECH:         { emoji: '💡',  gradient: 'from-blue-950 to-blue-900'      },
+  GEOPOLITICAL: { emoji: '🌍', gradient: 'from-red-600/70 to-orange-700/70'    },
+  MARKETS:      { emoji: '📈', gradient: 'from-emerald-600/70 to-teal-700/70'  },
+  ENERGY:       { emoji: '⚡', gradient: 'from-orange-500/70 to-yellow-600/70' },
+  CRYPTO:       { emoji: '₿',  gradient: 'from-purple-600/70 to-indigo-700/70' },
+  TECH:         { emoji: '💻', gradient: 'from-blue-600/70 to-cyan-700/70'     },
 }
 
 function ArticleIcon({ category }: { category: string }) {
@@ -61,9 +61,9 @@ function ago(ts: number | string) {
 }
 
 const COLUMNS: { id: NewsCategory; label: string; icon: string }[] = [
-  { id: 'GEOPOLITICAL', label: 'Geopolitical',        icon: '⚔️' },
+  { id: 'GEOPOLITICAL', label: 'Geopolitical',         icon: '🌍' },
   { id: 'MARKETS',      label: 'Markets & Economy',   icon: '📈' },
-  { id: 'ENERGY',       label: 'Energy & Commodities', icon: '🛢️' },
+  { id: 'ENERGY',       label: 'Energy & Commodities', icon: '⚡' },
 ]
 
 function ArticleRow({ article, category }: { article: Article; category: string }) {
@@ -184,7 +184,7 @@ export default function NewsBriefing() {
                   <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No articles</p>
                 </div>
               ) : (
-                <div className="scrollbar-hide overflow-y-auto" style={{ maxHeight: '420px' }}>
+                <div className="scrollbar-hide overflow-y-auto" style={{ maxHeight: '500px' }}>
                   {byCategory[col.id].map((a, i) => (
                     <ArticleRow key={i} article={a} category={col.id} />
                   ))}

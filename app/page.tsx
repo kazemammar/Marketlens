@@ -10,7 +10,8 @@ import IntelPanel        from '@/components/warroom/IntelPanel'
 import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
 import RiskGauge         from '@/components/warroom/RiskGauge'
-import SignalsPanel         from '@/components/warroom/SignalsPanel'
+import SignalsPanel      from '@/components/warroom/SignalsPanel'
+import HeatmapPanel      from '@/components/warroom/HeatmapPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import NewsBriefing         from '@/components/warroom/NewsBriefing'
@@ -66,8 +67,8 @@ export default async function HomePage({
           </div>
         </div>
 
-        {/* IntelPanel — right, scrollable */}
-        <div className="h-[300px] sm:h-[350px] lg:h-[500px] xl:h-[600px] flex flex-col overflow-hidden bg-[var(--surface)]">
+        {/* IntelPanel — right, stretches to match map column height */}
+        <div className="h-[300px] sm:h-[350px] lg:h-full flex flex-col overflow-hidden bg-[var(--surface)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
@@ -100,14 +101,29 @@ export default async function HomePage({
         </div>
       </div>
 
-      {/* ══ DATA PANELS — 4-column row (2x2 on mobile) ══════════════════ */}
-      <div className="grid grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] lg:grid-cols-4 lg:h-[520px]">
-        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col">
-          <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={homepage?.stocks ?? []} />
+      {/* ══ DATA PANELS — Row 1: Market Radar | Risk Gauge ══════════════ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
+        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0">
+          <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={[]} showHeatmap={false} />
         </div>
-        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col"><FXMonitor /></div>
-        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col"><RiskGauge /></div>
-        <div className="min-w-0 overflow-hidden h-full flex flex-col"><SignalsPanel /></div>
+        <div className="min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0">
+          <RiskGauge />
+        </div>
+      </div>
+
+      {/* ══ DATA PANELS — Row 2: FX Monitor | S&P Heatmap ═══════════════ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
+        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0">
+          <FXMonitor />
+        </div>
+        <div className="min-w-0 overflow-hidden h-full flex flex-col">
+          <HeatmapPanel stocks={homepage?.stocks ?? []} />
+        </div>
+      </div>
+
+      {/* ══ DATA PANELS — Row 3: Live Signals horizontal strip ══════════ */}
+      <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+        <SignalsPanel layout="horizontal" />
       </div>
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}

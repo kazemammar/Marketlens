@@ -13,7 +13,7 @@ function RingGauge({ score, color }: { score: number; color: string }) {
   const filled        = (score / 100) * circumference
 
   return (
-    <svg viewBox="0 0 96 96" className="h-28 w-28" aria-hidden>
+    <svg viewBox="0 0 96 96" className="h-[140px] w-[140px]" aria-hidden>
       <defs>
         <filter id="ring-glow">
           <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -106,7 +106,7 @@ export default function RiskGauge() {
       <div className="flex-1 px-3 py-3 overflow-y-auto">
         {loading ? (
           <div className="flex flex-col items-center gap-3">
-            <div className="skeleton h-28 w-28 rounded-full" />
+            <div className="skeleton h-[140px] w-[140px] rounded-full" />
             <div className="skeleton h-4 w-16 rounded" />
           </div>
         ) : data ? (

@@ -51,13 +51,11 @@ export default function MarketBrief() {
           background: 'linear-gradient(to right, rgba(16,185,129,0.06), rgba(16,185,129,0.02) 60%, transparent)',
         }}
       >
-        <div className="mx-auto max-w-screen-2xl px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <div className="skeleton h-5 w-20 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <div className="skeleton h-3 w-full max-w-2xl rounded" />
-              <div className="skeleton h-3 w-2/3 max-w-lg rounded" />
-            </div>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="skeleton h-5 w-20 rounded-full shrink-0" />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="skeleton h-3 w-full rounded" />
+            <div className="skeleton h-3 w-2/3 rounded" />
           </div>
         </div>
       </div>
@@ -79,11 +77,10 @@ export default function MarketBrief() {
         boxShadow: 'inset 3px 0 20px rgba(16,185,129,0.05)',
       }}
     >
-      <div className="mx-auto max-w-screen-2xl px-4 py-3.5 sm:px-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-5">
+      <div className="flex items-start gap-4 px-4 py-3">
 
           {/* ── Badge cluster ────────────────────────────────────────────── */}
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
 
             {/* AI BRIEF filled pill */}
             <div
@@ -135,7 +132,7 @@ export default function MarketBrief() {
 
           {/* ── Asset badges ─────────────────────────────────────────────── */}
           {brief.affectedAssets.length > 0 && (
-            <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            <div className="hidden lg:flex shrink-0 items-center gap-1.5">
               {brief.affectedAssets.slice(0, 5).map((a) => (
                 <Link
                   key={a.symbol}
@@ -148,7 +145,6 @@ export default function MarketBrief() {
             </div>
           )}
 
-        </div>
       </div>
     </div>
   )

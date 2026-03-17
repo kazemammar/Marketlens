@@ -53,23 +53,23 @@ export default async function HomePage({
       <CommodityStrip initialData={homepage?.commodityStrip} />
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
-      <div className="grid grid-cols-1 border-b border-[var(--border)] lg:grid-cols-[65fr_35fr]">
+      <div className="grid grid-cols-1 border-b border-[var(--border)] lg:grid-cols-[65fr_35fr] lg:h-[532px] xl:h-[632px]">
         {/* GeoMap — left */}
-        <div className="overflow-hidden lg:border-r border-[var(--border)]">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+        <div className="flex flex-col overflow-hidden lg:border-r border-[var(--border)]">
+          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
             <span className="truncate font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Geopolitical Intelligence Map
             </span>
           </div>
-          <div className="h-[240px] sm:h-[320px] lg:h-[500px] xl:h-[600px] overflow-hidden" style={{ isolation: 'isolate' }}>
+          <div className="h-[240px] sm:h-[320px] lg:flex-1 overflow-hidden" style={{ isolation: 'isolate' }}>
             <GeoMap />
           </div>
         </div>
 
-        {/* IntelPanel — right, stretches to match map column height */}
+        {/* IntelPanel — right, fixed height = grid row height */}
         <div className="h-[300px] sm:h-[350px] lg:h-full flex flex-col overflow-hidden bg-[var(--surface)]">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Intelligence Feed

@@ -53,12 +53,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  // Check per-user cache
-  const cacheKey = `portfolio:brief:${user.id}`
-  try {
-    const cached = await redis.get<PortfolioBriefPayload>(cacheKey)
-    if (cached) return NextResponse.json(cached)
-  } catch { /* fall through */ }
+  // Check per-user cache (skipped when ?refresh=true)
+  const url          = new URL(req.url)
+  const forceRefresh = url.searchParams.get('refresh') === 'true'
+  const cacheKey     = `portfolio:brief:${user.id}`
+
+  if (!forceRefresh) {
+    try {
+      const cached = await redis.get<PortfolioBriefPayload>(cacheKey)
+      if (cached) return NextResponse.json(cached)
+    } catch { /* fall through */ }
+  }
 
   // Fetch positions
   const { data: positions, error } = await supabase
@@ -147,4 +152,17 @@ export async function GET(req: Request) {
     redis.set(cacheKey, fallback, { ex: 300 }).catch(() => {})
     return NextResponse.json(fallback)
   }
+}
+
+export async function DELETE(req: Request) {
+  const limited = withRateLimit(req, 20)
+  if (limited) return limited
+
+  const supabase = await createServerSupabase()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  const cacheKey = `portfolio:brief:${user.id}`
+  await redis.del(cacheKey).catch(() => {})
+  return NextResponse.json({ success: true })
 }

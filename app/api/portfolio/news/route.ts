@@ -132,3 +132,13 @@ export async function GET(req: Request) {
 
   return NextResponse.json(payload)
 }
+
+export async function DELETE(req: Request) {
+  const supabase = await createServerSupabase()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  const cacheKey = `portfolio:news:${user.id}`
+  await redis.del(cacheKey).catch(() => {})
+  return NextResponse.json({ success: true })
+}

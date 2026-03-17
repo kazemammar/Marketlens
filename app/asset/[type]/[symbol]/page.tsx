@@ -52,13 +52,28 @@ export async function generateMetadata({ params }: AssetPageProps): Promise<Meta
     }
   } catch { /* best-effort */ }
 
+  const TYPE_LABELS: Record<string, string> = {
+    stock: 'Stock', crypto: 'Crypto', forex: 'Forex', commodity: 'Commodity', etf: 'ETF',
+  }
+  const typeLabel   = TYPE_LABELS[type] ?? type
   const title       = `${symbol.toUpperCase()} — ${name}`
-  const description = `Live price, chart, news and AI sentiment for ${name} (${symbol.toUpperCase()}).`
+  const description = `Live ${typeLabel.toLowerCase()} data, AI-powered sentiment analysis, and news for ${name} (${symbol.toUpperCase()}) on MarketLens.`
+  const ogTitle     = `${title} | MarketLens`
   return {
     title,
     description,
-    openGraph: { title: `${title} | MarketLens`, description },
-    twitter:   { title: `${title} | MarketLens`, description },
+    openGraph: {
+      title:       ogTitle,
+      description,
+      url:         `https://marketlens.live/asset/${type}/${encodeURIComponent(symbol)}`,
+      images:      [{ url: '/og-image.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card:        'summary_large_image',
+      title:       ogTitle,
+      description: `Real-time ${typeLabel.toLowerCase()} data and AI analysis for ${symbol.toUpperCase()}.`,
+      images:      ['/og-image.png'],
+    },
   }
 }
 

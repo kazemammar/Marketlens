@@ -20,30 +20,43 @@ const jetbrainsMono = JetBrains_Mono({
   weight:   ['400', '500', '600', '700'],
 })
 
-const SITE_DESCRIPTION =
-  'Real-time prices, charts, news, and AI-powered sentiment analysis for stocks, crypto, forex, commodities, and ETFs.'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://marketlens.live'
+
+const SITE_TITLE       = 'MarketLens — Live Market Data & AI Analysis'
+const SITE_DESCRIPTION = 'Real-time financial intelligence platform. Track stocks, crypto, forex, commodities & ETFs with AI-powered analysis, geopolitical monitoring, and smart news.'
 
 export const metadata: Metadata = {
   title: {
-    default:  'MarketLens — Live Market Data & AI Analysis',
+    default:  SITE_TITLE,
     template: '%s | MarketLens',
   },
   description: SITE_DESCRIPTION,
-  keywords: ['stocks', 'crypto', 'forex', 'commodities', 'ETF', 'market data', 'finance', 'AI analysis', 'live prices'],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://marketlens.vercel.app'),
+  keywords: ['stock market', 'cryptocurrency', 'forex', 'commodities', 'ETF', 'financial analysis', 'AI trading', 'market intelligence', 'geopolitical risk', 'real-time data'],
+  authors:  [{ name: 'Kazem Ammar' }],
+  creator:  'Kazem Ammar',
+  metadataBase: new URL(BASE_URL),
   openGraph: {
     type:        'website',
+    locale:      'en_US',
+    url:         BASE_URL,
     siteName:    'MarketLens',
-    title:       'MarketLens — Live Market Data & AI Analysis',
-    description: SITE_DESCRIPTION,
+    title:       SITE_TITLE,
+    description: 'Real-time financial intelligence. AI-powered analysis across stocks, crypto, forex, commodities & ETFs.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MarketLens — Financial Intelligence Platform' }],
   },
   twitter: {
-    card:        'summary',
-    title:       'MarketLens — Live Market Data & AI Analysis',
-    description: SITE_DESCRIPTION,
+    card:        'summary_large_image',
+    title:       SITE_TITLE,
+    description: 'Real-time financial intelligence. AI-powered analysis across stocks, crypto, forex, commodities & ETFs.',
+    images:      ['/og-image.png'],
   },
   icons: {
-    icon: '/favicon.svg',
+    icon:  '/favicon-32x32.png',
+    apple: '/apple-touch-icon.png',
+  },
+  robots: {
+    index:  true,
+    follow: true,
   },
 }
 

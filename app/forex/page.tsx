@@ -6,8 +6,8 @@ import GlobalSearch from '@/components/search/GlobalSearch'
 import { getForexCards } from '@/lib/api/forex'
 
 export const metadata: Metadata = {
-  title: 'Forex Market — MarketLens',
-  description: 'Real-time foreign exchange rates and currency pair analysis.',
+  title: 'Forex',
+  description: 'Major currency pairs with live rates, central bank analysis, and AI-powered forex intelligence on MarketLens.',
 }
 
 export default async function ForexPage() {

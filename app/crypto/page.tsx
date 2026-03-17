@@ -7,8 +7,8 @@ import { getCryptoMarkets } from '@/lib/api/coingecko'
 import { AssetCardData } from '@/lib/utils/types'
 
 export const metadata: Metadata = {
-  title: 'Crypto Market — MarketLens',
-  description: 'Real-time prices and AI-powered analysis for top cryptocurrencies.',
+  title: 'Crypto',
+  description: 'Top cryptocurrencies by market cap with live prices, Fear & Greed index, and DeFi analytics on MarketLens.',
 }
 
 export default async function CryptoPage() {

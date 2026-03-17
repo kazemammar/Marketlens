@@ -8,8 +8,8 @@ import { DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import { AssetCardData } from '@/lib/utils/types'
 
 export const metadata: Metadata = {
-  title: 'Commodities — MarketLens',
-  description: 'Real-time commodity prices including gold, oil, natural gas, and more.',
+  title: 'Commodities',
+  description: 'Track gold, oil, natural gas, and more with geopolitical risk monitoring and supply chain intelligence on MarketLens.',
 }
 
 export default async function CommoditiesPage() {

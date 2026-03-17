@@ -16,8 +16,8 @@ const ETF_NAMES: Record<string, string> = {
 }
 
 export const metadata: Metadata = {
-  title: 'ETFs — MarketLens',
-  description: 'Real-time prices and analysis for major exchange-traded funds.',
+  title: 'ETFs',
+  description: 'Top ETFs with holdings analysis, sector allocation, and AI-powered insights on MarketLens.',
 }
 
 export default async function ETFPage() {

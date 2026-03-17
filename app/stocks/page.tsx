@@ -4,8 +4,8 @@ import StockSearch from '@/components/pages/StockSearch'
 import GlobalSearch from '@/components/search/GlobalSearch'
 
 export const metadata: Metadata = {
-  title: 'Stock Market — MarketLens',
-  description: 'Real-time prices, analysis, and AI-powered intelligence for US equities.',
+  title: 'Stocks',
+  description: 'Browse and track US stocks with real-time prices, AI analysis, and sector breakdowns on MarketLens.',
 }
 
 export default function StocksPage() {

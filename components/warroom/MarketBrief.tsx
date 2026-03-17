@@ -73,14 +73,14 @@ export default function MarketBrief() {
         boxShadow: 'inset 3px 0 20px rgba(16,185,129,0.05)',
       }}
     >
-      <div className="flex items-start gap-4 px-4 py-3">
+      <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
 
           {/* ── Badge cluster ────────────────────────────────────────────── */}
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
 
             {/* AI BRIEF filled pill */}
             <div
-              className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
+              className="flex items-center gap-1.5 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1"
               style={{
                 background: 'rgba(16,185,129,0.15)',
                 border: '1px solid rgba(16,185,129,0.35)',
@@ -89,7 +89,7 @@ export default function MarketBrief() {
             >
               <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
               <span
-                className="font-mono text-[10px] font-bold uppercase tracking-[0.16em]"
+                className="font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.16em]"
                 style={{ color: 'var(--accent)' }}
               >
                 AI Brief
@@ -98,7 +98,7 @@ export default function MarketBrief() {
 
             {/* Risk pill */}
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${rs.text} ${rs.border}`}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 sm:px-2.5 sm:py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] ${rs.text} ${rs.border}`}
               style={{ background: 'var(--surface-2)' }}
             >
               <span
@@ -121,7 +121,7 @@ export default function MarketBrief() {
 
           {/* ── Brief text ───────────────────────────────────────────────── */}
           <p
-            className="min-w-0 flex-1 text-[13px] leading-relaxed"
+            className="min-w-0 flex-1 text-[12px] sm:text-[13px] leading-relaxed"
             style={{ color: 'var(--text-2)' }}
           >
             {brief.brief}

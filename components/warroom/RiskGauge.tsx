@@ -524,7 +524,7 @@ function RingGauge({ score, color }: { score: number; color: string }) {
   const filled        = (score / 100) * circumference
 
   return (
-    <svg viewBox="0 0 96 96" className="h-[140px] w-[140px]" aria-hidden>
+    <svg viewBox="0 0 96 96" className="h-full w-full" aria-hidden>
       <defs>
         <filter id="ring-glow">
           <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -655,7 +655,7 @@ export default function RiskGauge() {
         {loading ? (
           <div className="space-y-3">
             <div className="flex gap-3">
-              <div className="skeleton h-[140px] w-[140px] shrink-0 rounded-full" />
+              <div className="skeleton h-[100px] w-[100px] sm:h-[140px] sm:w-[140px] shrink-0 rounded-full" />
               <div className="flex-1 flex flex-col justify-center gap-3">
                 {[1,2,3,4].map((i) => (
                   <div key={i} className="space-y-1">
@@ -687,14 +687,14 @@ export default function RiskGauge() {
 
               {/* Ring — hoverable, interactive tooltip */}
               <div
-                className="group relative h-[140px] w-[140px] shrink-0 cursor-default"
+                className="group relative h-[100px] w-[100px] sm:h-[140px] sm:w-[140px] shrink-0 cursor-default"
                 onMouseEnter={(e) => showTip(e, <ScoreTooltipContent data={data} />, true)}
                 onMouseLeave={hideTip}
               >
                 <RingGauge score={data.score} color={scoreColor} />
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                   <span
-                    className="font-mono text-[48px] font-bold leading-none tabular-nums"
+                    className="font-mono text-[32px] sm:text-[48px] font-bold leading-none tabular-nums"
                     style={{ color: 'var(--text)', textShadow: `0 0 24px ${scoreColor}70` }}
                   >
                     {data.score}

@@ -68,7 +68,7 @@ export default function CommodityStrip({
       style={{ background: 'var(--surface)' }}
     >
       <div className="mr-3 shrink-0 flex items-center gap-1.5">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
+        <span className="font-mono text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
           COMMODITIES
         </span>
         {updatedAt > 0 && (
@@ -102,7 +102,7 @@ export default function CommodityStrip({
                 <Link
                   key={item.symbol}
                   href={`/asset/commodity/${encodeURIComponent(item.symbol)}`}
-                  className="flex shrink-0 items-center gap-2.5 border-r border-[var(--border)] px-4 py-0 transition-colors duration-150 hover:bg-[var(--surface-2)]"
+                  className="flex shrink-0 items-center gap-1.5 sm:gap-2.5 border-r border-[var(--border)] px-2.5 sm:px-4 py-0 transition-colors duration-150 hover:bg-[var(--surface-2)]"
                 >
                   <span className="font-mono text-[10px] font-semibold text-[var(--text)]">
                     {item.shortName}

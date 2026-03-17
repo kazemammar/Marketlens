@@ -32,7 +32,7 @@ export default function Footer() {
           </div>
 
           {/* Links */}
-          <nav className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
+          <nav className="flex flex-wrap gap-x-6 sm:gap-x-8 gap-y-3 text-sm">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Markets</span>
               <Link href="/?tab=stock"     className="text-[var(--text-muted)] transition hover:text-[var(--text)]">Stocks</Link>

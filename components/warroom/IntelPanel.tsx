@@ -268,14 +268,14 @@ export default function IntelPanel() {
       </div>
 
       {/* Filter pills */}
-      <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] px-2 py-1.5">
+      <div className="flex shrink-0 flex-wrap sm:flex-nowrap items-center gap-1.5 overflow-x-auto border-b border-[var(--border)] px-2 py-1.5">
         {(['ALL', 'HIGH', 'MED', 'LOW'] as Severity[]).map((s) => (
           <Pill key={s} active={severity === s} activeClass={SEV_ACTIVE[s]} onClick={() => setSeverity(s)}>
             {s}
           </Pill>
         ))}
 
-        <div className="h-3 w-px shrink-0 bg-[var(--border)]" />
+        <div className="hidden sm:block h-3 w-px shrink-0 bg-[var(--border)]" />
 
         {([
           ['ALL',          'ALL'],

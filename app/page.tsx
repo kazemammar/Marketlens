@@ -95,7 +95,7 @@ export default async function HomePage({
           </span>
         </div>
         <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <div className="flex items-center gap-1">
+        <div className="hidden sm:flex items-center gap-1">
           <span className="live-dot h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">LIVE</span>
         </div>
@@ -103,20 +103,20 @@ export default async function HomePage({
 
       {/* ══ DATA PANELS — Row 1: Market Radar | Risk Gauge ══════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
-        <div className="war-panel min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full">
+        <div className="war-panel min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full max-h-[350px] sm:max-h-none">
           <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={[]} showHeatmap={false} />
         </div>
-        <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full">
+        <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full max-h-[350px] sm:max-h-none">
           <RiskGauge />
         </div>
       </div>
 
       {/* ══ DATA PANELS — Row 2: FX Monitor | S&P Heatmap ═══════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
-        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0">
+        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0 max-h-[350px] sm:max-h-none">
           <FXMonitor />
         </div>
-        <div className="min-w-0 overflow-hidden h-full flex flex-col">
+        <div className="min-w-0 overflow-hidden h-full flex flex-col max-h-[350px] sm:max-h-none">
           <HeatmapPanel stocks={homepage?.stocks ?? []} />
         </div>
       </div>
@@ -156,7 +156,7 @@ export default async function HomePage({
             Market Overview
           </span>
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+          <span className="hidden sm:block font-mono text-[9px] text-[var(--text-muted)] opacity-50">
             Stocks · Crypto · Forex · Commodities · ETFs
           </span>
         </div>

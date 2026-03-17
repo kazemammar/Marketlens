@@ -65,7 +65,7 @@ export default function CommodityStrip({
       <span className="mr-3 shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.15em] text-[var(--text-muted)]">
         COMMODITIES
       </span>
-      <div className="flex flex-1 items-center gap-0 overflow-x-auto">
+      <div className="flex flex-1 items-center gap-0 overflow-x-auto scrollbar-hide">
         {loading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex shrink-0 items-center gap-2 border-r border-[var(--border)] px-4 h-10">

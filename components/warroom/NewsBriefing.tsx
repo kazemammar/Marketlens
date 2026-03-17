@@ -120,11 +120,11 @@ export default function NewsBriefing() {
       </div>
 
       {/* 3-column grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 bg-[var(--surface)]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 bg-[var(--surface)]">
         {COLUMNS.map((col, colIdx) => (
           <div
             key={col.id}
-            className={colIdx < COLUMNS.length - 1 ? 'sm:border-r border-[var(--border)]' : ''}
+            className={colIdx < COLUMNS.length - 1 ? 'border-b lg:border-b-0 lg:border-r border-[var(--border)]' : ''}
           >
             {/* Column header */}
             <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">

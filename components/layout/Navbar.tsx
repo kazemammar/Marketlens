@@ -95,7 +95,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
               key={href}
               href={href}
               onClick={onClose}
-              className={`flex items-center justify-center rounded-lg py-3 text-[11px] font-medium tracking-wide transition-colors ${
+              className={`flex min-h-[44px] items-center justify-center rounded-lg py-3 text-[11px] font-medium tracking-wide transition-colors ${
                 isActive
                   ? 'bg-[rgba(16,185,129,0.08)] text-[#10b981]'
                   : 'text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text-2)]'

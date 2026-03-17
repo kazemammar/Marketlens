@@ -53,21 +53,20 @@ export default async function HomePage({
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
       <div className="grid grid-cols-1 border-b border-[var(--border)] lg:grid-cols-[65fr_35fr]">
         {/* GeoMap — left */}
-        <div className="lg:border-r border-[var(--border)]">
+        <div className="overflow-hidden lg:border-r border-[var(--border)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
-            <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+            <span className="truncate font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
               Geopolitical Intelligence Map
             </span>
           </div>
-          <GeoMap />
+          <div className="h-[240px] sm:h-[320px] lg:h-auto overflow-hidden">
+            <GeoMap />
+          </div>
         </div>
 
         {/* IntelPanel — right, scrollable */}
-        <div
-          className="flex flex-col overflow-hidden bg-[var(--surface)]"
-          style={{ height: 'clamp(300px, 55vw, 600px)' }}
-        >
+        <div className="h-[300px] sm:h-[350px] lg:h-[500px] xl:h-[600px] flex flex-col overflow-hidden bg-[var(--surface)]">
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
@@ -89,7 +88,7 @@ export default async function HomePage({
             <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
             <circle cx="8" cy="8" r="1" fill="currentColor"/>
           </svg>
-          <span className="font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+          <span className="truncate font-mono font-semibold uppercase text-white" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
             Market Intelligence
           </span>
         </div>

@@ -99,7 +99,7 @@ export default function PeersTable({ symbol }: { symbol: string }) {
       </div>
 
       {/* Peer cards - horizontal scroll */}
-      <div className="overflow-x-auto bg-[var(--surface)]">
+      <div className="overflow-x-auto scrollbar-hide bg-[var(--surface)]" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="flex gap-px bg-[var(--border)] w-max min-w-full">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (

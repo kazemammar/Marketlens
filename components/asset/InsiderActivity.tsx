@@ -64,10 +64,10 @@ export default function InsiderActivity({ symbol }: { symbol: string }) {
                 <span className="w-16 shrink-0 text-right font-mono text-[10px] tabular-nums text-[var(--text-muted)]">
                   {formatShares(t.shares)}
                 </span>
-                <span className="w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-white">
+                <span className="hidden sm:inline-block w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-white">
                   {t.price > 0 ? `$${t.price.toFixed(2)}` : '—'}
                 </span>
-                <span className="w-16 shrink-0 text-right font-mono text-[9px] text-[var(--text-muted)]">
+                <span className="hidden sm:inline-block w-16 shrink-0 text-right font-mono text-[9px] text-[var(--text-muted)]">
                   {formatDate(t.transactionDate)}
                 </span>
               </div>

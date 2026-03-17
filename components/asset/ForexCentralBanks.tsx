@@ -124,7 +124,7 @@ function CbPanel({ side, align }: { side: CbSide; align: 'left' | 'right' }) {
 function Skeleton() {
   return (
     <div className="bg-[var(--surface)]">
-      <div className="grid grid-cols-2 gap-px bg-[var(--border)]">
+      <div className="grid grid-cols-1 gap-px bg-[var(--border)] sm:grid-cols-2">
         {[0, 1].map(i => (
           <div key={i} className="flex flex-col gap-3 bg-[var(--surface)] p-4">
             <div className="skeleton h-3 w-16 rounded" />
@@ -175,7 +175,7 @@ export default function ForexCentralBanks({ symbol }: { symbol: string }) {
       ) : (
         <div className="bg-[var(--surface)]">
           {/* Side-by-side panels */}
-          <div className="grid grid-cols-2 gap-px bg-[var(--border)]">
+          <div className="grid grid-cols-1 gap-px bg-[var(--border)] sm:grid-cols-2">
             <CbPanel side={data.base}  align="left"  />
             <CbPanel side={data.quote} align="right" />
           </div>

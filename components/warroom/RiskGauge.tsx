@@ -764,14 +764,14 @@ export default function RiskGauge() {
                   {(data.opportunities?.length ? data.opportunities : ['No signals yet']).slice(0, 3).map((item, i) => (
                     <div
                       key={i}
-                      className="group flex items-start gap-1 cursor-default"
+                      className="group flex items-center gap-1 cursor-default"
                       onMouseEnter={(e) => showTip(e,
                         <ItemTooltipContent text={item} kind="opportunity" allAssets={assets} />,
                         true,
                       )}
                       onMouseLeave={hideTip}
                     >
-                      <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-up)' }} />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full self-center" style={{ background: 'var(--price-up)' }} />
                       <span className="line-clamp-2 font-mono text-[9px] leading-snug text-[var(--text)] group-hover:text-[var(--price-up)] transition-colors duration-150">
                         {item}
                       </span>
@@ -788,14 +788,14 @@ export default function RiskGauge() {
                   {(data.threats?.length ? data.threats : data.factors ?? ['No signals yet']).slice(0, 3).map((item, i) => (
                     <div
                       key={i}
-                      className="group flex items-start gap-1 cursor-default"
+                      className="group flex items-center gap-1 cursor-default"
                       onMouseEnter={(e) => showTip(e,
                         <ItemTooltipContent text={item} kind="threat" allAssets={assets} />,
                         true,
                       )}
                       onMouseLeave={hideTip}
                     >
-                      <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--price-down)' }} />
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-full self-center" style={{ background: 'var(--price-down)' }} />
                       <span className="line-clamp-2 font-mono text-[9px] leading-snug text-[var(--text)] group-hover:text-[var(--price-down)] transition-colors duration-150">
                         {item}
                       </span>

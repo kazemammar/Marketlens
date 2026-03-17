@@ -8,12 +8,12 @@ import CommandPalette from './CommandPalette'
 import UserMenu from '@/components/auth/UserMenu'
 
 const NAV_LINKS = [
+  { label: 'Dashboard',   href: '/'            },
   { label: 'Stocks',      href: '/stocks'      },
   { label: 'Crypto',      href: '/crypto'      },
   { label: 'Forex',       href: '/forex'       },
   { label: 'Commodities', href: '/commodities' },
   { label: 'ETFs',        href: '/etf'         },
-  { label: 'Portfolio',   href: '/portfolio'   },
   { label: 'News',        href: '/news'        },
   { label: 'Econ',        href: '/economics'   },
 ]
@@ -74,6 +74,58 @@ function NavLinksFallback() {
   )
 }
 
+// ─── Right nav buttons (Portfolio + Watchlist) ─────────────────────────────────
+
+function RightNavButtons() {
+  const pathname = usePathname()
+  const isPortfolio = pathname === '/portfolio'
+  const isWatchlist = pathname === '/watchlist'
+
+  return (
+    <div className="hidden lg:flex items-center gap-2">
+      {/* Portfolio — prominent green button */}
+      <Link
+        href="/portfolio"
+        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-mono text-[10px] font-semibold tracking-wide transition-all duration-150 hover:opacity-90 ${
+          isPortfolio ? 'ring-1 ring-white/20' : ''
+        }`}
+        style={{
+          background: 'var(--accent)',
+          color: '#ffffff',
+          boxShadow: isPortfolio
+            ? '0 0 16px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.1)'
+            : '0 0 10px rgba(16,185,129,0.15)',
+        }}
+      >
+        <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
+          <rect x="1" y="3" width="12" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+          <polyline points="1,8 4,6 7,8 10,4 13,5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Portfolio
+      </Link>
+
+      {/* Watchlist — subtle, muted design */}
+      <Link
+        href="/watchlist"
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[10px] font-medium tracking-wide transition-all duration-150 ${
+          isWatchlist
+            ? 'text-[var(--accent)]'
+            : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+        }`}
+        style={{
+          border: `1px solid ${isWatchlist ? 'rgba(16,185,129,0.4)' : 'var(--border)'}`,
+          background: isWatchlist ? 'rgba(16,185,129,0.08)' : 'transparent',
+        }}
+      >
+        <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
+          <path d="M7 1l1.8 3.7 4 .6-2.9 2.8.7 4L7 10.4 3.4 12.1l.7-4-2.9-2.8 4-.6L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+        </svg>
+        Watchlist
+      </Link>
+    </div>
+  )
+}
+
 // ─── Mobile menu ──────────────────────────────────────────────────────────────
 
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -81,13 +133,40 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <div
       className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-        open ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+        open ? 'max-h-[480px] opacity-100' : 'max-h-0 opacity-0'
       }`}
       style={{
         background: 'var(--bg)',
         borderBottom: open ? '1px solid var(--border)' : 'none',
       }}
     >
+      {/* Portfolio + Watchlist — prominent mobile buttons */}
+      <div className="flex gap-2 px-3 pt-3 pb-1">
+        <Link
+          href="/portfolio"
+          onClick={onClose}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-3 font-mono text-[11px] font-semibold tracking-wide text-white transition-colors"
+          style={{ background: 'var(--accent)' }}
+        >
+          <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
+            <rect x="1" y="3" width="12" height="8" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+            <polyline points="1,8 4,6 7,8 10,4 13,5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Portfolio
+        </Link>
+        <Link
+          href="/watchlist"
+          onClick={onClose}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-3 font-mono text-[11px] font-medium tracking-wide text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+        >
+          <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
+            <path d="M7 1l1.8 3.7 4 .6-2.9 2.8.7 4L7 10.4 3.4 12.1l.7-4-2.9-2.8 4-.6L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+          </svg>
+          Watchlist
+        </Link>
+      </div>
+
+      {/* Regular nav grid */}
       <nav className="grid grid-cols-2 gap-1 p-3 sm:grid-cols-4">
         {NAV_LINKS.map(({ label, href }) => {
           const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
@@ -212,6 +291,14 @@ export default function Navbar() {
           <div className="flex-1" />
 
           {/* ── Right action group ───────────────────────────────────── */}
+
+          {/* Portfolio + Watchlist buttons */}
+          <Suspense fallback={<div className="hidden lg:flex items-center gap-2" />}>
+            <RightNavButtons />
+          </Suspense>
+
+          {/* Thin separator before search */}
+          <div className="hidden lg:block h-5 w-px shrink-0" style={{ background: 'var(--border)' }} />
 
           {/* Search pill */}
           <button

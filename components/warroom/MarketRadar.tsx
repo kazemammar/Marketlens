@@ -86,8 +86,8 @@ function HeatCell({ symbol, pct, height }: { symbol: string; pct: number; height
       className="flex flex-col items-center justify-center overflow-hidden transition-opacity hover:opacity-80"
       style={{ background: bg, height: `${height}px`, border: '1px solid var(--border)' }}
     >
-      <span className="font-mono font-bold leading-none" style={{ fontSize: height > 36 ? '9px' : '7px', color: abs >= 2 ? '#ffffff' : 'var(--text)' }}>{sym}</span>
-      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: height > 36 ? '8px' : '6px', color: abs >= 2 ? '#ffffffcc' : chgColor }}>
+      <span className="font-mono font-bold leading-none" style={{ fontSize: height > 36 ? '9px' : '8px', color: abs >= 2 ? '#ffffff' : 'var(--text)' }}>{sym}</span>
+      <span className="font-mono tabular-nums leading-none mt-0.5" style={{ fontSize: height > 36 ? '8px' : '8px', color: abs >= 2 ? '#ffffffcc' : chgColor }}>
         {pct >= 0 ? '+' : ''}{pct.toFixed(1)}%
       </span>
     </a>
@@ -199,7 +199,7 @@ export default function MarketRadar({
                   <div className="flex h-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
                     <div className="h-full rounded-full transition-all duration-700" style={{ width: `${upPct}%`, background: 'var(--price-up)' }} />
                   </div>
-                  <div className="mt-0.5 flex justify-between font-mono text-[7px] text-[var(--text-muted)] opacity-50">
+                  <div className="mt-0.5 flex justify-between font-mono text-[8px] text-[var(--text-muted)] opacity-50">
                     <span>{upCount} up</span><span>{dnCount} dn</span>
                   </div>
                 </div>

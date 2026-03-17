@@ -60,7 +60,7 @@ function IndicatorCard({ ind }: { ind: EconomicIndicator }) {
           {ind.name}
         </span>
         {isInverted && (
-          <span className="shrink-0 rounded border border-red-500/40 bg-red-500/10 px-1 py-px font-mono text-[7px] font-bold text-red-400">
+          <span className="shrink-0 rounded border border-red-500/40 bg-red-500/10 px-1 py-px font-mono text-[8px] font-bold text-red-400">
             INVERTED
           </span>
         )}

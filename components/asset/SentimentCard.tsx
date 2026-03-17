@@ -4,15 +4,15 @@ import { useEffect, useState } from 'react'
 import { SentimentAnalysis, SentimentLabel, AssetType } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
 
-const LABEL_CONFIG: Record<SentimentLabel, { color: string; bg: string; icon: string }> = {
-  Bullish: { color: 'text-green-500', bg: 'bg-green-500/10', icon: '📈' },
-  Bearish: { color: 'text-red-500',   bg: 'bg-red-500/10',   icon: '📉' },
-  Neutral: { color: 'text-slate-400', bg: 'bg-slate-500/10', icon: '➡️' },
+const LABEL_CONFIG: Record<SentimentLabel, { colorVar: string; bgVar: string; icon: string }> = {
+  Bullish: { colorVar: 'var(--price-up)',   bgVar: 'rgba(var(--price-up-rgb), 0.1)', icon: '📈' },
+  Bearish: { colorVar: 'var(--price-down)', bgVar: 'rgba(var(--price-down-rgb), 0.1)', icon: '📉' },
+  Neutral: { colorVar: 'var(--text-muted)', bgVar: 'var(--surface-2)',                icon: '➡️' },
 }
 
 function ScoreBar({ score }: { score: number }) {
   const pos = Math.max(0, Math.min(100, score))
-  const color = pos >= 60 ? 'bg-green-500' : pos <= 40 ? 'bg-red-500' : 'bg-yellow-400'
+  const colorStyle = { background: pos >= 60 ? 'var(--price-up)' : pos <= 40 ? 'var(--price-down)' : 'var(--warning)' }
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
@@ -21,7 +21,7 @@ function ScoreBar({ score }: { score: number }) {
         <span>Bullish</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
-        <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${pos}%` }} />
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pos}%`, ...colorStyle }} />
       </div>
     </div>
   )
@@ -74,7 +74,7 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
           <>
             {/* Label badge */}
             <div className="flex items-center gap-3">
-              <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${cfg.color} ${cfg.bg}`}>
+              <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold" style={{ color: cfg.colorVar, background: cfg.bgVar }}>
                 <span>{cfg.icon}</span>
                 {data.label}
               </span>
@@ -98,7 +98,7 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
                 <ul className="space-y-1">
                   {data.keySignals.map((signal, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-[var(--text)]">
-                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--accent)' }} />
                       {signal}
                     </li>
                   ))}

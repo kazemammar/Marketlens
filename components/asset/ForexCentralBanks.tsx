@@ -231,7 +231,7 @@ export default function ForexCentralBanks({ symbol }: { symbol: string }) {
                 )
               })()
             )}
-            <div className="mt-1 flex justify-between font-mono text-[7px] text-[var(--text-muted)]">
+            <div className="mt-1 flex justify-between font-mono text-[8px] text-[var(--text-muted)]">
               <span>{data.quote.currency} advantage</span>
               <span>parity</span>
               <span>{data.base.currency} advantage</span>

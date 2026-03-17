@@ -127,7 +127,7 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
                       {String(s.open).padStart(2, '0')}:00–{String(closeHour).padStart(2, '0')}:00
                     </span>
                     {active && (
-                      <span className="font-mono text-[7px] font-bold uppercase" style={{ color: 'var(--price-up)' }}>
+                      <span className="font-mono text-[8px] font-bold uppercase" style={{ color: 'var(--price-up)' }}>
                         OPEN
                       </span>
                     )}

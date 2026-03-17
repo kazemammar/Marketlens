@@ -49,7 +49,7 @@ function Gauge({ score }: { score: number }) {
       <path
         d={`M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 1 1 ${bgEnd.x} ${bgEnd.y}`}
         fill="none"
-        stroke="rgba(255,255,255,0.08)"
+        stroke="var(--surface-3)"
         strokeWidth="6"
         strokeLinecap="round"
       />
@@ -112,15 +112,15 @@ export default function MarketRiskGauge() {
   }, [])
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[rgba(255,255,255,0.07)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
-      <div className="flex items-center gap-1.5 border-b border-[rgba(255,255,255,0.06)] px-3 py-2">
-        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-red-400" aria-hidden>
+      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
+        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--price-down)' }} aria-hidden>
           <path d="M2 14L8 2l6 12H2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
           <line x1="8" y1="7" x2="8" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
           <circle cx="8" cy="12" r="0.7" fill="currentColor"/>
         </svg>
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
           Market Risk Score
         </span>
       </div>
@@ -156,7 +156,7 @@ export default function MarketRiskGauge() {
               <ul className="mt-3 space-y-1">
                 {data.factors.map((f, i) => (
                   <li key={i} className="flex items-start gap-1.5 text-[10px] text-[var(--text-muted)]">
-                    <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-red-400" />
+                    <span className="mt-1 h-1 w-1 shrink-0 rounded-full" style={{ background: 'var(--price-down)' }} />
                     <span className="line-clamp-2">{f}</span>
                   </li>
                 ))}

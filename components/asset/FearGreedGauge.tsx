@@ -150,7 +150,7 @@ export default function FearGreedGauge() {
             </span>
             {/* 30-day sparkline */}
             <div className="mt-3 w-full">
-              <p className="mb-1 text-center font-mono text-[7px] text-[var(--text-muted)] opacity-50">
+              <p className="mb-1 text-center font-mono text-[8px] text-[var(--text-muted)] opacity-50">
                 30-DAY HISTORY
               </p>
               <Sparkline history={data.history} />

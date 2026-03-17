@@ -32,10 +32,10 @@ function ConsensusBar({ recs }: { recs: AnalystRecommendation }) {
   const bearish   = recs.sell + recs.strongSell
   const consensus = bullish / total > 0.5 ? 'Buy' : bearish / total > 0.5 ? 'Sell' : 'Hold'
   const consColor = consensus === 'Buy'
-    ? 'text-green-500 bg-green-500/10'
+    ? 'text-[var(--price-up)] bg-[var(--accent-dim)]'
     : consensus === 'Sell'
-    ? 'text-red-500 bg-red-500/10'
-    : 'text-yellow-500 bg-yellow-500/10'
+    ? 'text-[var(--price-down)] bg-[var(--danger-dim)]'
+    : 'text-[var(--warning)] bg-[var(--warning-dim)]'
 
   return (
     <div className="space-y-3">

@@ -110,10 +110,10 @@ export function formatDateTime(timestampMs: number | null | undefined): string {
  * Return Tailwind color class based on whether a value is positive/negative.
  */
 export function changeColor(value: number | null | undefined): string {
-  if (value == null || isNaN(value)) return 'text-slate-400'
-  if (value > 0) return 'text-green-500'
-  if (value < 0) return 'text-red-500'
-  return 'text-slate-400'
+  if (value == null || isNaN(value)) return 'text-[var(--text-muted)]'
+  if (value > 0) return 'text-[var(--price-up)]'
+  if (value < 0) return 'text-[var(--price-down)]'
+  return 'text-[var(--text-muted)]'
 }
 
 /**

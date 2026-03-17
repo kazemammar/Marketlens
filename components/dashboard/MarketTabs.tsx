@@ -122,7 +122,7 @@ export default function MarketTabs({
                 flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-1
                 text-sm font-medium transition-colors
                 ${isActive
-                  ? 'border-blue-500 text-blue-500'
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
                   : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
                 }
               `}
@@ -186,7 +186,7 @@ function TabBadge({
   status: LoadStatus; count: number; isActive: boolean
 }) {
   const base = `ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold`
-  const activeColor   = 'bg-blue-500/10 text-blue-500'
+  const activeColor   = 'bg-[var(--accent-dim)] text-[var(--accent)]'
   const inactiveColor = 'bg-[var(--surface-2)] text-[var(--text-muted)]'
   const color = isActive ? activeColor : inactiveColor
 
@@ -247,7 +247,7 @@ function ErrorState({ tab, onRetry }: { tab: AssetType; onRetry: () => void }) {
       <p className="mt-3 text-sm font-medium text-[var(--text)]">Failed to load {tab} data</p>
       <button
         onClick={onRetry}
-        className="mt-3 rounded-lg bg-[var(--surface-2)] px-4 py-1.5 text-xs text-[var(--text)] transition hover:bg-blue-500/10 hover:text-blue-500"
+        className="mt-3 rounded-lg bg-[var(--surface-2)] px-4 py-1.5 text-xs text-[var(--text)] transition hover:bg-[var(--accent-dim)] hover:text-[var(--accent)]"
       >
         Retry
       </button>

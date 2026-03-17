@@ -85,7 +85,7 @@ export default function FXMonitor() {
                             {pos ? '+' : ''}{p.changePercent.toFixed(2)}%
                           </span>
                           <span
-                            className={`rounded px-1 py-px font-mono text-[7px] font-bold uppercase ${crit ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}
+                            className={`rounded px-1 py-px font-mono text-[8px] font-bold uppercase ${crit ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}
                           >
                             {crit ? 'Critical' : 'Elevated'}
                           </span>
@@ -168,12 +168,12 @@ export default function FXMonitor() {
               </p>
               <div className="flex gap-1.5">
                 <div className="flex-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
-                  <p className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Strongest</p>
+                  <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Strongest</p>
                   <p className="font-mono text-[10px] font-bold text-[var(--text)]">{strongest.symbol}</p>
                   <p className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--price-up)' }}>+{strongest.changePercent.toFixed(2)}%</p>
                 </div>
                 <div className="flex-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5">
-                  <p className="font-mono text-[7px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Weakest</p>
+                  <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Weakest</p>
                   <p className="font-mono text-[10px] font-bold text-[var(--text)]">{weakest.symbol}</p>
                   <p className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--price-down)' }}>{weakest.changePercent.toFixed(2)}%</p>
                 </div>

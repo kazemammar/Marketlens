@@ -24,20 +24,20 @@ export default function OilGasTracker() {
   }, [])
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[rgba(255,255,255,0.07)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
-      <div className="flex items-center gap-1.5 border-b border-[rgba(255,255,255,0.06)] px-3 py-2">
-        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-amber-400" aria-hidden>
+      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
+        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--warning)' }} aria-hidden>
           <path d="M8 2C5.5 2 4 4 4 6c0 2.5 2 4 4 7 2-3 4-4.5 4-7 0-2-1.5-4-4-4z" fill="currentColor" opacity=".6"/>
           <path d="M8 5v4M6.5 7.5L8 9l1.5-1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
         </svg>
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
           Energy &amp; Metals
         </span>
       </div>
 
       {/* Items grid */}
-      <div className="grid grid-cols-3 divide-x divide-[rgba(255,255,255,0.06)] sm:grid-cols-6">
+      <div className="grid grid-cols-3 divide-x divide-[var(--border)] sm:grid-cols-6">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="animate-pulse px-3 py-2.5">
@@ -48,7 +48,7 @@ export default function OilGasTracker() {
             ))
           : items.map((item) => {
               const positive = item.changePercent >= 0
-              const chgColor = positive ? 'text-emerald-400' : 'text-red-400'
+              const chgStyle = { color: positive ? 'var(--price-up)' : 'var(--price-down)' }
               return (
                 <Link
                   key={item.symbol}
@@ -61,7 +61,7 @@ export default function OilGasTracker() {
                   <span className="text-[13px] font-semibold tabular-nums text-[var(--text)]">
                     ${fmt(item.price)}
                   </span>
-                  <span className={`font-mono text-[10px] tabular-nums ${chgColor}`}>
+                  <span className="font-mono text-[10px] tabular-nums" style={chgStyle}>
                     {pct(item.changePercent)}
                   </span>
                 </Link>

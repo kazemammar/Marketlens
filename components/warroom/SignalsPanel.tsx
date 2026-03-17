@@ -77,10 +77,10 @@ function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
       </p>
       {/* Right meta: category tag · severity badge · time */}
       <div className="flex shrink-0 items-center gap-2 pt-0.5">
-        <span className={`rounded px-1.5 py-px font-mono text-[7px] font-bold uppercase ${CAT_COLOR[sig.category] ?? CAT_COLOR.news}`}>
+        <span className={`rounded px-1.5 py-px font-mono text-[8px] font-bold uppercase ${CAT_COLOR[sig.category] ?? CAT_COLOR.news}`}>
           {CAT_LABEL[sig.category] ?? sig.category}
         </span>
-        <span className={`rounded border px-1.5 py-px font-mono text-[7px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
+        <span className={`rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
           {sig.severity}
         </span>
         <span className="w-10 text-right font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50">

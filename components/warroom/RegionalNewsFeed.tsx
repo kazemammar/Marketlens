@@ -44,7 +44,7 @@ function getImpact(text: string): 'HIGH' | 'MED' | 'LOW' {
 const IMPACT_STYLE = {
   HIGH: 'text-red-400 bg-red-500/10 border-red-500/25',
   MED:  'text-amber-400 bg-amber-500/10 border-amber-500/25',
-  LOW:  'text-slate-400 bg-slate-500/10 border-slate-500/15',
+  LOW:  'text-[var(--text-muted)] bg-[var(--surface-2)] border-[var(--border)]',
 }
 
 function timeAgo(ts: string | number) {
@@ -94,13 +94,13 @@ export default function RegionalNewsFeed() {
 
   return (
     <div
-      className="flex flex-col overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[var(--surface)]"
+      className="flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]"
       style={{ minHeight: '400px' }}
     >
       {/* Header */}
-      <div className="flex items-center gap-1.5 border-b border-[rgba(255,255,255,0.06)] px-3 py-2 shrink-0">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-purple-400" />
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2 shrink-0">
+        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
           Regional Feed
         </span>
         {!loading && (
@@ -111,14 +111,14 @@ export default function RegionalNewsFeed() {
       </div>
 
       {/* Region tabs */}
-      <div className="flex border-b border-[rgba(255,255,255,0.06)] shrink-0">
+      <div className="flex border-b border-[var(--border)] shrink-0">
         {REGIONS.map((r) => (
           <button
             key={r.id}
             onClick={() => setRegion(r.id)}
             className={`flex-1 border-b-2 px-1 py-2 font-mono text-[9px] font-semibold uppercase tracking-wide transition ${
               region === r.id
-                ? 'border-blue-500 text-blue-400'
+                ? 'border-[var(--accent)] text-[var(--accent)]'
                 : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
             }`}
           >
@@ -130,7 +130,7 @@ export default function RegionalNewsFeed() {
       {/* Articles — scrollable */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="divide-y divide-[rgba(255,255,255,0.04)]">
+          <div className="divide-y divide-[var(--border)]">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex animate-pulse gap-2 px-3 py-2.5">
                 <div className="h-10 w-10 shrink-0 rounded bg-[var(--surface-2)]" />
@@ -145,7 +145,7 @@ export default function RegionalNewsFeed() {
         ) : visible.length === 0 ? (
           <p className="py-8 text-center font-mono text-[11px] text-[var(--text-muted)]">No articles</p>
         ) : (
-          <div className="divide-y divide-[rgba(255,255,255,0.04)]">
+          <div className="divide-y divide-[var(--border)]">
             {visible.map((a, i) => {
               const impact  = getImpact(`${a.headline} ${a.summary}`)
               const thumb   = a.imageUrl ?? a.thumbnail
@@ -156,7 +156,7 @@ export default function RegionalNewsFeed() {
                   href={a.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex gap-2 px-3 py-2.5 transition hover:bg-[rgba(255,255,255,0.03)]"
+                  className="group flex gap-2 px-3 py-2.5 transition hover:bg-[var(--surface-2)]"
                 >
                   {thumb ? (
                     <img src={thumb} alt="" className="h-10 w-10 shrink-0 rounded object-cover opacity-80 group-hover:opacity-100" loading="lazy" />
@@ -187,7 +187,7 @@ export default function RegionalNewsFeed() {
             {hasMore && !loadingMore && (
               <button
                 onClick={() => fetchPage(page + 1, false)}
-                className="w-full py-2.5 font-mono text-[10px] text-[var(--text-muted)] transition hover:bg-[rgba(255,255,255,0.03)] hover:text-[var(--text)]"
+                className="w-full py-2.5 font-mono text-[10px] text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
               >
                 Load more
               </button>

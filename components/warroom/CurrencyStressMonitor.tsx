@@ -33,18 +33,17 @@ export default function CurrencyStressMonitor() {
   }, [])
 
   const stressed = pairs.filter((p) => Math.abs(p.changePercent) >= 1)
-  const stable   = pairs.filter((p) => Math.abs(p.changePercent) < 1)
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[rgba(255,255,255,0.07)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-3 py-2">
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-blue-400" aria-hidden>
+          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
             <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
             <path d="M8 4v4l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted)]">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
             FX Stress
           </span>
         </div>
@@ -56,7 +55,7 @@ export default function CurrencyStressMonitor() {
       </div>
 
       {/* Pairs */}
-      <div className="divide-y divide-[rgba(255,255,255,0.04)]">
+      <div className="divide-y divide-[var(--border)]">
         {loading
           ? Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="flex animate-pulse items-center justify-between px-3 py-2">
@@ -68,8 +67,9 @@ export default function CurrencyStressMonitor() {
               const positive  = p.changePercent >= 0
               const stressed  = Math.abs(p.changePercent) >= 1
               const chgColor  = stressed
-                ? (positive ? 'text-emerald-300 font-bold' : 'text-red-300 font-bold')
-                : (positive ? 'text-emerald-400' : 'text-red-400')
+                ? (positive ? 'font-bold' : 'font-bold')
+                : ''
+              const chgStyle  = { color: positive ? 'var(--price-up)' : 'var(--price-down)' }
               return (
                 <div
                   key={p.symbol}
@@ -79,7 +79,7 @@ export default function CurrencyStressMonitor() {
                 >
                   <div className="flex items-center gap-2">
                     {stressed && (
-                      <span className={`h-1.5 w-1.5 rounded-full ${positive ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
+                      <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: positive ? 'var(--price-up)' : 'var(--price-down)' }} />
                     )}
                     <span className={`font-mono text-[11px] ${stressed ? 'text-[var(--text)]' : 'text-[var(--text-muted)]'}`}>
                       {p.symbol}
@@ -89,7 +89,7 @@ export default function CurrencyStressMonitor() {
                     <span className="font-mono text-[11px] tabular-nums text-[var(--text)]">
                       {fmt(p.price, p.symbol)}
                     </span>
-                    <span className={`font-mono text-[10px] tabular-nums ${chgColor}`}>
+                    <span className={`font-mono text-[10px] tabular-nums ${chgColor}`} style={chgStyle}>
                       {p.changePercent >= 0 ? '+' : ''}{p.changePercent.toFixed(2)}%
                     </span>
                   </div>
@@ -106,7 +106,7 @@ export default function CurrencyStressMonitor() {
 
       {/* Footer legend */}
       {!loading && (
-        <div className="border-t border-[rgba(255,255,255,0.04)] px-3 py-1.5">
+        <div className="border-t border-[var(--border)] px-3 py-1.5">
           <span className="font-mono text-[9px] text-[var(--text-muted)]">
             ● STRESSED = daily move &gt;1%
           </span>

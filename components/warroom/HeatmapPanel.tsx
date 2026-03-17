@@ -70,7 +70,7 @@ function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
     >
       <span
         className="font-mono font-bold leading-none"
-        style={{ fontSize: '11px', color: textWhite ? '#ffffff' : 'var(--text)' }}
+        style={{ fontSize: '11px', color: textWhite ? '#fff' : 'var(--text)' }}
       >
         {sym}
       </span>

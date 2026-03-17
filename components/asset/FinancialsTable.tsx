@@ -148,7 +148,7 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
                 <tbody className="divide-y divide-[var(--border)]">
                   {earnings.map((e) => {
                     const beat  = e.surprise > 0
-                    const color = beat ? 'text-green-500' : e.surprise < 0 ? 'text-red-500' : 'text-slate-400'
+                    const color = beat ? 'text-[var(--price-up)]' : e.surprise < 0 ? 'text-[var(--price-down)]' : 'text-[var(--text-muted)]'
                     return (
                       <tr key={e.period} className="hover:bg-[var(--surface-2)]">
                         <td className="py-2 text-[var(--text-muted)]">{e.period}</td>

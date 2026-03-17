@@ -150,7 +150,7 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                   <div className="mb-0.5 flex flex-wrap items-center gap-1.5">
                     <span className="font-mono text-[11px] font-bold text-[var(--text)]">{factor.title}</span>
                     <span
-                      className="rounded px-1.5 py-px font-mono text-[7px] font-bold uppercase tracking-[0.08em]"
+                      className="rounded px-1.5 py-px font-mono text-[8px] font-bold uppercase tracking-[0.08em]"
                       style={{ background: cat.bg, color: cat.color }}
                     >
                       {cat.label}
@@ -166,7 +166,7 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                   <span className="font-mono text-[14px] font-bold leading-none" style={{ color: impact.color }}>
                     {impact.icon}
                   </span>
-                  <span className={`rounded border px-1 py-px font-mono text-[7px] font-bold uppercase ${SEV_BADGE[factor.severity]}`}>
+                  <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[factor.severity]}`}>
                     {factor.severity}
                   </span>
                 </div>

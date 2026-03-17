@@ -91,10 +91,10 @@ export default function MarketBrief() {
                 boxShadow: '0 0 12px rgba(16,185,129,0.15)',
               }}
             >
-              <span className="live-dot h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+              <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
               <span
                 className="font-mono text-[10px] font-bold uppercase tracking-[0.16em]"
-                style={{ color: '#10b981' }}
+                style={{ color: 'var(--accent)' }}
               >
                 AI Brief
               </span>

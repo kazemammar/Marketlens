@@ -25,7 +25,7 @@ function NavLink({ label, href, isActive }: { label: string; href: string; isAct
       href={href}
       className={`relative flex h-8 items-center px-3 text-[11px] font-medium tracking-wide transition-colors duration-150 ${
         isActive
-          ? 'text-[#10b981]'
+          ? 'text-[var(--accent)]'
           : 'text-[var(--text-muted)] hover:text-[var(--text-2)]'
       }`}
     >
@@ -34,7 +34,7 @@ function NavLink({ label, href, isActive }: { label: string; href: string; isAct
       {isActive && (
         <span
           className="absolute bottom-0 left-3 right-3 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, #10b981, transparent)' }}
+          style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }}
         />
       )}
     </Link>
@@ -97,7 +97,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
               onClick={onClose}
               className={`flex min-h-[44px] items-center justify-center rounded-lg py-3 text-[11px] font-medium tracking-wide transition-colors ${
                 isActive
-                  ? 'bg-[rgba(16,185,129,0.08)] text-[#10b981]'
+                  ? 'bg-[var(--accent-dim)] text-[var(--accent)]'
                   : 'text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text-2)]'
               }`}
             >
@@ -167,7 +167,7 @@ export default function Navbar() {
               <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5" aria-hidden>
                 <polyline
                   points="1,11 4,7 7,8.5 10,4 13,2"
-                  stroke="#10b981"
+                  stroke="var(--accent)"
                   strokeWidth="1.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -178,19 +178,19 @@ export default function Navbar() {
             {/* Wordmark */}
             <span className="hidden sm:flex items-baseline gap-0" style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.03em' }}>
               <span style={{ color: 'var(--text)' }}>Market</span>
-              <span style={{ color: '#10b981', textShadow: '0 0 16px rgba(16,185,129,0.5)' }}>Lens</span>
+              <span style={{ color: 'var(--accent)', textShadow: '0 0 16px rgba(16,185,129,0.5)' }}>Lens</span>
             </span>
 
             {/* LIVE pill */}
             <span
-              className="hidden sm:flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[7px] font-bold tracking-[0.18em]"
+              className="hidden sm:flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold tracking-[0.18em]"
               style={{
                 background: 'rgba(16,185,129,0.10)',
                 border: '1px solid rgba(16,185,129,0.22)',
-                color: '#10b981',
+                color: 'var(--accent)',
               }}
             >
-              <span className="live-dot h-1 w-1 rounded-full" style={{ background: '#10b981' }} />
+              <span className="live-dot h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
               LIVE
             </span>
           </Link>

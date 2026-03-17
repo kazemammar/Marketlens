@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: 'Forex',       href: '/forex'       },
   { label: 'Commodities', href: '/commodities' },
   { label: 'ETFs',        href: '/etf'         },
+  { label: 'Portfolio',   href: '/portfolio'   },
   { label: 'News',        href: '/news'        },
   { label: 'Econ',        href: '/economics'   },
 ]

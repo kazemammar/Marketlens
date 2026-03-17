@@ -220,3 +220,17 @@ export interface InsiderTransaction {
   price: number
 }
 
+// ─── Portfolio ─────────────────────────────────────────────────────────────
+
+export interface PortfolioPosition {
+  id:         string
+  symbol:     string
+  asset_type: AssetType
+  direction:  'long' | 'short'
+  quantity:   number | null
+  avg_cost:   number | null
+  notes:      string | null
+  added_at:   string
+  updated_at: string
+}
+

@@ -4,10 +4,20 @@ export type NewsCategory = 'GEOPOLITICAL' | 'ENERGY' | 'CRYPTO' | 'TECH' | 'MARK
 
 export function categorizeArticle(headline: string): NewsCategory {
   const h = headline.toLowerCase()
-  if (/iran|israel|russia|ukraine|war|military|nato|sanction|missile|attack|conflict|houthi|gaza|troops|ceasefire|coup|invasion|airstrike/.test(h)) return 'GEOPOLITICAL'
-  if (/oil|crude|opec|natural gas|energy|pipeline|barrel|refinery|lng|petroleum|brent|wti/.test(h)) return 'ENERGY'
-  if (/bitcoin|crypto|btc|eth|blockchain|defi|token|nft|altcoin|binance|coinbase/.test(h)) return 'CRYPTO'
-  if (/\bai\b|artificial intelligence|apple|google|nvidia|microsoft|chip|semiconductor|software|openai|meta|big tech|tech stock/.test(h)) return 'TECH'
+
+  // ENERGY & COMMODITIES — must run BEFORE geopolitical so that oil/gas/commodity
+  // articles mentioning Iran, Russia, Ukraine etc. land here, not in GEOPOLITICAL
+  if (/\boil\b|crude oil|petroleum|\bopec\b|\bbrent\b|\bwti\b|\bbarrels?\b|refin(ery|ing)|\blng\b|natural gas|\bgas price|\bgas supply|\bfuel\b|\bdiesel\b|\bgasoline\b|\bcoal\b|\buranium\b|\bgold\b|\bsilver\b|\bcopper\b|\bwheat\b|\bcorn\b|soybean|commodit|commodity|commodities|\bpipeline\b|\bshale\b|energy sector|energy (stock|price|market|supply|crisis)|oil (price|market|supply|output|production|demand)|oil sanction|gas (price|market|supply)|energy transition|renewable energy|\bsolar\b|\bwind (energy|power|farm|turbine)\b/.test(h)) return 'ENERGY'
+
+  // CRYPTO
+  if (/bitcoin|ethereum|\bbtc\b|\beth\b|crypto(currency)?|blockchain|\bdefi\b|\bnft\b|altcoin|binance|coinbase|solana|\bxrp\b|ripple/.test(h)) return 'CRYPTO'
+
+  // GEOPOLITICAL — energy articles with geo actors already captured above
+  if (/iran|israel|russia|ukraine|\bwar\b|military|nato|sanction|missile|attack|conflict|houthi|gaza|troops|ceasefire|coup|invasion|airstrike|geopolit|taiwan strait|north korea|nuclear weapon|blockade|terrorist/.test(h)) return 'GEOPOLITICAL'
+
+  // TECH
+  if (/\bai\b|artificial intelligence|nvidia|semiconductor|\bchips?\b|openai|chatgpt|tech stock|big tech|software (company|startup)|cloud computing|silicon valley/.test(h)) return 'TECH'
+
   return 'MARKETS'
 }
 

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   }
 
   const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://marketlens.live'
-  const authHeaders = secret ? { Authorization: `Bearer ${secret}` } : {}
+  const authHeaders: Record<string, string> = secret ? { Authorization: `Bearer ${secret}` } : {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const results: Record<string, any> = {}

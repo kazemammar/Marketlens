@@ -186,50 +186,75 @@ export default function PerformanceChart() {
   const isPositive = (latest?.returnPct ?? 0) >= 0
   const lineColor  = isPositive ? '#10b981' : '#ef4444'
 
-  const yValues  = snapshots.map((s) => s.returnPct)
-  const yMin     = yValues.length ? Math.min(...yValues) : -10
-  const yMax     = yValues.length ? Math.max(...yValues) :  10
-  const yPad     = Math.max(2, (yMax - yMin) * 0.12)
-  const yDomain: [number, number] = [Math.floor(yMin - yPad), Math.ceil(yMax + yPad)]
-
   const tickStep = Math.max(1, Math.floor(snapshots.length / 6))
   const ticks    = snapshots.filter((_, i) => i % tickStep === 0).map((s) => s.date)
 
-  const isEmpty = !loading && !error && snapshots.length === 0
+  const isEmpty    = !loading && !error && snapshots.length === 0
+  const isSingle   = !loading && !error && snapshots.length === 1
+
+  // ── Shared header ──
+  const Header = (
+    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+      <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#10b981' }} aria-hidden>
+        <polyline points="1,13 4,8 7,10 10,5 15,3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text)]">
+        Performance
+      </span>
+      <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">Portfolio history</span>
+      <div className="ml-auto flex items-center gap-1">
+        {RANGES.map((r) => (
+          <button
+            key={r.key}
+            onClick={() => handleRange(r.key)}
+            className="rounded px-2 py-0.5 font-mono text-[9px] font-semibold transition-colors"
+            style={range === r.key ? {
+              background: 'var(--accent)',
+              color:      '#000',
+            } : {
+              background: 'var(--surface-2)',
+              color:      'var(--text-muted)',
+            }}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  // ── Single snapshot: show summary card instead of chart ──
+  if (isSingle) {
+    const snap = snapshots[0]
+    const snapColor = snap.returnPct >= 0 ? 'var(--price-up)' : 'var(--price-down)'
+    const snapGlow  = snap.returnPct >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'
+    return (
+      <div className="flex flex-col">
+        {Header}
+        <div className="flex flex-col items-center justify-center gap-3 py-8">
+          <div
+            className="font-mono text-[32px] font-bold tabular-nums"
+            style={{ color: snapColor, textShadow: `0 0 20px ${snapGlow}` }}
+          >
+            {snap.returnPct >= 0 ? '+' : ''}{snap.returnPct.toFixed(2)}%
+          </div>
+          <p className="font-mono text-[11px] text-[var(--text-muted)]">
+            Portfolio value: ${snap.totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+          </p>
+          <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+            First snapshot taken {snap.date} · Chart appears after 2+ days of data
+          </p>
+          <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+            Daily snapshots are taken automatically after market close
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col">
-
-      {/* Panel header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
-        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#10b981' }} aria-hidden>
-          <polyline points="1,13 4,8 7,10 10,5 15,3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text)]">
-          Performance
-        </span>
-        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">Portfolio history</span>
-
-        {/* Range toggles */}
-        <div className="ml-auto flex items-center gap-1">
-          {RANGES.map((r) => (
-            <button
-              key={r.key}
-              onClick={() => handleRange(r.key)}
-              className="rounded px-2 py-0.5 font-mono text-[9px] font-semibold transition-colors"
-              style={range === r.key ? {
-                background: 'var(--accent)',
-                color:      '#000',
-              } : {
-                background: 'var(--surface-2)',
-                color:      'var(--text-muted)',
-              }}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {Header}
 
       {/* Body */}
       {loading && !data ? (
@@ -250,8 +275,9 @@ export default function PerformanceChart() {
         <div style={{ opacity: fading ? 0.4 : 1, transition: 'opacity 200ms' }}>
 
           {/* Chart */}
-          <div className="px-1 pt-2" style={{ height: '180px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="px-1 pt-2">
+            <div className="w-full" style={{ minHeight: '180px', minWidth: '100px' }}>
+            <ResponsiveContainer width="100%" height={180}>
               <AreaChart data={snapshots} margin={{ top: 8, right: 12, bottom: 0, left: 5 }}>
                 <defs>
                   <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
@@ -278,7 +304,10 @@ export default function PerformanceChart() {
                   tickLine={false}
                 />
                 <YAxis
-                  domain={yDomain}
+                  domain={[
+                    (dataMin: number) => Math.min(dataMin - 5, -5),
+                    (dataMax: number) => Math.max(dataMax + 5, 5),
+                  ]}
                   tickFormatter={(v) => `${v.toFixed(0)}%`}
                   tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'monospace' }}
                   axisLine={false}
@@ -305,6 +334,7 @@ export default function PerformanceChart() {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            </div>
           </div>
 
           {/* Summary row */}

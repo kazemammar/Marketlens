@@ -71,9 +71,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'notes max 200 chars' }, { status: 400 })
   }
 
+  // Validate lots if provided
+  const lots = Array.isArray(body.lots) ? body.lots : []
+  const purchaseDate = body.purchase_date != null ? String(body.purchase_date).trim() : null
+
   const { data, error } = await supabase
     .from('portfolio_positions')
-    .insert({ user_id: user.id, symbol, asset_type: assetType, direction, quantity, avg_cost: avgCost, notes })
+    .insert({
+      user_id:       user.id,
+      symbol,
+      asset_type:    assetType,
+      direction,
+      quantity,
+      avg_cost:      avgCost,
+      notes,
+      lots,
+      purchase_date: purchaseDate,
+    })
     .select()
     .single()
 
@@ -137,6 +151,14 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: 'notes max 200 chars' }, { status: 400 })
     }
     updates.notes = notes
+  }
+
+  if (body.lots != null) {
+    updates.lots = Array.isArray(body.lots) ? body.lots : []
+  }
+
+  if (body.purchase_date !== undefined) {
+    updates.purchase_date = body.purchase_date != null ? String(body.purchase_date).trim() : null
   }
 
   const { data, error } = await supabase

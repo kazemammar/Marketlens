@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth }      from '@/lib/hooks/useAuth'
 import { usePortfolio } from '@/lib/hooks/usePortfolio'
@@ -14,7 +14,9 @@ import DayMovers        from '@/components/portfolio/DayMovers'
 import AllocationPanel  from '@/components/portfolio/AllocationPanel'
 import RiskAlerts       from '@/components/portfolio/RiskAlerts'
 import ExposurePanel    from '@/components/portfolio/ExposurePanel'
-import EarningsCalendar from '@/components/portfolio/EarningsCalendar'
+import EarningsCalendar  from '@/components/portfolio/EarningsCalendar'
+import BenchmarkChart   from '@/components/portfolio/BenchmarkChart'
+import PerformanceChart from '@/components/portfolio/PerformanceChart'
 
 // ─── Crypto symbol mapping ─────────────────────────────────────────────────
 
@@ -122,12 +124,13 @@ function SectionHeader({
 
 export default function PortfolioPage() {
   const { user, loading: authLoading } = useAuth()
-  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, refetch } = usePortfolio()
+  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, removeLot, refetch } = usePortfolio()
 
   const [quotes,       setQuotes]       = useState<Record<string, QuoteData>>({})
   const [addOpen,      setAddOpen]      = useState(false)
   const [authOpen,     setAuthOpen]     = useState(false)
   const [briefTrigger, setBriefTrigger] = useState(0)
+  const [prefill,      setPrefill]      = useState<{ symbol: string; type: string } | undefined>()
 
   // ── Fetch live prices ─────────────────────────────────────────────────
   const fetchQuotes = useCallback(async () => {
@@ -210,6 +213,33 @@ export default function PortfolioPage() {
 
     setQuotes(merged)
   }, [positions])
+
+  // All-time P&L — same source as summary bar, passed to BenchmarkChart for consistency
+  const allTimeStats = useMemo(() => {
+    let totalValue = 0
+    let totalCost  = 0
+    let withCost   = 0
+    for (const p of positions) {
+      const q = quotes[p.symbol]
+      if (!q || !p.quantity || !p.avg_cost) continue
+      const qty = Number(p.quantity)
+      const avg = Number(p.avg_cost)
+      if (qty <= 0 || avg <= 0) continue
+      withCost++
+      totalValue += qty * q.price
+      totalCost  += qty * avg
+    }
+    const allTimePnl = totalValue - totalCost
+    const allTimePct = totalCost > 0 ? (allTimePnl / totalCost) * 100 : 0
+    return {
+      allTimeReturn:     allTimePct,
+      allTimeReturnAmt:  allTimePnl,
+      totalCost,
+      totalValue,
+      positionsWithCost: withCost,
+      totalPositions:    positions.length,
+    }
+  }, [positions, quotes])
 
   useEffect(() => {
     fetchQuotes()
@@ -310,6 +340,16 @@ export default function PortfolioPage() {
             </div>
           </div>
 
+          {/* ── Benchmark Comparison ─────────────────────────────────────── */}
+          <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+            <BenchmarkChart {...allTimeStats} />
+          </div>
+
+          {/* ── Performance History ──────────────────────────────────────── */}
+          <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+            <PerformanceChart />
+          </div>
+
           {/* ── Earnings Calendar ────────────────────────────────────────── */}
           {positions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
             <div className="border-b border-[var(--border)] bg-[var(--surface)]">
@@ -362,6 +402,15 @@ export default function PortfolioPage() {
                 if (ok) setBriefTrigger((n) => n + 1)
                 return ok
               }}
+              onDeleteLot={async (positionId, lotId) => {
+                const ok = await removeLot(positionId, lotId)
+                if (ok) setBriefTrigger((n) => n + 1)
+                return ok
+              }}
+              onAddMore={(position) => {
+                setPrefill({ symbol: position.symbol, type: position.asset_type })
+                setAddOpen(true)
+              }}
             />
           </div>
 
@@ -384,7 +433,14 @@ export default function PortfolioPage() {
       {/* ══ MODALS ═══════════════════════════════════════════════════════ */}
       <AddPositionModal
         isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
+        onClose={() => { setAddOpen(false); setPrefill(undefined) }}
+        prefill={prefill}
+        positions={positions}
+        onAddLot={async (positionId, lot) => {
+          const ok = await addLotToPosition(positionId, lot)
+          if (ok) setBriefTrigger((n) => n + 1)
+          return ok
+        }}
         onAdd={async (data) => {
           const ok = await addPosition(
             data.symbol,
@@ -393,6 +449,8 @@ export default function PortfolioPage() {
             data.quantity,
             data.avgCost,
             data.notes,
+            data.lots   ?? null,
+            data.purchaseDate ?? null,
           )
           if (ok) { await refetch(); setBriefTrigger((n) => n + 1) }
           return ok

@@ -218,7 +218,7 @@ export default function PortfolioSummary({
                   <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: '#22c55e', textShadow: '0 0 10px #22c55e40' }}>
                     ↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%
                   </span>
-                  <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100">
+                  <div className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 z-50">
                     Best performer today
                   </div>
                 </div>
@@ -228,7 +228,7 @@ export default function PortfolioSummary({
                   <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: '#ef4444', textShadow: '0 0 10px #ef444430' }}>
                     ↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%
                   </span>
-                  <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100">
+                  <div className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 z-50">
                     Worst performer today
                   </div>
                 </div>

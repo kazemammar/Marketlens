@@ -92,7 +92,7 @@ function DonutRing({
 
   return (
     <div className="relative flex shrink-0 items-center justify-center">
-      <svg width="100" height="100" viewBox="0 0 100 100" className="overflow-visible shrink-0" aria-hidden>
+      <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden>
         <defs>
           <filter id="ring-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="2.5" result="blur"/>
@@ -124,11 +124,10 @@ function DonutRing({
             strokeDashoffset={arc.dashOff}
             strokeLinecap="butt"
             filter="url(#ring-glow)"
+            transform={`rotate(-90 ${CX} ${CY})`}
             style={{
-              transformOrigin: `${CX}px ${CY}px`,
-              transform:       'rotate(-90deg)',
-              transition:      'stroke-dasharray 0.8s ease, stroke-dashoffset 0.8s ease',
-              opacity:         0.92,
+              transition: 'stroke-dasharray 0.8s ease, stroke-dashoffset 0.8s ease',
+              opacity:    0.92,
             }}
           />
         ))}

@@ -22,37 +22,36 @@ interface RiskAlert {
   severity:  Severity
   category:  string
   message:   string
-  valuePct?: number   // optional % to render a visual bar
+  valuePct?: number
+  // 'bar' = show severity bar, 'direction' = show directional arrow, 'none' = nothing
+  indicator: 'bar' | 'direction' | 'none'
+  dirLong?:  boolean
 }
 
-const SEV_CONFIG: Record<Severity, { border: string; bg: string; pill: string; dot: string; pulse: boolean }> = {
+const SEV_CONFIG: Record<Severity, { border: string; bg: string; pill: string; dot: string }> = {
   HIGH: {
     border: '#ef4444',
-    bg:     'linear-gradient(135deg, rgba(239,68,68,0.06), transparent 60%)',
+    bg:     'linear-gradient(135deg, rgba(239,68,68,0.07), transparent 65%)',
     pill:   'bg-red-500/10 text-red-400 border-red-500/20',
     dot:    '#ef4444',
-    pulse:  true,
   },
   MED: {
     border: '#f59e0b',
-    bg:     'linear-gradient(135deg, rgba(245,158,11,0.06), transparent 60%)',
+    bg:     'linear-gradient(135deg, rgba(245,158,11,0.06), transparent 65%)',
     pill:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
     dot:    '#f59e0b',
-    pulse:  false,
   },
   LOW: {
     border: '#60a5fa',
-    bg:     'linear-gradient(135deg, rgba(96,165,250,0.06), transparent 60%)',
+    bg:     'linear-gradient(135deg, rgba(96,165,250,0.05), transparent 65%)',
     pill:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
     dot:    '#60a5fa',
-    pulse:  false,
   },
   INFO: {
     border: '#6b7280',
-    bg:     'linear-gradient(135deg, rgba(107,114,128,0.04), transparent 60%)',
+    bg:     'linear-gradient(135deg, rgba(107,114,128,0.04), transparent 65%)',
     pill:   'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
     dot:    '#6b7280',
-    pulse:  false,
   },
 }
 
@@ -100,7 +99,7 @@ function CategoryIcon({ category }: { category: string }) {
           <path d="M1 10L4 6l3 2 4-6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       )
-    default: // Data / Info
+    default:
       return (
         <svg viewBox="0 0 12 12" fill="none" className={cls} aria-hidden>
           <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
@@ -139,10 +138,11 @@ function computeAlerts(
         const pct = (val / totalValue) * 100
         if (pct > 40) {
           alerts.push({
-            severity: 'HIGH',
-            category: 'Concentration',
-            message:  `${sym} is ${pct.toFixed(0)}% of portfolio value — high concentration risk`,
-            valuePct: pct,
+            severity:  'HIGH',
+            category:  'Concentration',
+            message:   `${sym} is ${pct.toFixed(0)}% of portfolio value — high concentration risk`,
+            valuePct:  pct,
+            indicator: 'bar',
           })
         }
       }
@@ -162,10 +162,11 @@ function computeAlerts(
         const pct = (val / totalTyped) * 100
         if (pct > 70) {
           alerts.push({
-            severity: 'HIGH',
-            category: 'Diversification',
-            message:  `Portfolio is ${pct.toFixed(0)}% ${type}s — limited diversification`,
-            valuePct: pct,
+            severity:  'HIGH',
+            category:  'Diversification',
+            message:   `Portfolio is ${pct.toFixed(0)}% ${type}s — limited diversification`,
+            valuePct:  pct,
+            indicator: 'bar',
           })
         }
       }
@@ -177,32 +178,35 @@ function computeAlerts(
       const pct = (count / total) * 100
       if (pct > 70 && total >= 3) {
         alerts.push({
-          severity: 'HIGH',
-          category: 'Diversification',
-          message:  `${pct.toFixed(0)}% of positions are ${type}s — limited diversification`,
-          valuePct: pct,
+          severity:  'HIGH',
+          category:  'Diversification',
+          message:   `${pct.toFixed(0)}% of positions are ${type}s — limited diversification`,
+          valuePct:  pct,
+          indicator: 'bar',
         })
       }
     }
   }
 
-  const longCount = positions.filter((p) => p.direction === 'long').length
+  const longCount  = positions.filter((p) => p.direction === 'long').length
   const shortCount = positions.filter((p) => p.direction === 'short').length
-  const longPct   = (longCount / total) * 100
+  const longPct    = (longCount / total) * 100
 
   if (longPct > 85 && total >= 3) {
     alerts.push({
-      severity: 'MED',
-      category: 'Direction',
-      message:  `Portfolio is ${longPct.toFixed(0)}% long — vulnerable to broad market decline`,
-      valuePct: longPct,
+      severity:  'MED',
+      category:  'Direction',
+      message:   `Portfolio is ${longPct.toFixed(0)}% long — vulnerable to broad market decline`,
+      indicator: 'direction',
+      dirLong:   true,
     })
   } else if ((100 - longPct) > 85 && total >= 3) {
     alerts.push({
-      severity: 'MED',
-      category: 'Direction',
-      message:  `Portfolio is ${(100 - longPct).toFixed(0)}% short — at risk if markets rally`,
-      valuePct: 100 - longPct,
+      severity:  'MED',
+      category:  'Direction',
+      message:   `Portfolio is ${(100 - longPct).toFixed(0)}% short — at risk if markets rally`,
+      indicator: 'direction',
+      dirLong:   false,
     })
   }
 
@@ -215,9 +219,10 @@ function computeAlerts(
   for (const [sector, count] of Object.entries(sectorCounts)) {
     if (count >= 3) {
       alerts.push({
-        severity: 'MED',
-        category: 'Correlation',
-        message:  `${count} positions in ${sector} — correlated exposure`,
+        severity:  'MED',
+        category:  'Correlation',
+        message:   `${count} positions in ${sector} — correlated exposure`,
+        indicator: 'none',
       })
     }
   }
@@ -226,18 +231,20 @@ function computeAlerts(
   if (types.size === 1 && total >= 3) {
     const type = [...types][0]
     alerts.push({
-      severity: 'LOW',
-      category: 'Diversity',
-      message:  `All ${total} positions are ${type}s — consider diversifying across asset classes`,
+      severity:  'LOW',
+      category:  'Diversity',
+      message:   `All ${total} positions are ${type}s — consider diversifying across asset classes`,
+      indicator: 'none',
     })
   }
 
   const missingCost = positions.filter((p) => p.quantity == null || p.avg_cost == null).length
   if (missingCost > 0 && missingCost / total > 0.5) {
     alerts.push({
-      severity: 'INFO',
-      category: 'Data',
-      message:  `${missingCost} position${missingCost > 1 ? 's' : ''} missing cost basis — add for full P&L tracking`,
+      severity:  'INFO',
+      category:  'Data',
+      message:   `${missingCost} position${missingCost > 1 ? 's' : ''} missing cost basis — add for full P&L tracking`,
+      indicator: 'none',
     })
   }
 
@@ -271,17 +278,17 @@ export default function RiskAlerts({
   quotes:    Record<string, QuoteData>
 }) {
   const alerts = computeAlerts(positions, quotes)
+  const showFade = alerts.length > 3
 
   return (
     <>
       <PanelHeader />
-      <div className="flex-1 overflow-y-auto px-2.5 py-2">
-        {alerts.length === 0 ? (
-          /* ── All-clear state ── */
-          <div className="flex h-full flex-col items-center justify-center gap-3 py-6">
-            <div className="relative">
-              {/* Shield icon with glow */}
-              <svg viewBox="0 0 40 46" fill="none" width="40" height="46" aria-hidden>
+      <div className="relative flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto scrollbar-hide px-2.5 py-1.5">
+          {alerts.length === 0 ? (
+            /* ── All-clear state ── */
+            <div className="flex h-full flex-col items-center justify-center gap-3 py-6">
+              <svg viewBox="0 0 40 46" fill="none" width="36" height="42" aria-hidden>
                 <defs>
                   <filter id="shield-glow">
                     <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -303,73 +310,95 @@ export default function RiskAlerts({
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
-            <div className="text-center">
-              <p className="font-mono text-[11px] font-semibold" style={{ color: 'var(--price-up)' }}>
-                Portfolio balanced
-              </p>
-              <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-60 mt-0.5">
-                No risk alerts detected
-              </p>
-            </div>
-          </div>
-        ) : (
-          alerts.map((alert, i) => {
-            const cfg = SEV_CONFIG[alert.severity]
-            return (
-              <div
-                key={i}
-                className="animate-fade-up mb-2 overflow-hidden rounded-lg"
-                style={{
-                  borderLeft:         `3px solid ${cfg.border}`,
-                  background:         cfg.bg,
-                  border:             `1px solid ${cfg.border}25`,
-                  borderLeftWidth:    '3px',
-                  borderLeftColor:    cfg.border,
-                  animationDelay:     `${i * 60}ms`,
-                  animationFillMode:  'both',
-                }}
-              >
-                {/* Header row */}
-                <div className="flex items-center gap-1.5 px-2.5 pt-2 pb-1">
-                  {/* Severity dot — pulsing for HIGH */}
-                  <span
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${cfg.pulse ? 'live-dot' : ''}`}
-                    style={{ background: cfg.dot, boxShadow: `0 0 5px ${cfg.dot}70` }}
-                  />
-
-                  {/* Category icon + pill */}
-                  <span style={{ color: cfg.dot }}>
-                    <CategoryIcon category={alert.category} />
-                  </span>
-                  <span
-                    className={`rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase tracking-wide ${cfg.pill}`}
-                  >
-                    {alert.category}
-                  </span>
-                </div>
-
-                {/* Message */}
-                <p className="px-2.5 pb-2 font-mono text-[11px] leading-relaxed text-[var(--text)]">
-                  {alert.message}
+              <div className="text-center">
+                <p className="font-mono text-[11px] font-semibold" style={{ color: 'var(--price-up)' }}>
+                  Portfolio balanced
                 </p>
-
-                {/* Visual severity bar (when we have a %) */}
-                {alert.valuePct != null && (
-                  <div className="mx-2.5 mb-2 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
+                <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-50 mt-0.5">
+                  No risk alerts detected
+                </p>
+              </div>
+            </div>
+          ) : (
+            alerts.map((alert, i) => {
+              const cfg = SEV_CONFIG[alert.severity]
+              return (
+                <div
+                  key={i}
+                  className="animate-fade-up mb-1.5 overflow-hidden rounded-lg"
+                  style={{
+                    borderLeft:         `3px solid ${cfg.border}`,
+                    background:         cfg.bg,
+                    border:             `1px solid ${cfg.border}20`,
+                    borderLeftWidth:    '3px',
+                    borderLeftColor:    cfg.border,
+                    animationDelay:     `${i * 60}ms`,
+                    animationFillMode:  'both',
+                  }}
+                >
+                  {/* Header row — compact */}
+                  <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+                    {/* Severity dot — pulsing for HIGH */}
+                    <span
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${alert.severity === 'HIGH' ? 'live-dot' : ''}`}
                       style={{
-                        width:      `${Math.min(alert.valuePct, 100)}%`,
-                        background: `linear-gradient(to right, ${cfg.border}70, ${cfg.border})`,
-                        boxShadow:  `0 0 6px ${cfg.border}40`,
+                        background: cfg.dot,
+                        boxShadow:  `0 0 5px ${cfg.dot}${alert.severity === 'HIGH' ? '90' : '50'}`,
                       }}
                     />
+                    <span style={{ color: cfg.dot }}>
+                      <CategoryIcon category={alert.category} />
+                    </span>
+                    <span
+                      className={`rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase tracking-wide ${cfg.pill}`}
+                    >
+                      {alert.category}
+                    </span>
                   </div>
-                )}
-              </div>
-            )
-          })
+
+                  {/* Message */}
+                  <p className="px-2 pb-1.5 font-mono text-[10px] leading-relaxed text-[var(--text)]">
+                    {alert.message}
+                  </p>
+
+                  {/* Indicator: severity bar OR direction arrow */}
+                  {alert.indicator === 'bar' && alert.valuePct != null && (
+                    <div className="mx-2 mb-1.5 h-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width:      `${Math.min(alert.valuePct, 100)}%`,
+                          background: `linear-gradient(to right, ${cfg.border}60, ${cfg.border})`,
+                          boxShadow:  `0 0 5px ${cfg.border}40`,
+                        }}
+                      />
+                    </div>
+                  )}
+                  {alert.indicator === 'direction' && (
+                    <div className="mx-2 mb-1.5 flex items-center gap-1">
+                      <span
+                        className="rounded px-1.5 py-0.5 font-mono text-[8px] font-bold"
+                        style={{
+                          color:      alert.dirLong ? '#22c55e' : '#ef4444',
+                          background: alert.dirLong ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                        }}
+                      >
+                        {alert.dirLong ? '▲ LONG-HEAVY' : '▼ SHORT-HEAVY'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </div>
+
+        {/* Scroll fade gradient — shown when list overflows */}
+        {showFade && (
+          <div
+            className="pointer-events-none absolute bottom-0 left-0 right-0 h-8"
+            style={{ background: 'linear-gradient(to bottom, transparent, var(--surface))' }}
+          />
         )}
       </div>
     </>

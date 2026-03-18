@@ -35,6 +35,14 @@ const SECTOR_COLORS: Record<string, string> = {
   Other:      '#6b7280',
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+function fmtPortfolioValue(v: number): string {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`
+  if (v >= 1_000)     return `$${(v / 1_000).toFixed(1)}K`
+  return `$${v.toFixed(0)}`
+}
+
 // ─── Panel header ─────────────────────────────────────────────────────────
 
 function PanelHeader() {
@@ -58,33 +66,40 @@ function DonutRing({
   segments,
   centerLabel,
   centerSub,
+  centerGlow,
 }: {
-  segments:    Array<{ color: string; pct: number; label: string }>
-  centerLabel: string
-  centerSub:   string
+  segments:     Array<{ color: string; pct: number; label: string }>
+  centerLabel:  string
+  centerSub:    string
+  centerGlow?:  string
 }) {
-  const R            = 36
-  const CX           = 50
-  const CY           = 50
+  const R             = 36
+  const CX            = 50
+  const CY            = 50
   const circumference = 2 * Math.PI * R
-  const gap          = 2 // gap between segments in degrees → px on circle
+  const gap           = 2
 
-  // Build dasharray offsets
   let offset = 0
   const arcs = segments.map(({ color, pct, label }) => {
-    const segLen   = (pct / 100) * circumference - gap
-    const dashArr  = `${Math.max(segLen, 0)} ${circumference}`
-    const dashOff  = -(offset)
-    offset        += (pct / 100) * circumference
+    const segLen  = (pct / 100) * circumference - gap
+    const dashArr = `${Math.max(segLen, 0)} ${circumference}`
+    const dashOff = -(offset)
+    offset       += (pct / 100) * circumference
     return { color, dashArr, dashOff, pct, label }
   })
 
+  const glowColor = centerGlow ?? 'rgba(16,185,129,0.5)'
+
   return (
-    <div className="relative flex items-center justify-center">
+    <div className="relative flex shrink-0 items-center justify-center">
       <svg width="100" height="100" viewBox="0 0 100 100" className="overflow-visible" aria-hidden>
         <defs>
-          <filter id="ring-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2" result="blur"/>
+          <filter id="ring-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="text-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
         </defs>
@@ -94,17 +109,17 @@ function DonutRing({
           cx={CX} cy={CY} r={R}
           fill="none"
           stroke="var(--surface-2)"
-          strokeWidth="8"
+          strokeWidth="7"
         />
 
-        {/* Segments */}
+        {/* Colored segments */}
         {arcs.map((arc, i) => (
           <circle
             key={i}
             cx={CX} cy={CY} r={R}
             fill="none"
             stroke={arc.color}
-            strokeWidth="8"
+            strokeWidth="7"
             strokeDasharray={arc.dashArr}
             strokeDashoffset={arc.dashOff}
             strokeLinecap="butt"
@@ -112,19 +127,33 @@ function DonutRing({
             style={{
               transformOrigin: `${CX}px ${CY}px`,
               transform:       'rotate(-90deg)',
-              transition:      'stroke-dasharray 0.7s ease, stroke-dashoffset 0.7s ease',
-              opacity:         0.9,
+              transition:      'stroke-dasharray 0.8s ease, stroke-dashoffset 0.8s ease',
+              opacity:         0.92,
             }}
           />
         ))}
 
-        {/* Center text */}
-        <text x={CX} y={CY - 5} textAnchor="middle" dominantBaseline="middle"
-          style={{ fill: 'var(--text)', fontFamily: 'monospace', fontSize: '13px', fontWeight: 700 }}>
+        {/* Center value — with glow */}
+        <text
+          x={CX} y={CY - 5}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          filter="url(#text-glow)"
+          style={{
+            fill:       glowColor,
+            fontFamily: 'monospace',
+            fontSize:   '12px',
+            fontWeight: 700,
+          }}
+        >
           {centerLabel}
         </text>
-        <text x={CX} y={CY + 9} textAnchor="middle" dominantBaseline="middle"
-          style={{ fill: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '8px' }}>
+        <text
+          x={CX} y={CY + 9}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          style={{ fill: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '7.5px' }}
+        >
           {centerSub}
         </text>
       </svg>
@@ -154,7 +183,9 @@ export default function AllocationPanel({
 
   // ── By asset class ───────────────────────────────────────────────────
   const typeWeight: Record<string, number> = {}
-  let totalWeight = 0
+  let totalWeight  = 0
+  const hasRealVal = positions.some((p) => p.quantity != null && quotes[p.symbol] != null)
+
   for (const p of positions) {
     const q   = quotes[p.symbol]
     const val = (q && p.quantity != null) ? p.quantity * q.price : 1
@@ -177,60 +208,79 @@ export default function AllocationPanel({
     const sector = SECTOR[p.symbol] ?? 'Other'
     sectorCounts[sector] = (sectorCounts[sector] ?? 0) + 1
   }
-  const sectorEntries  = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1])
-  const totalStocks    = sectorEntries.reduce((acc, [, c]) => acc + c, 0)
-  const hasStocks      = sectorEntries.length > 0
+  const sectorEntries = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1])
+  const totalStocks   = sectorEntries.reduce((acc, [, c]) => acc + c, 0)
+  const hasStocks     = sectorEntries.length > 0
 
-  // Donut segments
+  // Donut
   const donutSegments = typeEntries.map(({ type, pct }) => ({
     color: TYPE_COLORS[type] ?? '#6b7280',
     pct,
     label: TYPE_LABEL[type] ?? type,
   }))
 
+  const centerLabel = hasRealVal ? fmtPortfolioValue(totalWeight) : `${positions.length}`
+  const centerSub   = hasRealVal ? 'portfolio' : 'positions'
+  const dominantColor = donutSegments[0]?.color ?? '#10b981'
+
+  const longDominant = longPct >= 50
+
   return (
     <>
       <PanelHeader />
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2.5">
+      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-2.5">
 
         {/* ── Donut + Legend ──────────────────────────────────────────── */}
         <div className="flex items-center gap-3">
           <DonutRing
             segments={donutSegments}
-            centerLabel={`${positions.length}`}
-            centerSub="positions"
+            centerLabel={centerLabel}
+            centerSub={centerSub}
+            centerGlow={dominantColor}
           />
 
-          {/* Legend */}
-          <div className="flex flex-col gap-1 min-w-0">
-            {typeEntries.map(({ type, pct }) => (
-              <div key={type} className="flex items-center gap-1.5">
-                <span
-                  className="h-2 w-2 shrink-0 rounded-sm"
+          {/* Legend pills */}
+          <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+            {typeEntries.map(({ type, pct }, i) => {
+              const color = TYPE_COLORS[type] ?? '#6b7280'
+              return (
+                <div
+                  key={type}
+                  className="animate-fade-up flex items-center gap-1.5 rounded-md px-2 py-1"
                   style={{
-                    background: TYPE_COLORS[type] ?? '#6b7280',
-                    boxShadow:  `0 0 5px ${TYPE_COLORS[type] ?? '#6b7280'}60`,
+                    background:        `${color}10`,
+                    border:            `1px solid ${color}25`,
+                    animationDelay:    `${i * 40}ms`,
+                    animationFillMode: 'both',
                   }}
-                />
-                <span className="font-mono text-[9px] text-[var(--text-muted)] truncate">
-                  {TYPE_LABEL[type] ?? type}
-                </span>
-                <span
-                  className="ml-auto font-mono text-[9px] font-bold tabular-nums"
-                  style={{ color: TYPE_COLORS[type] ?? '#6b7280' }}
                 >
-                  {pct.toFixed(0)}%
-                </span>
-              </div>
-            ))}
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full"
+                    style={{ background: color, boxShadow: `0 0 5px ${color}70` }}
+                  />
+                  <span className="font-mono text-[9px] truncate" style={{ color }}>
+                    {TYPE_LABEL[type] ?? type}
+                  </span>
+                  <span
+                    className="ml-auto font-mono text-[9px] font-bold tabular-nums shrink-0"
+                    style={{ color }}
+                  >
+                    {pct.toFixed(0)}%
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        {/* ── Long / Short bar ────────────────────────────────────────── */}
+        {/* ── Long / Short bar ─────────────────────────────────────── */}
         <div>
           <p className="mb-1 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Long / Short</p>
-          <div className="relative h-4 w-full overflow-hidden rounded-full bg-[var(--surface-2)]" style={{ boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)' }}>
-            {/* Long fill from left */}
+          <div
+            className="relative h-2 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
+            style={{ boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.25)' }}
+          >
+            {/* Long fill */}
             <div
               className="absolute left-0 top-0 h-full rounded-full transition-all duration-700"
               style={{
@@ -240,7 +290,7 @@ export default function AllocationPanel({
                 opacity:    0.9,
               }}
             />
-            {/* Short fill from right */}
+            {/* Short fill */}
             <div
               className="absolute right-0 top-0 h-full rounded-full transition-all duration-700"
               style={{
@@ -250,12 +300,21 @@ export default function AllocationPanel({
                 opacity:    0.9,
               }}
             />
+            {/* Shimmer pulse on dominant side */}
+            <div
+              className="absolute top-0 h-full animate-pulse rounded-full pointer-events-none"
+              style={{
+                [longDominant ? 'left' : 'right']: 0,
+                width:      `${Math.max(longPct, 100 - longPct)}%`,
+                background: `linear-gradient(${longDominant ? 'to right' : 'to left'}, transparent 40%, rgba(255,255,255,0.08) 100%)`,
+              }}
+            />
           </div>
           <div className="mt-1 flex items-center justify-between">
             <span className="font-mono text-[9px] font-semibold" style={{ color: '#22c55e' }}>
               {longPct.toFixed(0)}% Long
             </span>
-            <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+            <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">
               ({longCount}L / {shortCount}S)
             </span>
             <span className="font-mono text-[9px] font-semibold" style={{ color: '#ef4444' }}>
@@ -264,29 +323,37 @@ export default function AllocationPanel({
           </div>
         </div>
 
-        {/* ── Sector exposure ─────────────────────────────────────────── */}
+        {/* ── Sector exposure ─────────────────────────────────────── */}
         {hasStocks && (
           <div>
-            <p className="mb-1 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Sector Exposure</p>
+            <p className="mb-1 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Sector</p>
             <div className="space-y-1">
-              {sectorEntries.map(([sector, count]) => {
+              {sectorEntries.map(([sector, count], i) => {
                 const pct   = totalStocks > 0 ? (count / totalStocks) * 100 : 0
                 const color = SECTOR_COLORS[sector] ?? '#6b7280'
                 return (
-                  <div key={sector} className="flex items-center gap-2">
-                    <span className="w-16 shrink-0 font-mono text-[9px] text-[var(--text-muted)] truncate">{sector}</span>
+                  <div
+                    key={sector}
+                    className="animate-fade-up flex items-center gap-2"
+                    style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
+                  >
+                    <span className="w-14 shrink-0 font-mono text-[9px] text-[var(--text-muted)] truncate">{sector}</span>
                     <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-[var(--surface-2)]">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{
                           width:      `${pct}%`,
-                          background: color,
-                          opacity:    0.75,
-                          boxShadow:  `0 0 4px ${color}40`,
+                          background: `linear-gradient(to right, ${color}60, ${color})`,
+                          boxShadow:  `0 0 4px ${color}50`,
                         }}
                       />
                     </div>
-                    <span className="w-4 shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] text-right">{count}</span>
+                    <span
+                      className="w-6 shrink-0 font-mono text-[8px] tabular-nums text-right"
+                      style={{ color, opacity: 0.8 }}
+                    >
+                      {pct.toFixed(0)}%
+                    </span>
                   </div>
                 )
               })}
@@ -295,7 +362,7 @@ export default function AllocationPanel({
         )}
 
         {positions.length === 1 && (
-          <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-50 italic">
+          <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-40 italic">
             Add more positions for meaningful allocation data
           </p>
         )}

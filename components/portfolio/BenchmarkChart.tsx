@@ -121,8 +121,6 @@ export default function BenchmarkChart() {
   const [error,   setError]   = useState(false)
   const [range,   setRange]   = useState<Range>('3mo')
   const [fading,  setFading]  = useState(false)
-  const [snapCount, setSnapCount] = useState<number | null>(null)
-
   const fetchData = useCallback(async (r: Range, silent = false, refresh = false) => {
     if (!silent) { setLoading(true); setError(false) }
     else         { setFading(true) }
@@ -138,13 +136,6 @@ export default function BenchmarkChart() {
       setLoading(false)
       setFading(false)
     }
-  }, [])
-
-  useEffect(() => {
-    fetch('/api/portfolio/history?range=ALL')
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.snapshots) setSnapCount(d.snapshots.length) })
-      .catch(() => {})
   }, [])
 
   useEffect(() => { fetchData(range) }, [fetchData, range])
@@ -170,8 +161,6 @@ export default function BenchmarkChart() {
   const spyColor    = '#3b82f6'
   const diffColor   = diffAhead ? '#10b981' : 'var(--price-down)'
   const diffRgb     = diffAhead ? '16,185,129' : 'var(--price-down-rgb)'
-
-  const showSnapshotNote = snapCount !== null && snapCount < 5
 
   // X-axis ticks — ~6 labels
   const tickStep = Math.max(1, Math.floor(series.length / 6))
@@ -387,16 +376,6 @@ export default function BenchmarkChart() {
               <ReturnBar pct={spyReturn} color={spyColor} />
             </div>
           </div>
-
-          {/* ── Snapshot note ── */}
-          {showSnapshotNote && (
-            <div className="mx-3 mb-3 mt-1 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
-              <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-70">
-                Once daily snapshots accumulate, your portfolio performance will be tracked over time in the chart below.
-                Snapshots are taken automatically after market close.
-              </p>
-            </div>
-          )}
 
           {/* ── Footer ── */}
           <p className="border-t border-[var(--border)] px-3 py-1.5 font-mono text-[8px] text-[var(--text-muted)] opacity-40">

@@ -192,6 +192,9 @@ export default function PerformanceChart() {
   const isEmpty    = !loading && !error && snapshots.length === 0
   const isSingle   = !loading && !error && snapshots.length === 1
 
+  // Hide entirely until there are enough snapshots to draw a meaningful chart
+  if (!loading && !error && snapshots.length > 0 && snapshots.length < 3) return null
+
   // ── Shared header ──
   const Header = (
     <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">

@@ -124,12 +124,13 @@ function SectionHeader({
 
 export default function PortfolioPage() {
   const { user, loading: authLoading } = useAuth()
-  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, refetch } = usePortfolio()
+  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, removeLot, refetch } = usePortfolio()
 
   const [quotes,       setQuotes]       = useState<Record<string, QuoteData>>({})
   const [addOpen,      setAddOpen]      = useState(false)
   const [authOpen,     setAuthOpen]     = useState(false)
   const [briefTrigger, setBriefTrigger] = useState(0)
+  const [prefill,      setPrefill]      = useState<{ symbol: string; type: string } | undefined>()
 
   // ── Fetch live prices ─────────────────────────────────────────────────
   const fetchQuotes = useCallback(async () => {
@@ -401,6 +402,15 @@ export default function PortfolioPage() {
                 if (ok) setBriefTrigger((n) => n + 1)
                 return ok
               }}
+              onDeleteLot={async (positionId, lotId) => {
+                const ok = await removeLot(positionId, lotId)
+                if (ok) setBriefTrigger((n) => n + 1)
+                return ok
+              }}
+              onAddMore={(position) => {
+                setPrefill({ symbol: position.symbol, type: position.asset_type })
+                setAddOpen(true)
+              }}
             />
           </div>
 
@@ -423,7 +433,8 @@ export default function PortfolioPage() {
       {/* ══ MODALS ═══════════════════════════════════════════════════════ */}
       <AddPositionModal
         isOpen={addOpen}
-        onClose={() => setAddOpen(false)}
+        onClose={() => { setAddOpen(false); setPrefill(undefined) }}
+        prefill={prefill}
         positions={positions}
         onAddLot={async (positionId, lot) => {
           const ok = await addLotToPosition(positionId, lot)

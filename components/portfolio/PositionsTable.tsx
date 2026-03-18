@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import Link from 'next/link'
-import type { PortfolioPosition } from '@/lib/hooks/usePortfolio'
+import type { PortfolioPosition, PortfolioLot } from '@/lib/hooks/usePortfolio'
 import EditPositionModal from './EditPositionModal'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -46,8 +46,6 @@ function fmtPnl(n: number): string {
   return `${n >= 0 ? '+' : ''}$${n.toFixed(2)}`
 }
 
-// ─── Asset link ────────────────────────────────────────────────────────────
-
 function assetHref(type: string, symbol: string): string {
   return `/asset/${type}/${encodeURIComponent(symbol)}`
 }
@@ -80,26 +78,143 @@ function SortTh({
   )
 }
 
+// ─── Chevron icon ──────────────────────────────────────────────────────────
+
+function Chevron({ expanded }: { expanded: boolean }) {
+  return (
+    <svg viewBox="0 0 8 8" fill="none" className="h-2 w-2 shrink-0 transition-transform duration-150"
+      style={{ transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+      <path d="M2 1l4 3-4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
+
+// ─── Lot count badge ───────────────────────────────────────────────────────
+
+function BuysBadge({ count }: { count: number }) {
+  if (count <= 1) return null
+  return (
+    <span className="rounded px-1 py-px font-mono text-[8px] bg-[var(--accent)]/10 text-[var(--accent)]">
+      {count} buys
+    </span>
+  )
+}
+
+// ─── Lot row (used in both desktop and mobile) ─────────────────────────────
+
+function LotLine({
+  lot,
+  onDelete,
+}: {
+  lot:       PortfolioLot
+  onDelete?: () => void
+}) {
+  const dateFmt = new Date(lot.date + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  })
+  return (
+    <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)]/50 py-2 pr-3 pl-8">
+      <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40 shrink-0">└─</span>
+      <span className="font-mono text-[11px] text-[var(--text)] shrink-0">
+        ${lot.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+      <span className="font-mono text-[9px] text-[var(--text-muted)] shrink-0">at</span>
+      <span className="font-mono text-[11px] text-[var(--text)] shrink-0">${lot.price.toFixed(2)}</span>
+      <span className="font-mono text-[9px] text-[var(--text-muted)] shrink-0">·</span>
+      <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0">{dateFmt}</span>
+      <span className="font-mono text-[9px] text-[var(--text-muted)] shrink-0">·</span>
+      <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0">{lot.quantity.toFixed(4)} units</span>
+      {lot.note && (
+        <>
+          <span className="font-mono text-[9px] text-[var(--text-muted)] shrink-0">·</span>
+          <span className="font-mono text-[9px] italic text-[var(--text-muted)] truncate">{lot.note}</span>
+        </>
+      )}
+      {onDelete && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete() }}
+          className="ml-auto shrink-0 px-1 font-mono text-[12px] text-red-400/50 transition-colors hover:text-red-400"
+          aria-label="Delete lot"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── Add more row ──────────────────────────────────────────────────────────
+
+function AddMoreRow({
+  position,
+  onAddMore,
+}: {
+  position:  PortfolioPosition
+  onAddMore: (p: PortfolioPosition) => void
+}) {
+  return (
+    <div className="border-b border-[var(--border)] bg-[var(--surface-2)]/30 py-1.5 pl-8 pr-3">
+      <button
+        onClick={(e) => { e.stopPropagation(); onAddMore(position) }}
+        className="font-mono text-[9px] text-[var(--accent)] hover:underline"
+      >
+        + Add another purchase
+      </button>
+    </div>
+  )
+}
+
+// ─── Desktop expansion rows ────────────────────────────────────────────────
+
+function LotExpansionRows({
+  position,
+  onDeleteLot,
+  onAddMore,
+}: {
+  position:     PortfolioPosition
+  onDeleteLot?: (positionId: string, lotId: string) => Promise<boolean>
+  onAddMore?:   (position: PortfolioPosition) => void
+}) {
+  const lots = [...(position.lots ?? [])].sort((a, b) => a.date.localeCompare(b.date))
+  return (
+    <tr>
+      <td colSpan={11} className="p-0">
+        {lots.map((lot) => (
+          <LotLine
+            key={lot.id}
+            lot={lot}
+            onDelete={onDeleteLot ? () => onDeleteLot(position.id, lot.id) : undefined}
+          />
+        ))}
+        {onAddMore && <AddMoreRow position={position} onAddMore={onAddMore} />}
+      </td>
+    </tr>
+  )
+}
+
 // ─── Desktop table row ─────────────────────────────────────────────────────
 
 function DesktopRow({
   position,
   quote,
+  isExpanded,
   onEdit,
+  onToggleExpand,
 }: {
-  position: PortfolioPosition
-  quote:    QuoteData | undefined
-  onEdit:   (p: PortfolioPosition) => void
+  position:       PortfolioPosition
+  quote:          QuoteData | undefined
+  isExpanded:     boolean
+  onEdit:         (p: PortfolioPosition) => void
+  onToggleExpand: (id: string) => void
 }) {
+  const hasLots  = (position.lots?.length ?? 0) > 0
   const hasPrice = !!quote
   const hasData  = position.quantity != null && position.avg_cost != null && hasPrice
 
   const marketValue = hasData ? position.quantity! * quote!.price : null
   const costBasis   = hasData ? position.quantity! * position.avg_cost! : null
   const rawPnl      = hasData
-    ? position.direction === 'long'
-      ? marketValue! - costBasis!
-      : costBasis! - marketValue!
+    ? position.direction === 'long' ? marketValue! - costBasis! : costBasis! - marketValue!
     : null
   const pnlPct = hasData && position.avg_cost! > 0
     ? position.direction === 'long'
@@ -112,16 +227,36 @@ function DesktopRow({
 
   return (
     <tr
-      className="group border-b border-[var(--border)] transition-colors hover:bg-[var(--surface-2)]"
+      className={`group border-b border-[var(--border)] transition-colors hover:bg-[var(--surface-2)] ${hasLots ? 'cursor-pointer' : ''}`}
+      onClick={(e) => {
+        if (!hasLots) return
+        const t = e.target as HTMLElement
+        if (t.closest('a') || t.closest('button')) return
+        onToggleExpand(position.id)
+      }}
     >
-      {/* Symbol */}
+      {/* Symbol + chevron */}
       <td className="px-3 py-2.5">
-        <Link
-          href={assetHref(position.asset_type, position.symbol)}
-          className="font-mono text-[12px] font-bold text-[var(--accent)] transition hover:underline"
-        >
-          {position.symbol}
-        </Link>
+        <div className="flex items-center gap-1.5">
+          {hasLots ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleExpand(position.id) }}
+              className="text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+              aria-label={isExpanded ? 'Collapse lots' : 'Expand lots'}
+            >
+              <Chevron expanded={isExpanded} />
+            </button>
+          ) : (
+            <span className="w-2 shrink-0" />
+          )}
+          <Link
+            href={assetHref(position.asset_type, position.symbol)}
+            className="font-mono text-[12px] font-bold text-[var(--accent)] transition hover:underline"
+          >
+            {position.symbol}
+          </Link>
+          <BuysBadge count={position.lots?.length ?? 0} />
+        </div>
       </td>
 
       {/* Type */}
@@ -157,7 +292,7 @@ function DesktopRow({
           ? fmtQty(position.quantity)
           : (
             <button
-              onClick={() => onEdit(position)}
+              onClick={(e) => { e.stopPropagation(); onEdit(position) }}
               className="font-mono text-[10px] text-[var(--text-muted)] opacity-60 hover:text-[var(--accent)] hover:opacity-100"
             >
               + Add
@@ -172,7 +307,7 @@ function DesktopRow({
           ? `$${fmtPrice(position.avg_cost)}`
           : (
             <button
-              onClick={() => onEdit(position)}
+              onClick={(e) => { e.stopPropagation(); onEdit(position) }}
               className="font-mono text-[10px] text-[var(--text-muted)] opacity-60 hover:text-[var(--accent)] hover:opacity-100"
             >
               + Add
@@ -199,10 +334,10 @@ function DesktopRow({
         }
       </td>
 
-      {/* Edit button */}
+      {/* Edit */}
       <td className="px-3 py-2.5">
         <button
-          onClick={() => onEdit(position)}
+          onClick={(e) => { e.stopPropagation(); onEdit(position) }}
           aria-label={`Edit ${position.symbol}`}
           className="flex h-6 w-6 items-center justify-center rounded font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-all hover:bg-[var(--surface)] hover:text-[var(--text)] group-hover:opacity-100 focus:opacity-100"
         >
@@ -218,58 +353,104 @@ function DesktopRow({
 function MobileCard({
   position,
   quote,
+  isExpanded,
   onEdit,
+  onToggleExpand,
+  onDeleteLot,
+  onAddMore,
 }: {
-  position: PortfolioPosition
-  quote:    QuoteData | undefined
-  onEdit:   (p: PortfolioPosition) => void
+  position:       PortfolioPosition
+  quote:          QuoteData | undefined
+  isExpanded:     boolean
+  onEdit:         (p: PortfolioPosition) => void
+  onToggleExpand: (id: string) => void
+  onDeleteLot?:   (positionId: string, lotId: string) => Promise<boolean>
+  onAddMore?:     (position: PortfolioPosition) => void
 }) {
+  const hasLots     = (position.lots?.length ?? 0) > 0
   const changeColor = !quote ? undefined : quote.changePercent >= 0 ? 'var(--price-up)' : 'var(--price-down)'
+  const lots        = [...(position.lots ?? [])].sort((a, b) => a.date.localeCompare(b.date))
 
   return (
-    <div className="flex items-center gap-3 border-b border-[var(--border)] px-3 py-3 transition-colors hover:bg-[var(--surface-2)]">
-      {/* Left: symbol + type */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <Link
-            href={assetHref(position.asset_type, position.symbol)}
-            className="font-mono text-[13px] font-bold text-[var(--accent)] hover:underline"
-          >
-            {position.symbol}
-          </Link>
-          <span className={`rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${TYPE_COLORS[position.asset_type] ?? 'bg-zinc-800 text-zinc-400'}`}>
-            {position.asset_type}
-          </span>
-          <span className={`font-mono text-[9px] font-semibold uppercase ${position.direction === 'long' ? 'text-emerald-400' : 'text-red-400'}`}>
-            {position.direction === 'long' ? '▲ L' : '▼ S'}
-          </span>
-        </div>
-        {position.notes && (
-          <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--text-muted)] opacity-60">{position.notes}</p>
-        )}
-      </div>
-
-      {/* Right: price + change */}
-      <div className="text-right">
-        <p className="font-mono text-[12px] tabular-nums text-[var(--text)]">
-          {quote ? `$${fmtPrice(quote.price)}` : <span className="text-[var(--text-muted)]">—</span>}
-        </p>
-        <p className="font-mono text-[10px] tabular-nums" style={{ color: changeColor }}>
-          {quote
-            ? `${quote.changePercent >= 0 ? '▲' : '▼'} ${Math.abs(quote.changePercent).toFixed(2)}%`
-            : null
-          }
-        </p>
-      </div>
-
-      {/* Edit button */}
-      <button
-        onClick={() => onEdit(position)}
-        aria-label={`Edit ${position.symbol}`}
-        className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+    <div className="border-b border-[var(--border)]">
+      {/* Main card row */}
+      <div
+        className={`flex items-center gap-2 px-3 py-3 transition-colors hover:bg-[var(--surface-2)] ${hasLots ? 'cursor-pointer' : ''}`}
+        onClick={(e) => {
+          if (!hasLots) return
+          const t = e.target as HTMLElement
+          if (t.closest('a') || t.closest('button')) return
+          onToggleExpand(position.id)
+        }}
       >
-        ⋮
-      </button>
+        {/* Chevron */}
+        {hasLots ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleExpand(position.id) }}
+            className="shrink-0 text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+            aria-label={isExpanded ? 'Collapse lots' : 'Expand lots'}
+          >
+            <Chevron expanded={isExpanded} />
+          </button>
+        ) : (
+          <span className="w-2 shrink-0" />
+        )}
+
+        {/* Left: symbol + type */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Link
+              href={assetHref(position.asset_type, position.symbol)}
+              className="font-mono text-[13px] font-bold text-[var(--accent)] hover:underline"
+            >
+              {position.symbol}
+            </Link>
+            <span className={`rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase ${TYPE_COLORS[position.asset_type] ?? 'bg-zinc-800 text-zinc-400'}`}>
+              {position.asset_type}
+            </span>
+            <span className={`font-mono text-[9px] font-semibold uppercase ${position.direction === 'long' ? 'text-emerald-400' : 'text-red-400'}`}>
+              {position.direction === 'long' ? '▲ L' : '▼ S'}
+            </span>
+            <BuysBadge count={position.lots?.length ?? 0} />
+          </div>
+          {position.notes && (
+            <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--text-muted)] opacity-60">{position.notes}</p>
+          )}
+        </div>
+
+        {/* Right: price + change */}
+        <div className="shrink-0 text-right">
+          <p className="font-mono text-[12px] tabular-nums text-[var(--text)]">
+            {quote ? `$${fmtPrice(quote.price)}` : <span className="text-[var(--text-muted)]">—</span>}
+          </p>
+          <p className="font-mono text-[10px] tabular-nums" style={{ color: changeColor }}>
+            {quote ? `${quote.changePercent >= 0 ? '▲' : '▼'} ${Math.abs(quote.changePercent).toFixed(2)}%` : null}
+          </p>
+        </div>
+
+        {/* Edit button */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(position) }}
+          aria-label={`Edit ${position.symbol}`}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+        >
+          ⋮
+        </button>
+      </div>
+
+      {/* Lot expansion (mobile) */}
+      {isExpanded && lots.length > 0 && (
+        <div>
+          {lots.map((lot) => (
+            <LotLine
+              key={lot.id}
+              lot={lot}
+              onDelete={onDeleteLot ? () => onDeleteLot(position.id, lot.id) : undefined}
+            />
+          ))}
+          {onAddMore && <AddMoreRow position={position} onAddMore={onAddMore} />}
+        </div>
+      )}
     </div>
   )
 }
@@ -281,19 +462,32 @@ export default function PositionsTable({
   quotes,
   onUpdate,
   onDelete,
+  onDeleteLot,
+  onAddMore,
 }: {
-  positions: PortfolioPosition[]
-  quotes:    Record<string, QuoteData>
-  onUpdate:  (id: string, updates: Partial<{ direction: 'long' | 'short'; quantity: number | null; avg_cost: number | null; notes: string | null }>) => Promise<boolean>
-  onDelete:  (id: string) => Promise<boolean>
+  positions:    PortfolioPosition[]
+  quotes:       Record<string, QuoteData>
+  onUpdate:     (id: string, updates: Partial<{ direction: 'long' | 'short'; quantity: number | null; avg_cost: number | null; notes: string | null }>) => Promise<boolean>
+  onDelete:     (id: string) => Promise<boolean>
+  onDeleteLot?: (positionId: string, lotId: string) => Promise<boolean>
+  onAddMore?:   (position: PortfolioPosition) => void
 }) {
-  const [sortKey, setSortKey] = useState<SortKey>('symbol')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [editPos, setEditPos] = useState<PortfolioPosition | null>(null)
+  const [sortKey,      setSortKey]      = useState<SortKey>('symbol')
+  const [sortDir,      setSortDir]      = useState<SortDir>('asc')
+  const [editPos,      setEditPos]      = useState<PortfolioPosition | null>(null)
+  const [expandedIds,  setExpandedIds]  = useState<Set<string>>(new Set())
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
     else { setSortKey(key); setSortDir('asc') }
+  }
+
+  function toggleExpand(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
   }
 
   function pnlPct(p: PortfolioPosition): number {
@@ -323,11 +517,11 @@ export default function PositionsTable({
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
-              <SortTh label="Symbol"     sortKey="symbol"        current={sortKey} dir={sortDir} onSort={handleSort} />
-              <SortTh label="Type"       sortKey="type"          current={sortKey} dir={sortDir} onSort={handleSort} />
-              <SortTh label="Direction"  sortKey="direction"     current={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortTh label="Symbol"    sortKey="symbol"        current={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortTh label="Type"      sortKey="type"          current={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortTh label="Direction" sortKey="direction"     current={sortKey} dir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 text-left font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Price</th>
-              <SortTh label="Day %"      sortKey="changePercent" current={sortKey} dir={sortDir} onSort={handleSort} />
+              <SortTh label="Day %"     sortKey="changePercent" current={sortKey} dir={sortDir} onSort={handleSort} />
               <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Qty</th>
               <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Avg Cost</th>
               <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Mkt Value</th>
@@ -338,12 +532,22 @@ export default function PositionsTable({
           </thead>
           <tbody>
             {sorted.map((p) => (
-              <DesktopRow
-                key={p.id}
-                position={p}
-                quote={quotes[p.symbol]}
-                onEdit={setEditPos}
-              />
+              <Fragment key={p.id}>
+                <DesktopRow
+                  position={p}
+                  quote={quotes[p.symbol]}
+                  isExpanded={expandedIds.has(p.id)}
+                  onEdit={setEditPos}
+                  onToggleExpand={toggleExpand}
+                />
+                {expandedIds.has(p.id) && (p.lots?.length ?? 0) > 0 && (
+                  <LotExpansionRows
+                    position={p}
+                    onDeleteLot={onDeleteLot}
+                    onAddMore={onAddMore}
+                  />
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -356,7 +560,11 @@ export default function PositionsTable({
             key={p.id}
             position={p}
             quote={quotes[p.symbol]}
+            isExpanded={expandedIds.has(p.id)}
             onEdit={setEditPos}
+            onToggleExpand={toggleExpand}
+            onDeleteLot={onDeleteLot}
+            onAddMore={onAddMore}
           />
         ))}
       </div>

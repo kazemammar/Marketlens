@@ -63,13 +63,14 @@ function SortTh({
   onSort:  (k: SortKey) => void
   className?: string
 }) {
-  const active = current === sortKey
+  const active  = current === sortKey
+  const isRight = className.includes('text-right')
   return (
     <th
       className={`select-none cursor-pointer px-3 py-2.5 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)] transition-colors hover:text-[var(--text)] ${className || 'text-left'}`}
       onClick={() => onSort(sortKey)}
     >
-      <span className="flex items-center gap-1">
+      <span className={`flex items-center gap-1 ${isRight ? 'justify-end' : ''}`}>
         {label}
         <span className={`transition-opacity ${active ? 'opacity-100' : 'opacity-20'}`}>
           {active && dir === 'asc' ? '▲' : '▼'}

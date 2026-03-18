@@ -172,13 +172,17 @@ export default function MoversStrip() {
   const [data,    setData]    = useState<MoversPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const fetchingRef           = useRef(false)
+  const fetchedAt             = useRef(0)
 
   async function load() {
     if (fetchingRef.current) return
     fetchingRef.current = true
     try {
       const res = await fetch('/api/movers')
-      if (res.ok) setData(await res.json() as MoversPayload)
+      if (res.ok) {
+        setData(await res.json() as MoversPayload)
+        fetchedAt.current = Date.now()
+      }
     } catch { /* silent */ }
     setLoading(false)
     fetchingRef.current = false
@@ -213,6 +217,11 @@ export default function MoversStrip() {
             <span className="live-dot h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">LIVE</span>
           </div>
+          {fetchedAt.current > 0 && (
+            <span className="hidden sm:block font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50" suppressHydrationWarning>
+              Updated {new Date(fetchedAt.current).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
           <Link
             href="/movers"
             className="font-mono text-[9px] text-[var(--text-muted)] transition-colors hover:text-[var(--accent)]"

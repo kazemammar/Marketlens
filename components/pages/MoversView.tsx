@@ -125,16 +125,16 @@ function MoverCard({
       }}
     >
       {/* Top row */}
-      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+      <div className="flex items-center gap-1.5 px-2 pt-2 pb-0.5">
         {/* Rank */}
-        <span className="w-4 shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-40 text-right">
+        <span className="w-4 shrink-0 font-mono text-[11px] tabular-nums text-[var(--text-muted)] opacity-40 text-right">
           {rank}
         </span>
 
         {/* Symbol */}
         <Link
           href={assetHref(item.type, item.symbol)}
-          className="font-mono text-[12px] font-bold hover:underline shrink-0"
+          className="font-mono text-[13px] font-bold hover:underline shrink-0"
           style={{ color: 'var(--accent)' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -149,18 +149,18 @@ function MoverCard({
         )}
 
         {/* Name */}
-        <span className="min-w-0 flex-1 truncate font-mono text-[9px] text-[var(--text-muted)] opacity-60">
+        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-[var(--text-muted)] opacity-70">
           {item.name}
         </span>
 
         {/* Price */}
-        <span className="shrink-0 font-mono text-[10px] tabular-nums text-[var(--text)] opacity-80">
+        <span className="shrink-0 font-mono text-[13px] font-bold tabular-nums text-[var(--text)] opacity-80">
           {fmtPrice(item.price, item.type)}
         </span>
 
         {/* Change % */}
         <span
-          className="shrink-0 font-mono text-[12px] font-bold tabular-nums"
+          className="shrink-0 font-mono text-[13px] font-bold tabular-nums"
           style={{ color: colorHex, textShadow: `0 0 10px ${colorHex}50` }}
         >
           {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
@@ -169,7 +169,7 @@ function MoverCard({
 
       {/* Bar + dollar change */}
       <div className="mx-2 mb-1 flex items-center gap-2">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
@@ -179,7 +179,7 @@ function MoverCard({
             }}
           />
         </div>
-        <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-50">
+        <span className="shrink-0 font-mono text-[10px] tabular-nums text-[var(--text-muted)] opacity-60">
           {fmtChange(item.change)}
         </span>
       </div>
@@ -392,7 +392,7 @@ export default function MoversView() {
                 <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
                   <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span className="font-mono font-bold uppercase tracking-[0.14em] text-[var(--text)]" style={{ fontSize: '9px' }}>
+                <span className="font-mono font-bold uppercase tracking-[0.14em] text-[var(--text)]" style={{ fontSize: '12px' }}>
                   {TABS.find(t => t.key === tab)?.label ?? 'All'} Movers
                 </span>
                 {!loading && (

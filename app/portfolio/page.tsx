@@ -14,6 +14,7 @@ import DayMovers        from '@/components/portfolio/DayMovers'
 import AllocationPanel  from '@/components/portfolio/AllocationPanel'
 import RiskAlerts       from '@/components/portfolio/RiskAlerts'
 import ExposurePanel    from '@/components/portfolio/ExposurePanel'
+import EarningsCalendar from '@/components/portfolio/EarningsCalendar'
 
 // ─── Crypto symbol mapping ─────────────────────────────────────────────────
 
@@ -308,6 +309,13 @@ export default function PortfolioPage() {
               <ExposurePanel positions={positions} quotes={quotes} />
             </div>
           </div>
+
+          {/* ── Earnings Calendar ────────────────────────────────────────── */}
+          {positions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
+            <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+              <EarningsCalendar />
+            </div>
+          )}
 
           {/* ── Section header: POSITIONS ────────────────────────────────── */}
           <SectionHeader

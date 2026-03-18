@@ -15,7 +15,7 @@ import {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────
 
-async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
+export async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
   const apiKey = process.env.FMP_API_KEY
   if (!apiKey) throw new Error('FMP_API_KEY is not set')
 
@@ -189,6 +189,26 @@ export async function searchAssets(query: string, type?: AssetType): Promise<Ass
         currency: r.currency,
       }))
     },
+  )
+}
+
+// ─── Earnings calendar ────────────────────────────────────────────────────
+
+export interface EarningsEvent {
+  date:             string
+  symbol:           string
+  eps:              number | null
+  epsEstimated:     number | null
+  revenue:          number | null
+  revenueEstimated: number | null
+  time:             'bmo' | 'amc' | '--'
+}
+
+export async function getEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
+  return cachedFetch(
+    `earnings:calendar:${from}:${to}`,
+    3600,
+    () => fmpGet<EarningsEvent[]>(`/earning_calendar?from=${from}&to=${to}`),
   )
 }
 

@@ -53,25 +53,30 @@ export async function GET(req: Request) {
   const fmt = (d: Date) => d.toISOString().slice(0, 10)
   const today = fmt(now)
 
+  let allEarnings: EarningsEvent[] = []
   try {
-    const all = await getEarningsCalendar(fmt(from), fmt(to))
-
-    const filtered = all.filter((e) => equitySymbols.has(e.symbol))
-
-    const upcoming = filtered
-      .filter((e) => e.date >= today)
-      .sort((a, b) => a.date.localeCompare(b.date))
-
-    const recent = filtered
-      .filter((e) => e.date < today)
-      .sort((a, b) => b.date.localeCompare(a.date))
-
-    const payload: EarningsPayload = { upcoming, recent, generatedAt: Date.now() }
-    redis.set(cacheKey, payload, { ex: 3600 }).catch(() => {})
-    return NextResponse.json(payload)
-
+    allEarnings = await getEarningsCalendar(fmt(from), fmt(to))
   } catch (err) {
-    console.error('[api/portfolio/earnings]', err)
-    return NextResponse.json({ upcoming: [], recent: [], generatedAt: Date.now() })
+    console.warn('[portfolio/earnings] Failed to fetch earnings calendar:', err)
   }
+
+  if (allEarnings.length === 0) {
+    const empty: EarningsPayload = { upcoming: [], recent: [], generatedAt: Date.now() }
+    redis.set(cacheKey, empty, { ex: 600 }).catch(() => {})
+    return NextResponse.json(empty)
+  }
+
+  const filtered = allEarnings.filter((e) => equitySymbols.has(e.symbol))
+
+  const upcoming = filtered
+    .filter((e) => e.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+
+  const recent = filtered
+    .filter((e) => e.date < today)
+    .sort((a, b) => b.date.localeCompare(a.date))
+
+  const payload: EarningsPayload = { upcoming, recent, generatedAt: Date.now() }
+  redis.set(cacheKey, payload, { ex: 21600 }).catch(() => {})
+  return NextResponse.json(payload)
 }

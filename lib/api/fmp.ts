@@ -22,6 +22,10 @@ export async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
   const url = `${base}${path}${path.includes('?') ? '&' : '?'}apikey=${apiKey}`
   const res = await fetch(url, { next: { revalidate: 0 } })
 
+  if (res.status === 429) {
+    console.warn(`[FMP] Rate limited: ${path}`)
+    return [] as unknown as T
+  }
   if (!res.ok) {
     throw new Error(`FMP ${path} → HTTP ${res.status}`)
   }
@@ -207,7 +211,7 @@ export interface EarningsEvent {
 export async function getEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
   return cachedFetch(
     `earnings:calendar:${from}:${to}`,
-    3600,
+    21600,
     () => fmpGet<EarningsEvent[]>(`/earning_calendar?from=${from}&to=${to}`),
   )
 }

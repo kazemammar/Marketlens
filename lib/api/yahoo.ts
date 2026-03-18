@@ -1,5 +1,15 @@
 const YAHOO_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart'
 
+/** Map a portfolio symbol + asset type to the correct Yahoo Finance ticker */
+export function toYahooSymbol(symbol: string, assetType: string): string {
+  if (assetType === 'crypto') {
+    // Yahoo crypto format: BTC-USD, ETH-USD, SOL-USD, etc.
+    return `${symbol}-USD`
+  }
+  // Stocks, ETFs, commodities (CL=F, GC=F, NG=F, AAPL, SPY…) use native symbol
+  return symbol
+}
+
 export interface YahooQuote {
   symbol: string
   price: number

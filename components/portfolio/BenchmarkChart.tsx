@@ -45,11 +45,17 @@ function CustomTooltip({ active, payload, label }: any) {
     <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-xl shadow-black/50">
       <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{date}</p>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {payload.map((p: any) => (
-        <p key={p.name} className="font-mono text-[11px] font-bold tabular-nums" style={{ color: p.color }}>
-          {p.name}: {p.value >= 0 ? '+' : ''}{(p.value as number).toFixed(2)}%
-        </p>
-      ))}
+      {payload.map((p: any) => {
+        const val   = p.value as number
+        const color = p.dataKey === 'portfolioReturn'
+          ? (val >= 0 ? '#10b981' : '#ef4444')
+          : p.color
+        return (
+          <p key={p.name} className="font-mono text-[11px] font-bold tabular-nums" style={{ color }}>
+            {p.name}: {val >= 0 ? '+' : ''}{val.toFixed(2)}%
+          </p>
+        )
+      })}
     </div>
   )
 }
@@ -182,6 +188,13 @@ export default function BenchmarkChart({
   const diffColor   = diffAhead ? '#10b981' : 'var(--price-down)'
   const diffRgb     = diffAhead ? '16,185,129' : 'var(--price-down-rgb)'
 
+  // Zero-line gradient offset
+  const allValues   = series.map((d) => d.portfolioReturn)
+  const maxVal      = Math.max(...allValues, 0)
+  const minVal      = Math.min(...allValues, 0)
+  const zeroRange   = maxVal - minVal
+  const zeroOffset  = zeroRange > 0 ? maxVal / zeroRange : 0.5
+
   // X-axis ticks — ~6 labels
   const tickStep = Math.max(1, Math.floor(series.length / 6))
   const ticks    = series.filter((_, i) => i % tickStep === 0).map((d) => d.date)
@@ -241,10 +254,21 @@ export default function BenchmarkChart({
                   <ResponsiveContainer width="100%" height={220}>
                     <AreaChart data={series} margin={{ top: 10, right: 10, bottom: 0, left: 5 }}>
                       <defs>
+                        {/* Portfolio fill — green above zero, red below */}
                         <linearGradient id="gradPortfolio" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%"   stopColor="#10b981" stopOpacity={0.20} />
-                          <stop offset="100%" stopColor="#10b981" stopOpacity={0}    />
+                          <stop offset="0%"                          stopColor="#10b981" stopOpacity={0.25} />
+                          <stop offset={`${zeroOffset * 100}%`}      stopColor="#10b981" stopOpacity={0.05} />
+                          <stop offset={`${zeroOffset * 100}%`}      stopColor="#ef4444" stopOpacity={0.05} />
+                          <stop offset="100%"                        stopColor="#ef4444" stopOpacity={0.25} />
                         </linearGradient>
+                        {/* Portfolio stroke — green above zero, red below */}
+                        <linearGradient id="strokePortfolio" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%"                          stopColor="#10b981" />
+                          <stop offset={`${zeroOffset * 100}%`}      stopColor="#10b981" />
+                          <stop offset={`${zeroOffset * 100}%`}      stopColor="#ef4444" />
+                          <stop offset="100%"                        stopColor="#ef4444" />
+                        </linearGradient>
+                        {/* SPY fill — blue */}
                         <linearGradient id="gradSpy" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%"   stopColor="#3b82f6" stopOpacity={0.15} />
                           <stop offset="100%" stopColor="#3b82f6" stopOpacity={0}    />
@@ -275,14 +299,14 @@ export default function BenchmarkChart({
                         ]}
                       />
 
-                      <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
+                      <ReferenceLine y={0} stroke="var(--text-muted)" strokeWidth={1} strokeOpacity={0.3} strokeDasharray="4 4" />
                       <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--border)', strokeWidth: 1 }} />
 
-                      {/* Portfolio line — green */}
+                      {/* Portfolio line — green above zero, red below */}
                       <Area
                         type="monotone"
                         dataKey="portfolioReturn"
-                        stroke="#10b981"
+                        stroke="url(#strokePortfolio)"
                         strokeWidth={2}
                         fill="url(#gradPortfolio)"
                         dot={false}
@@ -311,7 +335,10 @@ export default function BenchmarkChart({
               {/* Legend */}
               <div className="flex items-center justify-center gap-6 py-1.5">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-0.5 w-4 rounded-full bg-[#10b981]" />
+                  <div className="flex h-0.5 w-4">
+                    <div className="h-full w-2 rounded-l-full bg-[#10b981]" />
+                    <div className="h-full w-2 rounded-r-full bg-[#ef4444]" />
+                  </div>
                   <span className="font-mono text-[9px] text-[var(--text-muted)]">Your Portfolio</span>
                 </div>
                 <div className="flex items-center gap-1.5">

@@ -290,21 +290,21 @@ export default function PortfolioPage() {
           />
 
           {/* ── Row 1: Day Movers | Allocation ──────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[280px]">
-            <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:border-r border-[var(--border)] sm:h-full max-h-[280px] sm:max-h-none">
+          <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:min-h-[200px]">
+            <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:border-r border-[var(--border)]">
               <DayMovers positions={positions} quotes={quotes} />
             </div>
-            <div className="min-w-0 overflow-hidden flex flex-col sm:h-full max-h-[280px] sm:max-h-none">
+            <div className="min-w-0 overflow-hidden flex flex-col">
               <AllocationPanel positions={positions} quotes={quotes} />
             </div>
           </div>
 
           {/* ── Row 2: Risk Alerts | Exposure ───────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[260px]">
-            <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:border-r border-[var(--border)] sm:h-full max-h-[260px] sm:max-h-none">
+          <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:min-h-[180px]">
+            <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:border-r border-[var(--border)]">
               <RiskAlerts positions={positions} quotes={quotes} />
             </div>
-            <div className="min-w-0 overflow-hidden flex flex-col sm:h-full max-h-[260px] sm:max-h-none">
+            <div className="min-w-0 overflow-hidden flex flex-col">
               <ExposurePanel positions={positions} quotes={quotes} />
             </div>
           </div>

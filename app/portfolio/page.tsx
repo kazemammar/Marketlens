@@ -16,6 +16,7 @@ import RiskAlerts       from '@/components/portfolio/RiskAlerts'
 import ExposurePanel    from '@/components/portfolio/ExposurePanel'
 import EarningsCalendar  from '@/components/portfolio/EarningsCalendar'
 import BenchmarkChart   from '@/components/portfolio/BenchmarkChart'
+import PerformanceChart from '@/components/portfolio/PerformanceChart'
 
 // ─── Crypto symbol mapping ─────────────────────────────────────────────────
 
@@ -314,6 +315,11 @@ export default function PortfolioPage() {
           {/* ── Benchmark Comparison ─────────────────────────────────────── */}
           <div className="border-b border-[var(--border)] bg-[var(--surface)]">
             <BenchmarkChart />
+          </div>
+
+          {/* ── Performance History ──────────────────────────────────────── */}
+          <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+            <PerformanceChart />
           </div>
 
           {/* ── Earnings Calendar ────────────────────────────────────────── */}

@@ -70,7 +70,15 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
           <span>({formatPercent(changePercent, false)})</span>
         </div>
         <MarketStatusBadge type={type} />
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">15min delayed</span>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+          {type === 'crypto'
+            ? 'Binance · near real-time'
+            : type === 'forex'
+            ? 'ECB reference rate · daily'
+            : type === 'commodity'
+            ? 'Yahoo Finance · 15min delayed'
+            : 'Finnhub · 15min delayed'}
+        </span>
         <div className="flex items-center gap-2">
           <PortfolioButton symbol={symbol} type={type} />
           <WatchlistButton symbol={symbol} type={type} />

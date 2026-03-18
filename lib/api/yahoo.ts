@@ -16,7 +16,7 @@ export async function getYahooQuote(symbol: string): Promise<YahooQuote | null> 
       `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=2d`,
       {
         headers: { 'User-Agent': 'Mozilla/5.0' },
-        next: { revalidate: 300 },
+        next: { revalidate: 60 },
       },
     )
     if (!res.ok) return null
@@ -55,7 +55,7 @@ export async function getYahooSparkline(symbol: string): Promise<number[]> {
       `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=1h&range=5d`,
       {
         headers: { 'User-Agent': 'Mozilla/5.0' },
-        next: { revalidate: 900 },
+        next: { revalidate: 300 },
       },
     )
     if (!res.ok) return []

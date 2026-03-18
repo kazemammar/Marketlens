@@ -87,5 +87,14 @@ export default function TradingViewChart({ symbol, type, theme = 'dark' }: Tradi
     return () => { container.innerHTML = '' }
   }, [tvSymbol, theme])
 
-  return <div ref={containerRef} className="tradingview-widget-container w-full" />
+  return (
+    <div>
+      <div ref={containerRef} className="tradingview-widget-container w-full" />
+      <div className="flex items-center justify-end border-t border-[var(--border)] px-2 py-1">
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+          Chart powered by TradingView · prices may differ from header
+        </span>
+      </div>
+    </div>
+  )
 }

@@ -411,8 +411,8 @@ export default function MoversView() {
 
             {/* Disclaimer */}
             {!loading && (
-              <p className="mt-3 font-mono text-[8px] text-[var(--text-muted)] opacity-30">
-                Stocks: US markets · Crypto: 24h change · Commodities: futures · Data cached 90s
+              <p className="px-3 py-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+                Stocks: Finnhub · Crypto: CoinGecko · Commodities: Yahoo Finance · All data 15min delayed
               </p>
             )}
           </>

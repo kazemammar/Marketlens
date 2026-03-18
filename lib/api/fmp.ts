@@ -22,6 +22,10 @@ async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
   const url = `${base}${path}${path.includes('?') ? '&' : '?'}apikey=${apiKey}`
   const res = await fetch(url, { next: { revalidate: 0 } })
 
+  if (res.status === 429) {
+    console.warn(`[FMP] Rate limited: ${path}`)
+    return [] as unknown as T
+  }
   if (!res.ok) {
     throw new Error(`FMP ${path} → HTTP ${res.status}`)
   }

@@ -1,7 +1,10 @@
+'use client'
+
 import Image from 'next/image'
 import { AssetType, AssetCardData } from '@/lib/utils/types'
 import { formatPrice, formatChange, formatPercent, changeColor } from '@/lib/utils/formatters'
 import WatchlistButton from './WatchlistButton'
+import PortfolioButton from './PortfolioButton'
 import MarketStatusBadge from './MarketStatusBadge'
 
 const TYPE_LABELS: Record<AssetType, string> = {
@@ -68,7 +71,10 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
         </div>
         <MarketStatusBadge type={type} />
         <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">15min delayed</span>
-        <WatchlistButton symbol={symbol} type={type} />
+        <div className="flex items-center gap-2">
+          <PortfolioButton symbol={symbol} type={type} />
+          <WatchlistButton symbol={symbol} type={type} />
+        </div>
       </div>
     </div>
   )

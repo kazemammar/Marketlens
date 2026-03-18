@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { PortfolioPosition } from '@/lib/hooks/usePortfolio'
+import AssetDataSnapshot from './AssetDataSnapshot'
 
 export default function EditPositionModal({
   isOpen,
@@ -27,6 +28,10 @@ export default function EditPositionModal({
   const [confirmDel,  setConfirmDel]  = useState(false)
   const [visible,     setVisible]     = useState(false)
 
+  const [quoteData,   setQuoteData]   = useState<{ price: number; change: number; changePercent: number; high: number; low: number; open: number } | null>(null)
+  const [metricsData, setMetricsData] = useState<{ week52High: number | null; week52Low: number | null; marketCap: number | null; peRatio: number | null; dividendYield: number | null } | null>(null)
+  const [dataLoading, setDataLoading] = useState(false)
+
   // Sync form when position prop changes or modal opens
   useEffect(() => {
     if (isOpen) {
@@ -42,6 +47,21 @@ export default function EditPositionModal({
       setVisible(false)
     }
   }, [isOpen, position])
+
+  // Fetch market data on open
+  useEffect(() => {
+    if (!isOpen) return
+    let cancelled = false
+    setDataLoading(true)
+    Promise.all([
+      fetch(`/api/quote/${encodeURIComponent(position.symbol)}`).then((r) => r.ok ? r.json() : null),
+      fetch(`/api/financials/${encodeURIComponent(position.symbol)}`).then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([q, f]) => { if (!cancelled) { setQuoteData(q); setMetricsData(f?.metrics ?? null) } })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setDataLoading(false) })
+    return () => { cancelled = true }
+  }, [isOpen, position.symbol])
 
   // Escape key
   useEffect(() => {
@@ -121,6 +141,50 @@ export default function EditPositionModal({
             </p>
           </div>
 
+          {/* Asset data snapshot */}
+          {!confirmDel && (
+            <div className="mb-4 space-y-2">
+              <AssetDataSnapshot
+                quoteData={quoteData}
+                metricsData={metricsData}
+                dataLoading={dataLoading}
+                assetType={position.asset_type}
+              />
+
+              {/* Position P&L card */}
+              {quoteData && position.quantity != null && position.avg_cost != null && (
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 flex items-center justify-between gap-4">
+                  <div>
+                    <span className="font-mono text-[8px] uppercase tracking-wide text-[var(--text-muted)]">Your Position</span>
+                    <p className="font-mono text-[11px] text-[var(--text)] mt-0.5">
+                      {position.quantity} shares @ ${position.avg_cost.toFixed(2)} avg
+                    </p>
+                  </div>
+                  {(() => {
+                    const cost    = position.avg_cost
+                    const current = quoteData.price
+                    const pct     = ((current - cost) / cost) * 100
+                    const pnl     = (current - cost) * position.quantity
+                    const up      = position.direction === 'long' ? pct >= 0 : pct < 0
+                    const color   = up ? 'var(--price-up)' : 'var(--price-down)'
+                    const sign    = pnl >= 0 ? '+' : ''
+                    return (
+                      <div className="text-right shrink-0">
+                        <span className="font-mono text-[8px] uppercase tracking-wide text-[var(--text-muted)]">Current</span>
+                        <p className="font-mono text-[11px] font-semibold mt-0.5" style={{ color }}>
+                          ${current.toFixed(2)} ({sign}{pct.toFixed(2)}%)
+                        </p>
+                        <p className="font-mono text-[10px] tabular-nums" style={{ color }}>
+                          {sign}${Math.abs(pnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Delete confirmation overlay */}
           {confirmDel ? (
             <div className="flex flex-col gap-4">
@@ -192,7 +256,7 @@ export default function EditPositionModal({
                   placeholder="e.g. 100"
                   min="0"
                   step="any"
-                  className="h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
@@ -208,7 +272,7 @@ export default function EditPositionModal({
                   placeholder="e.g. 185.50"
                   min="0"
                   step="any"
-                  className="h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
@@ -223,7 +287,7 @@ export default function EditPositionModal({
                   onChange={(e) => setNotes(e.target.value.slice(0, 200))}
                   placeholder="e.g. swing trade, hedge..."
                   maxLength={200}
-                  className="h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 

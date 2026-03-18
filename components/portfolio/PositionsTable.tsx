@@ -323,12 +323,12 @@ function DesktopRow({
       </td>
 
       {/* P&L $ */}
-      <td className="px-3 py-2.5 text-right font-mono text-[11px] tabular-nums" style={{ color: pnlColor }}>
+      <td className="px-3 py-2.5 pr-2 text-right font-mono text-[11px] tabular-nums" style={{ color: pnlColor }}>
         {rawPnl != null ? fmtPnl(rawPnl) : <span className="text-[var(--text-muted)] opacity-50">—</span>}
       </td>
 
       {/* P&L % */}
-      <td className="px-3 py-2.5 pr-4 text-right font-mono text-[11px] tabular-nums" style={{ color: pnlColor }}>
+      <td className="px-3 py-2.5 pr-6 text-right font-mono text-[11px] tabular-nums min-w-[80px]" style={{ color: pnlColor }}>
         {pnlPct != null
           ? `${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%`
           : <span className="text-[var(--text-muted)] opacity-50">—</span>
@@ -526,8 +526,8 @@ export default function PositionsTable({
               <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Qty</th>
               <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Avg Cost</th>
               <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">Mkt Value</th>
-              <th className="px-3 py-2.5 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">P&amp;L $</th>
-              <SortTh label="P&L %" sortKey="pnlPct" current={sortKey} dir={sortDir} onSort={handleSort} className="text-right pr-4" />
+              <th className="px-3 py-2.5 pr-2 text-right font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)]">P&amp;L $</th>
+              <SortTh label="P&L %" sortKey="pnlPct" current={sortKey} dir={sortDir} onSort={handleSort} className="text-right pr-6 min-w-[80px]" />
               <th className="w-10 px-3 py-2.5" />
             </tr>
           </thead>

@@ -207,36 +207,32 @@ export default function PortfolioSummary({
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Secondary: count + best/worst + tracking + spark */}
+          {/* Secondary: best/worst + tracking + spark */}
           <div className="flex items-center gap-3 shrink-0">
-            <span className="font-mono text-[10px] text-[var(--text-muted)]">
-              {total} pos · {longs}L&thinsp;/&thinsp;{shorts}S
-            </span>
 
             {hasMov && (
-              <>
-                <span className="h-4 w-px bg-[var(--border)]" />
-                <div className="flex items-center gap-2">
-                  {/* Best */}
-                  <span
-                    className="flex items-center gap-1 font-mono text-[10px]"
-                    style={{ color: '#22c55e' }}
-                    title="Best performer today"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#22c55e', boxShadow: '0 0 4px #22c55e80' }} />
+              <div className="flex items-center gap-3">
+                {/* Best */}
+                <div className="group relative flex items-center gap-1.5 cursor-default">
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#22c55e', boxShadow: '0 0 4px #22c55e80' }} />
+                  <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: '#22c55e', textShadow: '0 0 10px #22c55e40' }}>
                     ↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%
                   </span>
-                  {/* Worst */}
-                  <span
-                    className="flex items-center gap-1 font-mono text-[10px]"
-                    style={{ color: '#ef4444' }}
-                    title="Worst performer today"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#ef4444', boxShadow: '0 0 4px #ef444480' }} />
+                  <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100">
+                    Best performer today
+                  </div>
+                </div>
+                {/* Worst */}
+                <div className="group relative flex items-center gap-1.5 cursor-default">
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#ef4444', boxShadow: '0 0 4px #ef444480' }} />
+                  <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: '#ef4444', textShadow: '0 0 10px #ef444430' }}>
                     ↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%
                   </span>
+                  <div className="pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100">
+                    Worst performer today
+                  </div>
                 </div>
-              </>
+              </div>
             )}
 
             {partial && (
@@ -291,23 +287,22 @@ export default function PortfolioSummary({
             </div>
           </div>
 
-          {/* Row 3: positions + best/worst */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-[10px] text-[var(--text-muted)]">
-              {total} pos · {longs}L / {shorts}S
-            </span>
-            {hasMov && (
-              <>
-                <span className="font-mono text-[10px]" style={{ color: '#22c55e' }}>↑&thinsp;{best.symbol}</span>
-                <span className="font-mono text-[10px]" style={{ color: '#ef4444' }}>↓&thinsp;{worst.symbol}</span>
-              </>
-            )}
-            {partial && (
-              <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
-                tracking {tracked.length}/{total}
-              </span>
-            )}
-          </div>
+          {/* Row 3: best/worst */}
+          {(hasMov || partial) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {hasMov && (
+                <>
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: '#22c55e' }}>↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%</span>
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: '#ef4444' }}>↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%</span>
+                </>
+              )}
+              {partial && (
+                <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+                  tracking {tracked.length}/{total}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

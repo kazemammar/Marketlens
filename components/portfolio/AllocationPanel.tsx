@@ -91,8 +91,8 @@ function DonutRing({
   const glowColor = centerGlow ?? 'rgba(16,185,129,0.5)'
 
   return (
-    <div className="relative flex shrink-0 items-center justify-center">
-      <svg width="100" height="100" viewBox="0 0 100 100" className="overflow-visible" aria-hidden>
+    <div className="relative flex shrink-0 items-center justify-center h-[100px] w-[100px]">
+      <svg viewBox="0 0 100 100" className="h-full w-full overflow-visible" aria-hidden>
         <defs>
           <filter id="ring-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="2.5" result="blur"/>
@@ -137,11 +137,11 @@ function DonutRing({
         <text
           x={CX} y={CY - 5}
           textAnchor="middle"
-          dominantBaseline="middle"
+          dominantBaseline="central"
           filter="url(#text-glow)"
           style={{
             fill:       glowColor,
-            fontFamily: 'monospace',
+            fontFamily: 'var(--font-mono), monospace',
             fontSize:   '12px',
             fontWeight: 700,
           }}
@@ -151,8 +151,8 @@ function DonutRing({
         <text
           x={CX} y={CY + 9}
           textAnchor="middle"
-          dominantBaseline="middle"
-          style={{ fill: 'var(--text-muted)', fontFamily: 'monospace', fontSize: '7.5px' }}
+          dominantBaseline="central"
+          style={{ fill: 'var(--text-muted)', fontFamily: 'var(--font-mono), monospace', fontSize: '7.5px' }}
         >
           {centerSub}
         </text>

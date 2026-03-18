@@ -20,10 +20,27 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const cacheKey = `portfolio:earnings:${user.id}`
-  try {
-    const cached = await redis.get<EarningsPayload>(cacheKey)
-    if (cached) return NextResponse.json(cached)
-  } catch { /* fall through */ }
+
+  const url = new URL(req.url)
+  const forceRefresh = url.searchParams.get('refresh') === 'true'
+
+  if (forceRefresh) {
+    const now2 = new Date()
+    const fr   = new Date(now2); fr.setDate(fr.getDate() - 7)
+    const to2  = new Date(now2); to2.setDate(to2.getDate() + 30)
+    const fmt2 = (d: Date) => d.toISOString().slice(0, 10)
+    await Promise.all([
+      redis.del(cacheKey).catch(() => {}),
+      redis.del(`earnings:calendar:${fmt2(fr)}:${fmt2(to2)}`).catch(() => {}),
+    ])
+  }
+
+  if (!forceRefresh) {
+    try {
+      const cached = await redis.get<EarningsPayload>(cacheKey)
+      if (cached) return NextResponse.json(cached)
+    } catch { /* fall through */ }
+  }
 
   // Fetch portfolio positions — only equities have earnings
   const { data: positions, error } = await supabase

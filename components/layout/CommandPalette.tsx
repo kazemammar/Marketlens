@@ -155,7 +155,7 @@ export default function CommandPalette({
         {(suggestions.length > 0 || (dq.length > 0 && !loading && !noResults)) && (
           <ul role="listbox" className="max-h-72 overflow-y-auto py-1">
             {suggestions.map((asset, i) => (
-              <li key={`${asset.type}-${asset.symbol}`} role="option" aria-selected={i === activeIdx}>
+              <li key={`${asset.type}-${asset.symbol}-${i}`} role="option" aria-selected={i === activeIdx}>
                 <button
                   onMouseDown={(e) => { e.preventDefault(); navigateTo(asset) }}
                   onMouseEnter={() => setActiveIdx(i)}

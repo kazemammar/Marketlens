@@ -1,4 +1,4 @@
-import { cachedFetch, cacheKey, redis } from '@/lib/cache/redis'
+import { cachedFetch, cacheKey } from '@/lib/cache/redis'
 import { TTL, FMP_BASE_URL } from '@/lib/utils/constants'
 
 // Stable endpoint base — replaces legacy /api/v3 paths that now return 404
@@ -15,7 +15,7 @@ import {
 
 // ─── Internal helpers ─────────────────────────────────────────────────────
 
-export async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
+async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
   const apiKey = process.env.FMP_API_KEY
   if (!apiKey) throw new Error('FMP_API_KEY is not set')
 
@@ -194,36 +194,6 @@ export async function searchAssets(query: string, type?: AssetType): Promise<Ass
       }))
     },
   )
-}
-
-// ─── Earnings calendar ────────────────────────────────────────────────────
-
-export interface EarningsEvent {
-  date:             string
-  symbol:           string
-  eps:              number | null
-  epsEstimated:     number | null
-  revenue:          number | null
-  revenueEstimated: number | null
-  time:             'bmo' | 'amc' | '--'
-}
-
-export async function getEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
-  const key = `earnings:calendar:${from}:${to}`
-
-  try {
-    const cached = await redis.get<EarningsEvent[]>(key)
-    if (cached && cached.length > 0) return cached
-  } catch { /* fall through */ }
-
-  const data = await fmpGet<EarningsEvent[]>(`/earning_calendar?from=${from}&to=${to}`)
-  const result = Array.isArray(data) ? data : []
-
-  if (result.length > 0) {
-    redis.set(key, result, { ex: 21600 }).catch(() => {})
-  }
-
-  return result
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

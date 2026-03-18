@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { EarningsPayload } from '@/app/api/portfolio/earnings/route'
-import type { EarningsEvent }   from '@/lib/api/fmp'
+import type { EarningsPayload, EarningsItem } from '@/app/api/portfolio/earnings/route'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -17,20 +16,7 @@ function fmtDate(dateStr: string): string {
 function daysUntil(dateStr: string): number {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const [y, m, d] = dateStr.split('-').map(Number)
-  const target = new Date(y, m - 1, d)
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000)
-}
-
-function countdownLabel(days: number): string {
-  if (days === 0) return 'today'
-  if (days === 1) return 'tomorrow'
-  return `in ${days}d`
-}
-
-function fmtRevenue(n: number): string {
-  if (Math.abs(n) >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
-  if (Math.abs(n) >= 1e6) return `$${(n / 1e6).toFixed(0)}M`
-  return `$${n.toFixed(0)}`
+  return Math.round((new Date(y, m - 1, d).getTime() - today.getTime()) / 86_400_000)
 }
 
 function fmtEps(n: number): string {
@@ -68,37 +54,44 @@ function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
 
 // ─── Upcoming row ─────────────────────────────────────────────────────────
 
-function UpcomingRow({ event, delay }: { event: EarningsEvent; delay: number }) {
+function UpcomingRow({ event, delay }: { event: EarningsItem; delay: number }) {
   const days = daysUntil(event.date)
 
-  const dateBg = days <= 2
-    ? 'rgba(239,68,68,0.15)'
-    : days <= 6
-    ? 'rgba(245,158,11,0.15)'
-    : 'var(--surface-2)'
-
-  const dateColor = days <= 2
-    ? '#ef4444'
-    : days <= 6
+  const dateColor = days <= 7
     ? '#f59e0b'
+    : days <= 14
+    ? 'var(--accent)'
     : 'var(--text-muted)'
 
-  const countdownColor = days <= 2 ? '#ef4444' : days <= 6 ? '#f59e0b' : 'var(--text-muted)'
+  const dateBg = days <= 7
+    ? 'rgba(245,158,11,0.12)'
+    : days <= 14
+    ? 'rgba(16,185,129,0.10)'
+    : 'var(--surface-2)'
 
-  const timeLabel = event.time === 'bmo' ? 'BMO' : event.time === 'amc' ? 'AMC' : null
+  const countdownColor = dateColor
+
+  const countdown = days === 0
+    ? 'today'
+    : days === 1
+    ? 'tomorrow'
+    : `in ~${days}d`
 
   return (
     <div
       className="animate-fade-up flex items-center gap-3 px-3 py-2 border-b border-[var(--border)] last:border-0"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
-      {/* Date badge */}
-      <span
-        className="shrink-0 rounded-md px-2 py-0.5 font-mono text-[10px] font-bold tabular-nums"
-        style={{ background: dateBg, color: dateColor, minWidth: '52px', textAlign: 'center' }}
-      >
-        {fmtDate(event.date)}
-      </span>
+      {/* Date badge + EST */}
+      <div className="flex shrink-0 flex-col items-center gap-0.5" style={{ minWidth: '52px' }}>
+        <span
+          className="rounded-md px-2 py-0.5 font-mono text-[10px] font-bold tabular-nums w-full text-center"
+          style={{ background: dateBg, color: dateColor }}
+        >
+          {fmtDate(event.date)}
+        </span>
+        <span className="font-mono text-[7px] uppercase tracking-wide opacity-40 text-[var(--text-muted)]">est</span>
+      </div>
 
       {/* Symbol */}
       <Link
@@ -109,21 +102,11 @@ function UpcomingRow({ event, delay }: { event: EarningsEvent; delay: number }) 
         {event.symbol}
       </Link>
 
-      {/* Time badge */}
-      {timeLabel && (
-        <span className="shrink-0 rounded px-1.5 py-px font-mono text-[8px] font-semibold uppercase tracking-wide bg-[var(--surface-2)] text-[var(--text-muted)]">
-          {timeLabel}
-        </span>
-      )}
+      {/* Quarter label */}
+      <span className="shrink-0 rounded px-1.5 py-px font-mono text-[8px] font-semibold uppercase tracking-wide bg-[var(--surface-2)] text-[var(--text-muted)]">
+        Q{event.quarter} {event.year}
+      </span>
 
-      {/* Est. EPS */}
-      {event.epsEstimated != null && (
-        <span className="font-mono text-[10px] text-[var(--text-muted)] opacity-60">
-          Est. EPS: {fmtEps(event.epsEstimated)}
-        </span>
-      )}
-
-      {/* Spacer */}
       <div className="flex-1" />
 
       {/* Countdown */}
@@ -131,7 +114,7 @@ function UpcomingRow({ event, delay }: { event: EarningsEvent; delay: number }) 
         className="shrink-0 font-mono text-[10px] font-semibold tabular-nums"
         style={{ color: countdownColor }}
       >
-        {countdownLabel(days)}
+        {countdown}
       </span>
     </div>
   )
@@ -139,49 +122,44 @@ function UpcomingRow({ event, delay }: { event: EarningsEvent; delay: number }) 
 
 // ─── Recent row ───────────────────────────────────────────────────────────
 
-function RecentRow({ event, delay }: { event: EarningsEvent; delay: number }) {
-  const hasBoth    = event.eps != null && event.epsEstimated != null
-  const beat       = hasBoth ? (event.eps! > event.epsEstimated!) : null
-  const diff       = hasBoth ? Math.abs(event.eps! - event.epsEstimated!) : null
-  const beatColor  = beat === true ? '#22c55e' : beat === false ? '#ef4444' : 'var(--text-muted)'
+function RecentRow({ event, delay }: { event: EarningsItem; delay: number }) {
+  const hasBoth     = event.actual != null && event.estimate != null
+  const beat        = hasBoth ? (event.actual! > event.estimate!) : null
+  const beatColor   = beat === true ? '#22c55e' : beat === false ? '#ef4444' : 'var(--text-muted)'
 
   return (
     <div
-      className="animate-fade-up flex items-center gap-3 px-3 py-2 border-b border-[var(--border)] last:border-0"
+      className="animate-fade-up flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] last:border-0"
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both', opacity: 0.75 }}
     >
       {/* Date */}
-      <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] tabular-nums" style={{ minWidth: '52px' }}>
+      <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] tabular-nums" style={{ minWidth: '44px' }}>
         {fmtDate(event.date)}
       </span>
 
       {/* Symbol */}
       <Link
         href={`/asset/stock/${encodeURIComponent(event.symbol)}`}
-        className="font-mono text-[12px] font-bold shrink-0 hover:underline"
+        className="font-mono text-[11px] font-bold shrink-0 hover:underline"
         style={{ color: 'var(--accent)' }}
       >
         {event.symbol}
       </Link>
 
-      {/* Actual EPS */}
-      {event.eps != null && (
-        <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
-          {fmtEps(event.eps)} EPS
-        </span>
-      )}
+      {/* Quarter label */}
+      <span className="shrink-0 font-mono text-[8px] text-[var(--text-muted)] opacity-60">
+        Q{event.quarter} {event.year}
+      </span>
 
-      {/* Beat/miss vs estimate */}
-      {hasBoth && diff != null && (
+      {/* EPS + beat/miss */}
+      {hasBoth && (
         <span className="font-mono text-[10px] font-semibold" style={{ color: beatColor }}>
-          {beat ? '▲ Beat' : '▼ Missed'} by {fmtEps(diff)}
-        </span>
-      )}
-
-      {/* Revenue */}
-      {event.revenue != null && event.revenueEstimated != null && (
-        <span className="hidden sm:inline font-mono text-[9px] text-[var(--text-muted)] opacity-50">
-          Rev: {fmtRevenue(event.revenue)} vs {fmtRevenue(event.revenueEstimated)} est.
+          {beat ? '▲' : '▼'} {fmtEps(event.actual!)} vs {fmtEps(event.estimate!)} est
+          {event.surprisePercent != null && (
+            <span className="ml-1 opacity-70">
+              ({event.surprisePercent >= 0 ? '+' : ''}{event.surprisePercent.toFixed(1)}%)
+            </span>
+          )}
         </span>
       )}
     </div>
@@ -223,7 +201,7 @@ export default function EarningsCalendar() {
             <line x1="1" y1="6" x2="15" y2="6" stroke="currentColor" strokeWidth="1.3"/>
           </svg>
           <p className="font-mono text-[11px] text-[var(--text-muted)]">
-            No upcoming earnings for your stock positions
+            No earnings data for your stock positions
           </p>
         </div>
       ) : (
@@ -250,13 +228,18 @@ export default function EarningsCalendar() {
                 <div className="px-3 py-1.5 border-b border-[var(--border)]">
                   <span className="font-mono text-[8px] uppercase tracking-wide text-[var(--text-muted)] opacity-50">Recent</span>
                 </div>
-                {recent.slice(0, 5).map((e, i) => (
-                  <RecentRow key={`${e.symbol}-${e.date}`} event={e} delay={i * 40} />
+                {recent.slice(0, 6).map((e, i) => (
+                  <RecentRow key={`${e.symbol}-${e.date}-${i}`} event={e} delay={i * 40} />
                 ))}
               </div>
             )}
 
           </div>
+
+          {/* Disclaimer */}
+          <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-40 px-3 py-2">
+            Upcoming dates are estimates based on historical reporting patterns
+          </p>
         </div>
       )}
     </>

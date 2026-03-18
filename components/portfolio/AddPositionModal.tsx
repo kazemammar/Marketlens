@@ -49,13 +49,17 @@ export default function AddPositionModal({
   const [dropOpen,    setDropOpen]    = useState(false)
   const [selected,    setSelected]    = useState<Asset | null>(null)
 
-  const [direction,   setDirection]   = useState<'long' | 'short'>('long')
-  const [quantity,    setQuantity]    = useState('')
-  const [avgCost,     setAvgCost]     = useState('')
-  const [notes,       setNotes]       = useState('')
-  const [error,       setError]       = useState('')
-  const [submitting,  setSubmitting]  = useState(false)
-  const [visible,     setVisible]     = useState(false)
+  const [direction,     setDirection]     = useState<'long' | 'short'>('long')
+  const [quantity,      setQuantity]      = useState('')
+  const [avgCost,       setAvgCost]       = useState('')
+  const [notes,         setNotes]         = useState('')
+  const [error,         setError]         = useState('')
+  const [submitting,    setSubmitting]    = useState(false)
+  const [visible,       setVisible]       = useState(false)
+  const [dateMode,      setDateMode]      = useState<'exact' | 'approx'>('exact')
+  const [dateStr,       setDateStr]       = useState('')
+  const [approxAgo,     setApproxAgo]     = useState('')
+  const [priceFetching, setPriceFetching] = useState(false)
 
   const [quoteData,   setQuoteData]   = useState<{ price: number; change: number; changePercent: number; high: number; low: number; open: number } | null>(null)
   const [metricsData, setMetricsData] = useState<{ week52High: number | null; week52Low: number | null; marketCap: number | null; peRatio: number | null; dividendYield: number | null } | null>(null)
@@ -72,6 +76,7 @@ export default function AddPositionModal({
       const id = requestAnimationFrame(() => setVisible(true))
       setDirection('long'); setQuantity(''); setAvgCost(''); setNotes('')
       setError(''); setSubmitting(false); setDropOpen(false); setActiveIdx(-1)
+      setDateMode('exact'); setDateStr(''); setApproxAgo(''); setPriceFetching(false)
       setQuoteData(null); setMetricsData(null)
       if (prefill) {
         const asset = { symbol: prefill.symbol, type: prefill.type as import('@/lib/utils/types').AssetType, name: prefill.symbol }
@@ -374,6 +379,68 @@ export default function AddPositionModal({
               <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-60">Add for P&amp;L tracking</p>
             </div>
 
+            {/* Purchase Date */}
+            <div className="space-y-1.5">
+              <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
+                Purchase Date <span className="opacity-50">(optional)</span>
+              </label>
+              <div className="flex gap-2 mb-2">
+                {(['exact', 'approx'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setDateMode(mode)}
+                    className={`rounded-full px-3 py-1 font-mono text-[10px] border transition-colors ${
+                      dateMode === mode
+                        ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                        : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]'
+                    }`}
+                  >
+                    {mode === 'exact' ? 'Exact Date' : 'Approximate'}
+                  </button>
+                ))}
+              </div>
+              {dateMode === 'exact' ? (
+                <input
+                  type="date"
+                  value={dateStr}
+                  onChange={(e) => setDateStr(e.target.value)}
+                  max={new Date().toISOString().slice(0, 10)}
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all focus:border-[var(--accent)]/50 [color-scheme:dark]"
+                />
+              ) : (
+                <select
+                  value={approxAgo}
+                  onChange={(e) => {
+                    setApproxAgo(e.target.value)
+                    if (e.target.value && selected) {
+                      setPriceFetching(true)
+                      fetch(`/api/portfolio/price-on-date?symbol=${encodeURIComponent(selected.symbol)}&type=${encodeURIComponent(selected.type)}&ago=${e.target.value}`)
+                        .then((r) => r.json())
+                        .then((data) => { if (data.avgPrice) setAvgCost(data.avgPrice.toFixed(2)) })
+                        .catch(() => {})
+                        .finally(() => setPriceFetching(false))
+                    }
+                  }}
+                  className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5 font-mono text-[13px] text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  <option value="">How long ago?</option>
+                  <option value="1w">About 1 week ago</option>
+                  <option value="1mo">About 1 month ago</option>
+                  <option value="3mo">About 3 months ago</option>
+                  <option value="6mo">About 6 months ago</option>
+                  <option value="1y">About 1 year ago</option>
+                </select>
+              )}
+              {priceFetching && (
+                <p className="flex items-center gap-1.5 font-mono text-[10px] text-[var(--text-muted)]">
+                  <span className="h-2.5 w-2.5 animate-spin rounded-full border border-[var(--accent)] border-t-transparent" />
+                  Fetching average price…
+                </p>
+              )}
+            </div>
+
             {/* Notes */}
             <div className="space-y-1.5">
               <label className="block font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">
@@ -388,6 +455,27 @@ export default function AddPositionModal({
                 className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
               />
             </div>
+
+            {/* Preview card */}
+            {quantity && avgCost && Number(quantity) > 0 && Number(avgCost) > 0 && (
+              <div className="rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-3 space-y-1.5">
+                <div className="font-mono text-[9px] font-bold uppercase tracking-wide text-[var(--accent)]">Preview</div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] text-[var(--text-muted)]">Units</span>
+                  <span className="font-mono text-[13px] font-bold text-[var(--text)]">{Number(quantity)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] text-[var(--text-muted)]">Price per unit</span>
+                  <span className="font-mono text-[13px] text-[var(--text)]">${Number(avgCost).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-[var(--border)] pt-1.5">
+                  <span className="font-mono text-[11px] text-[var(--text-muted)]">Total invested</span>
+                  <span className="font-mono text-[13px] font-bold text-[var(--accent)]">
+                    ${(Number(quantity) * Number(avgCost)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Error */}
             {error && (

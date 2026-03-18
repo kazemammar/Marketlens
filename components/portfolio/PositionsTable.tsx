@@ -36,7 +36,8 @@ function fmtPrice(n: number): string {
 }
 
 function fmtQty(n: number): string {
-  return n.toLocaleString('en-US', { maximumFractionDigits: 8 })
+  const num = Number(n)
+  return num % 1 === 0 ? num.toLocaleString('en-US') : num.toFixed(4)
 }
 
 function fmtPnl(n: number): string {

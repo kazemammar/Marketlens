@@ -186,6 +186,12 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           )
         })}
       </nav>
+
+      <div className="px-3 pb-3 pt-1">
+        <p className="text-center font-mono text-[10px] tracking-wide text-[var(--text-muted)] opacity-60">
+          by Kazem Julien Ammar
+        </p>
+      </div>
     </div>
   )
 }

@@ -43,23 +43,18 @@ function fmtDate(dateStr: string): string {
 // ─── Custom tooltip ──────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label, portfolioReturn }: any) {
+function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const spyVal: number = payload[0]?.value ?? 0
+  const formatted = new Date(label + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  })
   return (
     <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-xl">
-      <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{label}</p>
+      <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{formatted}</p>
       <p className="font-mono text-[11px] font-bold" style={{ color: '#3b82f6' }}>
         S&amp;P 500: {fmtPct(spyVal)}
       </p>
-      {portfolioReturn !== null && (
-        <p
-          className="font-mono text-[11px] font-bold"
-          style={{ color: portfolioReturn >= 0 ? '#22c55e' : '#ef4444' }}
-        >
-          Your return: {fmtPct(portfolioReturn)}
-        </p>
-      )}
     </div>
   )
 }
@@ -231,7 +226,7 @@ export default function BenchmarkChart() {
           {/* Chart */}
           <div className="px-1 pt-2" style={{ height: '200px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={spyData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
+              <AreaChart data={spyData} margin={{ top: 10, right: 120, bottom: 0, left: 5 }}>
                 <defs>
                   <linearGradient id="spyGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.20} />
@@ -249,7 +244,9 @@ export default function BenchmarkChart() {
                 <XAxis
                   dataKey="date"
                   ticks={ticks}
-                  tickFormatter={fmtDate}
+                  tickFormatter={(d: string) =>
+                    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  }
                   tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'monospace' }}
                   axisLine={{ stroke: 'var(--border)' }}
                   tickLine={false}
@@ -276,7 +273,8 @@ export default function BenchmarkChart() {
                   >
                     <Label
                       value={`Portfolio ${portReturn >= 0 ? '+' : ''}${portReturn.toFixed(1)}%`}
-                      position="right"
+                      position="insideRight"
+                      offset={-4}
                       fill={portColor}
                       fontSize={10}
                       fontFamily="monospace"
@@ -285,7 +283,7 @@ export default function BenchmarkChart() {
                 )}
 
                 <Tooltip
-                  content={<CustomTooltip portfolioReturn={portReturn} />}
+                  content={<CustomTooltip />}
                   cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
                 />
 

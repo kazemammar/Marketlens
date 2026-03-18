@@ -50,8 +50,11 @@ export async function GET(req: Request) {
     ? url.searchParams.get('range')
     : '3mo') as Range
 
-  // Cache check
+  // Cache check — also bust stale keys so crypto fix takes effect immediately
   const cacheKey = `portfolio:benchmark:${user.id}:${range}`
+  await Promise.allSettled(
+    VALID_RANGES.map((r) => redis.del(`portfolio:benchmark:${user.id}:${r}`)),
+  )
   try {
     const cached = await redis.get<BenchmarkPayload>(cacheKey)
     if (cached) return NextResponse.json(cached)
@@ -73,22 +76,49 @@ export async function GET(req: Request) {
     (p) => p.quantity != null && p.avg_cost != null && p.quantity > 0,
   )
 
-  // Fetch SPY history + current quotes for cost positions in parallel
-  const [spyResult, ...quoteResults] = await Promise.allSettled([
+  // Separate by asset type
+  const stockPositions     = costPositions.filter((p) => p.asset_type === 'stock' || p.asset_type === 'etf')
+  const cryptoPositions    = costPositions.filter((p) => p.asset_type === 'crypto')
+  const commodityPositions = costPositions.filter((p) => p.asset_type === 'commodity')
+
+  // Fetch SPY history + all quote buckets in parallel
+  const [
+    spyResult,
+    stockResults,
+    cryptoResults,
+    commodityResults,
+  ] = await Promise.all([
     getYahooHistory('SPY', range),
-    ...costPositions.map((p) =>
-      p.asset_type === 'commodity'
-        ? getYahooQuote(p.symbol).then((q) => q ? { symbol: p.symbol, price: q.price } : null)
-        : p.asset_type === 'crypto'
-          ? getQuote(CRYPTO_TO_BINANCE[p.symbol] ?? `BINANCE:${p.symbol}USDT`).then((q) =>
-              q ? { symbol: p.symbol, price: q.price } : null,
-            )
-          : getQuote(p.symbol).then((q) => q ? { symbol: p.symbol, price: q.price } : null),
+    Promise.allSettled(stockPositions.map((p) => getQuote(p.symbol))),
+    Promise.allSettled(
+      cryptoPositions.map((p) =>
+        getQuote(CRYPTO_TO_BINANCE[p.symbol] ?? `BINANCE:${p.symbol}USDT`),
+      ),
     ),
+    Promise.allSettled(commodityPositions.map((p) => getYahooQuote(p.symbol))),
   ])
 
+  // Build symbol → price map
+  const quoteMap: Record<string, number> = {}
+
+  stockPositions.forEach((p, i) => {
+    const r = stockResults[i]
+    const price = r.status === 'fulfilled' ? (r.value?.price ?? 0) : 0
+    if (price > 0) quoteMap[p.symbol] = price
+  })
+  cryptoPositions.forEach((p, i) => {
+    const r = cryptoResults[i]
+    const price = r.status === 'fulfilled' ? (r.value?.price ?? 0) : 0
+    if (price > 0) quoteMap[p.symbol] = price
+  })
+  commodityPositions.forEach((p, i) => {
+    const r = commodityResults[i]
+    const price = r.status === 'fulfilled' ? (r.value?.price ?? 0) : 0
+    if (price > 0) quoteMap[p.symbol] = price
+  })
+
   // Build SPY series
-  const spyHistory = spyResult.status === 'fulfilled' ? spyResult.value : []
+  const spyHistory = Array.isArray(spyResult) ? spyResult : []
   const firstClose = spyHistory[0]?.close ?? 0
   const lastClose  = spyHistory[spyHistory.length - 1]?.close ?? 0
 
@@ -101,31 +131,29 @@ export async function GET(req: Request) {
 
   const spyReturn = firstClose > 0 ? ((lastClose - firstClose) / firstClose) * 100 : 0
 
-  // Build portfolio stats from cost basis
+  // Build portfolio stats
   let totalCost  = 0
   let totalValue = 0
   let withCost   = 0
 
-  costPositions.forEach((p, i) => {
-    const result   = quoteResults[i]
-    const rawPrice = result?.status === 'fulfilled' ? result.value : null
-    const price    = rawPrice && 'price' in rawPrice ? (rawPrice as { price: number }).price : 0
+  for (const p of costPositions) {
+    const price = quoteMap[p.symbol]
+    if (!price || price <= 0) continue
 
-    if (price > 0 && p.quantity! > 0 && p.avg_cost! > 0) {
-      const qty       = p.quantity!
-      const cost      = p.avg_cost!
-      const costBasis = qty * cost
-      totalCost += costBasis
-      if (p.direction === 'long') {
-        totalValue += qty * price
-      } else {
-        // Short: profit when price drops below cost basis
-        const marketValue = qty * price
-        totalValue += costBasis + (costBasis - marketValue)
-      }
-      withCost++
+    const qty       = p.quantity!
+    const cost      = p.avg_cost!
+    const costBasis = qty * cost
+    totalCost += costBasis
+
+    if (p.direction === 'long') {
+      totalValue += qty * price
+    } else {
+      // Short: profit when price drops below cost basis
+      const marketValue = qty * price
+      totalValue += costBasis + (costBasis - marketValue)
     }
-  })
+    withCost++
+  }
 
   const totalReturnAmt = totalValue - totalCost
   const totalReturn    = totalCost > 0 ? (totalReturnAmt / totalCost) * 100 : 0

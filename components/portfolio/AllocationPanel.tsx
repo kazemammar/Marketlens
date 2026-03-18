@@ -228,7 +228,7 @@ export default function AllocationPanel({
   return (
     <>
       <PanelHeader />
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2 space-y-2.5">
+      <div className="overflow-y-auto scrollbar-hide px-3 py-2 space-y-4">
 
         {/* ── Donut + Legend ──────────────────────────────────────────── */}
         <div className="flex items-center gap-3">
@@ -258,11 +258,11 @@ export default function AllocationPanel({
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
                     style={{ background: color, boxShadow: `0 0 5px ${color}70` }}
                   />
-                  <span className="font-mono text-[9px] truncate" style={{ color }}>
+                  <span className="font-mono text-[10px] truncate" style={{ color }}>
                     {TYPE_LABEL[type] ?? type}
                   </span>
                   <span
-                    className="ml-auto font-mono text-[9px] font-bold tabular-nums shrink-0"
+                    className="ml-auto font-mono text-[11px] font-bold tabular-nums shrink-0"
                     style={{ color }}
                   >
                     {pct.toFixed(0)}%
@@ -311,13 +311,13 @@ export default function AllocationPanel({
             />
           </div>
           <div className="mt-1 flex items-center justify-between">
-            <span className="font-mono text-[9px] font-semibold" style={{ color: '#22c55e' }}>
+            <span className="font-mono text-[10px] font-semibold" style={{ color: '#22c55e' }}>
               {longPct.toFixed(0)}% Long
             </span>
             <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">
               ({longCount}L / {shortCount}S)
             </span>
-            <span className="font-mono text-[9px] font-semibold" style={{ color: '#ef4444' }}>
+            <span className="font-mono text-[10px] font-semibold" style={{ color: '#ef4444' }}>
               {(100 - longPct).toFixed(0)}% Short
             </span>
           </div>
@@ -337,7 +337,7 @@ export default function AllocationPanel({
                     className="animate-fade-up flex items-center gap-2"
                     style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}
                   >
-                    <span className="w-14 shrink-0 font-mono text-[9px] text-[var(--text-muted)] truncate">{sector}</span>
+                    <span className="w-14 shrink-0 font-mono text-[10px] text-[var(--text-muted)] truncate">{sector}</span>
                     <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-[var(--surface-2)]">
                       <div
                         className="h-full rounded-full transition-all duration-700"
@@ -349,7 +349,7 @@ export default function AllocationPanel({
                       />
                     </div>
                     <span
-                      className="w-6 shrink-0 font-mono text-[8px] tabular-nums text-right"
+                      className="w-6 shrink-0 font-mono text-[10px] tabular-nums text-right"
                       style={{ color, opacity: 0.8 }}
                     >
                       {pct.toFixed(0)}%

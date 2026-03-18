@@ -87,13 +87,13 @@ function PositionCard({
       {/* Symbol + direction arrow */}
       <div className="flex items-center gap-0.5">
         <span
-          className="font-mono text-[9px] font-bold leading-none"
+          className="font-mono text-[10px] font-bold leading-none"
           style={{ color: position.direction === 'long' ? '#22c55e' : '#ef4444' }}
         >
           {position.direction === 'long' ? '▲' : '▼'}
         </span>
         <span
-          className="font-mono text-[9px] font-bold leading-none truncate"
+          className="font-mono text-[10px] font-bold leading-none truncate"
           style={{ color: 'var(--accent)' }}
         >
           {position.symbol}
@@ -103,7 +103,7 @@ function PositionCard({
       {/* Day change % */}
       {hasQuote && (
         <span
-          className="font-mono text-[8px] tabular-nums leading-none"
+          className="font-mono text-[9px] tabular-nums leading-none"
           style={{ color: changeColor, textShadow: `0 0 6px ${changeColor}50` }}
         >
           {isUp ? '+' : ''}{changePercent.toFixed(2)}%
@@ -112,7 +112,7 @@ function PositionCard({
 
       {/* Current price */}
       {hasQuote && quote.price > 0 && (
-        <span className="font-mono text-[7px] tabular-nums leading-none text-[var(--text-muted)] opacity-50">
+        <span className="font-mono text-[9px] tabular-nums leading-none text-[var(--text-muted)] opacity-50">
           {fmtPrice(quote.price, position.asset_type)}
         </span>
       )}
@@ -179,7 +179,7 @@ export default function ExposurePanel({
   return (
     <>
       <PanelHeader />
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-3 py-2.5 space-y-3">
+      <div className="overflow-y-auto scrollbar-hide px-3 py-2.5 space-y-4">
 
         {/* ── Direction gauge ──────────────────────────────────────── */}
         <div>
@@ -250,13 +250,13 @@ export default function ExposurePanel({
 
           {/* Labels */}
           <div className="mt-2 flex items-center justify-between">
-            <span className="font-mono text-[9px] font-medium" style={{ color: '#ef4444', opacity: 0.6 }}>
+            <span className="font-mono text-[10px] font-medium" style={{ color: '#ef4444', opacity: 0.6 }}>
               SHORT
             </span>
 
             {/* Net label pill */}
             <span
-              className="rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold tabular-nums"
+              className="rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold tabular-nums"
               style={{
                 color:      fillColor,
                 background: `${fillColor}12`,
@@ -267,7 +267,7 @@ export default function ExposurePanel({
               {absNet.toFixed(0)}% {directionWord}
             </span>
 
-            <span className="font-mono text-[9px] font-medium" style={{ color: '#22c55e', opacity: 0.6 }}>
+            <span className="font-mono text-[10px] font-medium" style={{ color: '#22c55e', opacity: 0.6 }}>
               LONG
             </span>
           </div>
@@ -292,7 +292,7 @@ export default function ExposurePanel({
                       style={{ background: color, boxShadow: `0 0 5px ${color}80` }}
                     />
                     <span
-                      className="font-mono text-[8px] font-bold uppercase tracking-wide"
+                      className="font-mono text-[9px] font-bold uppercase tracking-wide"
                       style={{ color }}
                     >
                       {TYPE_LABEL[type] ?? type}
@@ -300,7 +300,7 @@ export default function ExposurePanel({
                   </div>
 
                   {/* Position cards */}
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {posns.map((p) => (
                       <PositionCard
                         key={`${p.id}-${p.direction}`}

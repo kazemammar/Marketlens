@@ -283,8 +283,8 @@ export default function RiskAlerts({
   return (
     <>
       <PanelHeader />
-      <div className="relative flex-1 overflow-hidden">
-        <div className="h-full overflow-y-auto scrollbar-hide px-2.5 py-1.5">
+      <div className="relative overflow-hidden">
+        <div className="overflow-y-auto scrollbar-hide px-2.5 py-1.5">
           {alerts.length === 0 ? (
             /* ── All-clear state ── */
             <div className="flex h-full flex-col items-center justify-center gap-3 py-6">
@@ -311,7 +311,7 @@ export default function RiskAlerts({
                 />
               </svg>
               <div className="text-center">
-                <p className="font-mono text-[11px] font-semibold" style={{ color: 'var(--price-up)' }}>
+                <p className="font-mono text-[12px] font-semibold" style={{ color: 'var(--price-up)' }}>
                   Portfolio balanced
                 </p>
                 <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-50 mt-0.5">
@@ -325,7 +325,7 @@ export default function RiskAlerts({
               return (
                 <div
                   key={i}
-                  className="animate-fade-up mb-1.5 overflow-hidden rounded-lg"
+                  className="animate-fade-up mb-2 overflow-hidden rounded-lg"
                   style={{
                     borderLeft:         `3px solid ${cfg.border}`,
                     background:         cfg.bg,
@@ -337,7 +337,7 @@ export default function RiskAlerts({
                   }}
                 >
                   {/* Header row — compact */}
-                  <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+                  <div className="flex items-center gap-1.5 px-2.5 pt-2 pb-0.5">
                     {/* Severity dot — pulsing for HIGH */}
                     <span
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${alert.severity === 'HIGH' ? 'live-dot' : ''}`}
@@ -357,7 +357,7 @@ export default function RiskAlerts({
                   </div>
 
                   {/* Message */}
-                  <p className="px-2 pb-1.5 font-mono text-[10px] leading-relaxed text-[var(--text)]">
+                  <p className="px-2.5 pb-2 font-mono text-[10px] leading-relaxed text-[var(--text)]">
                     {alert.message}
                   </p>
 

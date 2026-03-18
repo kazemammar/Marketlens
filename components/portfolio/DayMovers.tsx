@@ -67,7 +67,7 @@ function EmptyWinners() {
       <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: '#ef4444', opacity: 0.35 }} aria-hidden>
         <polyline points="1,5 5,9 8,7 11,10 15,6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-      <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-50 text-center">None today</p>
+      <p className="font-mono text-[11px] text-[var(--text-muted)] opacity-50 text-center">None today</p>
     </div>
   )
 }
@@ -117,7 +117,7 @@ function MoverCard({
 
   return (
     <div
-      className="animate-fade-up mx-2 mb-1.5 overflow-hidden rounded-md cursor-default"
+      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded-md cursor-default"
       style={{
         borderLeft:         `2px solid ${colorHex}90`,
         background:         `linear-gradient(to right, ${colorHex}08, transparent 70%)`,
@@ -142,7 +142,7 @@ function MoverCard({
       <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
         <Link
           href={`/asset/${type}/${encodeURIComponent(symbol)}`}
-          className="font-mono text-[11px] font-bold hover:underline"
+          className="font-mono text-[12px] font-bold hover:underline"
           style={{ color: 'var(--accent)' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -157,13 +157,13 @@ function MoverCard({
         </span>
 
         {/* Current price */}
-        <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-60">
+        <span className="font-mono text-[11px] tabular-nums text-[var(--text-muted)] opacity-60">
           {fmtPrice(price, type)}
         </span>
 
         {/* Change % */}
         <span
-          className="ml-auto font-mono text-[11px] font-bold tabular-nums"
+          className="ml-auto font-mono text-[12px] font-bold tabular-nums"
           style={{ color: colorHex, textShadow: `0 0 10px ${colorHex}50` }}
         >
           {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
@@ -185,7 +185,7 @@ function MoverCard({
       {/* P&L dollar amount */}
       {pnlDollar != null && (
         <p
-          className="px-2 pb-1.5 pt-0.5 font-mono text-[8px] tabular-nums"
+          className="px-2 pb-1.5 pt-0.5 font-mono text-[10px] tabular-nums"
           style={{ color: pnlDollar >= 0 ? '#22c55e' : '#ef4444', opacity: 0.7 }}
         >
           {fmtPnl(pnlDollar)}
@@ -232,7 +232,7 @@ export default function DayMovers({
   return (
     <>
       <PanelHeader />
-      <div className="flex-1 overflow-y-auto scrollbar-hide">
+      <div className="overflow-y-auto scrollbar-hide">
         {!hasMoverData ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 px-4 py-6">
             <div className="relative flex h-10 w-10 items-center justify-center">

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const VALID_TYPES = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
@@ -25,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const limited = withRateLimit(req, 20)
+  if (limited) return limited
+
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -60,6 +64,9 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const limited = withRateLimit(req, 20)
+  if (limited) return limited
+
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 

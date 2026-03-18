@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { Asset } from '@/lib/utils/types'
+import AssetDataSnapshot from './AssetDataSnapshot'
 
 const TYPE_COLORS: Record<string, string> = {
   stock:     'bg-emerald-500/10 text-emerald-400',
@@ -77,14 +78,6 @@ export default function AddPositionModal({
         setSelected(asset)
         setQuery(prefill.symbol)
         setResults([])
-        setDataLoading(true)
-        Promise.all([
-          fetch(`/api/quote/${encodeURIComponent(prefill.symbol)}`).then((r) => r.ok ? r.json() : null),
-          fetch(`/api/financials/${encodeURIComponent(prefill.symbol)}`).then((r) => r.ok ? r.json() : null),
-        ])
-          .then(([q, f]) => { setQuoteData(q); setMetricsData(f?.metrics ?? null) })
-          .catch(() => {})
-          .finally(() => setDataLoading(false))
       } else {
         setQuery(''); setResults([]); setSelected(null)
         setTimeout(() => inputRef.current?.focus(), 80)
@@ -111,6 +104,21 @@ export default function AddPositionModal({
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [])
 
+  // Fetch market data when selection changes
+  useEffect(() => {
+    if (!selected) { setQuoteData(null); setMetricsData(null); return }
+    let cancelled = false
+    setDataLoading(true)
+    Promise.all([
+      fetch(`/api/quote/${encodeURIComponent(selected.symbol)}`).then((r) => r.ok ? r.json() : null),
+      fetch(`/api/financials/${encodeURIComponent(selected.symbol)}`).then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([q, f]) => { if (!cancelled) { setQuoteData(q); setMetricsData(f?.metrics ?? null) } })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setDataLoading(false) })
+    return () => { cancelled = true }
+  }, [selected?.symbol]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Fetch search results
   useEffect(() => {
     if (dq.length < 1) { setResults([]); return }
@@ -128,15 +136,6 @@ export default function AddPositionModal({
     setSelected(asset)
     setQuery(asset.symbol)
     setDropOpen(false)
-    setQuoteData(null); setMetricsData(null)
-    setDataLoading(true)
-    Promise.all([
-      fetch(`/api/quote/${encodeURIComponent(asset.symbol)}`).then((r) => r.ok ? r.json() : null),
-      fetch(`/api/financials/${encodeURIComponent(asset.symbol)}`).then((r) => r.ok ? r.json() : null),
-    ])
-      .then(([q, f]) => { setQuoteData(q); setMetricsData(f?.metrics ?? null) })
-      .catch(() => {})
-      .finally(() => setDataLoading(false))
   }, [])
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -315,103 +314,12 @@ export default function AddPositionModal({
 
             {/* Asset data snapshot */}
             {selected && (
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 space-y-2">
-                {dataLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-20 animate-pulse rounded bg-[var(--surface-3)]" />
-                    <div className="h-4 w-16 animate-pulse rounded bg-[var(--surface-3)]" />
-                  </div>
-                ) : quoteData ? (
-                  <>
-                    {/* Price + change */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-mono text-[18px] font-bold tabular-nums text-[var(--text)]">
-                          ${quoteData.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                        <span
-                          className="font-mono text-[12px] font-semibold tabular-nums"
-                          style={{ color: quoteData.changePercent >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}
-                        >
-                          {quoteData.changePercent >= 0 ? '▲' : '▼'} {Math.abs(quoteData.changePercent).toFixed(2)}%
-                        </span>
-                      </div>
-                      <span className="font-mono text-[9px] text-[var(--text-muted)]">
-                        {selected.type.toUpperCase()}
-                      </span>
-                    </div>
-
-                    {/* Day range bar */}
-                    {quoteData.low > 0 && quoteData.high > quoteData.low && (
-                      <div>
-                        <span className="font-mono text-[9px] text-[var(--text-muted)]">Day Range</span>
-                        <div className="relative mt-1 h-1.5 w-full rounded-full bg-[var(--surface-3)]">
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 h-2.5 w-0.5 rounded-full bg-[var(--accent)]"
-                            style={{ left: `${Math.max(0, Math.min(100, ((quoteData.price - quoteData.low) / (quoteData.high - quoteData.low)) * 100))}%` }}
-                          />
-                        </div>
-                        <div className="flex justify-between mt-0.5">
-                          <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]">${quoteData.low.toFixed(2)}</span>
-                          <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]">${quoteData.high.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 52-week range bar */}
-                    {metricsData?.week52High && metricsData?.week52Low && metricsData.week52High > metricsData.week52Low && (
-                      <div>
-                        <span className="font-mono text-[9px] text-[var(--text-muted)]">52W Range</span>
-                        <div className="relative mt-1 h-1.5 w-full rounded-full bg-[var(--surface-3)]">
-                          <div
-                            className="absolute top-1/2 -translate-y-1/2 h-2.5 w-0.5 rounded-full"
-                            style={{
-                              left: `${Math.max(0, Math.min(100, ((quoteData.price - metricsData.week52Low) / (metricsData.week52High - metricsData.week52Low)) * 100))}%`,
-                              background: 'var(--warning, #f59e0b)',
-                            }}
-                          />
-                        </div>
-                        <div className="flex justify-between mt-0.5">
-                          <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]">${metricsData.week52Low.toFixed(2)}</span>
-                          <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]">${metricsData.week52High.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Key metrics row */}
-                    {metricsData && (metricsData.marketCap || metricsData.peRatio || (metricsData.dividendYield != null && metricsData.dividendYield > 0)) && (
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1.5 border-t border-[var(--border)]">
-                        {metricsData.marketCap != null && (
-                          <div>
-                            <span className="font-mono text-[8px] uppercase text-[var(--text-muted)]">Mkt Cap </span>
-                            <span className="font-mono text-[10px] tabular-nums text-[var(--text)]">
-                              {metricsData.marketCap >= 1_000_000
-                                ? `$${(metricsData.marketCap / 1_000_000).toFixed(1)}T`
-                                : metricsData.marketCap >= 1_000
-                                ? `$${(metricsData.marketCap / 1_000).toFixed(0)}B`
-                                : `$${metricsData.marketCap.toFixed(0)}M`}
-                            </span>
-                          </div>
-                        )}
-                        {metricsData.peRatio != null && (
-                          <div>
-                            <span className="font-mono text-[8px] uppercase text-[var(--text-muted)]">P/E </span>
-                            <span className="font-mono text-[10px] tabular-nums text-[var(--text)]">{metricsData.peRatio.toFixed(1)}</span>
-                          </div>
-                        )}
-                        {metricsData.dividendYield != null && metricsData.dividendYield > 0 && (
-                          <div>
-                            <span className="font-mono text-[8px] uppercase text-[var(--text-muted)]">Div </span>
-                            <span className="font-mono text-[10px] tabular-nums text-[var(--text)]">{metricsData.dividendYield.toFixed(2)}%</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="font-mono text-[10px] text-[var(--text-muted)]">Price data unavailable</p>
-                )}
-              </div>
+              <AssetDataSnapshot
+                quoteData={quoteData}
+                metricsData={metricsData}
+                dataLoading={dataLoading}
+                assetType={selected.type}
+              />
             )}
 
             {/* Direction */}

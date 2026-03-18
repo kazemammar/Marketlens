@@ -117,6 +117,9 @@ export default function CommodityStrip({
               )
             })}
       </div>
+      <span className="shrink-0 font-mono text-[8px] text-[var(--text-muted)] opacity-30 px-2">
+        Yahoo · delayed
+      </span>
     </div>
   )
 }

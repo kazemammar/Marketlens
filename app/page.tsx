@@ -14,6 +14,7 @@ import SignalsPanel      from '@/components/warroom/SignalsPanel'
 import HeatmapPanel      from '@/components/warroom/HeatmapPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
+import MoversStrip         from '@/components/warroom/MoversStrip'
 import NewsBriefing         from '@/components/warroom/NewsBriefing'
 import MaritimePanel        from '@/components/warroom/MaritimePanel'
 import StatusBar            from '@/components/layout/StatusBar'
@@ -125,6 +126,9 @@ export default async function HomePage({
       <div className="border-b border-[var(--border)] bg-[var(--surface)]">
         <SignalsPanel layout="horizontal" />
       </div>
+
+      {/* ══ TOP MOVERS STRIP ══════════════════════════════════════════════ */}
+      <MoversStrip />
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}
       <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>

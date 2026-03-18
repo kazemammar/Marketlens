@@ -216,30 +216,25 @@ export default function PortfolioSummary({
             {hasMov && (
               <>
                 <span className="h-4 w-px bg-[var(--border)]" />
-                <div className="flex flex-col gap-px" title="Today's best and worst performing positions (by portfolio impact)">
-                  <span className="font-mono text-[7px] uppercase tracking-wide text-[var(--text-muted)] opacity-50 leading-none">
-                    Today&apos;s Movers
+                <div className="flex items-center gap-2">
+                  {/* Best */}
+                  <span
+                    className="flex items-center gap-1 font-mono text-[10px]"
+                    style={{ color: '#22c55e' }}
+                    title="Best performer today"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#22c55e', boxShadow: '0 0 4px #22c55e80' }} />
+                    ↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%
                   </span>
-                  <div className="flex items-center gap-2">
-                    {/* Best */}
-                    <span
-                      className="flex items-center gap-1 font-mono text-[10px]"
-                      style={{ color: '#22c55e' }}
-                      title={`Best performer: ${best.symbol} is up ${fmt(best.impact)}% portfolio impact today`}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#22c55e', boxShadow: '0 0 4px #22c55e80' }} />
-                      ↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%
-                    </span>
-                    {/* Worst */}
-                    <span
-                      className="flex items-center gap-1 font-mono text-[10px]"
-                      style={{ color: '#ef4444' }}
-                      title={`Worst performer: ${worst.symbol} is down ${fmt(Math.abs(worst.impact))}% portfolio impact today`}
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#ef4444', boxShadow: '0 0 4px #ef444480' }} />
-                      ↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%
-                    </span>
-                  </div>
+                  {/* Worst */}
+                  <span
+                    className="flex items-center gap-1 font-mono text-[10px]"
+                    style={{ color: '#ef4444' }}
+                    title="Worst performer today"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#ef4444', boxShadow: '0 0 4px #ef444480' }} />
+                    ↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%
+                  </span>
                 </div>
               </>
             )}

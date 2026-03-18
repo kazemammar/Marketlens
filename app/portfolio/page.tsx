@@ -124,7 +124,7 @@ function SectionHeader({
 
 export default function PortfolioPage() {
   const { user, loading: authLoading } = useAuth()
-  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, refetch } = usePortfolio()
+  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, refetch } = usePortfolio()
 
   const [quotes,       setQuotes]       = useState<Record<string, QuoteData>>({})
   const [addOpen,      setAddOpen]      = useState(false)
@@ -424,6 +424,12 @@ export default function PortfolioPage() {
       <AddPositionModal
         isOpen={addOpen}
         onClose={() => setAddOpen(false)}
+        positions={positions}
+        onAddLot={async (positionId, lot) => {
+          const ok = await addLotToPosition(positionId, lot)
+          if (ok) setBriefTrigger((n) => n + 1)
+          return ok
+        }}
         onAdd={async (data) => {
           const ok = await addPosition(
             data.symbol,
@@ -432,6 +438,8 @@ export default function PortfolioPage() {
             data.quantity,
             data.avgCost,
             data.notes,
+            data.lots   ?? null,
+            data.purchaseDate ?? null,
           )
           if (ok) { await refetch(); setBriefTrigger((n) => n + 1) }
           return ok

@@ -68,6 +68,42 @@ export async function getYahooSparkline(symbol: string): Promise<number[]> {
   }
 }
 
+export interface HistoricalDay {
+  date:  string  // "2026-03-18"
+  close: number
+}
+
+export async function getYahooHistory(
+  symbol: string,
+  range: '1mo' | '3mo' | '6mo' | '1y' = '3mo',
+): Promise<HistoricalDay[]> {
+  try {
+    const res = await fetch(
+      `${YAHOO_BASE}/${encodeURIComponent(symbol)}?interval=1d&range=${range}`,
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        next: { revalidate: 3600 },
+      },
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    const result = data.chart?.result?.[0]
+    if (!result) return []
+
+    const timestamps: number[]          = result.timestamp ?? []
+    const closes: (number | null)[]     = result.indicators?.quote?.[0]?.close ?? []
+
+    return timestamps
+      .map((ts, i) => ({
+        date:  new Date(ts * 1000).toISOString().slice(0, 10),
+        close: closes[i] ?? 0,
+      }))
+      .filter((d) => d.close > 0)
+  } catch {
+    return []
+  }
+}
+
 export async function getYahooQuotesBatch(symbols: string[]): Promise<YahooQuote[]> {
   const results = await Promise.allSettled(symbols.map((s) => getYahooQuote(s)))
   return results

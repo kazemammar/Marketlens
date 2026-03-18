@@ -14,7 +14,8 @@ import DayMovers        from '@/components/portfolio/DayMovers'
 import AllocationPanel  from '@/components/portfolio/AllocationPanel'
 import RiskAlerts       from '@/components/portfolio/RiskAlerts'
 import ExposurePanel    from '@/components/portfolio/ExposurePanel'
-import EarningsCalendar from '@/components/portfolio/EarningsCalendar'
+import EarningsCalendar  from '@/components/portfolio/EarningsCalendar'
+import BenchmarkChart   from '@/components/portfolio/BenchmarkChart'
 
 // ─── Crypto symbol mapping ─────────────────────────────────────────────────
 
@@ -308,6 +309,11 @@ export default function PortfolioPage() {
             <div className="min-w-0 overflow-hidden flex flex-col">
               <ExposurePanel positions={positions} quotes={quotes} />
             </div>
+          </div>
+
+          {/* ── Benchmark Comparison ─────────────────────────────────────── */}
+          <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+            <BenchmarkChart />
           </div>
 
           {/* ── Earnings Calendar ────────────────────────────────────────── */}

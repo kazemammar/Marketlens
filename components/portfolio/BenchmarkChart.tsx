@@ -272,7 +272,7 @@ export default function BenchmarkChart() {
                     strokeWidth={1.5}
                   >
                     <Label
-                      value={`Portfolio ${portReturn >= 0 ? '+' : ''}${portReturn.toFixed(1)}%`}
+                      value={`Portfolio (all-time) ${portReturn >= 0 ? '+' : ''}${portReturn.toFixed(1)}%`}
                       position="insideRight"
                       offset={-4}
                       fill={portColor}
@@ -301,6 +301,17 @@ export default function BenchmarkChart() {
             </ResponsiveContainer>
           </div>
 
+          {/* Annotation */}
+          {portReturn !== null && (
+            <p className="px-3 pb-1 pt-0.5 font-mono text-[8px] text-[var(--text-muted)] opacity-60">
+              <span
+                className="inline-block mr-1 w-5 border-t-0 border-b-0"
+                style={{ borderTop: `1.5px dashed ${portColor}`, display: 'inline-block', verticalAlign: 'middle', width: '18px' }}
+              />
+              Dashed line = your all-time portfolio return (cost basis). Area chart = S&amp;P 500 over selected period.
+            </p>
+          )}
+
           {/* Stats row */}
           <div className="flex items-stretch gap-2 px-3 pb-3 pt-2">
 
@@ -311,7 +322,7 @@ export default function BenchmarkChart() {
                 returnPct={portReturn}
                 returnAmt={portReturnAmt}
                 color={portColor}
-                sub={`${data?.portfolio.positionsWithCost} of ${data?.portfolio.totalPositions} positions`}
+                sub={`All-time · ${data?.portfolio.positionsWithCost} of ${data?.portfolio.totalPositions} positions with cost data`}
               />
             ) : (
               <div className="flex min-w-0 flex-1 items-center justify-center rounded-md border border-[var(--border)] px-3 py-2">

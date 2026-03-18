@@ -23,6 +23,24 @@ function fmtEps(n: number): string {
   return `${n >= 0 ? '' : '−'}$${Math.abs(n).toFixed(2)}`
 }
 
+function urgencyConfig(days: number): { color: string; bg: string; borderHex: string } {
+  if (days <= 14) return {
+    color:     '#f59e0b',
+    bg:        'rgba(245,158,11,0.12)',
+    borderHex: '#f59e0b',
+  }
+  if (days <= 30) return {
+    color:     'var(--accent)',
+    bg:        'rgba(16,185,129,0.10)',
+    borderHex: '#10b981',
+  }
+  return {
+    color:     'var(--text-muted)',
+    bg:        'var(--surface-2)',
+    borderHex: '#6b7280',
+  }
+}
+
 // ─── Panel header ─────────────────────────────────────────────────────────
 
 function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
@@ -52,116 +70,172 @@ function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
   )
 }
 
-// ─── Upcoming row ─────────────────────────────────────────────────────────
+// ─── Column header ─────────────────────────────────────────────────────────
 
-function UpcomingRow({ event, delay }: { event: EarningsItem; delay: number }) {
-  const days = daysUntil(event.date)
-
-  const dateColor = days <= 7
-    ? '#f59e0b'
-    : days <= 14
-    ? 'var(--accent)'
-    : 'var(--text-muted)'
-
-  const dateBg = days <= 7
-    ? 'rgba(245,158,11,0.12)'
-    : days <= 14
-    ? 'rgba(16,185,129,0.10)'
-    : 'var(--surface-2)'
-
-  const countdownColor = dateColor
-
-  const countdown = days === 0
-    ? 'today'
-    : days === 1
-    ? 'tomorrow'
-    : `in ~${days}d`
-
+function ColHeader({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
-    <div
-      className="animate-fade-up flex items-center gap-3 px-3 py-2 border-b border-[var(--border)] last:border-0"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
-    >
-      {/* Date badge + EST */}
-      <div className="flex shrink-0 flex-col items-center gap-0.5" style={{ minWidth: '52px' }}>
-        <span
-          className="rounded-md px-2 py-0.5 font-mono text-[10px] font-bold tabular-nums w-full text-center"
-          style={{ background: dateBg, color: dateColor }}
-        >
-          {fmtDate(event.date)}
-        </span>
-        <span className="font-mono text-[7px] uppercase tracking-wide opacity-40 text-[var(--text-muted)]">est</span>
-      </div>
-
-      {/* Symbol */}
-      <Link
-        href={`/asset/stock/${encodeURIComponent(event.symbol)}`}
-        className="font-mono text-[12px] font-bold shrink-0 hover:underline"
-        style={{ color: 'var(--accent)' }}
-      >
-        {event.symbol}
-      </Link>
-
-      {/* Quarter label */}
-      <span className="shrink-0 rounded px-1.5 py-px font-mono text-[8px] font-semibold uppercase tracking-wide bg-[var(--surface-2)] text-[var(--text-muted)]">
-        Q{event.quarter} {event.year}
-      </span>
-
-      <div className="flex-1" />
-
-      {/* Countdown */}
-      <span
-        className="shrink-0 font-mono text-[10px] font-semibold tabular-nums"
-        style={{ color: countdownColor }}
-      >
-        {countdown}
+    <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-1.5">
+      {icon}
+      <span className="font-mono text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+        {label}
       </span>
     </div>
   )
 }
 
-// ─── Recent row ───────────────────────────────────────────────────────────
+// ─── Upcoming card ─────────────────────────────────────────────────────────
 
-function RecentRow({ event, delay }: { event: EarningsItem; delay: number }) {
-  const hasBoth     = event.actual != null && event.estimate != null
-  const beat        = hasBoth ? (event.actual! > event.estimate!) : null
-  const beatColor   = beat === true ? '#22c55e' : beat === false ? '#ef4444' : 'var(--text-muted)'
+function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) {
+  const days  = daysUntil(event.date)
+  const cfg   = urgencyConfig(days)
+
+  const countdown = days === 0 ? 'today'
+    : days === 1 ? 'tomorrow'
+    : `in ~${days}d`
 
   return (
     <div
-      className="animate-fade-up flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] last:border-0"
-      style={{ animationDelay: `${delay}ms`, animationFillMode: 'both', opacity: 0.75 }}
+      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded-md cursor-default"
+      style={{
+        borderLeft:        `2px solid ${cfg.borderHex}90`,
+        background:        `linear-gradient(to right, ${cfg.borderHex}08, transparent 70%)`,
+        animationDelay:    `${delay}ms`,
+        animationFillMode: 'both',
+        transition:        'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLDivElement
+        el.style.transform   = 'translateY(-1px)'
+        el.style.borderColor = cfg.borderHex
+        el.style.boxShadow   = `0 2px 8px ${cfg.borderHex}20`
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLDivElement
+        el.style.transform   = 'translateY(0)'
+        el.style.borderColor = `${cfg.borderHex}90`
+        el.style.boxShadow   = 'none'
+      }}
     >
-      {/* Date */}
-      <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)] tabular-nums" style={{ minWidth: '44px' }}>
-        {fmtDate(event.date)}
-      </span>
-
-      {/* Symbol */}
-      <Link
-        href={`/asset/stock/${encodeURIComponent(event.symbol)}`}
-        className="font-mono text-[11px] font-bold shrink-0 hover:underline"
-        style={{ color: 'var(--accent)' }}
-      >
-        {event.symbol}
-      </Link>
-
-      {/* Quarter label */}
-      <span className="shrink-0 font-mono text-[8px] text-[var(--text-muted)] opacity-60">
-        Q{event.quarter} {event.year}
-      </span>
-
-      {/* EPS + beat/miss */}
-      {hasBoth && (
-        <span className="font-mono text-[10px] font-semibold" style={{ color: beatColor }}>
-          {beat ? '▲' : '▼'} {fmtEps(event.actual!)} vs {fmtEps(event.estimate!)} est
-          {event.surprisePercent != null && (
-            <span className="ml-1 opacity-70">
-              ({event.surprisePercent >= 0 ? '+' : ''}{event.surprisePercent.toFixed(1)}%)
-            </span>
-          )}
+      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-1">
+        {/* Date pill */}
+        <span
+          className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold tabular-nums"
+          style={{ background: cfg.bg, color: cfg.color }}
+        >
+          {fmtDate(event.date)}
         </span>
+
+        {/* Symbol */}
+        <Link
+          href={`/asset/stock/${encodeURIComponent(event.symbol)}`}
+          className="font-mono text-[12px] font-bold hover:underline"
+          style={{ color: 'var(--accent)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {event.symbol}
+        </Link>
+
+        {/* Quarter label */}
+        <span className="rounded px-1 py-px font-mono text-[8px] font-semibold bg-[var(--surface-2)] text-[var(--text-muted)]">
+          Q{event.quarter} {event.year}
+        </span>
+
+        {/* Countdown */}
+        <span
+          className="ml-auto font-mono text-[10px] font-semibold tabular-nums"
+          style={{ color: cfg.color, textShadow: `0 0 8px ${cfg.borderHex}50` }}
+        >
+          {countdown}
+        </span>
+      </div>
+
+      {/* EST badge row */}
+      <div className="flex items-center gap-1 px-2 pb-1.5">
+        <span className="rounded px-1 py-px font-mono text-[7px] uppercase tracking-wide bg-[var(--surface-2)] text-[var(--text-muted)] opacity-50">
+          est
+        </span>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+          estimated report date
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Recent card ───────────────────────────────────────────────────────────
+
+function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
+  const hasBoth   = event.actual != null && event.estimate != null
+  const beat      = hasBoth ? (event.actual! >= event.estimate!) : null
+  const colorHex  = beat === true ? '#22c55e' : beat === false ? '#ef4444' : '#6b7280'
+  const beatBg    = beat === true ? 'rgba(34,197,94,0.12)' : beat === false ? 'rgba(239,68,68,0.12)' : 'var(--surface-2)'
+
+  return (
+    <div
+      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded-md cursor-default"
+      style={{
+        borderLeft:        `2px solid ${colorHex}90`,
+        background:        `linear-gradient(to right, ${colorHex}08, transparent 70%)`,
+        animationDelay:    `${delay}ms`,
+        animationFillMode: 'both',
+        transition:        'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLDivElement
+        el.style.transform   = 'translateY(-1px)'
+        el.style.borderColor = colorHex
+        el.style.boxShadow   = `0 2px 8px ${colorHex}20`
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLDivElement
+        el.style.transform   = 'translateY(0)'
+        el.style.borderColor = `${colorHex}90`
+        el.style.boxShadow   = 'none'
+      }}
+    >
+      {/* Top row */}
+      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+        {/* Date pill */}
+        <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">
+          {fmtDate(event.date)}
+        </span>
+
+        {/* Symbol */}
+        <Link
+          href={`/asset/stock/${encodeURIComponent(event.symbol)}`}
+          className="font-mono text-[12px] font-bold hover:underline"
+          style={{ color: 'var(--accent)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {event.symbol}
+        </Link>
+
+        {/* Quarter label */}
+        <span className="rounded px-1 py-px font-mono text-[8px] font-semibold bg-[var(--surface-2)] text-[var(--text-muted)]">
+          Q{event.quarter} {event.year}
+        </span>
+
+        {/* Beat/miss pill */}
+        {hasBoth && (
+          <span
+            className="ml-auto shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold tabular-nums"
+            style={{ background: beatBg, color: colorHex, textShadow: `0 0 8px ${colorHex}40` }}
+          >
+            {beat ? '▲ Beat' : '▼ Miss'}
+            {event.surprisePercent != null && (
+              <span> {event.surprisePercent >= 0 ? '+' : ''}{event.surprisePercent.toFixed(1)}%</span>
+            )}
+          </span>
+        )}
+      </div>
+
+      {/* EPS detail row */}
+      {hasBoth && (
+        <p className="px-2 pb-1.5 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-60">
+          {fmtEps(event.actual!)} vs {fmtEps(event.estimate!)} est
+        </p>
       )}
+      {!hasBoth && <div className="pb-1.5" />}
     </div>
   )
 }
@@ -201,46 +275,72 @@ export default function EarningsCalendar() {
             <line x1="1" y1="6" x2="15" y2="6" stroke="currentColor" strokeWidth="1.3"/>
           </svg>
           <p className="font-mono text-[11px] text-[var(--text-muted)]">
-            No earnings data for your stock positions
+            No upcoming earnings — your stocks have already reported this quarter
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <div className="flex min-w-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-[var(--border)] overflow-y-auto scrollbar-hide">
 
-            {/* Upcoming */}
-            {upcoming.length > 0 && (
-              <div className="flex-1 min-w-0">
+          {/* Upcoming column */}
+          <div className="flex flex-col min-w-0">
+            <ColHeader
+              label="Upcoming"
+              icon={
+                <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5 shrink-0" aria-hidden>
+                  <circle cx="5" cy="5" r="3.5" stroke="var(--accent)" strokeWidth="1.3"/>
+                  <line x1="5" y1="3" x2="5" y2="5.5" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="5" cy="6.2" r="0.5" fill="var(--accent)"/>
+                </svg>
+              }
+            />
+            {upcoming.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-4">
+                <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50 text-center">
+                  All reported this quarter
+                </p>
+              </div>
+            ) : (
+              <div className="pt-1.5">
                 {upcoming.map((e, i) => (
-                  <UpcomingRow key={`${e.symbol}-${e.date}`} event={e} delay={i * 40} />
+                  <UpcomingCard key={`${e.symbol}-${e.date}`} event={e} delay={i * 50} />
                 ))}
               </div>
             )}
-
-            {/* Divider */}
-            {upcoming.length > 0 && recent.length > 0 && (
-              <div className="hidden sm:block w-px bg-[var(--border)] shrink-0" />
-            )}
-
-            {/* Recent */}
-            {recent.length > 0 && (
-              <div className="flex-1 min-w-0">
-                <div className="px-3 py-1.5 border-b border-[var(--border)]">
-                  <span className="font-mono text-[8px] uppercase tracking-wide text-[var(--text-muted)] opacity-50">Recent</span>
-                </div>
-                {recent.slice(0, 6).map((e, i) => (
-                  <RecentRow key={`${e.symbol}-${e.date}-${i}`} event={e} delay={i * 40} />
-                ))}
-              </div>
-            )}
-
           </div>
 
-          {/* Disclaimer */}
-          <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-40 px-3 py-2">
-            Upcoming dates are estimates based on historical reporting patterns
-          </p>
+          {/* Recent column */}
+          <div className="flex flex-col min-w-0">
+            <ColHeader
+              label="Recent"
+              icon={
+                <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5 shrink-0" aria-hidden>
+                  <polyline points="1,7 4,3 7,5 9,1" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              }
+            />
+            {recent.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-4">
+                <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50 text-center">
+                  No recent data
+                </p>
+              </div>
+            ) : (
+              <div className="pt-1.5">
+                {recent.slice(0, 6).map((e, i) => (
+                  <RecentCard key={`${e.symbol}-${e.date}-${i}`} event={e} delay={i * 50} />
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
+      )}
+
+      {/* Disclaimer */}
+      {hasAny && !loading && (
+        <p className="border-t border-[var(--border)] px-3 py-1.5 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+          Upcoming dates are estimates based on historical reporting patterns
+        </p>
       )}
     </>
   )

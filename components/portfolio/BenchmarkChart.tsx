@@ -115,7 +115,23 @@ function SpyOnlyCard({ spyReturn, rangeFull }: { spyReturn: number; rangeFull: s
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function BenchmarkChart() {
+interface BenchmarkChartProps {
+  allTimeReturn?:     number
+  allTimeReturnAmt?:  number
+  totalCost?:         number
+  totalValue?:        number
+  positionsWithCost?: number
+  totalPositions?:    number
+}
+
+export default function BenchmarkChart({
+  allTimeReturn,
+  allTimeReturnAmt,
+  totalCost,
+  totalValue,
+  positionsWithCost,
+  totalPositions,
+}: BenchmarkChartProps) {
   const [data,    setData]    = useState<BenchmarkPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(false)
@@ -150,10 +166,14 @@ export default function BenchmarkChart() {
   const hasData             = series.length > 0
   const hasPortfolioCost    = (data?.portfolio.positionsWithCost ?? 0) > 0
   const portRangeReturn     = data?.portfolioRangeReturn ?? 0
-  const portAllTimeReturn   = data?.portfolio.totalReturn ?? 0
-  const portAllTimeAmt      = data?.portfolio.totalReturnAmt ?? 0
-  const spyReturn           = data?.spyReturn ?? 0
-  const diff                = portRangeReturn - spyReturn
+  // All-time values: prefer props from page (same quote source as summary bar), fall back to API
+  const displayAllTimeReturn  = allTimeReturn    ?? data?.portfolio.totalReturn    ?? 0
+  const displayAllTimeAmt     = allTimeReturnAmt ?? data?.portfolio.totalReturnAmt ?? 0
+  const displayWithCost       = positionsWithCost ?? data?.portfolio.positionsWithCost ?? 0
+  const displayTotal          = totalPositions    ?? data?.portfolio.totalPositions    ?? 0
+  const spyReturn             = data?.spyReturn ?? 0
+  // Center diff compares range returns (both from the same API response)
+  const diff                  = portRangeReturn - spyReturn
   const diffAhead           = diff >= 0
   const rangeFull           = RANGES.find((r) => r.key === range)?.full ?? ''
 
@@ -329,10 +349,10 @@ export default function BenchmarkChart() {
                 {fmtPct(portRangeReturn)}
               </span>
               <span className="mt-0.5 font-mono text-[10px] tabular-nums text-[var(--text-muted)] opacity-60">
-                All-time: {fmtPct(portAllTimeReturn)} ({fmtAmt(portAllTimeAmt)})
+                All-time: {fmtPct(displayAllTimeReturn)} ({fmtAmt(displayAllTimeAmt)})
               </span>
               <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
-                {data?.portfolio.positionsWithCost} of {data?.portfolio.totalPositions} positions with cost data
+                {displayWithCost} of {displayTotal} positions with cost data
               </span>
               <ReturnBar pct={portRangeReturn} color={portColor} />
             </div>

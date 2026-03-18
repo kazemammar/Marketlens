@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth }      from '@/lib/hooks/useAuth'
 import { usePortfolio } from '@/lib/hooks/usePortfolio'
@@ -213,6 +213,33 @@ export default function PortfolioPage() {
     setQuotes(merged)
   }, [positions])
 
+  // All-time P&L — same source as summary bar, passed to BenchmarkChart for consistency
+  const allTimeStats = useMemo(() => {
+    let totalValue = 0
+    let totalCost  = 0
+    let withCost   = 0
+    for (const p of positions) {
+      const q = quotes[p.symbol]
+      if (!q || !p.quantity || !p.avg_cost) continue
+      const qty = Number(p.quantity)
+      const avg = Number(p.avg_cost)
+      if (qty <= 0 || avg <= 0) continue
+      withCost++
+      totalValue += qty * q.price
+      totalCost  += qty * avg
+    }
+    const allTimePnl = totalValue - totalCost
+    const allTimePct = totalCost > 0 ? (allTimePnl / totalCost) * 100 : 0
+    return {
+      allTimeReturn:     allTimePct,
+      allTimeReturnAmt:  allTimePnl,
+      totalCost,
+      totalValue,
+      positionsWithCost: withCost,
+      totalPositions:    positions.length,
+    }
+  }, [positions, quotes])
+
   useEffect(() => {
     fetchQuotes()
     const id = setInterval(fetchQuotes, 60_000)
@@ -314,7 +341,7 @@ export default function PortfolioPage() {
 
           {/* ── Benchmark Comparison ─────────────────────────────────────── */}
           <div className="border-b border-[var(--border)] bg-[var(--surface)]">
-            <BenchmarkChart />
+            <BenchmarkChart {...allTimeStats} />
           </div>
 
           {/* ── Performance History ──────────────────────────────────────── */}

@@ -1,27 +1,23 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
-  Tooltip, ReferenceLine, CartesianGrid, Label,
-} from 'recharts'
 import type { BenchmarkPayload } from '@/app/api/portfolio/benchmark/route'
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Range = '1mo' | '3mo' | '6mo' | '1y'
 
-const RANGES: { key: Range; label: string }[] = [
-  { key: '1mo', label: '1M' },
-  { key: '3mo', label: '3M' },
-  { key: '6mo', label: '6M' },
-  { key: '1y',  label: '1Y' },
+const RANGES: { key: Range; label: string; full: string }[] = [
+  { key: '1mo', label: '1M', full: '1 month'   },
+  { key: '3mo', label: '3M', full: '3 months'  },
+  { key: '6mo', label: '6M', full: '6 months'  },
+  { key: '1y',  label: '1Y', full: '1 year'    },
 ]
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 
-function fmtPct(n: number, showSign = true): string {
-  const sign = showSign && n >= 0 ? '+' : ''
+function fmtPct(n: number): string {
+  const sign = n >= 0 ? '+' : ''
   return `${sign}${n.toFixed(2)}%`
 }
 
@@ -33,88 +29,88 @@ function fmtAmt(n: number): string {
   return `${sign}$${abs.toFixed(2)}`
 }
 
-function fmtDate(dateStr: string): string {
-  const [, m, d] = dateStr.split('-').map(Number)
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(
-    new Date(2000, m - 1, d),
-  )
-}
+// ─── Return bar ───────────────────────────────────────────────────────────────
 
-// ─── Custom tooltip ──────────────────────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null
-  const spyVal: number = payload[0]?.value ?? 0
-  const formatted = new Date(label + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  })
+function ReturnBar({ pct, color }: { pct: number; color: string }) {
+  // Map return to bar width: 0% → 0%, ±50% → 100%, clamped
+  const width = Math.min(100, Math.abs(pct) * 2)
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-xl">
-      <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{formatted}</p>
-      <p className="font-mono text-[11px] font-bold" style={{ color: '#3b82f6' }}>
-        S&amp;P 500: {fmtPct(spyVal)}
-      </p>
-    </div>
-  )
-}
-
-// ─── Stat card ───────────────────────────────────────────────────────────────
-
-function StatCard({
-  label, returnPct, returnAmt, color, sub,
-}: {
-  label:      string
-  returnPct:  number
-  returnAmt?: number
-  color:      string
-  sub?:       string
-}) {
-  return (
-    <div
-      className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md border border-[var(--border)] px-3 py-2"
-      style={{
-        borderLeft:  `3px solid ${color}`,
-        background:  `linear-gradient(to right, ${color}10, transparent 80%)`,
-      }}
-    >
-      <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
-        {label}
-      </span>
-      <span
-        className="font-mono text-[18px] font-bold tabular-nums leading-none"
-        style={{ color, textShadow: `0 0 12px ${color}40` }}
-      >
-        {fmtPct(returnPct)}
-      </span>
-      {returnAmt !== undefined && (
-        <span className="font-mono text-[10px] tabular-nums" style={{ color, opacity: 0.7 }}>
-          {fmtAmt(returnAmt)}
-        </span>
-      )}
-      {sub && (
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">{sub}</span>
-      )}
+    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
+      <div
+        className="h-full rounded-full transition-all duration-500"
+        style={{
+          width:      `${width}%`,
+          background: color,
+          opacity:    0.7,
+          marginLeft: pct < 0 ? 'auto' : undefined,
+        }}
+      />
     </div>
   )
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function ChartSkeleton() {
+function Skeleton() {
   return (
-    <div className="flex flex-col gap-3 px-3 pb-3 pt-2">
-      <div className="h-[200px] w-full animate-pulse rounded-md bg-[var(--surface-2)]" />
-      <div className="flex gap-3">
-        <div className="h-[72px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
-        <div className="h-[72px] w-24 animate-pulse rounded-md bg-[var(--surface-2)]" />
-        <div className="h-[72px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
+    <div className="grid grid-cols-[1fr_auto_1fr] gap-0 px-0">
+      <div className="flex flex-col gap-2 p-4">
+        <div className="h-3 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-8 w-28 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-3 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="mt-1 h-1.5 w-full animate-pulse rounded-full bg-[var(--surface-2)]" />
+      </div>
+      <div className="flex items-center justify-center border-x border-[var(--border)] px-4">
+        <div className="h-10 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
+      </div>
+      <div className="flex flex-col gap-2 p-4">
+        <div className="h-3 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-8 w-28 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-3 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="mt-1 h-1.5 w-full animate-pulse rounded-full bg-[var(--surface-2)]" />
       </div>
     </div>
   )
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── SPY-only state (no cost data) ────────────────────────────────────────────
+
+function SpyOnlyCard({ spyReturn, rangeFull }: { spyReturn: number; rangeFull: string }) {
+  const spyColor = spyReturn >= 0 ? 'var(--price-up)' : 'var(--price-down)'
+  const spyRgb   = spyReturn >= 0 ? 'var(--price-up-rgb)' : 'var(--price-down-rgb)'
+  return (
+    <div className="flex flex-col items-center gap-4 px-4 py-6">
+      <div
+        className="flex w-full max-w-sm flex-col gap-1 rounded-lg border border-[var(--border)] p-4"
+        style={{ background: `rgba(${spyRgb}, 0.04)`, borderLeftWidth: '3px', borderLeftColor: spyColor }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+            S&amp;P 500 (SPY)
+          </span>
+          <span
+            className="rounded px-1.5 py-0.5 font-mono text-[8px]"
+            style={{ background: `rgba(${spyRgb}, 0.12)`, color: spyColor }}
+          >
+            {rangeFull}
+          </span>
+        </div>
+        <span
+          className="font-mono text-[28px] font-bold tabular-nums leading-none"
+          style={{ color: spyColor, textShadow: `0 0 20px rgba(${spyRgb}, 0.35)` }}
+        >
+          {fmtPct(spyReturn)}
+        </span>
+        <ReturnBar pct={spyReturn} color={spyColor} />
+      </div>
+      <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-60 text-center max-w-[260px]">
+        Add cost basis to your positions to compare your portfolio against the market
+      </p>
+    </div>
+  )
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function BenchmarkChart() {
   const [data,    setData]    = useState<BenchmarkPayload | null>(null)
@@ -122,6 +118,7 @@ export default function BenchmarkChart() {
   const [error,   setError]   = useState(false)
   const [range,   setRange]   = useState<Range>('3mo')
   const [fading,  setFading]  = useState(false)
+  const [snapCount, setSnapCount] = useState<number | null>(null)
 
   const fetchData = useCallback(async (r: Range, silent = false) => {
     if (!silent) { setLoading(true); setError(false) }
@@ -139,6 +136,14 @@ export default function BenchmarkChart() {
     }
   }, [])
 
+  // Fetch snapshot count once to decide whether to show the "coming soon" note
+  useEffect(() => {
+    fetch('/api/portfolio/history?range=ALL')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.snapshots) setSnapCount(d.snapshots.length) })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => { fetchData(range) }, [fetchData, range])
 
   const handleRange = (r: Range) => {
@@ -146,70 +151,63 @@ export default function BenchmarkChart() {
     fetchData(r, !!data)
   }
 
-  // ── Derived ──
+  // ── Derived values ──
   const hasPortfolioCost = (data?.portfolio.positionsWithCost ?? 0) > 0
   const portReturn       = hasPortfolioCost ? (data?.portfolio.totalReturn ?? null) : null
   const portReturnAmt    = hasPortfolioCost ? (data?.portfolio.totalReturnAmt ?? 0) : 0
   const spyReturn        = data?.spyReturn ?? 0
   const diff             = portReturn !== null ? portReturn - spyReturn : null
-  const portColor        = portReturn !== null
-    ? (portReturn >= 0 ? '#22c55e' : '#ef4444')
-    : '#6b7280'
+  const diffAhead        = diff !== null && diff >= 0
+  const rangeFull        = RANGES.find((r) => r.key === range)?.full ?? ''
 
-  // Format x-axis ticks — show ~6 labels max
-  const spyData  = data?.spy ?? []
-  const tickStep = Math.max(1, Math.floor(spyData.length / 6))
-  const ticks    = spyData.filter((_, i) => i % tickStep === 0).map((d) => d.date)
+  const portColor = portReturn === null ? '#6b7280'
+    : portReturn >= 0 ? 'var(--price-up)' : 'var(--price-down)'
+  const portRgb   = portReturn === null ? '107,114,128'
+    : portReturn >= 0 ? 'var(--price-up-rgb)' : 'var(--price-down-rgb)'
 
-  // Y-axis domain: expand to include portfolio return line + padding
-  const spyValues   = spyData.map((d) => d.cumReturn)
-  const allValues   = portReturn !== null ? [...spyValues, portReturn] : spyValues
-  const yMin        = allValues.length ? Math.min(...allValues) : -10
-  const yMax        = allValues.length ? Math.max(...allValues) :  10
-  const yPad        = Math.max(3, (yMax - yMin) * 0.12)
-  const yDomain: [number, number] = [
-    Math.floor(yMin - yPad),
-    Math.ceil(yMax  + yPad),
-  ]
+  const spyColor  = spyReturn >= 0 ? '#3b82f6' : 'var(--price-down)'
+  const spyRgb    = spyReturn >= 0 ? '59,130,246' : 'var(--price-down-rgb)'
+
+  const diffColor = diffAhead ? 'var(--price-up)' : 'var(--price-down)'
+  const diffRgb   = diffAhead ? 'var(--price-up-rgb)' : 'var(--price-down-rgb)'
+
+  const showSnapshotNote = snapCount !== null && snapCount < 5
+
+  // ── Header (shared) ──
+  const Header = (
+    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+      <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#3b82f6' }} aria-hidden>
+        <polyline points="1,12 4,7 7,9 10,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <polyline points="1,14 4,10 7,12 10,7 15,5" stroke="var(--price-up)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
+      </svg>
+      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text)]">
+        Benchmark
+      </span>
+      <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">vs S&amp;P 500</span>
+      <div className="ml-auto flex items-center gap-1">
+        {RANGES.map((r) => (
+          <button
+            key={r.key}
+            onClick={() => handleRange(r.key)}
+            className="rounded px-2 py-0.5 font-mono text-[9px] font-semibold transition-colors"
+            style={range === r.key
+              ? { background: 'var(--accent)', color: '#000' }
+              : { background: 'var(--surface-2)', color: 'var(--text-muted)' }
+            }
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <div className="flex flex-col">
+      {Header}
 
-      {/* Panel header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
-        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#3b82f6' }} aria-hidden>
-          <polyline points="1,12 4,7 7,9 10,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <polyline points="1,14 4,10 7,12 10,7 15,5" stroke="#22c55e" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-        </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text)]">
-          Benchmark
-        </span>
-        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">vs S&amp;P 500</span>
-
-        {/* Range toggles */}
-        <div className="ml-auto flex items-center gap-1">
-          {RANGES.map((r) => (
-            <button
-              key={r.key}
-              onClick={() => handleRange(r.key)}
-              className="rounded px-2 py-0.5 font-mono text-[9px] font-semibold transition-colors"
-              style={range === r.key ? {
-                background:  'var(--accent)',
-                color:       '#000',
-              } : {
-                background:  'var(--surface-2)',
-                color:       'var(--text-muted)',
-              }}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Body */}
       {loading && !data ? (
-        <ChartSkeleton />
+        <Skeleton />
       ) : error && !data ? (
         <div className="flex flex-col items-center justify-center gap-2 py-10">
           <p className="font-mono text-[11px] text-[var(--text-muted)]">Unable to load benchmark data</p>
@@ -220,148 +218,113 @@ export default function BenchmarkChart() {
             Retry
           </button>
         </div>
+      ) : !hasPortfolioCost ? (
+        <SpyOnlyCard spyReturn={spyReturn} rangeFull={rangeFull} />
       ) : (
         <div style={{ opacity: fading ? 0.4 : 1, transition: 'opacity 200ms' }}>
 
-          {/* Chart */}
-          <div className="px-1 pt-2" style={{ height: '200px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={spyData} margin={{ top: 10, right: 120, bottom: 0, left: 5 }}>
-                <defs>
-                  <linearGradient id="spyGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.20} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}    />
-                  </linearGradient>
-                </defs>
+          {/* ── Three-column comparison ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr]">
 
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--border)"
-                  strokeOpacity={0.3}
-                  vertical={false}
-                />
+            {/* LEFT — Portfolio */}
+            <div
+              className="flex flex-col gap-0.5 p-4"
+              style={{ background: `rgba(${portRgb}, 0.04)` }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  Your Portfolio
+                </span>
+                <span
+                  className="rounded px-1.5 py-0.5 font-mono text-[7px] font-semibold uppercase"
+                  style={{ background: 'var(--surface-3)', color: 'var(--text-muted)' }}
+                >
+                  All-time
+                </span>
+              </div>
+              <span
+                className="font-mono text-[28px] font-bold tabular-nums leading-none"
+                style={{ color: portColor, textShadow: `0 0 20px rgba(${portRgb}, 0.35)` }}
+              >
+                {fmtPct(portReturn!)}
+              </span>
+              <span className="mt-0.5 font-mono text-[12px] tabular-nums" style={{ color: portColor, opacity: 0.7 }}>
+                {fmtAmt(portReturnAmt)}
+              </span>
+              <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">
+                {data?.portfolio.positionsWithCost} of {data?.portfolio.totalPositions} positions with cost data
+              </span>
+              <ReturnBar pct={portReturn!} color={portColor} />
+            </div>
 
-                <XAxis
-                  dataKey="date"
-                  ticks={ticks}
-                  tickFormatter={(d: string) =>
-                    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                  }
-                  tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'monospace' }}
-                  axisLine={{ stroke: 'var(--border)' }}
-                  tickLine={false}
-                />
-                <YAxis
-                  domain={yDomain}
-                  tickFormatter={(v) => `${v.toFixed(0)}%`}
-                  tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'monospace' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={36}
-                />
+            {/* CENTER — Diff */}
+            <div className="flex flex-col items-center justify-center gap-1 border-y border-[var(--border)] p-4 text-center sm:border-x sm:border-y-0 sm:px-5">
+              <div
+                className="rounded-lg px-3 py-2"
+                style={{ background: `rgba(${diffRgb}, 0.10)` }}
+              >
+                <span
+                  className="font-mono text-[15px] font-bold tabular-nums leading-none"
+                  style={{ color: diffColor, textShadow: `0 0 12px rgba(${diffRgb}, 0.4)` }}
+                >
+                  {diffAhead ? '▲' : '▼'} {Math.abs(diff!).toFixed(1)}%
+                </span>
+              </div>
+              <span
+                className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em]"
+                style={{ color: diffColor, opacity: 0.8 }}
+              >
+                {diffAhead ? 'ahead' : 'behind'}
+              </span>
+              <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">vs SPY {rangeFull}</span>
+            </div>
 
-                {/* Zero baseline */}
-                <ReferenceLine y={0} stroke="var(--border)" strokeWidth={1} />
-
-                {/* Portfolio return reference line */}
-                {portReturn !== null && (
-                  <ReferenceLine
-                    y={portReturn}
-                    stroke={portColor}
-                    strokeDasharray="6 4"
-                    strokeWidth={1.5}
-                  >
-                    <Label
-                      value={`Portfolio (all-time) ${portReturn >= 0 ? '+' : ''}${portReturn.toFixed(1)}%`}
-                      position="insideRight"
-                      offset={-4}
-                      fill={portColor}
-                      fontSize={10}
-                      fontFamily="monospace"
-                    />
-                  </ReferenceLine>
-                )}
-
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ stroke: 'var(--border)', strokeWidth: 1 }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="cumReturn"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  fill="url(#spyGrad)"
-                  dot={false}
-                  activeDot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }}
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {/* RIGHT — SPY */}
+            <div
+              className="flex flex-col gap-0.5 p-4"
+              style={{ background: spyReturn >= 0 ? 'rgba(59,130,246,0.04)' : `rgba(${spyRgb},0.04)` }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                  S&amp;P 500 (SPY)
+                </span>
+                <span
+                  className="rounded px-1.5 py-0.5 font-mono text-[7px] font-semibold uppercase"
+                  style={{ background: `rgba(${spyRgb}, 0.12)`, color: spyColor }}
+                >
+                  {rangeFull}
+                </span>
+              </div>
+              <span
+                className="font-mono text-[28px] font-bold tabular-nums leading-none"
+                style={{ color: spyColor, textShadow: `0 0 20px rgba(${spyRgb}, 0.35)` }}
+              >
+                {fmtPct(spyReturn)}
+              </span>
+              <span className="mt-0.5 font-mono text-[12px] tabular-nums text-transparent select-none">
+                &nbsp;
+              </span>
+              <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">
+                iShares S&amp;P 500 ETF · Yahoo Finance
+              </span>
+              <ReturnBar pct={spyReturn} color={spyColor} />
+            </div>
           </div>
 
-          {/* Annotation */}
-          {portReturn !== null && (
-            <p className="px-3 pb-1 pt-0.5 font-mono text-[8px] text-[var(--text-muted)] opacity-60">
-              <span
-                className="inline-block mr-1 w-5 border-t-0 border-b-0"
-                style={{ borderTop: `1.5px dashed ${portColor}`, display: 'inline-block', verticalAlign: 'middle', width: '18px' }}
-              />
-              Dashed line = your all-time portfolio return (cost basis). Area chart = S&amp;P 500 over selected period.
-            </p>
+          {/* ── Snapshot note ── */}
+          {showSnapshotNote && (
+            <div className="mx-3 mb-3 mt-1 rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
+              <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-70">
+                <span className="opacity-60">📈 </span>
+                Once daily snapshots accumulate, your portfolio performance will be tracked over time in the chart below.
+                Snapshots are taken automatically after market close.
+              </p>
+            </div>
           )}
 
-          {/* Stats row */}
-          <div className="flex items-stretch gap-2 px-3 pb-3 pt-2">
-
-            {/* Portfolio card */}
-            {hasPortfolioCost && portReturn !== null ? (
-              <StatCard
-                label="Your Portfolio"
-                returnPct={portReturn}
-                returnAmt={portReturnAmt}
-                color={portColor}
-                sub={`All-time · ${data?.portfolio.positionsWithCost} of ${data?.portfolio.totalPositions} positions with cost data`}
-              />
-            ) : (
-              <div className="flex min-w-0 flex-1 items-center justify-center rounded-md border border-[var(--border)] px-3 py-2">
-                <p className="font-mono text-[9px] text-[var(--text-muted)] opacity-60 text-center">
-                  Add cost basis to<br/>see your return
-                </p>
-              </div>
-            )}
-
-            {/* Diff badge */}
-            {diff !== null && (
-              <div className="flex shrink-0 flex-col items-center justify-center gap-0.5 text-center" style={{ minWidth: '80px' }}>
-                <span
-                  className="font-mono text-[12px] font-bold tabular-nums leading-none"
-                  style={{ color: diff >= 0 ? '#22c55e' : '#ef4444', textShadow: `0 0 10px ${diff >= 0 ? '#22c55e' : '#ef4444'}50` }}
-                >
-                  {diff >= 0 ? '▲' : '▼'} {Math.abs(diff).toFixed(1)}%
-                </span>
-                <span
-                  className="font-mono text-[8px] font-semibold uppercase tracking-wide"
-                  style={{ color: diff >= 0 ? '#22c55e' : '#ef4444', opacity: 0.75 }}
-                >
-                  {diff >= 0 ? 'Outperforming' : 'Underperforming'}
-                </span>
-              </div>
-            )}
-
-            {/* SPY card */}
-            <StatCard
-              label="S&P 500 (SPY)"
-              returnPct={spyReturn}
-              color="#3b82f6"
-              sub={`${range === '1mo' ? '1 month' : range === '3mo' ? '3 months' : range === '6mo' ? '6 months' : '1 year'}`}
-            />
-          </div>
-
-          {/* Footer */}
+          {/* ── Footer ── */}
           <p className="border-t border-[var(--border)] px-3 py-1.5 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
-            Portfolio return calculated from cost basis · SPY data via Yahoo Finance
+            Portfolio return calculated from cost basis · S&amp;P 500 data via Yahoo Finance
           </p>
         </div>
       )}

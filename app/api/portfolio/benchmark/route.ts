@@ -61,9 +61,9 @@ export async function GET(req: Request) {
     quantity: number | null; avg_cost: number | null
   }> = positions ?? []
 
-  // Positions with cost basis (long only for simplicity)
+  // All positions with cost basis (both long and short)
   const costPositions = rows.filter(
-    (p) => p.quantity != null && p.avg_cost != null && p.quantity > 0 && p.direction === 'long',
+    (p) => p.quantity != null && p.avg_cost != null && p.quantity > 0,
   )
 
   // Fetch SPY history + current quotes for cost positions in parallel
@@ -103,8 +103,17 @@ export async function GET(req: Request) {
     const price    = rawPrice && 'price' in rawPrice ? (rawPrice as { price: number }).price : 0
 
     if (price > 0 && p.quantity! > 0 && p.avg_cost! > 0) {
-      totalCost  += p.quantity! * p.avg_cost!
-      totalValue += p.quantity! * price
+      const qty       = p.quantity!
+      const cost      = p.avg_cost!
+      const costBasis = qty * cost
+      totalCost += costBasis
+      if (p.direction === 'long') {
+        totalValue += qty * price
+      } else {
+        // Short: profit when price drops below cost basis
+        const marketValue = qty * price
+        totalValue += costBasis + (costBasis - marketValue)
+      }
       withCost++
     }
   })

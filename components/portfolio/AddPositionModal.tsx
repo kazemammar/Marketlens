@@ -255,7 +255,7 @@ export default function AddPositionModal({
                       placeholder="Search symbol or name..."
                       autoComplete="off"
                       spellCheck={false}
-                      className="flex-1 bg-transparent font-mono text-[12px] text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
+                      className="flex-1 bg-transparent font-mono text-[12px] text-[var(--text)] outline-none focus:outline-none focus-visible:outline-none focus:ring-0 placeholder:text-[var(--text-muted)]"
                       aria-label="Search assets"
                     />
                     {searching && (

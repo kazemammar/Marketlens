@@ -235,13 +235,7 @@ export default function AddPositionModal({
               ) : (
                 /* Normal search */
                 <div ref={wrapRef} className="relative">
-                  <div
-                    className={`flex h-11 items-center gap-2.5 rounded-lg border px-3 transition-colors ${
-                      dropOpen
-                        ? 'border-[var(--accent)]/60 bg-[var(--surface)]'
-                        : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)]/30'
-                    }`}
-                  >
+                  <div className="flex h-11 items-center gap-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                       className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)]" aria-hidden>
                       <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>

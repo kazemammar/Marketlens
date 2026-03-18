@@ -124,7 +124,7 @@ function SectionHeader({
 
 export default function PortfolioPage() {
   const { user, loading: authLoading } = useAuth()
-  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, removeLot, refetch } = usePortfolio()
+  const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, removeLot, updateLot, refetch } = usePortfolio()
 
   const [quotes,       setQuotes]       = useState<Record<string, QuoteData>>({})
   const [addOpen,      setAddOpen]      = useState(false)
@@ -404,6 +404,11 @@ export default function PortfolioPage() {
               }}
               onDeleteLot={async (positionId, lotId) => {
                 const ok = await removeLot(positionId, lotId)
+                if (ok) setBriefTrigger((n) => n + 1)
+                return ok
+              }}
+              onEditLot={async (positionId, updatedLot) => {
+                const ok = await updateLot(positionId, updatedLot)
                 if (ok) setBriefTrigger((n) => n + 1)
                 return ok
               }}

@@ -220,6 +220,45 @@ export function usePortfolio() {
     return false
   }, [userId, positions])
 
+  // ── Update lot in position ──────────────────────────────────────────────────
+
+  const updateLot = useCallback(async (
+    positionId: string,
+    updatedLot: PortfolioLot,
+  ): Promise<boolean> => {
+    if (!userId) return false
+    try {
+      const position = positions.find((p) => p.id === positionId)
+      if (!position) return false
+
+      const newLots  = (position.lots ?? []).map((l) => l.id === updatedLot.id ? updatedLot : l)
+      const totalQty = newLots.reduce((sum, l) => sum + l.quantity, 0)
+      const totalAmt = newLots.reduce((sum, l) => sum + l.amount,   0)
+      const avgCost  = totalQty > 0 ? totalAmt / totalQty : 0
+
+      const patch = {
+        lots:       newLots,
+        quantity:   totalQty,
+        avg_cost:   Math.round(avgCost * 100) / 100,
+        updated_at: new Date().toISOString(),
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (createClient().from('portfolio_positions') as any)
+        .update(patch)
+        .eq('id', positionId)
+        .eq('user_id', userId)
+
+      if (!error) {
+        setPositions((prev) =>
+          prev.map((p) => p.id === positionId ? { ...p, ...patch } : p)
+        )
+        return true
+      }
+    } catch { /* silent */ }
+    return false
+  }, [userId, positions])
+
   // ── Remove position ─────────────────────────────────────────────────────────
 
   const removePosition = useCallback(async (id: string): Promise<boolean> => {
@@ -254,6 +293,7 @@ export function usePortfolio() {
     updatePosition,
     addLotToPosition,
     removeLot,
+    updateLot,
     removePosition,
     hasPosition,
     refetch: fetchPositions,

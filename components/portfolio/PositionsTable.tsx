@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import Link from 'next/link'
 import type { PortfolioPosition, PortfolioLot } from '@/lib/hooks/usePortfolio'
 import EditPositionModal from './EditPositionModal'
@@ -106,9 +106,11 @@ function BuysBadge({ count }: { count: number }) {
 
 function LotLine({
   lot,
+  onEdit,
   onDelete,
 }: {
   lot:       PortfolioLot
+  onEdit?:   () => void
   onDelete?: () => void
 }) {
   const dateFmt = new Date(lot.date + 'T00:00:00').toLocaleDateString('en-US', {
@@ -132,15 +134,106 @@ function LotLine({
           <span className="font-mono text-[9px] italic text-[var(--text-muted)] truncate">{lot.note}</span>
         </>
       )}
-      {onDelete && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete() }}
-          className="ml-auto shrink-0 px-1 font-mono text-[12px] text-red-400/50 transition-colors hover:text-red-400"
-          aria-label="Delete lot"
-        >
-          ×
-        </button>
-      )}
+      <div className="ml-auto flex shrink-0 items-center gap-1">
+        {onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit() }}
+            className="rounded px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-muted)] transition-colors hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
+            title="Edit this purchase"
+          >
+            edit
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete() }}
+            className="rounded px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+            title="Remove this purchase"
+          >
+            remove
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Inline lot edit form ───────────────────────────────────────────────────
+
+function LotEditRow({
+  lot,
+  onSave,
+  onCancel,
+}: {
+  lot:      PortfolioLot
+  onSave:   (updated: PortfolioLot) => Promise<boolean>
+  onCancel: () => void
+}) {
+  const [amount,  setAmount]  = useState(lot.amount.toString())
+  const [price,   setPrice]   = useState(lot.price.toString())
+  const [date,    setDate]    = useState(lot.date)
+  const [note,    setNote]    = useState(lot.note ?? '')
+  const [saving,  setSaving]  = useState(false)
+
+  const amt = Number(amount)
+  const prc = Number(price)
+  const derivedQty = amt > 0 && prc > 0 ? (amt / prc).toFixed(4) : '—'
+
+  async function handleSave() {
+    if (amt <= 0 || prc <= 0) return
+    setSaving(true)
+    const updated: PortfolioLot = {
+      ...lot,
+      amount:   amt,
+      price:    prc,
+      quantity: amt / prc,
+      date:     date || lot.date,
+      note:     note.trim() || undefined,
+    }
+    const ok = await onSave(updated)
+    if (!ok) setSaving(false)
+  }
+
+  const inputCls = 'rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 font-mono text-[11px] text-[var(--text)] focus:border-[var(--accent)] focus:outline-none'
+
+  return (
+    <div className="border-b border-[var(--border)] bg-[var(--accent)]/5 py-3 pr-3 pl-8">
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label className="block font-mono text-[8px] uppercase text-[var(--text-muted)]">Amount ($)</label>
+          <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={`mt-0.5 w-24 ${inputCls}`} />
+        </div>
+        <div>
+          <label className="block font-mono text-[8px] uppercase text-[var(--text-muted)]">Price ($)</label>
+          <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className={`mt-0.5 w-24 ${inputCls}`} />
+        </div>
+        <div>
+          <label className="block font-mono text-[8px] uppercase text-[var(--text-muted)]">Date</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`mt-0.5 ${inputCls}`} style={{ colorScheme: 'dark' }} />
+        </div>
+        <div>
+          <label className="block font-mono text-[8px] uppercase text-[var(--text-muted)]">Note</label>
+          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} placeholder="optional" className={`mt-0.5 w-28 ${inputCls}`} />
+        </div>
+        <div className="flex items-center gap-2 pb-0.5">
+          <button
+            onClick={handleSave}
+            disabled={saving || amt <= 0 || prc <= 0}
+            className="rounded bg-[var(--accent)] px-3 py-1.5 font-mono text-[10px] font-bold text-black transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+          <button
+            onClick={onCancel}
+            className="rounded border border-[var(--border)] px-3 py-1.5 font-mono text-[10px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+          >
+            Cancel
+          </button>
+          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+            = {derivedQty} units
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -170,23 +263,43 @@ function AddMoreRow({
 
 function LotExpansionRows({
   position,
+  editingLotId,
+  setEditingLotId,
+  onEditLot,
   onDeleteLot,
   onAddMore,
 }: {
-  position:     PortfolioPosition
-  onDeleteLot?: (positionId: string, lotId: string) => Promise<boolean>
-  onAddMore?:   (position: PortfolioPosition) => void
+  position:        PortfolioPosition
+  editingLotId:    string | null
+  setEditingLotId: (id: string | null) => void
+  onEditLot?:      (positionId: string, updatedLot: PortfolioLot) => Promise<boolean>
+  onDeleteLot?:    (positionId: string, lotId: string) => Promise<boolean>
+  onAddMore?:      (position: PortfolioPosition) => void
 }) {
   const lots = [...(position.lots ?? [])].sort((a, b) => a.date.localeCompare(b.date))
   return (
     <tr>
       <td colSpan={11} className="p-0">
         {lots.map((lot) => (
-          <LotLine
-            key={lot.id}
-            lot={lot}
-            onDelete={onDeleteLot ? () => onDeleteLot(position.id, lot.id) : undefined}
-          />
+          editingLotId === lot.id ? (
+            <LotEditRow
+              key={lot.id}
+              lot={lot}
+              onSave={async (updated) => {
+                const ok = await onEditLot?.(position.id, updated)
+                if (ok) setEditingLotId(null)
+                return ok ?? false
+              }}
+              onCancel={() => setEditingLotId(null)}
+            />
+          ) : (
+            <LotLine
+              key={lot.id}
+              lot={lot}
+              onEdit={onEditLot ? () => setEditingLotId(lot.id) : undefined}
+              onDelete={onDeleteLot ? () => onDeleteLot(position.id, lot.id) : undefined}
+            />
+          )
         ))}
         {onAddMore && <AddMoreRow position={position} onAddMore={onAddMore} />}
       </td>
@@ -358,16 +471,22 @@ function MobileCard({
   isExpanded,
   onEdit,
   onToggleExpand,
+  editingLotId,
+  setEditingLotId,
+  onEditLot,
   onDeleteLot,
   onAddMore,
 }: {
-  position:       PortfolioPosition
-  quote:          QuoteData | undefined
-  isExpanded:     boolean
-  onEdit:         (p: PortfolioPosition) => void
-  onToggleExpand: (id: string) => void
-  onDeleteLot?:   (positionId: string, lotId: string) => Promise<boolean>
-  onAddMore?:     (position: PortfolioPosition) => void
+  position:        PortfolioPosition
+  quote:           QuoteData | undefined
+  isExpanded:      boolean
+  onEdit:          (p: PortfolioPosition) => void
+  onToggleExpand:  (id: string) => void
+  editingLotId:    string | null
+  setEditingLotId: (id: string | null) => void
+  onEditLot?:      (positionId: string, updatedLot: PortfolioLot) => Promise<boolean>
+  onDeleteLot?:    (positionId: string, lotId: string) => Promise<boolean>
+  onAddMore?:      (position: PortfolioPosition) => void
 }) {
   const hasLots     = (position.lots?.length ?? 0) > 0
   const changeColor = !quote ? undefined : quote.changePercent >= 0 ? 'var(--price-up)' : 'var(--price-down)'
@@ -444,11 +563,25 @@ function MobileCard({
       {isExpanded && lots.length > 0 && (
         <div>
           {lots.map((lot) => (
-            <LotLine
-              key={lot.id}
-              lot={lot}
-              onDelete={onDeleteLot ? () => onDeleteLot(position.id, lot.id) : undefined}
-            />
+            editingLotId === lot.id ? (
+              <LotEditRow
+                key={lot.id}
+                lot={lot}
+                onSave={async (updated) => {
+                  const ok = await onEditLot?.(position.id, updated)
+                  if (ok) setEditingLotId(null)
+                  return ok ?? false
+                }}
+                onCancel={() => setEditingLotId(null)}
+              />
+            ) : (
+              <LotLine
+                key={lot.id}
+                lot={lot}
+                onEdit={onEditLot ? () => setEditingLotId(lot.id) : undefined}
+                onDelete={onDeleteLot ? () => onDeleteLot(position.id, lot.id) : undefined}
+              />
+            )
           ))}
           {onAddMore && <AddMoreRow position={position} onAddMore={onAddMore} />}
         </div>
@@ -465,6 +598,7 @@ export default function PositionsTable({
   onUpdate,
   onDelete,
   onDeleteLot,
+  onEditLot,
   onAddMore,
 }: {
   positions:    PortfolioPosition[]
@@ -472,12 +606,14 @@ export default function PositionsTable({
   onUpdate:     (id: string, updates: Partial<{ direction: 'long' | 'short'; quantity: number | null; avg_cost: number | null; notes: string | null }>) => Promise<boolean>
   onDelete:     (id: string) => Promise<boolean>
   onDeleteLot?: (positionId: string, lotId: string) => Promise<boolean>
+  onEditLot?:   (positionId: string, updatedLot: PortfolioLot) => Promise<boolean>
   onAddMore?:   (position: PortfolioPosition) => void
 }) {
   const [sortKey,      setSortKey]      = useState<SortKey>('symbol')
   const [sortDir,      setSortDir]      = useState<SortDir>('asc')
   const [editPos,      setEditPos]      = useState<PortfolioPosition | null>(null)
   const [expandedIds,  setExpandedIds]  = useState<Set<string>>(new Set())
+  const [editingLotId, setEditingLotId] = useState<string | null>(null)
 
   function handleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => d === 'asc' ? 'desc' : 'asc')
@@ -545,6 +681,9 @@ export default function PositionsTable({
                 {expandedIds.has(p.id) && (p.lots?.length ?? 0) > 0 && (
                   <LotExpansionRows
                     position={p}
+                    editingLotId={editingLotId}
+                    setEditingLotId={setEditingLotId}
+                    onEditLot={onEditLot}
                     onDeleteLot={onDeleteLot}
                     onAddMore={onAddMore}
                   />
@@ -565,6 +704,9 @@ export default function PositionsTable({
             isExpanded={expandedIds.has(p.id)}
             onEdit={setEditPos}
             onToggleExpand={toggleExpand}
+            editingLotId={editingLotId}
+            setEditingLotId={setEditingLotId}
+            onEditLot={onEditLot}
             onDeleteLot={onDeleteLot}
             onAddMore={onAddMore}
           />

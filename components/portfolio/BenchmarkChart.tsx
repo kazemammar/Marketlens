@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
-  Tooltip, ReferenceLine, CartesianGrid,
+  Tooltip, ReferenceLine, CartesianGrid, Label,
 } from 'recharts'
 import type { BenchmarkPayload } from '@/app/api/portfolio/benchmark/route'
 
@@ -69,16 +69,19 @@ function CustomTooltip({ active, payload, label, portfolioReturn }: any) {
 function StatCard({
   label, returnPct, returnAmt, color, sub,
 }: {
-  label:     string
-  returnPct: number
+  label:      string
+  returnPct:  number
   returnAmt?: number
-  color:     string
-  sub?:      string
+  color:      string
+  sub?:       string
 }) {
   return (
     <div
-      className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md border px-3 py-2"
-      style={{ borderColor: `${color}30`, background: `${color}08` }}
+      className="flex min-w-0 flex-1 flex-col gap-0.5 rounded-md border border-[var(--border)] px-3 py-2"
+      style={{
+        borderLeft:  `3px solid ${color}`,
+        background:  `linear-gradient(to right, ${color}10, transparent 80%)`,
+      }}
     >
       <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
         {label}
@@ -163,6 +166,17 @@ export default function BenchmarkChart() {
   const tickStep = Math.max(1, Math.floor(spyData.length / 6))
   const ticks    = spyData.filter((_, i) => i % tickStep === 0).map((d) => d.date)
 
+  // Y-axis domain: expand to include portfolio return line + padding
+  const spyValues   = spyData.map((d) => d.cumReturn)
+  const allValues   = portReturn !== null ? [...spyValues, portReturn] : spyValues
+  const yMin        = allValues.length ? Math.min(...allValues) : -10
+  const yMax        = allValues.length ? Math.max(...allValues) :  10
+  const yPad        = Math.max(3, (yMax - yMin) * 0.12)
+  const yDomain: [number, number] = [
+    Math.floor(yMin - yPad),
+    Math.ceil(yMax  + yPad),
+  ]
+
   return (
     <div className="flex flex-col">
 
@@ -241,12 +255,12 @@ export default function BenchmarkChart() {
                   tickLine={false}
                 />
                 <YAxis
+                  domain={yDomain}
                   tickFormatter={(v) => `${v.toFixed(0)}%`}
                   tick={{ fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'monospace' }}
                   axisLine={false}
                   tickLine={false}
                   width={36}
-                  hide={false}
                 />
 
                 {/* Zero baseline */}
@@ -257,16 +271,17 @@ export default function BenchmarkChart() {
                   <ReferenceLine
                     y={portReturn}
                     stroke={portColor}
-                    strokeDasharray="5 3"
+                    strokeDasharray="6 4"
                     strokeWidth={1.5}
-                    label={{
-                      value:    `You: ${fmtPct(portReturn)}`,
-                      position: 'right',
-                      fill:     portColor,
-                      fontSize: 8,
-                      fontFamily: 'monospace',
-                    }}
-                  />
+                  >
+                    <Label
+                      value={`Portfolio ${portReturn >= 0 ? '+' : ''}${portReturn.toFixed(1)}%`}
+                      position="right"
+                      fill={portColor}
+                      fontSize={10}
+                      fontFamily="monospace"
+                    />
+                  </ReferenceLine>
                 )}
 
                 <Tooltip
@@ -310,19 +325,18 @@ export default function BenchmarkChart() {
 
             {/* Diff badge */}
             {diff !== null && (
-              <div className="flex shrink-0 flex-col items-center justify-center gap-0.5">
-                <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">vs</span>
+              <div className="flex shrink-0 flex-col items-center justify-center gap-0.5 text-center" style={{ minWidth: '80px' }}>
                 <span
-                  className="font-mono text-[10px] font-bold tabular-nums"
-                  style={{ color: diff >= 0 ? '#22c55e' : '#ef4444' }}
+                  className="font-mono text-[12px] font-bold tabular-nums leading-none"
+                  style={{ color: diff >= 0 ? '#22c55e' : '#ef4444', textShadow: `0 0 10px ${diff >= 0 ? '#22c55e' : '#ef4444'}50` }}
                 >
                   {diff >= 0 ? '▲' : '▼'} {Math.abs(diff).toFixed(1)}%
                 </span>
                 <span
-                  className="font-mono text-[7px] text-center"
-                  style={{ color: diff >= 0 ? '#22c55e' : '#ef4444', opacity: 0.7 }}
+                  className="font-mono text-[8px] font-semibold uppercase tracking-wide"
+                  style={{ color: diff >= 0 ? '#22c55e' : '#ef4444', opacity: 0.75 }}
                 >
-                  {diff >= 0 ? 'outperf.' : 'underperf.'}
+                  {diff >= 0 ? 'Outperforming' : 'Underperforming'}
                 </span>
               </div>
             )}

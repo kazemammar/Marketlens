@@ -66,7 +66,7 @@ function SortTh({
   const active = current === sortKey
   return (
     <th
-      className={`select-none cursor-pointer px-3 py-2.5 text-left font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)] transition-colors hover:text-[var(--text)] ${className}`}
+      className={`select-none cursor-pointer px-3 py-2.5 font-mono text-[9px] uppercase tracking-[0.08em] text-[var(--text-muted)] transition-colors hover:text-[var(--text)] ${className || 'text-left'}`}
       onClick={() => onSort(sortKey)}
     >
       <span className="flex items-center gap-1">

@@ -256,7 +256,7 @@ export default function EditPositionModal({
                   placeholder="e.g. 100"
                   min="0"
                   step="any"
-                  className="h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
@@ -272,7 +272,7 @@ export default function EditPositionModal({
                   placeholder="e.g. 185.50"
                   min="0"
                   step="any"
-                  className="h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
@@ -287,7 +287,7 @@ export default function EditPositionModal({
                   onChange={(e) => setNotes(e.target.value.slice(0, 200))}
                   placeholder="e.g. swing trade, hedge..."
                   maxLength={200}
-                  className="h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 

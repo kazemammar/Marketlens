@@ -114,6 +114,12 @@ body::after {
   border-radius: 3px;
 }
 
+/* Suppress focus-visible outline inside containers that handle their own focus styles */
+.no-focus-ring:focus-visible,
+.no-focus-ring *:focus-visible {
+  outline: none;
+}
+
 /* ─── Transition defaults ────────────────────────────────────────────────── */
 * {
   transition-property: color, background-color, border-color, box-shadow, opacity, transform, filter;

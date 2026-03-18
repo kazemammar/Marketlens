@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/icon.svg" width="80" height="80" alt="MarketLens" />
+  <img src="public/logo.png" width="80" height="80" alt="MarketLens" />
 </p>
 
 <h1 align="center">MarketLens</h1>

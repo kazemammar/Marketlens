@@ -327,11 +327,16 @@ export default function RiskAlerts({
                   key={i}
                   className="animate-fade-up mb-2 overflow-hidden rounded-lg"
                   style={{
-                    borderLeft:         `3px solid ${cfg.border}`,
-                    background:         cfg.bg,
-                    border:             `1px solid ${cfg.border}20`,
+                    borderTopWidth:     '1px',
+                    borderRightWidth:   '1px',
+                    borderBottomWidth:  '1px',
                     borderLeftWidth:    '3px',
+                    borderStyle:        'solid',
+                    borderTopColor:     `${cfg.border}20`,
+                    borderRightColor:   `${cfg.border}20`,
+                    borderBottomColor:  `${cfg.border}20`,
                     borderLeftColor:    cfg.border,
+                    background:         cfg.bg,
                     animationDelay:     `${i * 60}ms`,
                     animationFillMode:  'both',
                   }}

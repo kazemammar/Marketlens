@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: ['stock market', 'cryptocurrency', 'forex', 'commodities', 'ETF', 'financial analysis', 'AI trading', 'market intelligence', 'geopolitical risk', 'real-time data'],
-  authors:  [{ name: 'Kazem Ammar' }],
-  creator:  'Kazem Ammar',
+  authors:  [{ name: 'Kazem Julien Ammar' }],
+  creator:  'Kazem Julien Ammar',
   metadataBase: new URL(BASE_URL),
   openGraph: {
     type:        'website',

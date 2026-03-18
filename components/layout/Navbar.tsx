@@ -276,8 +276,8 @@ export default function Navbar() {
           </Link>
 
           {/* ── Byline ───────────────────────────────────────────────── */}
-          <span className="hidden xl:block text-[9px] font-medium tracking-wide" style={{ color: 'rgba(161,161,170,0.45)' }}>
-            by Kazem Ammar
+          <span className="hidden lg:block text-[10px] font-medium tracking-wide" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+            by Kazem Julien Ammar
           </span>
 
           {/* ── Separator ────────────────────────────────────────────── */}

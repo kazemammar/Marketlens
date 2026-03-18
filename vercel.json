@@ -1,11 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/market-brief",
-      "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/cron/snapshot",
+      "path": "/api/cron/daily",
       "schedule": "30 21 * * 1-5"
     }
   ]

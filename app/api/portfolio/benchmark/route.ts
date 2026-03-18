@@ -6,6 +6,13 @@ import { getYahooHistory }      from '@/lib/api/yahoo'
 import { getQuote }             from '@/lib/api/finnhub'
 import { getYahooQuote }        from '@/lib/api/yahoo'
 
+const CRYPTO_TO_BINANCE: Record<string, string> = {
+  BTC:   'BINANCE:BTCUSDT',  ETH:  'BINANCE:ETHUSDT',  SOL:  'BINANCE:SOLUSDT',
+  BNB:   'BINANCE:BNBUSDT',  XRP:  'BINANCE:XRPUSDT',  ADA:  'BINANCE:ADAUSDT',
+  DOGE:  'BINANCE:DOGEUSDT', AVAX: 'BINANCE:AVAXUSDT', DOT:  'BINANCE:DOTUSDT',
+  LINK:  'BINANCE:LINKUSDT', MATIC:'BINANCE:MATICUSDT',
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PortfolioStats {
@@ -71,10 +78,12 @@ export async function GET(req: Request) {
     getYahooHistory('SPY', range),
     ...costPositions.map((p) =>
       p.asset_type === 'commodity'
-        ? getYahooQuote(p.symbol)
-        : getQuote(p.symbol).then((q) =>
-            q ? { symbol: p.symbol, price: q.price } : null,
-          ),
+        ? getYahooQuote(p.symbol).then((q) => q ? { symbol: p.symbol, price: q.price } : null)
+        : p.asset_type === 'crypto'
+          ? getQuote(CRYPTO_TO_BINANCE[p.symbol] ?? `BINANCE:${p.symbol}USDT`).then((q) =>
+              q ? { symbol: p.symbol, price: q.price } : null,
+            )
+          : getQuote(p.symbol).then((q) => q ? { symbol: p.symbol, price: q.price } : null),
     ),
   ])
 

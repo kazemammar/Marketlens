@@ -116,12 +116,10 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
         el.style.boxShadow   = 'none'
       }}
     >
-      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-1">
-        {/* Date pill */}
-        <span
-          className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold tabular-nums"
-          style={{ background: cfg.bg, color: cfg.color }}
-        >
+      {/* Top row */}
+      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+        {/* Date */}
+        <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">
           {fmtDate(event.date)}
         </span>
 
@@ -140,24 +138,20 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
           Q{event.quarter} {event.year}
         </span>
 
-        {/* Countdown */}
+        {/* Countdown pill */}
         <span
-          className="ml-auto font-mono text-[10px] font-semibold tabular-nums"
-          style={{ color: cfg.color, textShadow: `0 0 8px ${cfg.borderHex}50` }}
+          className="ml-auto shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold tabular-nums"
+          style={{ background: cfg.bg, color: cfg.color }}
         >
           {countdown}
         </span>
       </div>
 
-      {/* EST badge row */}
-      <div className="flex items-center gap-1 px-2 pb-1.5">
-        <span className="rounded px-1 py-px font-mono text-[7px] uppercase tracking-wide bg-[var(--surface-2)] text-[var(--text-muted)] opacity-50">
-          est
-        </span>
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">
-          estimated report date
-        </span>
-      </div>
+      {/* Sub-row */}
+      <p className="px-2 pb-1.5 font-mono text-[9px] text-[var(--text-muted)] opacity-60">
+        Est. report date
+        <span className="ml-1.5 rounded px-1 py-px text-[7px] uppercase tracking-wide bg-[var(--surface-2)] opacity-70">EST</span>
+      </p>
     </div>
   )
 }
@@ -166,7 +160,7 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
 
 function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
   const hasBoth   = event.actual != null && event.estimate != null
-  const beat      = hasBoth ? (event.actual! >= event.estimate!) : null
+  const beat      = event.surprisePercent != null ? event.surprisePercent >= 0 : hasBoth ? (event.actual! >= event.estimate!) : null
   const colorHex  = beat === true ? '#22c55e' : beat === false ? '#ef4444' : '#6b7280'
   const beatBg    = beat === true ? 'rgba(34,197,94,0.12)' : beat === false ? 'rgba(239,68,68,0.12)' : 'var(--surface-2)'
 

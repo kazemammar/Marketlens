@@ -83,8 +83,8 @@ export default function CurrencyStrengthMeter() {
       {/* Bars + Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 lg:items-stretch">
         {/* Strength bars */}
-        <div className="border-b border-[var(--border)] bg-[var(--surface)] p-3 lg:border-b-0 lg:border-r flex flex-col">
-          <div className="flex flex-col justify-evenly flex-1">
+        <div className="border-b border-[var(--border)] bg-[var(--surface)] p-3 lg:border-b-0 lg:border-r flex flex-col justify-center">
+          <div className="flex flex-col gap-2.5">
             {strengths.map((s) => {
               const pct   = (Math.abs(s.score) / maxAbs) * 50
               const isPos = s.score >= 0

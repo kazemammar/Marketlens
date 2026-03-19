@@ -121,7 +121,7 @@ function MoverCard({
         <Link
           href={assetHref(item.type, item.symbol)}
           className="font-mono text-[12px] font-bold hover:underline shrink-0"
-          style={{ color: 'var(--accent)' }}
+          style={{ color: colorHex }}
           onClick={(e) => e.stopPropagation()}
         >
           {item.symbol}

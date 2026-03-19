@@ -5,6 +5,9 @@ import type { QuoteData }         from './PositionsTable'
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
+const TYPE_ORDER    = ['stock', 'crypto', 'forex', 'commodity', 'etf']
+const SECTOR_ORDER  = ['Technology', 'Finance', 'Healthcare', 'Consumer', 'Industrial', 'Communication', 'Energy', 'Real Estate', 'Materials', 'Utilities', 'Other']
+
 const TYPE_COLORS: Record<string, string> = {
   stock:     '#10b981',
   crypto:    '#8b5cf6',
@@ -266,7 +269,10 @@ export default function AllocationPanel({
   }
   const typeEntries = Object.entries(typeWeight)
     .map(([type, w]) => ({ type, pct: totalWeight > 0 ? (w / totalWeight) * 100 : 0 }))
-    .sort((a, b) => b.pct - a.pct)
+    .sort((a, b) => {
+      const ai = TYPE_ORDER.indexOf(a.type), bi = TYPE_ORDER.indexOf(b.type)
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+    })
 
   // ── By direction ─────────────────────────────────────────────────────
   const longCount  = positions.filter((p) => p.direction === 'long').length
@@ -280,7 +286,10 @@ export default function AllocationPanel({
     const sector = SECTOR[p.symbol] ?? 'Other'
     sectorCounts[sector] = (sectorCounts[sector] ?? 0) + 1
   }
-  const sectorEntries = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1])
+  const sectorEntries = Object.entries(sectorCounts).sort(([a], [b]) => {
+    const ai = SECTOR_ORDER.indexOf(a), bi = SECTOR_ORDER.indexOf(b)
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+  })
   const totalStocks   = sectorEntries.reduce((acc, [, c]) => acc + c, 0)
   const hasStocks     = sectorEntries.length > 0
 

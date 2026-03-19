@@ -6,6 +6,8 @@ import type { QuoteData }         from './PositionsTable'
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
+const TYPE_ORDER = ['stock', 'crypto', 'forex', 'commodity', 'etf']
+
 const TYPE_COLORS: Record<string, string> = {
   stock:     '#10b981',
   crypto:    '#8b5cf6',
@@ -221,7 +223,10 @@ export default function ExposurePanel({
         <div>
           <p className="mb-1.5 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Positions by Class</p>
           <div className="space-y-2.5">
-            {Object.entries(byType).map(([type, posns], gi) => {
+            {Object.entries(byType).sort(([a], [b]) => {
+              const ai = TYPE_ORDER.indexOf(a), bi = TYPE_ORDER.indexOf(b)
+              return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
+            }).map(([type, posns], gi) => {
               const color = TYPE_COLORS[type] ?? '#6b7280'
               return (
                 <div

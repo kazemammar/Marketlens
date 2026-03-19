@@ -50,11 +50,9 @@ function PanelHeader() {
 function PositionCard({
   position,
   quote,
-  typeColor,
 }: {
   position:  PortfolioPosition
   quote:     QuoteData | undefined
-  typeColor: string
 }) {
   const changePercent = quote?.changePercent ?? 0
   const isUp          = changePercent >= 0
@@ -64,57 +62,36 @@ function PositionCard({
   return (
     <Link
       href={`/asset/${position.asset_type}/${encodeURIComponent(position.symbol)}`}
-      className="flex min-w-[64px] flex-col gap-0.5 rounded p-1.5"
-      style={{
-        background:  `${typeColor}08`,
-        border:      `1px solid ${typeColor}20`,
-        transition:  'transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLAnchorElement
-        el.style.borderColor = `${typeColor}55`
-        el.style.background  = `${typeColor}14`
-        el.style.transform   = 'scale(1.03)'
-        el.style.boxShadow   = `0 2px 10px ${typeColor}25`
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLAnchorElement
-        el.style.borderColor = `${typeColor}20`
-        el.style.background  = `${typeColor}08`
-        el.style.transform   = 'scale(1)'
-        el.style.boxShadow   = 'none'
-      }}
+      className="flex min-w-[80px] flex-1 flex-col gap-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-2 transition-colors duration-150 hover:bg-[var(--surface-3,var(--surface-2))]"
+      style={{ borderLeft: `2px solid ${changeColor}60` }}
     >
       {/* Symbol + direction arrow */}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1">
         <span
-          className="font-mono text-[10px] font-bold leading-none"
-          style={{ color: position.direction === 'long' ? '#22c55e' : '#ef4444' }}
+          className="font-mono text-[9px] font-bold leading-none"
+          style={{ color: changeColor }}
         >
           {position.direction === 'long' ? '▲' : '▼'}
         </span>
-        <span
-          className="font-mono text-[10px] font-bold leading-none truncate"
-          style={{ color: 'var(--accent)' }}
-        >
+        <span className="font-mono text-[11px] font-bold leading-none truncate text-[var(--text)]">
           {position.symbol}
         </span>
       </div>
 
-      {/* Day change % */}
-      {hasQuote && (
-        <span
-          className="font-mono text-[9px] tabular-nums leading-none"
-          style={{ color: changeColor, textShadow: `0 0 6px ${changeColor}50` }}
-        >
-          {isUp ? '+' : ''}{changePercent.toFixed(2)}%
+      {/* Current price */}
+      {hasQuote && quote.price > 0 && (
+        <span className="font-mono text-[10px] tabular-nums leading-none text-[var(--text-muted)]">
+          {fmtPrice(quote.price, position.asset_type)}
         </span>
       )}
 
-      {/* Current price */}
-      {hasQuote && quote.price > 0 && (
-        <span className="font-mono text-[9px] tabular-nums leading-none text-[var(--text-muted)] opacity-50">
-          {fmtPrice(quote.price, position.asset_type)}
+      {/* Day change % */}
+      {hasQuote && (
+        <span
+          className="font-mono text-[10px] font-bold tabular-nums leading-none"
+          style={{ color: changeColor }}
+        >
+          {isUp ? '+' : ''}{changePercent.toFixed(2)}%
         </span>
       )}
     </Link>
@@ -267,13 +244,12 @@ export default function ExposurePanel({
                   </div>
 
                   {/* Position cards */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {posns.map((p) => (
                       <PositionCard
                         key={`${p.id}-${p.direction}`}
                         position={p}
                         quote={quotes[p.symbol]}
-                        typeColor={color}
                       />
                     ))}
                   </div>

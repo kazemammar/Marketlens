@@ -106,7 +106,7 @@ function MoverCard({
       className="animate-fade-up mx-2 mb-2 overflow-hidden rounded cursor-default"
       style={{
         borderLeft:        `2px solid ${colorHex}90`,
-        background:        `linear-gradient(to right, ${colorHex}08, transparent 70%)`,
+        background:        `linear-gradient(to right, ${colorHex}14, transparent 70%)`,
         animationDelay:    `${delay}ms`,
         animationFillMode: 'both',
         transition:        'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
@@ -327,7 +327,7 @@ export default function MoversView() {
         {/* Gainers / Losers panel */}
         {!error && (
           <>
-            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+            <div className="overflow-hidden rounded border border-[var(--border)]">
               {/* Panel header */}
               <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
                 <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>

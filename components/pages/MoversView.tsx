@@ -64,7 +64,7 @@ function assetHref(type: string, symbol: string): string {
 
 function SkeletonCard() {
   return (
-    <div className="mx-2 mb-2 overflow-hidden rounded-md border-l-2 border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5">
+    <div className="mx-2 mb-2 overflow-hidden rounded border-l-2 border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5">
       <div className="flex items-center gap-2">
         <div className="h-3 w-4 animate-pulse rounded bg-[var(--border)]" />
         <div className="h-3 w-12 animate-pulse rounded bg-[var(--border)]" />
@@ -103,7 +103,7 @@ function MoverCard({
 
   return (
     <div
-      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded-md cursor-default"
+      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded cursor-default"
       style={{
         borderLeft:        `2px solid ${colorHex}90`,
         background:        `linear-gradient(to right, ${colorHex}08, transparent 70%)`,
@@ -134,7 +134,7 @@ function MoverCard({
         {/* Symbol */}
         <Link
           href={assetHref(item.type, item.symbol)}
-          className="font-mono text-[13px] font-bold hover:underline shrink-0"
+          className="font-mono text-[12px] font-bold hover:underline shrink-0"
           style={{ color: 'var(--accent)' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -154,13 +154,13 @@ function MoverCard({
         </span>
 
         {/* Price */}
-        <span className="shrink-0 font-mono text-[13px] font-bold tabular-nums text-[var(--text)] opacity-80">
+        <span className="shrink-0 font-mono text-[12px] font-bold tabular-nums text-[var(--text)] opacity-80">
           {fmtPrice(item.price, item.type)}
         </span>
 
         {/* Change % */}
         <span
-          className="shrink-0 font-mono text-[13px] font-bold tabular-nums"
+          className="shrink-0 font-mono text-[12px] font-bold tabular-nums"
           style={{ color: colorHex, textShadow: `0 0 10px ${colorHex}50` }}
         >
           {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
@@ -298,10 +298,10 @@ export default function MoversView() {
         {/* Page header */}
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
               Top Movers
             </h1>
-            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
               Biggest gainers and losers across stocks, crypto &amp; commodities
             </p>
           </div>
@@ -330,7 +330,7 @@ export default function MoversView() {
 
         {/* Error state */}
         {error && !data && (
-          <div className="flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] px-6 py-12">
+          <div className="flex items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-12">
             <div className="text-center">
               <svg viewBox="0 0 20 20" fill="none" className="mx-auto mb-3 h-8 w-8 text-[var(--text-muted)] opacity-30" stroke="currentColor" strokeWidth="1.3">
                 <circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="11"/><circle cx="10" cy="13.5" r="0.8" fill="currentColor"/>
@@ -372,7 +372,7 @@ export default function MoversView() {
 
             {/* Gainers / Losers grid */}
             <div
-              className="overflow-hidden rounded-xl border border-[var(--border)]"
+              className="overflow-hidden rounded border border-[var(--border)]"
               style={{ background: 'var(--surface)' }}
             >
               {/* Panel header */}

@@ -17,10 +17,10 @@ export default function StocksPage() {
         <div className="mb-6">
           <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+              <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
                 Stock Market
               </h1>
-              <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+              <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
                 Real-time prices and AI analysis for 300+ US equities across 11 sectors
               </p>
             </div>

@@ -43,11 +43,11 @@ function ResultCard({ asset }: { asset: Asset }) {
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)]"
+      className="group flex items-center gap-3 rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)]"
     >
       <TypeBadge type={asset.type} />
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[13px] font-semibold text-[var(--text)]">{asset.symbol}</p>
+        <p className="font-mono text-[12px] font-semibold text-[var(--text)]">{asset.symbol}</p>
         <p className="truncate font-mono text-[10px] text-[var(--text-muted)]">{asset.name}</p>
       </div>
       <span
@@ -94,7 +94,7 @@ function SkeletonResults() {
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: count }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+              <div key={i} className="flex items-center gap-3 rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
                 <div className="h-5 w-12 animate-pulse rounded bg-[var(--surface-2)]" />
                 <div className="flex-1 space-y-1.5">
                   <div className="h-3 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
@@ -169,7 +169,7 @@ async function SearchResults({ query }: { query: string }) {
 
   if (results.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+      <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
         <p className="text-3xl">🔍</p>
         <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
           No results for &ldquo;{query}&rdquo;
@@ -229,7 +229,7 @@ export default async function SearchPage({
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
             {query ? 'Search Results' : 'Search'}
           </h1>
           <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
@@ -250,7 +250,7 @@ export default async function SearchPage({
 
         {/* Results */}
         {!query ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+          <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
             <p className="text-3xl">🔍</p>
             <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
               Search for any asset

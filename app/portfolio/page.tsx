@@ -52,7 +52,7 @@ function EmptyPortfolio({ onAdd }: { onAdd: () => void }) {
       </p>
       <button
         onClick={onAdd}
-        className="mt-6 rounded-lg px-5 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90"
+        className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-black transition hover:opacity-90"
         style={{ background: 'var(--accent)' }}
       >
         Add Position
@@ -68,7 +68,7 @@ function EmptyPortfolio({ onAdd }: { onAdd: () => void }) {
           <Link
             key={href}
             href={href}
-            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+            className="rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
           >
             {label}
           </Link>
@@ -84,7 +84,7 @@ function LoadingSkeleton() {
   return (
     <div className="px-4 py-8 space-y-3">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+        <div key={i} className="flex items-center gap-4 rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
           <div className="h-3.5 w-12 animate-pulse rounded bg-[var(--surface-2)]" />
           <div className="h-3 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
           <div className="h-3 w-10 animate-pulse rounded bg-[var(--surface-2)]" />
@@ -263,7 +263,7 @@ export default function PortfolioPage() {
       <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
           <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">My Portfolio</h1>
-          <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+          <div className="mt-8 flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
             <p className="text-3xl">🔒</p>
             <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
               Sign in to see your portfolio
@@ -273,7 +273,7 @@ export default function PortfolioPage() {
             </p>
             <button
               onClick={() => setAuthOpen(true)}
-              className="mt-6 rounded-lg px-5 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90"
+              className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90"
               style={{ background: 'var(--accent)' }}
             >
               Sign In / Create Account

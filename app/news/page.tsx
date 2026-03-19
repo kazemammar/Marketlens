@@ -148,7 +148,7 @@ export default function NewsPage() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">Market News</h1>
+          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">Market News</h1>
           <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
             Latest headlines across stocks, crypto, forex and commodities
           </p>

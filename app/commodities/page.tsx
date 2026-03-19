@@ -46,10 +46,10 @@ export default async function CommoditiesPage() {
         {/* Page header */}
         <div className="mb-6 space-y-4">
           <div>
-            <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
               Commodities
             </h1>
-            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
               Real-time commodity prices — gold, silver, crude oil, natural gas, and more
             </p>
           </div>
@@ -67,7 +67,7 @@ export default async function CommoditiesPage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+          <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
             <p className="text-3xl">📭</p>
             <p className="mt-3 font-mono text-[14px] font-medium text-[var(--text)]">No commodity data available</p>
             <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">Check your API connection and try again.</p>

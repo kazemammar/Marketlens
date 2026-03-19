@@ -44,10 +44,10 @@ export default function PortfolioButton({
       <button
         onClick={handleClick}
         aria-label={active ? 'Go to portfolio' : 'Add to portfolio'}
-        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-[11px] font-semibold transition-all ${
+        className={`flex items-center gap-1.5 rounded border px-3 py-1.5 font-mono text-[10px] font-semibold transition-all ${
           active
             ? 'border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)]'
-            : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--accent)]/40 hover:text-[var(--accent)]'
+            : 'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)] hover:border-[var(--accent)]/30 hover:text-[var(--accent)]'
         }`}
       >
         {justAdded ? (

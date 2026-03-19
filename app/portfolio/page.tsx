@@ -68,7 +68,7 @@ function EmptyPortfolio({ onAdd }: { onAdd: () => void }) {
           <Link
             key={href}
             href={href}
-            className="rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+            className="rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
           >
             {label}
           </Link>

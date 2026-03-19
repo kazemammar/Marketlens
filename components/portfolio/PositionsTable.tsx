@@ -553,7 +553,7 @@ function MobileCard({
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(position) }}
           aria-label={`Edit ${position.symbol}`}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-[var(--border)] font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
         >
           ⋮
         </button>

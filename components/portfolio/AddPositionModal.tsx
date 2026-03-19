@@ -494,7 +494,7 @@ export default function AddPositionModal({
                     key={m.id}
                     type="button"
                     onClick={() => { setMethod(m.id); setStep('details') }}
-                    className="flex flex-col items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface-2)] px-3 py-4 text-center transition-all duration-150 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/5"
+                    className="flex flex-col items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface-2)] px-3 py-4 text-center transition-all duration-150 hover:border-[var(--accent)]/30 hover:bg-[var(--accent)]/5"
                   >
                     <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] font-mono text-[13px] font-bold text-[var(--text-muted)]">
                       {m.icon}

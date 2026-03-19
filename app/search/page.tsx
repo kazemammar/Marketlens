@@ -43,7 +43,7 @@ function ResultCard({ asset }: { asset: Asset }) {
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--accent)]/40 hover:bg-[var(--surface-2)]"
+      className="group flex items-center gap-3 rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-3 transition hover:border-[var(--accent)]/30 hover:bg-[var(--surface-2)]"
     >
       <TypeBadge type={asset.type} />
       <div className="min-w-0 flex-1">
@@ -182,7 +182,7 @@ async function SearchResults({ query }: { query: string }) {
             <Link
               key={s}
               href={`/search?q=${encodeURIComponent(s)}`}
-              className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+              className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
             >
               {s}
             </Link>
@@ -263,7 +263,7 @@ export default async function SearchPage({
                 <Link
                   key={s}
                   href={`/search?q=${encodeURIComponent(s)}`}
-                  className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+                  className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
                 >
                   {s}
                 </Link>

@@ -306,20 +306,20 @@ export default async function AssetPage({ params }: AssetPageProps) {
       </div>
 
       {/* ── Related Assets — all types ── */}
-      <div className="mx-auto mt-3 w-full max-w-screen-xl px-4 sm:px-6">
+      <div className="mx-auto mt-2 w-full max-w-screen-xl px-4 sm:px-6">
         <RelatedAssets symbol={symbol} type={type} />
       </div>
 
       {/* ── Commodity Intelligence (commodity only) ── */}
       {type === 'commodity' && (
-        <div className="mx-auto mt-3 w-full max-w-screen-xl px-4 sm:px-6">
+        <div className="mx-auto mt-2 w-full max-w-screen-xl px-4 sm:px-6">
           <CommodityIntel symbol={symbol} />
         </div>
       )}
 
       {/* ── Forex panels (forex only) ── */}
       {type === 'forex' && (
-        <div className="mx-auto mt-3 w-full max-w-screen-xl space-y-3 px-4 sm:px-6">
+        <div className="mx-auto mt-2 w-full max-w-screen-xl space-y-2 px-4 sm:px-6">
           <ForexStrength symbol={symbol} />
           <ForexCentralBanks symbol={symbol} />
         </div>
@@ -327,7 +327,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
 
       {/* ── ETF panels (etf only) ── */}
       {type === 'etf' && (
-        <div className="mx-auto mt-3 w-full max-w-screen-xl space-y-3 px-4 sm:px-6">
+        <div className="mx-auto mt-2 w-full max-w-screen-xl space-y-2 px-4 sm:px-6">
           <EtfOverview symbol={symbol} />
           <EtfHoldings symbol={symbol} />
         </div>
@@ -335,7 +335,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
 
       {/* ── Peers & Technicals (stock only) — full-width, below chart ── */}
       {type === 'stock' && (
-        <div className="mx-auto mt-3 w-full max-w-screen-xl space-y-3 px-4 sm:px-6">
+        <div className="mx-auto mt-2 w-full max-w-screen-xl space-y-2 px-4 sm:px-6">
           <PeersTable symbol={symbol} />
           <EarningsHistory symbol={symbol} />
           <TechnicalSummary symbol={symbol} />
@@ -344,7 +344,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
 
       {/* ── Crypto-specific panels ── */}
       {type === 'crypto' && (
-        <div className="mx-auto mt-3 w-full max-w-screen-xl px-4 sm:px-6">
+        <div className="mx-auto mt-2 w-full max-w-screen-xl px-4 sm:px-6">
           <CryptoStats symbol={symbol} />
         </div>
       )}
@@ -355,9 +355,9 @@ export default async function AssetPage({ params }: AssetPageProps) {
       </div>
 
       {/* ── Context + Fear & Greed (crypto) / Context alone (others) ── */}
-      <div className="mx-auto mt-3 w-full max-w-screen-xl px-4 sm:px-6">
+      <div className="mx-auto mt-2 w-full max-w-screen-xl px-4 sm:px-6">
         {type === 'crypto' ? (
-          <div className="grid grid-cols-1 items-start gap-px bg-[var(--border)] lg:grid-cols-[30fr_70fr]">
+          <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-[30fr_70fr]">
             <FearGreedGauge />
             <AssetContext symbol={symbol} type={type} />
           </div>
@@ -372,8 +372,8 @@ export default async function AssetPage({ params }: AssetPageProps) {
       </div>
 
       {/* ── Content — constrained, tight padding ── */}
-      <main className="mx-auto max-w-screen-xl px-4 py-3 sm:px-6">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[65fr_35fr]">
+      <main className="mx-auto max-w-screen-xl px-4 py-2 sm:px-6">
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[65fr_35fr]">
           {/* ── Left 65%: News + Insider Activity (stock only) ── */}
           <div className="col-span-1">
             <Suspense fallback={<SectionSkeleton rows={6} />}>
@@ -385,7 +385,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
           </div>
 
           {/* ── Right 35%: Sentiment → Analyst → Financials ── */}
-          <div className="col-span-1 space-y-3">
+          <div className="col-span-1 space-y-2">
             {showSentiment && (
               <SentimentCard symbol={symbol} type={type} />
             )}

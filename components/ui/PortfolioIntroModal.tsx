@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
-const STORAGE_KEY = 'ml_portfolio_intro_v1'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 const FEATURES = [
   {
@@ -55,18 +54,18 @@ const FEATURES = [
 ]
 
 export default function PortfolioIntroModal() {
+  const { user, loading } = useAuth()
   const [visible, setVisible] = useState(false)
   const [closing, setClosing] = useState(false)
 
   useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY)) return
-    } catch { /* SSR / private mode */ }
+    // Wait for auth to resolve, then show only if logged out
+    if (loading) return
+    if (user) return
 
-    // Delay so the page loads first
     const t = setTimeout(() => setVisible(true), 1400)
     return () => clearTimeout(t)
-  }, [])
+  }, [loading, user])
 
   useEffect(() => {
     if (!visible) return
@@ -77,7 +76,6 @@ export default function PortfolioIntroModal() {
 
   function dismiss() {
     setClosing(true)
-    try { localStorage.setItem(STORAGE_KEY, '1') } catch { /* */ }
     setTimeout(() => { setVisible(false); setClosing(false) }, 280)
   }
 

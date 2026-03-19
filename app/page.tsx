@@ -98,8 +98,8 @@ export default async function HomePage({
         </div>
         <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
         <div className="hidden sm:flex items-center gap-1">
-          <span className="live-dot h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
-          <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">LIVE</span>
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>LIVE</span>
         </div>
       </div>
 

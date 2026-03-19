@@ -77,14 +77,18 @@ export default function CurrencyStrengthMeter() {
           Currency Strength
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">live · 7-day cross-rate</span>
+        <div className="flex items-center gap-1">
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>LIVE</span>
+          <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">· 7-day cross-rate</span>
+        </div>
       </div>
 
       {/* Bars + Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 lg:items-stretch">
         {/* Strength bars */}
-        <div className="border-b border-[var(--border)] bg-[var(--surface)] p-3 lg:border-b-0 lg:border-r">
-          <div className="space-y-1.5">
+        <div className="border-b border-[var(--border)] bg-[var(--surface)] p-3 lg:border-b-0 lg:border-r flex flex-col min-h-[260px]">
+          <div className="flex flex-col justify-evenly flex-1">
             {strengths.map((s) => {
               const pct   = (Math.abs(s.score) / maxAbs) * 50
               const isPos = s.score >= 0

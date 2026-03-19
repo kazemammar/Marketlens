@@ -277,7 +277,7 @@ export default function Navbar() {
                 color: 'var(--accent)',
               }}
             >
-              <span className="live-dot h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
+              <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
               LIVE
             </span>
           </Link>

@@ -126,7 +126,10 @@ function MarketIndices() {
           Market Indices
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">live</span>
+        <div className="flex items-center gap-1">
+          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>LIVE</span>
+        </div>
       </div>
       <div className="flex gap-px overflow-x-auto">
         {INDEX_CONFIG.map((idx) => (

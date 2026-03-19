@@ -41,14 +41,14 @@ function ConsensusBar({ recs }: { recs: AnalystRecommendation }) {
     <div className="space-y-3">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[var(--text-muted)]">{recs.period} · {total} analysts</span>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${consColor}`}>
+        <span className="font-mono text-[9px] text-[var(--text-muted)]">{recs.period} · {total} analysts</span>
+        <span className={`rounded px-2 py-0.5 font-mono text-[9px] font-bold ${consColor}`}>
           {consensus}
         </span>
       </div>
 
       {/* Stacked bar */}
-      <div className="flex h-3 w-full overflow-hidden rounded-full">
+      <div className="flex h-1.5 w-full overflow-hidden rounded-full">
         {bars.filter((b) => b.count > 0).map((b) => (
           <div
             key={b.label}
@@ -62,9 +62,9 @@ function ConsensusBar({ recs }: { recs: AnalystRecommendation }) {
       {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {bars.map((b) => (
-          <div key={b.label} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
-            <span className={`inline-block h-2 w-2 rounded-full ${b.color}`} />
-            {b.label} <span className="font-medium text-[var(--text)]">{b.count}</span>
+          <div key={b.label} className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${b.color}`} />
+            {b.label} <span className="font-semibold text-[var(--text)]">{b.count}</span>
           </div>
         ))}
       </div>
@@ -81,7 +81,7 @@ export default async function AnalystRatings({ symbol }: AnalystRatingsProps) {
 
       {recs.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-8 text-center">
-          <p className="text-sm text-[var(--text-muted)]">No analyst data available.</p>
+          <p className="font-mono text-[10px] text-[var(--text-muted)]">No analyst data available.</p>
         </div>
       ) : (
         <div className="space-y-4 rounded border border-[var(--border)] bg-[var(--surface)] p-3">

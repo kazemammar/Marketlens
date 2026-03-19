@@ -53,7 +53,7 @@ function CustomTooltip({ active, payload, label }: {
   const surprise = act != null && est != null ? act - est : null
 
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-lg font-mono text-[11px]">
+    <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-[10px]">
       <p className="font-bold text-[var(--text)] mb-1">{label}</p>
       {est != null && (
         <p className="text-[var(--text-muted)]">
@@ -135,7 +135,7 @@ export default function EarningsHistory({ symbol }: { symbol: string }) {
       {/* Section header — matches PeersTable / TechnicalSummary style */}
       <div className="flex items-center gap-2 mb-3">
         <span className="h-2 w-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
-        <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+        <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Earnings History
         </h2>
         <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />

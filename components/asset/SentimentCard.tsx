@@ -22,12 +22,12 @@ function ScoreBar({ score }: { score: number }) {
   const colorStyle = { background: pos >= 60 ? 'var(--price-up)' : pos <= 40 ? 'var(--price-down)' : 'var(--warning)' }
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
+      <div className="flex items-center justify-between font-mono text-[9px] text-[var(--text-muted)]">
         <span>Bearish</span>
-        <span className="font-medium tabular-nums text-[var(--text)]">{pos}/100</span>
+        <span className="font-semibold tabular-nums text-[var(--text)]">{pos}/100</span>
         <span>Bullish</span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pos}%`, ...colorStyle }} />
       </div>
     </div>
@@ -74,14 +74,14 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
         )}
 
         {error && !loading && (
-          <p className="text-sm text-[var(--text-muted)]">Sentiment analysis unavailable.</p>
+          <p className="font-mono text-[10px] text-[var(--text-muted)]">Sentiment analysis unavailable.</p>
         )}
 
         {data && !loading && (
           <>
             {/* Label badge + conviction badge */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold" style={{ color: cfg.colorVar, background: cfg.bgVar }}>
+              <span className="flex items-center gap-1.5 rounded px-2.5 py-1 font-mono text-[11px] font-bold" style={{ color: cfg.colorVar, background: cfg.bgVar }}>
                 <span>{cfg.icon}</span>
                 {data.label}
               </span>
@@ -90,7 +90,7 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
                   {data.conviction === 'high' ? 'High Conviction' : data.conviction === 'medium' ? 'Medium' : 'Low'}
                 </span>
               )}
-              <span className="text-xs text-[var(--text-muted)]">
+              <span className="font-mono text-[8px] text-[var(--text-muted)]">
                 Analyzed {dateStr || '…'}
               </span>
             </div>
@@ -99,17 +99,17 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
             <ScoreBar score={data.score} />
 
             {/* Summary */}
-            <p className="text-sm text-[var(--text-muted)] leading-relaxed">{data.summary}</p>
+            <p className="font-mono text-[10px] text-[var(--text-muted)] leading-relaxed">{data.summary}</p>
 
             {/* Key signals */}
             {data.keySignals.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
                   Key Signals
                 </p>
                 <ul className="space-y-1">
                   {data.keySignals.map((signal, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-[var(--text)]">
+                    <li key={i} className="flex items-start gap-2 font-mono text-[10px] text-[var(--text)]">
                       <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--accent)' }} />
                       {signal}
                     </li>

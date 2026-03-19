@@ -42,7 +42,7 @@ export default function DefiTvl({ symbol }: { symbol: string }) {
       {loading ? (
         <div className="skeleton h-5 w-24 rounded" />
       ) : !data ? (
-        <span className="font-mono text-[13px] text-[var(--text-muted)]">—</span>
+        <span className="font-mono text-[12px] text-[var(--text-muted)]">—</span>
       ) : (
         <>
           <span className="font-mono text-[15px] font-bold leading-tight tabular-nums text-[var(--text)]">

@@ -59,7 +59,7 @@ export default function RelatedAssets({ symbol, type }: Props) {
                   {badge.label}
                 </span>
                 {/* Symbol */}
-                <span className="font-mono text-[13px] font-bold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">
+                <span className="font-mono text-[12px] font-bold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">
                   {asset.symbol}
                 </span>
                 {/* Name */}

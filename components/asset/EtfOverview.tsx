@@ -54,7 +54,7 @@ function Block({ label, value, accent }: InfoBlock) {
       </p>
       <p
         className="font-mono text-[12px] font-bold"
-        style={{ color: accent ? 'var(--accent)' : 'white' }}
+        style={{ color: accent ? 'var(--accent)' : 'var(--text)' }}
       >
         {value}
       </p>

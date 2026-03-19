@@ -78,7 +78,7 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
             <p className="mb-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
               Pair
             </p>
-            <p className="font-mono text-[13px] font-bold text-[var(--text)]">
+            <p className="font-mono text-[12px] font-bold text-[var(--text)]">
               {info?.fullName ?? symbol}
             </p>
             <div className="mt-1.5 flex items-center gap-2">
@@ -119,7 +119,7 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
                     />
                     <span
                       className="font-mono text-[9px] font-semibold"
-                      style={{ color: active ? '#fff' : 'var(--text-muted)' }}
+                      style={{ color: active ? 'var(--text)' : 'var(--text-muted)' }}
                     >
                       {s.name}
                     </span>

@@ -165,7 +165,7 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
                   <RiskDot severity={zone.severity} />
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-0.5">
-                      <span className="font-mono text-[12px] font-bold text-[var(--text)]">{zone.name}</span>
+                      <span className="font-mono text-[11px] font-bold text-[var(--text)]">{zone.name}</span>
                       <span
                         className="rounded-sm px-1.5 py-px font-mono text-[8px] font-bold uppercase"
                         style={{ background: `${sColor}18`, color: sColor, border: `1px solid ${sColor}33` }}

@@ -48,7 +48,7 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
       <section>
         <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Latest News</h2>
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-10 text-center">
-          <p className="text-sm text-[var(--text-muted)]">No recent news found.</p>
+          <p className="font-mono text-[10px] text-[var(--text-muted)]">No recent news found.</p>
         </div>
       </section>
     )
@@ -78,7 +78,7 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
               />
 
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-[12px] font-medium leading-snug text-[var(--text)] transition-colors group-hover:text-blue-400">
+                <p className="line-clamp-2 font-mono text-[11px] font-medium leading-snug text-[var(--text)] transition-colors group-hover:text-[var(--accent)]">
                   {article.headline}
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-[var(--text-muted)]">

@@ -25,9 +25,9 @@ async function fetchFinancials(symbol: string): Promise<FinancialsData> {
 
 function MetricRow({ label, value }: { label: string; value: string | null }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-2">
-      <span className="text-sm text-[var(--text-muted)]">{label}</span>
-      <span className="text-sm font-medium font-mono tabular-nums text-[var(--text)]">
+    <div className="flex items-center justify-between gap-4 py-1.5">
+      <span className="font-mono text-[10px] text-[var(--text-muted)]">{label}</span>
+      <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
         {value ?? '—'}
       </span>
     </div>
@@ -45,7 +45,7 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
       <section>
         <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Financials</h2>
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-8 text-center">
-          <p className="text-sm text-[var(--text-muted)]">Financial data temporarily unavailable — try again later.</p>
+          <p className="font-mono text-[10px] text-[var(--text-muted)]">Financial data temporarily unavailable — try again later.</p>
         </div>
       </section>
     )
@@ -61,12 +61,12 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
       {/* ── Income statement table ── */}
       {quarters.length > 0 && (
         <div className="overflow-x-auto rounded border border-[var(--border)] bg-[var(--surface)]">
-          <table className="w-full text-sm">
+          <table className="w-full font-mono text-[10px]">
             <thead>
-              <tr className="border-b border-[var(--border)]">
-                <th className="px-4 py-3 text-left font-medium text-[var(--text-muted)]">Period</th>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
+                <th className="px-3 py-2 text-left text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">Period</th>
                 {quarters.map((q) => (
-                  <th key={q.period} className="px-4 py-3 text-right font-medium text-[var(--text-muted)]">
+                  <th key={q.period} className="px-3 py-2 text-right text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
                     {q.period.split(' ')[0]}
                   </th>
                 ))}
@@ -82,14 +82,14 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
                 { label: 'EPS',              key: 'eps'             as const },
               ].map(({ label, key }) => (
                 <tr key={key} className="hover:bg-[var(--surface-2)] transition-colors">
-                  <td className="px-4 py-2.5 font-medium text-[var(--text)]">{label}</td>
+                  <td className="px-3 py-2 font-semibold text-[var(--text)]">{label}</td>
                   {quarters.map((q) => {
                     const v = q[key]
                     const formatted = key === 'eps'
                       ? `$${formatNumber(v)}`
                       : formatCompact(v)
                     return (
-                      <td key={q.period} className="px-4 py-2.5 text-right font-mono tabular-nums text-[var(--text)]">
+                      <td key={q.period} className="px-3 py-2 text-right tabular-nums text-[var(--text)]">
                         {formatted}
                       </td>
                     )

@@ -69,7 +69,7 @@ function CbPanel({ side, align }: { side: CbSide; align: 'left' | 'right' }) {
     <div className={`flex flex-col gap-2 p-4 ${itemsAlign}`}>
       {/* Currency header */}
       <div className={`flex items-center gap-1.5 ${align === 'right' ? 'flex-row-reverse' : ''}`}>
-        <span className="text-lg leading-none">{flag}</span>
+        <span className="text-[14px] leading-none">{flag}</span>
         <div className={textAlign}>
           <div className="font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--text)]">
             {side.currency}

@@ -191,7 +191,7 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                 <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
                   Thesis
                 </span>
-                <p className="mt-0.5 font-mono text-[12px] sm:text-[13px] leading-relaxed text-[var(--text)]">
+                <p className="mt-0.5 font-mono text-[11px] leading-relaxed text-[var(--text)]">
                   {data.thesis}
                 </p>
               </div>

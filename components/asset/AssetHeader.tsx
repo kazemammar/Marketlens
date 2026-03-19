@@ -28,7 +28,7 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
       {/* Left: logo + identity */}
       <div className="flex items-center gap-4">
         {logoUrl && (
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-[var(--border)] bg-white p-1">
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border border-[var(--border)] bg-white p-1">
             <Image
               src={logoUrl}
               alt={`${name} logo`}
@@ -41,17 +41,17 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
 
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-[var(--text)]">{symbol}</h1>
-            <span className="rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
+            <h1 className="font-mono text-[22px] font-bold text-[var(--text)]">{symbol}</h1>
+            <span className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-[0.1em]">
               {TYPE_LABELS[type]}
             </span>
             {exchange && (
-              <span className="rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
+              <span className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[8px] font-bold text-[var(--text-muted)]">
                 {exchange}
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-sm text-[var(--text-muted)]">
+          <p className="mt-0.5 font-mono text-[10px] text-[var(--text-muted)]">
             {name}
             {industry && <span className="ml-2 text-[var(--text-muted)]">· {industry}</span>}
           </p>
@@ -60,10 +60,10 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
 
       {/* Right: price + watchlist */}
       <div className="flex flex-col items-start sm:items-end gap-2">
-        <p className="text-4xl font-bold font-mono tabular-nums text-[var(--text)]">
+        <p className="font-mono text-[32px] font-bold tabular-nums text-[var(--text)]">
           {formatPrice(price, currency)}
         </p>
-        <div className={`flex items-center gap-2 text-sm font-mono font-medium tabular-nums ${color}`}>
+        <div className={`flex items-center gap-2 font-mono text-[11px] font-semibold tabular-nums ${color}`}>
           <span>
             {isPositive ? '▲' : '▼'}&nbsp;{formatChange(Math.abs(change))}
           </span>

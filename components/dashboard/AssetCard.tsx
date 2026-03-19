@@ -69,7 +69,7 @@ export default function AssetCard({ asset }: { asset: AssetCardData }) {
   return (
     <Link
       href={href}
-      className="asset-card group relative flex flex-col gap-2.5 rounded border border-[var(--border)] bg-[var(--surface)] p-3 transition hover:border-[var(--accent)]/30 animate-fade-up"
+      className="asset-card group relative flex flex-col gap-2.5 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5 transition hover:border-[var(--accent)]/30 animate-fade-up"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">

@@ -82,7 +82,7 @@ function LargeCard({ ind }: { ind: EconomicIndicator }) {
 
   return (
     <div
-      className="flex flex-col gap-3 rounded border bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/30"
+      className="flex flex-col gap-2.5 rounded border bg-[var(--surface)] p-2.5 transition hover:border-[var(--accent)]/30"
       style={{ borderColor: isInverted ? 'rgba(239,68,68,0.5)' : 'var(--border)' }}
     >
       <div className="flex items-start justify-between gap-2">
@@ -152,8 +152,8 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
   const daysAway = Math.ceil((new Date(next).getTime() - now.getTime()) / 86400000)
 
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-4">
-      <div className="mb-3 flex items-center gap-2">
+    <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-2.5">
+      <div className="mb-2.5 flex items-center gap-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-amber-400" aria-hidden>
           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -161,7 +161,7 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Fed Watch</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         <div>
           <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Current Rate</p>
           <p className="font-mono text-[22px] font-bold text-[var(--text)] tabular-nums">
@@ -210,7 +210,7 @@ export default function EconomicsPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+      <div className="px-4 py-4">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center gap-3">
             <div>
@@ -245,7 +245,7 @@ export default function EconomicsPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 9 }).map((_, i) => (
               <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
                 <div className="flex h-full animate-pulse flex-col gap-3 p-4">
@@ -258,7 +258,7 @@ export default function EconomicsPage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {indicators.map((ind) => (
               <LargeCard key={ind.id} ind={ind} />
             ))}

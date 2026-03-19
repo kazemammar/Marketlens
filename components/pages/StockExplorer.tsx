@@ -117,7 +117,7 @@ function MarketIndices() {
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
         <span className="relative flex h-1.5 w-1.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
@@ -128,7 +128,7 @@ function MarketIndices() {
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">live</span>
       </div>
-      <div className="flex gap-px bg-[var(--border)] overflow-x-auto">
+      <div className="flex gap-px overflow-x-auto">
         {INDEX_CONFIG.map((idx) => (
           <IndexCard key={idx.symbol} {...idx} data={bySymbol[idx.symbol]} />
         ))}
@@ -145,7 +145,7 @@ function GridSkeleton({ count = 10 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-3"
+          className="flex flex-col gap-2.5 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-1.5">
@@ -221,7 +221,7 @@ export default function StockExplorer() {
       {/* Sector tabs + grid */}
       <div className="overflow-hidden rounded border border-[var(--border)]">
         {/* Header */}
-        <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+        <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <path d="M2 14h12M4 10v4M8 7v7M12 4v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
@@ -244,7 +244,7 @@ export default function StockExplorer() {
         </div>
 
         {/* Sector tab bar */}
-        <div className="flex items-center gap-0 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-1">
+        <div className="flex items-center gap-0 overflow-x-auto border-b border-[var(--border)] px-1">
           {TABS.map((tab) => {
             const isActive = tab === activeTab
             const color    = SECTOR_COLORS[tab] ?? 'var(--accent)'
@@ -268,7 +268,7 @@ export default function StockExplorer() {
         </div>
 
         {/* Stock grid */}
-        <div className="bg-[var(--surface)] p-4">
+        <div className="p-2.5">
           {loading ? (
             <GridSkeleton count={activeTab === 'All' ? ALL_TOP_PICKS.length : STOCK_SECTORS[activeTab]?.length ?? 10} />
           ) : stocks.length === 0 ? (

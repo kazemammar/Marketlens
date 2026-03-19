@@ -32,7 +32,7 @@ function ArticleCard({ article }: { article: NewsArticle }) {
       href={article.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex gap-4 rounded border border-[var(--border)] bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/30"
+      className="group flex gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5 transition hover:border-[var(--accent)]/30"
     >
       {/* Thumbnail */}
       {article.imageUrl ? (
@@ -79,7 +79,7 @@ function ArticleCard({ article }: { article: NewsArticle }) {
 
 function ArticleSkeleton() {
   return (
-    <div className="flex gap-4 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="flex gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5">
       <div className="h-20 w-28 shrink-0 animate-pulse rounded bg-[var(--surface-2)] sm:h-24 sm:w-36" />
       <div className="flex-1 space-y-2">
         <div className="h-4 w-full animate-pulse rounded bg-[var(--surface-2)]" />

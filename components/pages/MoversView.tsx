@@ -297,36 +297,13 @@ export default function MoversView() {
       <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
 
         {/* Page header */}
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
-              Top Movers
-            </h1>
-            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
-              Biggest gainers and losers across stocks, crypto &amp; commodities
-            </p>
-          </div>
-
-          {/* Timestamp + refresh */}
-          <div className="flex items-center gap-2">
-            {generatedAt && (
-              <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40 tabular-nums">
-                Updated {generatedAt}
-              </span>
-            )}
-            <button
-              onClick={() => fetchData()}
-              disabled={loading}
-              className="flex items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 font-mono text-[9px] text-[var(--text-muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
-            >
-              <svg viewBox="0 0 12 12" fill="none" className={`h-2.5 w-2.5 ${loading ? 'animate-spin' : ''}`} stroke="currentColor" strokeWidth="1.5">
-                <path d="M10 6A4 4 0 1 1 6 2" strokeLinecap="round"/>
-                <polyline points="10,2 10,6 6,6" fill="currentColor" stroke="none"/>
-                <path d="M10 2l0 4-4 0" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Refresh
-            </button>
-          </div>
+        <div className="mb-6">
+          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
+            Top Movers
+          </h1>
+          <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+            Biggest gainers and losers across stocks, crypto &amp; commodities
+          </p>
         </div>
 
         {/* Error state */}
@@ -352,7 +329,7 @@ export default function MoversView() {
           <>
             <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
               {/* Panel header */}
-              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+              <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
                 <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
                   <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
@@ -360,47 +337,37 @@ export default function MoversView() {
                   Top Movers
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-                {!loading && (
-                  <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">
-                    {gainers.length + losers.length} tracked
-                  </span>
-                )}
-                {generatedAt && (
-                  <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40 tabular-nums">
-                    {generatedAt}
-                  </span>
-                )}
+                <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+                  {!loading && `${gainers.length + losers.length} tracked`}
+                  {generatedAt && ` · Updated ${generatedAt}`}
+                </span>
                 <button
                   onClick={() => fetchData()}
                   disabled={loading}
-                  className="flex items-center gap-1 rounded border border-[var(--border)] px-2 py-0.5 font-mono text-[8px] text-[var(--text-muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
+                  className="ml-1 font-mono text-[8px] text-[var(--accent)] opacity-60 hover:opacity-100 hover:underline disabled:opacity-30"
                 >
-                  <svg viewBox="0 0 12 12" fill="none" className={`h-2 w-2 ${loading ? 'animate-spin' : ''}`} stroke="currentColor" strokeWidth="1.5">
-                    <path d="M10 6A4 4 0 1 1 6 2" strokeLinecap="round"/>
-                    <path d="M10 2l0 4-4 0" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  Refresh
+                  ↻ Refresh
                 </button>
               </div>
 
-              {/* Asset type tabs — inside panel like StockExplorer sector tabs */}
-              <div className="flex overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-1">
-                {TABS.map((t) => (
+              {/* Asset type tabs */}
+              <div className="flex items-center gap-0 overflow-x-auto border-b border-[var(--border)] px-1">
+                {TABS.map((t) => {
+                  const isActive = t.key === tab
+                  return (
                   <button
                     key={t.key}
                     onClick={() => setTab(t.key)}
-                    className={`relative shrink-0 px-4 pb-2 pt-2 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors ${
-                      tab === t.key
-                        ? 'text-[var(--accent)]'
-                        : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                    }`}
+                    className="relative shrink-0 px-3 py-2.5 font-mono text-[10px] font-semibold tracking-[0.06em] transition-colors"
+                    style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}
                   >
-                    {t.label.toUpperCase()}
-                    {tab === t.key && (
+                    {t.label}
+                    {isActive && (
                       <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[var(--accent)]" />
                     )}
                   </button>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Two-column grid */}

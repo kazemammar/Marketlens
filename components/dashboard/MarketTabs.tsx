@@ -236,7 +236,7 @@ export default function MarketTabs({
       )}
 
       {current.status === 'loaded' && displayData.length > 0 && (
-        <div className="px-0 py-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="px-0 pt-4 pb-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {displayData.map((asset) => (
             <AssetCard key={`${asset.type}-${asset.symbol}`} asset={asset} />
           ))}

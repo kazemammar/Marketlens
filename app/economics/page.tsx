@@ -82,7 +82,7 @@ function LargeCard({ ind }: { ind: EconomicIndicator }) {
 
   return (
     <div
-      className="flex flex-col gap-3 rounded-lg border bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/30"
+      className="flex flex-col gap-3 rounded border bg-[var(--surface)] p-4 transition hover:border-[var(--accent)]/30"
       style={{ borderColor: isInverted ? 'rgba(239,68,68,0.5)' : 'var(--border)' }}
     >
       <div className="flex items-start justify-between gap-2">
@@ -90,7 +90,7 @@ function LargeCard({ ind }: { ind: EconomicIndicator }) {
           <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
             {ind.name}
           </span>
-          <div className="mt-1 font-mono text-[28px] font-bold leading-none tabular-nums text-white">
+          <div className="mt-1 font-mono text-[28px] font-bold leading-none tabular-nums text-[var(--text)]">
             {formatVal()}
           </div>
         </div>
@@ -152,25 +152,25 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
   const daysAway = Math.ceil((new Date(next).getTime() - now.getTime()) / 86400000)
 
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+    <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-4">
       <div className="mb-3 flex items-center gap-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-amber-400" aria-hidden>
           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">Fed Watch</span>
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Fed Watch</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
           <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Current Rate</p>
-          <p className="font-mono text-[22px] font-bold text-white tabular-nums">
+          <p className="font-mono text-[22px] font-bold text-[var(--text)] tabular-nums">
             {fedRate?.value !== null && fedRate?.value !== undefined ? `${fedRate.value.toFixed(2)}%` : '—'}
           </p>
         </div>
         <div>
           <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Next FOMC</p>
-          <p className="font-mono text-[13px] font-bold text-white">
+          <p className="font-mono text-[13px] font-bold text-[var(--text)]">
             {new Date(next).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
           <p className="font-mono text-[10px] text-amber-400 mt-0.5">in {daysAway} days</p>
@@ -214,10 +214,10 @@ export default function EconomicsPage() {
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+              <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
                 Economic Calendar
               </h1>
-              <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+              <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
                 Key macro indicators and economic data releases
               </p>
             </div>
@@ -238,7 +238,7 @@ export default function EconomicsPage() {
 
         {/* Indicators grid */}
         <div className="mb-3 flex items-center gap-2">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Key Indicators
           </span>
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
@@ -247,7 +247,7 @@ export default function EconomicsPage() {
         {loading ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="h-40 rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+              <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
                 <div className="flex h-full animate-pulse flex-col gap-3 p-4">
                   <div className="skeleton h-2 w-24 rounded" />
                   <div className="skeleton h-8 w-20 rounded" />

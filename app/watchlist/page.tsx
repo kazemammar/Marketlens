@@ -34,7 +34,7 @@ function WatchlistCard({
   return (
     <div className="relative">
       {loading ? (
-        <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+        <div className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-1.5">
               <div className="h-3.5 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
@@ -50,8 +50,8 @@ function WatchlistCard({
       ) : asset ? (
         <AssetCard asset={asset} />
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-4 text-center">
-          <p className="font-mono text-[13px] font-semibold text-[var(--text)]">{item.symbol}</p>
+        <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] bg-[var(--surface)] p-4 text-center">
+          <p className="font-mono text-[12px] font-semibold text-[var(--text)]">{item.symbol}</p>
           <p className="mt-0.5 font-mono text-[10px] text-[var(--text-muted)]">{item.asset_type}</p>
           <p className="mt-2 font-mono text-[10px] text-[var(--text-muted)] opacity-60">No quote data</p>
         </div>
@@ -77,12 +77,12 @@ function WatchlistCard({
 
 function EmptyWatchlist() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+    <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
       <p className="text-3xl">⭐</p>
       <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
         Your watchlist is empty
       </p>
-      <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)] max-w-xs">
+      <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)] max-w-xs">
         Browse stocks, crypto, and more, then click{' '}
         <span className="text-[var(--accent)]">☆ Watch</span>{' '}
         to add assets here.
@@ -98,7 +98,7 @@ function EmptyWatchlist() {
           <Link
             key={href}
             href={href}
-            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-mono text-[11px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--text)]"
+            className="rounded border border-[var(--border)] bg-[var(--surface)] px-4 py-2 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
           >
             {label}
           </Link>
@@ -120,18 +120,18 @@ export default function WatchlistPage() {
     return (
       <div className="min-h-screen bg-[var(--bg)]">
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">My Watchlist</h1>
-          <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">My Watchlist</h1>
+          <div className="mt-8 flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
             <p className="text-3xl">🔒</p>
             <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
               Sign in to see your watchlist
             </p>
-            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
               Create a free account to save assets and track them here.
             </p>
             <button
               onClick={() => setModalOpen(true)}
-              className="mt-6 rounded-lg px-5 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90"
+              className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-[var(--text)] transition hover:opacity-90"
               style={{ background: 'var(--accent)' }}
             >
               Sign In / Create Account
@@ -152,11 +152,11 @@ export default function WatchlistPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
               My Watchlist
             </h1>
             {user && (
-              <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+              <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
                 {items.length} asset{items.length !== 1 ? 's' : ''} · {user.email}
               </p>
             )}
@@ -175,7 +175,7 @@ export default function WatchlistPage() {
         {isLoading && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+              <div key={i} className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-col gap-1.5">
                     <div className="h-3.5 w-16 animate-pulse rounded bg-[var(--surface-2)]" />

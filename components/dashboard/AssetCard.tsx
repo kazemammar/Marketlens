@@ -69,14 +69,14 @@ export default function AssetCard({ asset }: { asset: AssetCardData }) {
   return (
     <Link
       href={href}
-      className="asset-card group relative flex flex-col gap-2.5 rounded-lg bg-[var(--surface)] p-3.5 transition-all duration-200 animate-fade-up"
+      className="asset-card group relative flex flex-col gap-2.5 rounded border border-[var(--border)] bg-[var(--surface)] p-3 transition hover:border-[var(--accent)]/30 animate-fade-up"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <span className="block truncate font-mono font-bold text-[var(--text)]" style={{ fontSize: '15px' }}>
+          <span className="block truncate font-mono text-[12px] font-bold text-[var(--text)]">
             {symbol}
           </span>
-          <p className="mt-0.5 truncate text-[11px]" style={{ color: 'var(--text-muted)' }}>{name}</p>
+          <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--text-muted)]">{name}</p>
         </div>
         <Sparkline
           open={open} high={high} low={low} price={price}
@@ -85,11 +85,11 @@ export default function AssetCard({ asset }: { asset: AssetCardData }) {
       </div>
 
       <div className="flex items-end justify-between">
-        <p className="font-mono font-bold tabular-nums text-[var(--text)]" style={{ fontSize: '18px' }}>
+        <p className="font-mono text-[16px] font-bold tabular-nums text-[var(--text)]">
           {formatPrice(price, currency)}
         </p>
-        <div className="flex items-center gap-1 font-mono text-[12px] font-semibold tabular-nums" style={{ color: chgColor }}>
-          <span className="text-[10px] leading-none">{isPositive ? '▲' : '▼'}</span>
+        <div className="flex items-center gap-1 font-mono text-[11px] font-semibold tabular-nums" style={{ color: chgColor }}>
+          <span className="font-mono text-[9px] leading-none">{isPositive ? '▲' : '▼'}</span>
           <span>{formatPercent(changePercent, false)}</span>
         </div>
       </div>

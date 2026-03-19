@@ -72,7 +72,7 @@ export default function CurrencyStrengthMeter() {
         <svg className="h-3 w-3 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
           <path d="M3 6l9-4 9 4v6c0 5-4.5 9-9 10C7.5 21 3 17 3 12V6z" />
         </svg>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Currency Strength
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />

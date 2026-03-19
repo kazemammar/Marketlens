@@ -108,11 +108,11 @@ export default function HeatmapPanel({ stocks = [] }: { stocks?: AssetCardData[]
           <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No data</p>
         </div>
       ) : (
-        <div className="flex flex-1 flex-col gap-px overflow-hidden p-1">
+        <div className="flex flex-1 flex-col gap-px overflow-hidden p-1" style={{ minWidth: 0 }}>
           {rows.map((row, ri) => (
-            <div key={ri} className="flex min-h-0 gap-px" style={{ flex: `${ROW_FLEX[ri] ?? 30} 0 0` }}>
+            <div key={ri} className="flex min-h-0 min-w-0 gap-px overflow-hidden" style={{ flex: `${ROW_FLEX[ri] ?? 30} 0 0` }}>
               {row.map(({ symbol, pct, flex }) => (
-                <div key={symbol} className="min-w-0" style={{ flex: `${flex} 0 0` }}>
+                <div key={symbol} className="min-w-0 overflow-hidden" style={{ flex: `${flex} 0 0` }}>
                   <HeatCell symbol={symbol} pct={pct} />
                 </div>
               ))}

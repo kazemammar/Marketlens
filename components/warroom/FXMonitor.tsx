@@ -89,7 +89,7 @@ export default function FXMonitor() {
             const { label, color } = ecbDateLabel(rateDate)
             return (
               <span
-                className="font-mono text-[8px]"
+                className="hidden sm:inline font-mono text-[8px]"
                 style={{ color }}
                 title={`ECB reference rates published on ${rateDate}`}
                 suppressHydrationWarning

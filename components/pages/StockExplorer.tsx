@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AssetCard from '@/components/dashboard/AssetCard'
 import type { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
@@ -36,8 +36,9 @@ const ALL_TOP_PICKS = [
 const SECTOR_KEYS = Object.keys(STOCK_SECTORS)
 const TABS        = ['All', ...SECTOR_KEYS]
 
-function sectorUrl(sector: string) {
-  return `/api/stocks/batch?symbols=${STOCK_SECTORS[sector].join(',')}`
+function sectorUrl(sector: string, tick = 0) {
+  const base = `/api/stocks/batch?symbols=${STOCK_SECTORS[sector].join(',')}`
+  return tick > 0 ? `${base}&_t=${tick}` : base
 }
 
 const SECTOR_COLORS: Record<string, string> = {
@@ -164,19 +165,24 @@ function GridSkeleton({ count = 10 }: { count?: number }) {
 
 export default function StockExplorer() {
   const [activeTab, setActiveTab] = useState('All')
+  const [tick, setTick]           = useState(0)
 
-  const allFetch      = useFetch<AssetCardData[]>(`/api/stocks/batch?symbols=${ALL_TOP_PICKS.join(',')}`, { enabled: activeTab === 'All',              refreshInterval: 5 * 60_000 })
-  const techFetch     = useFetch<AssetCardData[]>(sectorUrl('Technology'),       { enabled: activeTab === 'Technology',       refreshInterval: 5 * 60_000 })
-  const finFetch      = useFetch<AssetCardData[]>(sectorUrl('Finance'),          { enabled: activeTab === 'Finance',          refreshInterval: 5 * 60_000 })
-  const hlthFetch     = useFetch<AssetCardData[]>(sectorUrl('Healthcare'),       { enabled: activeTab === 'Healthcare',       refreshInterval: 5 * 60_000 })
-  const nrgFetch      = useFetch<AssetCardData[]>(sectorUrl('Energy'),           { enabled: activeTab === 'Energy',           refreshInterval: 5 * 60_000 })
-  const consDiscFetch = useFetch<AssetCardData[]>(sectorUrl('Consumer Disc.'),   { enabled: activeTab === 'Consumer Disc.',   refreshInterval: 5 * 60_000 })
-  const consStapFetch = useFetch<AssetCardData[]>(sectorUrl('Consumer Staples'), { enabled: activeTab === 'Consumer Staples', refreshInterval: 5 * 60_000 })
-  const indFetch      = useFetch<AssetCardData[]>(sectorUrl('Industrial'),       { enabled: activeTab === 'Industrial',       refreshInterval: 5 * 60_000 })
-  const commFetch     = useFetch<AssetCardData[]>(sectorUrl('Communication'),    { enabled: activeTab === 'Communication',    refreshInterval: 5 * 60_000 })
-  const realEstFetch  = useFetch<AssetCardData[]>(sectorUrl('Real Estate'),      { enabled: activeTab === 'Real Estate',      refreshInterval: 5 * 60_000 })
-  const matFetch      = useFetch<AssetCardData[]>(sectorUrl('Materials'),        { enabled: activeTab === 'Materials',        refreshInterval: 5 * 60_000 })
-  const utilFetch     = useFetch<AssetCardData[]>(sectorUrl('Utilities'),        { enabled: activeTab === 'Utilities',        refreshInterval: 5 * 60_000 })
+  const allUrl = tick > 0
+    ? `/api/stocks/batch?symbols=${ALL_TOP_PICKS.join(',')}&_t=${tick}`
+    : `/api/stocks/batch?symbols=${ALL_TOP_PICKS.join(',')}`
+
+  const allFetch      = useFetch<AssetCardData[]>(allUrl,                         { enabled: activeTab === 'All',              refreshInterval: 5 * 60_000 })
+  const techFetch     = useFetch<AssetCardData[]>(sectorUrl('Technology',    tick), { enabled: activeTab === 'Technology',       refreshInterval: 5 * 60_000 })
+  const finFetch      = useFetch<AssetCardData[]>(sectorUrl('Finance',       tick), { enabled: activeTab === 'Finance',          refreshInterval: 5 * 60_000 })
+  const hlthFetch     = useFetch<AssetCardData[]>(sectorUrl('Healthcare',    tick), { enabled: activeTab === 'Healthcare',       refreshInterval: 5 * 60_000 })
+  const nrgFetch      = useFetch<AssetCardData[]>(sectorUrl('Energy',        tick), { enabled: activeTab === 'Energy',           refreshInterval: 5 * 60_000 })
+  const consDiscFetch = useFetch<AssetCardData[]>(sectorUrl('Consumer Disc.',tick), { enabled: activeTab === 'Consumer Disc.',   refreshInterval: 5 * 60_000 })
+  const consStapFetch = useFetch<AssetCardData[]>(sectorUrl('Consumer Staples',tick),{ enabled: activeTab === 'Consumer Staples', refreshInterval: 5 * 60_000 })
+  const indFetch      = useFetch<AssetCardData[]>(sectorUrl('Industrial',    tick), { enabled: activeTab === 'Industrial',       refreshInterval: 5 * 60_000 })
+  const commFetch     = useFetch<AssetCardData[]>(sectorUrl('Communication', tick), { enabled: activeTab === 'Communication',    refreshInterval: 5 * 60_000 })
+  const realEstFetch  = useFetch<AssetCardData[]>(sectorUrl('Real Estate',   tick), { enabled: activeTab === 'Real Estate',      refreshInterval: 5 * 60_000 })
+  const matFetch      = useFetch<AssetCardData[]>(sectorUrl('Materials',     tick), { enabled: activeTab === 'Materials',        refreshInterval: 5 * 60_000 })
+  const utilFetch     = useFetch<AssetCardData[]>(sectorUrl('Utilities',     tick), { enabled: activeTab === 'Utilities',        refreshInterval: 5 * 60_000 })
 
   const fetchMap: Record<string, ReturnType<typeof useFetch<AssetCardData[]>>> = {
     'All':              allFetch,
@@ -196,6 +202,11 @@ export default function StockExplorer() {
   const current = fetchMap[activeTab]
   const stocks  = current.data ?? []
   const loading = current.loading && stocks.length === 0
+
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null)
+  useEffect(() => {
+    if (current.lastUpdated) setLastUpdated(current.lastUpdated)
+  }, [current.lastUpdated])
 
   const totalStocks = SECTOR_KEYS.reduce((acc, s) => acc + STOCK_SECTORS[s].length, 0)
 
@@ -217,7 +228,16 @@ export default function StockExplorer() {
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
             {totalStocks}+ stocks
+            {lastUpdated && (
+              <> · Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</>
+            )}
           </span>
+          <button
+            onClick={() => setTick(t => t + 1)}
+            className="ml-1 font-mono text-[8px] text-[var(--accent)] opacity-60 hover:opacity-100 hover:underline"
+          >
+            ↻ Refresh
+          </button>
         </div>
 
         {/* Sector tab bar */}

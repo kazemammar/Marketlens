@@ -7,7 +7,7 @@ import type { AssetCardData } from '@/lib/utils/types'
 export async function GET(req: Request) {
   const url          = new URL(req.url)
   const symbolsParam = url.searchParams.get('symbols') ?? ''
-  const symbols      = symbolsParam.split(',').map(s => s.trim()).filter(Boolean).slice(0, 30)
+  const symbols      = symbolsParam.split(',').map(s => s.trim()).filter(Boolean).slice(0, 60)
 
   if (symbols.length === 0) return NextResponse.json([])
 

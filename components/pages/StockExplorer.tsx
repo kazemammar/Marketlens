@@ -21,16 +21,19 @@ const STOCK_SECTORS: Record<string, string[]> = {
   'Utilities':        ['NEE','DUK','SO','D','AEP','SRE','EXC','XEL','ED','WEC','ES','AWK','ATO','CMS','DTE','PEG','FE','PPL','EIX','ETR','CEG','EVRG','NI','LNT','AES'],
 }
 
-// Top 2-3 mega caps per sector — used for the "All" tab
+// Top 5 by market cap per sector — used for the "All" tab (55 total)
 const ALL_TOP_PICKS = [
-  'AAPL','MSFT','NVDA',   // Technology
-  'GOOGL','AMZN','META',  // Communication + Consumer Disc.
-  'TSLA','BRK.B','JPM',   // Consumer Disc. + Finance
-  'V','UNH','LLY',         // Finance + Healthcare
-  'XOM','HD','PG',         // Energy + Consumer Disc. + Staples
-  'CAT','NEE','AMT',       // Industrial + Utilities + Real Estate
-  'LIN','NFLX','COST',     // Materials + Communication + Staples
-  'GE','COP','ABBV',       // Industrial + Energy + Healthcare
+  'AAPL','MSFT','NVDA','AVGO','ORCL',          // Technology
+  'JPM','V','MA','BAC','BRK.B',                 // Finance
+  'UNH','LLY','JNJ','ABBV','MRK',              // Healthcare
+  'AMZN','TSLA','HD','NKE','MCD',              // Consumer Disc.
+  'PG','KO','PEP','COST','WMT',                // Consumer Staples
+  'CAT','GE','HON','UPS','RTX',                // Industrial
+  'GOOGL','META','NFLX','DIS','CMCSA',         // Communication
+  'XOM','CVX','COP','SLB','EOG',               // Energy
+  'AMT','PLD','EQIX','PSA','SPG',              // Real Estate
+  'LIN','APD','SHW','ECL','FCX',               // Materials
+  'NEE','DUK','SO','D','AEP',                  // Utilities
 ]
 
 const SECTOR_KEYS = Object.keys(STOCK_SECTORS)

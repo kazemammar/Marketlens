@@ -256,7 +256,7 @@ export default function EarningsCalendar() {
 
   const upcoming    = data?.upcoming ?? []
   const recent      = data?.recent   ?? []
-  const upcoming90  = upcoming.filter((e) => daysUntil(e.date) <= 90)
+  const upcoming90  = upcoming.filter((e) => daysUntil(e.date) <= 180)
   const hasAny      = upcoming90.length > 0 || recent.length > 0
 
   return (

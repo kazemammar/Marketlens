@@ -42,21 +42,20 @@ export default async function ForexPage() {
         {/* Currency Pairs panel */}
         <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
           {/* Panel header */}
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
             <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-              <path d="M3 8h10M9 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13 8H3M7 11L4 8l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45"/>
+              <path d="M2 14h12M4 10v4M8 7v7M12 4v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
               Currency Pairs
             </span>
             <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-            <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">{pairs.length} PAIRS</span>
+            <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">{pairs.length} pairs</span>
           </div>
 
           {/* Grid */}
           {pairs.length > 0 ? (
-            <div className="p-2.5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="p-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {pairs.map((asset) => (
                 <AssetCard key={`forex-${asset.symbol}`} asset={asset} />
               ))}

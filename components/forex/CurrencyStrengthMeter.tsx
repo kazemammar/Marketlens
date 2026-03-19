@@ -68,15 +68,16 @@ export default function CurrencyStrengthMeter() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-        <svg className="h-3 w-3 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <path d="M3 6l9-4 9 4v6c0 5-4.5 9-9 10C7.5 21 3 17 3 12V6z" />
-        </svg>
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
+        <span className="relative flex h-1.5 w-1.5 shrink-0">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+        </span>
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Currency Strength
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[8px] text-[var(--text-muted)]">7-DAY CROSS-RATE</span>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">live · 7-day cross-rate</span>
       </div>
 
       {/* Bars + Chart */}
@@ -242,8 +243,8 @@ function StrengthTooltip({
 function SkeletonMeter() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-        <div className="h-3 w-3 rounded bg-[var(--surface-2)] animate-pulse" />
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
+        <div className="h-1.5 w-1.5 rounded-full bg-[var(--surface-2)] animate-pulse" />
         <div className="h-2 w-32 rounded bg-[var(--surface-2)] animate-pulse" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2">

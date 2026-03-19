@@ -298,22 +298,10 @@ export default function MoversView() {
         {/* Page header */}
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-                <polyline points="2,14 7,8 11,11 15,5 18,3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                <polyline points="2,17 7,11 11,14 15,8 18,6" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-              </svg>
-              <h1 className="font-mono text-[13px] font-bold uppercase tracking-[0.16em] text-[var(--text)]">
-                Top Movers
-              </h1>
-              <span
-                className="rounded-full px-2 py-px font-mono text-[8px] font-bold uppercase tracking-wide"
-                style={{ background: 'rgba(16,185,129,0.12)', color: 'var(--accent)' }}
-              >
-                Live
-              </span>
-            </div>
-            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)] opacity-60">
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+              Top Movers
+            </h1>
+            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
               Biggest gainers and losers across stocks, crypto &amp; commodities
             </p>
           </div>

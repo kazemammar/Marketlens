@@ -213,17 +213,12 @@ export default function EconomicsPage() {
       <div className="border-b border-[var(--border)] bg-[var(--surface)] px-4 py-4">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center gap-3">
-            <svg viewBox="0 0 16 16" fill="none" className="h-5 w-5" style={{ color: 'var(--accent)' }} aria-hidden>
-              <rect x="1" y="9" width="3" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
-              <rect x="6" y="5" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
-              <rect x="11" y="1" width="3" height="14" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
-            </svg>
             <div>
-              <h1 className="font-mono text-[15px] font-bold uppercase tracking-[0.08em] text-white">
-                Economic Indicators
+              <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">
+                Economic Calendar
               </h1>
-              <p className="font-mono text-[10px] text-[var(--text-muted)]">
-                FRED — Federal Reserve Economic Data · Updated every 6 hours
+              <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+                Key macro indicators and economic data releases
               </p>
             </div>
             {inverted && (

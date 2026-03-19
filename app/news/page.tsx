@@ -53,16 +53,16 @@ function ArticleCard({ article }: { article: NewsArticle }) {
 
       {/* Content */}
       <div className="min-w-0 flex-1">
-        <p className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--text)] transition-colors group-hover:text-blue-400 sm:text-base">
+        <p className="line-clamp-2 font-mono text-[13px] font-semibold leading-snug text-[var(--text)] transition-colors group-hover:text-blue-400 sm:text-[14px]">
           {article.headline}
         </p>
         {article.summary && (
-          <p className="mt-1.5 line-clamp-2 hidden text-xs leading-relaxed text-[var(--text-muted)] sm:block">
+          <p className="mt-1.5 line-clamp-2 hidden font-mono text-[11px] leading-relaxed text-[var(--text-muted)] sm:block">
             {article.summary}
           </p>
         )}
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-muted)]">
-          <span className="font-medium text-[var(--text)]">{article.source}</span>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-[var(--text-muted)]">
+          <span className="font-semibold text-[var(--text)]">{article.source}</span>
           <span>·</span>
           <span>{formatRelativeTime(article.publishedAt)}</span>
         </div>
@@ -148,9 +148,9 @@ export default function NewsPage() {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]">News Hub</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Latest financial news from Reuters, CNBC, MarketWatch and more.
+          <h1 className="font-mono text-[22px] font-bold tracking-tight text-white">Market News</h1>
+          <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+            Latest headlines across stocks, crypto, forex and commodities
           </p>
         </div>
 
@@ -164,7 +164,7 @@ export default function NewsPage() {
                 onClick={() => handleCategoryChange(cat.id)}
                 className={`
                   flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-1
-                  text-sm font-medium transition-colors
+                  font-mono text-[12px] font-medium transition-colors
                   ${isActive
                     ? 'border-blue-500 text-blue-500'
                     : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -180,7 +180,7 @@ export default function NewsPage() {
 
         {/* Article count */}
         {!loading && total > 0 && (
-          <p className="mb-4 text-xs text-[var(--text-muted)]">
+          <p className="mb-4 font-mono text-[11px] text-[var(--text-muted)]">
             {total} article{total !== 1 ? 's' : ''} found
           </p>
         )}
@@ -197,8 +197,8 @@ export default function NewsPage() {
         {!loading && articles.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-4xl">📭</p>
-            <p className="mt-4 text-base font-medium text-[var(--text)]">No articles found</p>
-            <p className="mt-1 text-sm text-[var(--text-muted)]">
+            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">No articles found</p>
+            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
               Try a different category or check back later.
             </p>
           </div>
@@ -210,7 +210,7 @@ export default function NewsPage() {
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 text-sm font-medium text-[var(--text)] transition hover:bg-[var(--surface-2)] disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 font-mono text-[12px] font-medium text-[var(--text)] transition hover:bg-[var(--surface-2)] disabled:opacity-50"
             >
               {loadingMore ? (
                 <>

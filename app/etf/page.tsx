@@ -73,8 +73,8 @@ export default async function ETFPage() {
         ) : (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
             <p className="text-3xl">📭</p>
-            <p className="mt-3 text-sm font-medium text-[var(--text)]">No ETF data available</p>
-            <p className="mt-1 text-xs text-[var(--text-muted)]">Check your API connection and try again.</p>
+            <p className="mt-3 font-mono text-[14px] font-medium text-[var(--text)]">No ETF data available</p>
+            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">Check your API connection and try again.</p>
           </div>
         )}
       </div>

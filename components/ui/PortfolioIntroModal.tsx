@@ -149,8 +149,7 @@ export default function PortfolioIntroModal() {
             and risk signals that actually tell you something.
           </p>
           <p className="mt-2 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">
-            We&apos;re shipping new features every week —{' '}
-            <span className="text-[var(--text)]">start now and grow with it.</span>
+            We&apos;re shipping new features every week.
           </p>
 
           {/* Feature grid */}

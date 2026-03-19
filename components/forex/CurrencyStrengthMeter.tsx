@@ -81,7 +81,7 @@ export default function CurrencyStrengthMeter() {
       </div>
 
       {/* Bars + Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:items-stretch">
         {/* Strength bars */}
         <div className="border-b border-[var(--border)] bg-[var(--surface)] p-3 lg:border-b-0 lg:border-r flex flex-col">
           <div className="flex flex-col justify-between flex-1 gap-1">
@@ -139,8 +139,8 @@ export default function CurrencyStrengthMeter() {
         </div>
 
         {/* Trend chart */}
-        <div className="p-3">
-          <div className="h-[220px] sm:h-[250px]">
+        <div className="flex flex-col p-3 min-h-[260px]">
+          <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
@@ -158,7 +158,7 @@ export default function CurrencyStrengthMeter() {
                 />
                 <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="4 4" />
                 <Tooltip content={<StrengthTooltip flags={FLAGS} colors={COLORS} hidden={hiddenCurrencies} />} />
-                {sortedCurrencies.filter(ccy => !hiddenCurrencies.has(ccy)).map(ccy => (
+                {sortedCurrencies.map(ccy => (
                   <Line
                     key={ccy}
                     type="monotone"
@@ -171,20 +171,6 @@ export default function CurrencyStrengthMeter() {
                 ))}
               </LineChart>
             </ResponsiveContainer>
-          </div>
-          {/* Interactive legend — sorted by current strength */}
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-            {sortedCurrencies.map((ccy) => (
-              <button
-                key={ccy}
-                onClick={() => toggleCurrency(ccy)}
-                className="flex items-center gap-1 font-mono text-[8px] transition-opacity"
-                style={{ opacity: hiddenCurrencies.has(ccy) ? 0.3 : 1 }}
-              >
-                <span className="inline-block h-1.5 w-4 rounded-full" style={{ background: COLORS[ccy] }} />
-                {ccy}
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -247,7 +233,7 @@ function SkeletonMeter() {
         <div className="h-1.5 w-1.5 rounded-full bg-[var(--surface-2)] animate-pulse" />
         <div className="h-2 w-32 rounded bg-[var(--surface-2)] animate-pulse" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 lg:items-stretch">
         <div className="border-b border-[var(--border)] p-3 space-y-2 lg:border-b-0 lg:border-r">
           {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="flex items-center gap-2">

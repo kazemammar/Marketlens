@@ -173,9 +173,7 @@ function MoverCard({
           />
         </div>
         {pnlDollar != null && (
-          <span
-            className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-50"
-          >
+          <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-50">
             {fmtPnl(pnlDollar)}
           </span>
         )}

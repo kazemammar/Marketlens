@@ -62,7 +62,7 @@ function PositionCard({
   return (
     <Link
       href={`/asset/${position.asset_type}/${encodeURIComponent(position.symbol)}`}
-      className="flex min-w-[80px] flex-1 flex-col gap-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-2 transition-colors duration-150 hover:bg-[var(--surface-3,var(--surface-2))]"
+      className="flex w-[72px] flex-col gap-0.5 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 transition-colors duration-150 hover:bg-[var(--surface-3,var(--surface-2))]"
       style={{ borderLeft: `2px solid ${changeColor}60` }}
     >
       {/* Symbol + direction arrow */}
@@ -73,14 +73,14 @@ function PositionCard({
         >
           {position.direction === 'long' ? '▲' : '▼'}
         </span>
-        <span className="font-mono text-[11px] font-bold leading-none truncate text-[var(--text)]">
+        <span className="font-mono text-[10px] font-bold leading-none truncate text-[var(--text)]">
           {position.symbol}
         </span>
       </div>
 
       {/* Current price */}
       {hasQuote && quote.price > 0 && (
-        <span className="font-mono text-[10px] tabular-nums leading-none text-[var(--text-muted)]">
+        <span className="font-mono text-[9px] tabular-nums leading-none text-[var(--text-muted)]">
           {fmtPrice(quote.price, position.asset_type)}
         </span>
       )}
@@ -88,7 +88,7 @@ function PositionCard({
       {/* Day change % */}
       {hasQuote && (
         <span
-          className="font-mono text-[10px] font-bold tabular-nums leading-none"
+          className="font-mono text-[9px] font-bold tabular-nums leading-none"
           style={{ color: changeColor }}
         >
           {isUp ? '+' : ''}{changePercent.toFixed(2)}%

@@ -286,7 +286,7 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: 'var(--bg)' }}>
 
       {/* ══ SUMMARY BAR ══════════════════════════════════════════════════ */}
       <PortfolioSummary positions={activePositions} quotes={activeQuotes} />

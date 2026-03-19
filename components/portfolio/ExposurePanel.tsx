@@ -63,7 +63,7 @@ function PositionCard({
   return (
     <Link
       href={`/asset/${position.asset_type}/${encodeURIComponent(position.symbol)}`}
-      className="flex min-w-[64px] flex-col gap-0.5 rounded-md p-1.5"
+      className="flex min-w-[64px] flex-col gap-0.5 rounded p-1.5"
       style={{
         background:  `${typeColor}08`,
         border:      `1px solid ${typeColor}20`,
@@ -256,7 +256,7 @@ export default function ExposurePanel({
 
             {/* Net label pill */}
             <span
-              className="rounded-full px-2.5 py-0.5 font-mono text-[11px] font-bold tabular-nums"
+              className="rounded px-2.5 py-0.5 font-mono text-[11px] font-bold tabular-nums"
               style={{
                 color:      fillColor,
                 background: `${fillColor}12`,

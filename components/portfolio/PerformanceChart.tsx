@@ -53,7 +53,7 @@ function CustomTooltip({ active, payload, label }: any) {
     month: 'short', day: 'numeric', year: 'numeric',
   })
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-xl">
+    <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-black/50">
       <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{formatted}</p>
       <p className="font-mono text-[11px] font-bold" style={{ color: snap.returnPct >= 0 ? '#10b981' : '#ef4444' }}>
         {fmtPct(snap.returnPct)}
@@ -70,11 +70,11 @@ function CustomTooltip({ active, payload, label }: any) {
 function ChartSkeleton() {
   return (
     <div className="flex flex-col gap-3 px-3 pb-3 pt-2">
-      <div className="h-[180px] w-full animate-pulse rounded-md bg-[var(--surface-2)]" />
+      <div className="h-[180px] w-full animate-pulse rounded bg-[var(--surface-2)]" />
       <div className="flex gap-3">
-        <div className="h-[48px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
-        <div className="h-[48px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
-        <div className="h-[48px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
+        <div className="h-[48px] flex-1 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-[48px] flex-1 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-[48px] flex-1 animate-pulse rounded bg-[var(--surface-2)]" />
       </div>
     </div>
   )

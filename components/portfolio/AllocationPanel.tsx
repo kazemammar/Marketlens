@@ -317,7 +317,7 @@ export default function AllocationPanel({
               return (
                 <div
                   key={type}
-                  className="animate-fade-up flex items-center gap-1.5 rounded-md px-2 py-1"
+                  className="animate-fade-up flex items-center gap-1.5 rounded px-2 py-1"
                   style={{
                     background:        `${color}10`,
                     border:            `1px solid ${color}25`,

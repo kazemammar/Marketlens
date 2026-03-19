@@ -80,7 +80,7 @@ function Field({
           placeholder={placeholder}
           autoComplete={autoComplete}
           spellCheck={false}
-          className={`h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 ${isPassword ? 'pr-10 pl-3.5' : 'px-3.5'}`}
+          className={`h-11 w-full rounded border border-[var(--border)] bg-[var(--surface)] font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 ${isPassword ? 'pr-10 pl-3.5' : 'px-3.5'}`}
         />
         {isPassword && (
           <button
@@ -191,7 +191,7 @@ export default function AuthModal({
     >
       {/* Modal card */}
       <div
-        className="relative w-full mx-4 max-w-[420px] overflow-y-auto rounded-xl shadow-2xl"
+        className="relative w-full mx-4 max-w-[420px] overflow-y-auto rounded shadow-black/50"
         style={{
           backgroundColor: 'var(--surface)',
           border:          '1px solid var(--border)',
@@ -207,7 +207,7 @@ export default function AuthModal({
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-muted)] transition hover:bg-[var(--surface)] hover:text-[var(--text)]"
+          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded text-[var(--text-muted)] transition hover:bg-[var(--surface)] hover:text-[var(--text)]"
         >
           <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5" aria-hidden>
             <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -219,7 +219,7 @@ export default function AuthModal({
           <div className="mb-5 text-center">
             <div className="mb-3 flex items-center justify-center gap-2">
               <div
-                className="flex h-8 w-8 items-center justify-center rounded-lg"
+                className="flex h-8 w-8 items-center justify-center rounded"
                 style={{
                   background: 'rgba(16,185,129,0.12)',
                   border:     '1px solid rgba(16,185,129,0.25)',
@@ -246,7 +246,7 @@ export default function AuthModal({
 
           {/* Pill tab switcher */}
           <div
-            className="mb-5 flex rounded-lg p-1"
+            className="mb-5 flex rounded p-1"
             style={{ background: 'var(--surface)' }}
           >
             {(['signin', 'signup'] as const).map((t) => {
@@ -256,7 +256,7 @@ export default function AuthModal({
                   key={t}
                   type="button"
                   onClick={() => switchTab(t)}
-                  className={`flex-1 rounded-md py-2 font-mono text-[11px] font-semibold transition-all duration-150 ${
+                  className={`flex-1 rounded py-2 font-mono text-[11px] font-semibold transition-all duration-150 ${
                     active
                       ? 'bg-[var(--surface-2)] text-[var(--text)] shadow-sm'
                       : 'text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -294,7 +294,7 @@ export default function AuthModal({
               </div>
               <button
                 onClick={() => switchTab('signin')}
-                className="mt-1 flex h-10 w-full items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] font-mono text-[12px] text-[var(--text-muted)] transition hover:border-emerald-500/30 hover:text-[var(--text)]"
+                className="mt-1 flex h-10 w-full items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] font-mono text-[12px] text-[var(--text-muted)] transition hover:border-emerald-500/30 hover:text-[var(--text)]"
               >
                 ← Back to Sign In
               </button>
@@ -306,7 +306,7 @@ export default function AuthModal({
               <button
                 type="button"
                 onClick={signInWithGoogle}
-                className="flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] font-mono text-[12px] font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]"
+                className="flex h-11 w-full items-center justify-center gap-3 rounded border border-[var(--border)] bg-[var(--surface)] font-mono text-[12px] font-medium text-[var(--text)] transition-colors hover:bg-[var(--surface-2)]"
               >
                 <GoogleIcon />
                 Continue with Google
@@ -350,8 +350,8 @@ export default function AuthModal({
               )}
 
               {error && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
-                  <span className="mt-px text-sm text-red-400" aria-hidden>⚠</span>
+                <div className="flex items-start gap-2.5 rounded border border-red-500/20 bg-red-500/5 px-4 py-3">
+                  <span className="mt-px font-mono text-[10px] text-red-400" aria-hidden>⚠</span>
                   <p className="font-mono text-[11px] leading-relaxed text-red-400">{error}</p>
                 </div>
               )}
@@ -359,7 +359,7 @@ export default function AuthModal({
               <button
                 type="submit"
                 disabled={state === 'busy'}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 font-mono text-sm font-semibold text-[var(--text)] transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded bg-emerald-600 font-mono font-mono text-[12px] font-semibold text-[var(--text)] transition-colors hover:bg-emerald-500 active:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {state === 'busy' && (
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

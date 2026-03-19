@@ -325,7 +325,7 @@ export default function RiskAlerts({
               return (
                 <div
                   key={i}
-                  className="animate-fade-up mb-2 overflow-hidden rounded-lg"
+                  className="animate-fade-up mb-2 overflow-hidden rounded"
                   style={{
                     borderTopWidth:    '1px',
                     borderRightWidth:  '1px',

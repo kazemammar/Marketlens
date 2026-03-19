@@ -130,7 +130,7 @@ export default function GlobalSearch({
 
       {/* ── Input ── */}
       <div
-        className={`flex h-10 items-center gap-2.5 rounded-lg border px-3 transition-colors ${
+        className={`flex h-10 items-center gap-2.5 rounded border px-3 transition-colors ${
           open
             ? 'border-[var(--accent)]/60 bg-[var(--surface)]'
             : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)]/30'
@@ -181,7 +181,7 @@ export default function GlobalSearch({
       {/* ── Dropdown ── */}
       {showDropdown && (
         <div
-          className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-2xl shadow-black/50"
+          className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] shadow-black/50"
           style={{ maxHeight: '360px', overflowY: 'auto' }}
           role="listbox"
         >

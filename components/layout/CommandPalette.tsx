@@ -104,7 +104,7 @@ export default function CommandPalette({
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="animate-palette-in w-full max-w-xl overflow-hidden rounded-xl shadow-2xl"
+        className="animate-palette-in w-full max-w-xl overflow-hidden rounded shadow-black/50"
         style={{
           background: 'var(--surface)',
           border: '1px solid rgba(16,185,129,0.2)',
@@ -124,7 +124,7 @@ export default function CommandPalette({
             onKeyDown={handleKeyDown}
             placeholder="Search markets — stocks, crypto, forex…"
             autoComplete="off"
-            className="flex-1 bg-transparent font-mono text-[13px] text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
+            className="flex-1 bg-transparent font-mono text-[12px] text-[var(--text)] outline-none placeholder:text-[var(--text-muted)]"
           />
           {loading && (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border border-[var(--accent)] border-t-transparent" />

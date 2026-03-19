@@ -20,7 +20,7 @@ export default function StockSearch() {
   return (
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
       <div
-        className="flex h-9 items-center gap-2 rounded-md px-3"
+        className="flex h-9 items-center gap-2 rounded px-3"
         style={{ background: 'var(--surface)', border: '1px solid var(--border)', minWidth: 220 }}
       >
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--text-muted)' }} aria-hidden>
@@ -49,7 +49,7 @@ export default function StockSearch() {
       </div>
       <button
         type="submit"
-        className="flex h-9 items-center rounded-md px-3 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--text)] transition"
+        className="flex h-9 items-center rounded px-3 font-mono text-[10px] font-bold uppercase tracking-[0.08em] text-[var(--text)] transition"
         style={{ background: 'var(--accent)', opacity: value.trim() ? 1 : 0.4 }}
         disabled={!value.trim()}
       >

@@ -536,7 +536,7 @@ export default function GeoMap() {
 
         {/* Layer toggles — top right */}
         <div className="absolute right-1.5 top-1.5 z-20 flex flex-col gap-px">
-          <div className="rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-xl">
+          <div className="rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50">
             <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Layers</p>
             {LAYER_CFG.map(({ key, label, dot }) => (
               <label key={key} className="flex cursor-pointer items-center gap-1.5 py-0.5">
@@ -555,7 +555,7 @@ export default function GeoMap() {
 
         {/* Pipeline legend — bottom left */}
         {layers.pipelines && (
-          <div className="absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-xl">
+          <div className="absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50">
             <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Pipelines</p>
             {PIPELINE_LEGEND.map((p) => (
               <div key={p.name} className="flex items-center gap-1.5 py-0.5">
@@ -569,7 +569,7 @@ export default function GeoMap() {
 
         {/* Ship legend — bottom center */}
         {layers.ships && shipData && (
-          <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded border border-white/10 bg-black/60 px-2.5 py-1.5 backdrop-blur-md shadow-xl">
+          <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded border border-white/10 bg-black/60 px-2.5 py-1.5 backdrop-blur-md shadow-black/50">
             <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Vessels by Chokepoint</p>
             <div className="flex items-center gap-3">
               {[

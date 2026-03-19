@@ -29,7 +29,7 @@ const SENTIMENT_STYLE = {
 }
 
 const LABEL_CLS    = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[80px] shrink-0'
-const CONTENT_CLS  = 'font-mono text-[12px] sm:text-[13px] leading-relaxed'
+const CONTENT_CLS  = 'font-mono text-[10px] sm:text-[11px] leading-relaxed'
 
 // ─── Component ────────────────────────────────────────────────────────────
 
@@ -220,7 +220,7 @@ export default function PortfolioBrief({
           {badges}
 
           <div className="min-w-0 flex-1">
-            <p className="font-mono text-[12px] sm:text-[13px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
+            <p className="font-mono text-[10px] sm:text-[11px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
               {brief.brief}
             </p>
 

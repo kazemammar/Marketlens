@@ -159,7 +159,7 @@ export default function MarketTabs({
               onClick={() => handleTabClick(tab.id)}
               className={`
                 flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-1
-                text-sm font-medium transition-colors
+                font-mono text-[11px] font-medium transition-colors
                 ${isActive
                   ? 'border-[var(--accent)] text-[var(--accent)]'
                   : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
@@ -273,7 +273,7 @@ function SkeletonGrid() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+          className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-4"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-1.5">
@@ -297,22 +297,22 @@ function SkeletonGrid() {
 
 function EmptyState({ tab }: { tab: AssetType }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] py-20 text-center">
+    <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
       <p className="text-3xl">📭</p>
-      <p className="mt-3 text-sm font-medium text-[var(--text)]">No {tab} data available</p>
-      <p className="mt-1 text-xs text-[var(--text-muted)]">Check your API keys or try again.</p>
+      <p className="mt-3 font-mono text-[11px] font-medium text-[var(--text)]">No {tab} data available</p>
+      <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">Check your API keys or try again.</p>
     </div>
   )
 }
 
 function ErrorState({ tab, onRetry }: { tab: AssetType; onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-red-500/30 py-20 text-center">
+    <div className="flex flex-col items-center justify-center rounded border border-dashed border-red-500/30 py-20 text-center">
       <p className="text-3xl">⚠️</p>
-      <p className="mt-3 text-sm font-medium text-[var(--text)]">Failed to load {tab} data</p>
+      <p className="mt-3 font-mono text-[11px] font-medium text-[var(--text)]">Failed to load {tab} data</p>
       <button
         onClick={onRetry}
-        className="mt-3 rounded-lg bg-[var(--surface-2)] px-4 py-1.5 text-xs text-[var(--text)] transition hover:bg-[var(--accent-dim)] hover:text-[var(--accent)]"
+        className="mt-3 rounded bg-[var(--surface-2)] px-4 py-1.5 font-mono text-[10px] text-[var(--text)] transition hover:bg-[var(--accent-dim)] hover:text-[var(--accent)]"
       >
         Retry
       </button>

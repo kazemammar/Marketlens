@@ -95,7 +95,7 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
 
   return (
     <div
-      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded-md cursor-default"
+      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded cursor-default"
       style={{
         borderLeft:        `2px solid ${cfg.borderHex}90`,
         background:        `linear-gradient(to right, ${cfg.borderHex}08, transparent 70%)`,
@@ -160,7 +160,7 @@ function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
 
   return (
     <div
-      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded-md cursor-default"
+      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded cursor-default"
       style={{
         borderLeft:        `2px solid ${colorHex}90`,
         background:        `linear-gradient(to right, ${colorHex}08, transparent 70%)`,

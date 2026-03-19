@@ -42,7 +42,7 @@ function CustomTooltip({ active, payload, label }: any) {
     month: 'short', day: 'numeric', year: 'numeric',
   })
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-xl shadow-black/50">
+    <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-black/50">
       <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{date}</p>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((p: any) => {
@@ -65,11 +65,11 @@ function CustomTooltip({ active, payload, label }: any) {
 function ChartSkeleton() {
   return (
     <div className="flex flex-col gap-3 px-3 pb-3 pt-2">
-      <div className="h-[220px] w-full animate-pulse rounded-md bg-[var(--surface-2)]" />
+      <div className="h-[220px] w-full animate-pulse rounded bg-[var(--surface-2)]" />
       <div className="flex gap-3">
-        <div className="h-[64px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
-        <div className="h-[64px] w-20 animate-pulse rounded-md bg-[var(--surface-2)]" />
-        <div className="h-[64px] flex-1 animate-pulse rounded-md bg-[var(--surface-2)]" />
+        <div className="h-[64px] flex-1 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-[64px] w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+        <div className="h-[64px] flex-1 animate-pulse rounded bg-[var(--surface-2)]" />
       </div>
     </div>
   )
@@ -96,7 +96,7 @@ function SpyOnlyCard({ spyReturn, rangeFull }: { spyReturn: number; rangeFull: s
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-6">
       <div
-        className="flex w-full max-w-sm flex-col gap-1 rounded-lg border border-[var(--border)] p-4"
+        className="flex w-full max-w-sm flex-col gap-1 rounded border border-[var(--border)] p-4"
         style={{ borderLeftWidth: '3px', borderLeftColor: color }}
       >
         <div className="flex items-center justify-between">
@@ -386,7 +386,7 @@ export default function BenchmarkChart({
 
             {/* CENTER — Diff */}
             <div className="flex flex-col items-center justify-center gap-1 border-y border-[var(--border)] p-4 text-center sm:border-x sm:border-y-0 sm:px-5">
-              <div className="rounded-lg px-3 py-2" style={{ background: `rgba(${diffRgb}, 0.10)` }}>
+              <div className="rounded px-3 py-2" style={{ background: `rgba(${diffRgb}, 0.10)` }}>
                 <span
                   className="font-mono text-[15px] font-bold tabular-nums leading-none"
                   style={{ color: diffColor, textShadow: `0 0 12px rgba(${diffRgb}, 0.4)` }}

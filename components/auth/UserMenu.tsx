@@ -33,7 +33,7 @@ export default function UserMenu() {
       <>
         <button
           onClick={() => setModalOpen(true)}
-          className="flex h-8 items-center gap-1.5 rounded-md px-2.5 font-mono text-[10px] font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+          className="flex h-8 items-center gap-1.5 rounded px-2.5 font-mono text-[10px] font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
           style={{ border: '1px solid var(--border)' }}
         >
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" aria-hidden>
@@ -71,7 +71,7 @@ export default function UserMenu() {
 
       {/* Dropdown */}
       {dropdownOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-[var(--border)] shadow-2xl shadow-black/60"
+        <div className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded border border-[var(--border)] shadow-black/60"
           style={{ background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}
         >
           {/* Email header */}

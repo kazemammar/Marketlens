@@ -39,7 +39,7 @@ export default function AssetDataSnapshot({
   assetType:   string
 }) {
   return (
-    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 space-y-2">
+    <div className="rounded border border-[var(--border)] bg-[var(--surface-2)] p-3 space-y-2">
       {dataLoading ? (
         <div className="flex items-center gap-2">
           <div className="h-6 w-20 animate-pulse rounded bg-[var(--surface-3)]" />

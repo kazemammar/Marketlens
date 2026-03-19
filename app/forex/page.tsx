@@ -40,7 +40,7 @@ export default async function ForexPage() {
         </div>
 
         {/* Currency Pairs panel */}
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+        <div className="overflow-hidden rounded border border-[var(--border)]">
           {/* Panel header */}
           <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-2">
             <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>

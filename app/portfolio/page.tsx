@@ -105,7 +105,7 @@ function SectionHeader({
   right?: React.ReactNode
 }) {
   return (
-    <div className="flex items-center gap-3 border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 sm:px-4">
+    <div className="flex items-center gap-2 px-3 py-3 sm:px-4">
       <div className="flex items-center gap-2">
         {icon}
         <span
@@ -324,39 +324,45 @@ export default function PortfolioPage() {
           />
 
           {/* ── Row 1: Day Movers | Allocation ──────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:min-h-[200px]">
-            <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:border-r border-[var(--border)]">
+          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <DayMovers positions={activePositions} quotes={activeQuotes} />
             </div>
-            <div className="min-w-0 overflow-hidden flex flex-col">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <AllocationPanel positions={activePositions} quotes={activeQuotes} />
             </div>
           </div>
 
           {/* ── Row 2: Risk Alerts | Exposure ───────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:min-h-[180px]">
-            <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:border-r border-[var(--border)]">
+          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <RiskAlerts positions={activePositions} quotes={activeQuotes} />
             </div>
-            <div className="min-w-0 overflow-hidden flex flex-col">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <ExposurePanel positions={activePositions} quotes={activeQuotes} />
             </div>
           </div>
 
           {/* ── Benchmark Comparison ─────────────────────────────────────── */}
-          <div className="border-b border-[var(--border)] bg-[var(--surface)]">
-            <BenchmarkChart {...allTimeStats} />
+          <div className="px-3 sm:px-4 py-2">
+            <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+              <BenchmarkChart {...allTimeStats} />
+            </div>
           </div>
 
           {/* ── Performance History ──────────────────────────────────────── */}
-          <div className="border-b border-[var(--border)] bg-[var(--surface)]">
-            <PerformanceChart />
+          <div className="px-3 sm:px-4 py-2">
+            <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+              <PerformanceChart />
+            </div>
           </div>
 
           {/* ── Earnings Calendar ────────────────────────────────────────── */}
           {activePositions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
-            <div className="border-b border-[var(--border)] bg-[var(--surface)]">
-              <EarningsCalendar />
+            <div className="px-3 sm:px-4 py-2">
+              <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+                <EarningsCalendar />
+              </div>
             </div>
           )}
 
@@ -391,7 +397,8 @@ export default function PortfolioPage() {
           />
 
           {/* ── Positions table ──────────────────────────────────────────── */}
-          <div className="border-b border-[var(--border)]">
+          <div className="px-3 sm:px-4 py-2">
+            <div className="rounded border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
             <PositionsTable
               positions={activePositions}
               quotes={activeQuotes}
@@ -420,6 +427,7 @@ export default function PortfolioPage() {
                 setAddOpen(true)
               }}
             />
+            </div>
           </div>
 
           {/* ── Section header: PORTFOLIO NEWS ───────────────────────────── */}

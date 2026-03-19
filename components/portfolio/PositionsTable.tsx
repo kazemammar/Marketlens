@@ -654,7 +654,7 @@ export default function PositionsTable({
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
+            <tr className="border-b border-[var(--border)]">
               <SortTh label="Symbol"    sortKey="symbol"        current={sortKey} dir={sortDir} onSort={handleSort} />
               <SortTh label="Type"      sortKey="type"          current={sortKey} dir={sortDir} onSort={handleSort} />
               <SortTh label="Direction" sortKey="direction"     current={sortKey} dir={sortDir} onSort={handleSort} />

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import AssetCard from '@/components/dashboard/AssetCard'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import CurrencyStrengthMeter from '@/components/forex/CurrencyStrengthMeter'
 import { getForexCards } from '@/lib/api/forex'
 
 export const metadata: Metadata = {
@@ -31,6 +32,11 @@ export default async function ForexPage() {
             placeholder="Search currency pairs, e.g. EUR/USD..."
             className="w-full max-w-lg"
           />
+        </div>
+
+        {/* Currency Strength Meter */}
+        <div className="mb-6">
+          <CurrencyStrengthMeter />
         </div>
 
         {/* Grid */}

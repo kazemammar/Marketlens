@@ -1,0 +1,231 @@
+'use client'
+
+import { useState } from 'react'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+} from 'recharts'
+import { useFetch } from '@/lib/hooks/useFetch'
+import type { CurrencyStrength } from '@/app/api/forex/strength/route'
+
+const FLAGS: Record<string, string> = {
+  USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵',
+  CHF: '🇨🇭', AUD: '🇦🇺', CAD: '🇨🇦', NZD: '🇳🇿', CNY: '🇨🇳',
+}
+
+const COLORS: Record<string, string> = {
+  USD: '#3b82f6', EUR: '#10b981', GBP: '#f59e0b', JPY: '#ef4444',
+  CHF: '#8b5cf6', AUD: '#06b6d4', CAD: '#f97316', NZD: '#84cc16', CNY: '#ec4899',
+}
+
+function fmt(score: number): string {
+  return (score >= 0 ? '+' : '') + score.toFixed(3) + '%'
+}
+
+export default function CurrencyStrengthMeter() {
+  const { data, loading, error } = useFetch<{ strengths: CurrencyStrength[]; asOf: string }>(
+    '/api/forex/strength',
+    { refreshInterval: 5 * 60_000 },
+  )
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set())
+
+  const strengths = data?.strengths ?? []
+  const maxAbs = Math.max(...strengths.map(s => Math.abs(s.score)), 0.001)
+
+  // Build chart data: array of { date, USD: score, EUR: score, ... }
+  const chartData = (() => {
+    if (!strengths.length) return []
+    const dateMap: Record<string, Record<string, number>> = {}
+    for (const s of strengths) {
+      for (const point of s.trend) {
+        if (!dateMap[point.date]) dateMap[point.date] = {}
+        dateMap[point.date][s.currency] = point.score
+      }
+    }
+    return Object.entries(dateMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, scores]) => ({
+        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+        ...scores,
+      }))
+  })()
+
+  function toggleCurrency(ccy: string) {
+    setHiddenCurrencies(prev => {
+      const next = new Set(prev)
+      if (next.has(ccy)) next.delete(ccy)
+      else next.add(ccy)
+      return next
+    })
+  }
+
+  if (loading) return <SkeletonMeter />
+  if (error || !strengths.length) return null
+
+  return (
+    <div className="border border-[var(--border)] bg-[var(--surface)]">
+      {/* Panel header */}
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+        <svg className="h-3 w-3 text-[var(--accent)] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path d="M3 6l9-4 9 4v6c0 5-4.5 9-9 10C7.5 21 3 17 3 12V6z" />
+        </svg>
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          Currency Strength
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+        <span className="font-mono text-[8px] text-[var(--text-muted)]">7-DAY CROSS-RATE</span>
+      </div>
+
+      {/* Bars + Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        {/* Strength bars */}
+        <div className="border-b border-[var(--border)] p-3 lg:border-b-0 lg:border-r">
+          <div className="space-y-1.5">
+            {strengths.map((s) => {
+              const pct   = (Math.abs(s.score) / maxAbs) * 50
+              const isPos = s.score >= 0
+              return (
+                <div key={s.currency} className="flex items-center gap-2">
+                  {/* Rank */}
+                  <span className="w-3 shrink-0 font-mono text-[9px] text-[var(--text-muted)]">
+                    {s.rank}
+                  </span>
+                  {/* Flag + code */}
+                  <span className="w-12 shrink-0 font-mono text-[10px] font-bold text-[var(--text)]">
+                    {FLAGS[s.currency]} {s.currency}
+                  </span>
+                  {/* Bar visualization */}
+                  <div className="relative flex h-3 flex-1 items-center">
+                    {/* Center line */}
+                    <div className="absolute inset-y-0 left-1/2 w-px bg-[var(--border)]" />
+                    {/* Bar */}
+                    {isPos ? (
+                      <div
+                        className="absolute inset-y-0.5 rounded-sm"
+                        style={{
+                          left: '50%',
+                          width: `${pct}%`,
+                          background: '#10b981',
+                          opacity: 0.85,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-y-0.5 rounded-sm"
+                        style={{
+                          right: '50%',
+                          width: `${pct}%`,
+                          background: '#ef4444',
+                          opacity: 0.85,
+                        }}
+                      />
+                    )}
+                  </div>
+                  {/* Score */}
+                  <span
+                    className="w-16 shrink-0 text-right font-mono text-[9px] font-semibold tabular-nums"
+                    style={{ color: isPos ? '#10b981' : '#ef4444' }}
+                  >
+                    {fmt(s.score)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Trend chart */}
+        <div className="p-3">
+          <div className="h-[220px] sm:h-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 8, fontFamily: 'monospace', fill: 'var(--text-muted)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 8, fontFamily: 'monospace', fill: 'var(--text-muted)' }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v: number) => `${v.toFixed(1)}%`}
+                />
+                <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="4 4" />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 4,
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                  }}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  formatter={(value: any, name: any) => [
+                    typeof value === 'number' ? fmt(value as number) : String(value ?? ''),
+                    `${FLAGS[String(name)] ?? ''} ${String(name ?? '')}`,
+                  ]}
+                  labelStyle={{ color: 'var(--text-muted)', fontSize: 9 }}
+                />
+                {Object.entries(COLORS).map(([ccy, color]) =>
+                  !hiddenCurrencies.has(ccy) && (
+                    <Line
+                      key={ccy}
+                      type="monotone"
+                      dataKey={ccy}
+                      stroke={color}
+                      strokeWidth={1.5}
+                      dot={false}
+                      activeDot={{ r: 3 }}
+                    />
+                  ),
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          {/* Interactive legend */}
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            {Object.entries(COLORS).map(([ccy, color]) => (
+              <button
+                key={ccy}
+                onClick={() => toggleCurrency(ccy)}
+                className="flex items-center gap-1 font-mono text-[8px] transition-opacity"
+                style={{ opacity: hiddenCurrencies.has(ccy) ? 0.3 : 1 }}
+              >
+                <span className="inline-block h-1.5 w-4 rounded-full" style={{ background: color }} />
+                {ccy}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SkeletonMeter() {
+  return (
+    <div className="border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+        <div className="h-3 w-3 rounded bg-[var(--surface-2)] animate-pulse" />
+        <div className="h-2 w-32 rounded bg-[var(--surface-2)] animate-pulse" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        <div className="border-b border-[var(--border)] p-3 space-y-2 lg:border-b-0 lg:border-r">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="h-2 w-3 rounded bg-[var(--surface-2)] animate-pulse" />
+              <div className="h-2 w-12 rounded bg-[var(--surface-2)] animate-pulse" />
+              <div className="h-2 flex-1 rounded bg-[var(--surface-2)] animate-pulse" />
+              <div className="h-2 w-10 rounded bg-[var(--surface-2)] animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="p-3">
+          <div className="h-[220px] rounded bg-[var(--surface-2)] animate-pulse" />
+        </div>
+      </div>
+    </div>
+  )
+}

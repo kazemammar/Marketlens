@@ -4,6 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
+import type { CurrencyStrength } from '@/app/api/forex/strength/route'
+
+const FLAGS: Record<string, string> = {
+  USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', JPY: '🇯🇵',
+  CHF: '🇨🇭', AUD: '🇦🇺', CAD: '🇨🇦', NZD: '🇳🇿', CNY: '🇨🇳',
+}
 
 // Shows the ECB publication date as a human-readable label.
 // ECB reference rates are published once per trading day at ~16:00 CET.
@@ -58,6 +64,10 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
 
 export default function FXMonitor() {
   const { data, loading } = useFetch<AssetCardData[]>('/api/market?tab=forex', { refreshInterval: 30 * 60_000 })
+  const { data: strengthData } = useFetch<{ strengths: CurrencyStrength[] }>(
+    '/api/forex/strength',
+    { refreshInterval: 5 * 60_000 },
+  )
   const pairs = data ?? []
   const [tooltipOpen, setTooltipOpen] = useState(false)
   // Use ECB publication date from the data itself — more accurate than client clock
@@ -220,37 +230,44 @@ export default function FXMonitor() {
               )
             })}
 
-        {/* Currency strength mini-ranking */}
-        {!loading && pairs.length > 0 && (() => {
-          const sorted   = [...pairs].sort((a, b) => b.changePercent - a.changePercent)
-          const strongest = sorted[0]
-          const weakest   = sorted[sorted.length - 1]
-          if (!strongest || !weakest) return null
+        {/* Currency Strength compact ranking */}
+        {strengthData?.strengths && strengthData.strengths.length > 0 && (() => {
+          const strengths = strengthData.strengths
+          const maxAbs = Math.max(...strengths.map(s => Math.abs(s.score)), 0.001)
           return (
             <div className="border-t border-[var(--border)] px-3 py-2">
               <div className="mb-1.5 flex items-baseline justify-between">
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-60">
-                  Today&apos;s Move
+                  Currency Strength
                 </span>
                 <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-30">
-                  % vs prev close
+                  7-day cross-rate
                 </span>
               </div>
-              <div className="flex gap-1.5">
-                <Link href={`/asset/forex/${encodeURIComponent(strongest.symbol)}`} className="group flex-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 transition-all duration-150 hover:border-[var(--accent)]/30 hover:bg-[var(--surface-3)]">
-                  <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Strongest</p>
-                  <p className="font-mono text-[10px] font-bold text-[var(--text)]">{strongest.symbol}</p>
-                  <p className="font-mono text-[9px] tabular-nums" style={{ color: strongest.changePercent >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}>
-                    {strongest.changePercent >= 0 ? '+' : ''}{strongest.changePercent.toFixed(2)}%
-                  </p>
-                </Link>
-                <Link href={`/asset/forex/${encodeURIComponent(weakest.symbol)}`} className="group flex-1 rounded border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1.5 transition-all duration-150 hover:border-[var(--accent)]/30 hover:bg-[var(--surface-3)]">
-                  <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--text-muted)] opacity-60">Weakest</p>
-                  <p className="font-mono text-[10px] font-bold text-[var(--text)]">{weakest.symbol}</p>
-                  <p className="font-mono text-[9px] tabular-nums" style={{ color: weakest.changePercent >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}>
-                    {weakest.changePercent >= 0 ? '+' : ''}{weakest.changePercent.toFixed(2)}%
-                  </p>
-                </Link>
+              <div className="space-y-0.5">
+                {strengths.map((s) => {
+                  const pct   = (Math.abs(s.score) / maxAbs) * 50
+                  const isPos = s.score >= 0
+                  return (
+                    <div key={s.currency} className="flex items-center gap-1.5">
+                      <span className="w-2.5 shrink-0 font-mono text-[7px] text-[var(--text-muted)]">{s.rank}</span>
+                      <span className="w-10 shrink-0 font-mono text-[8px] font-bold text-[var(--text)]">
+                        {FLAGS[s.currency]} {s.currency}
+                      </span>
+                      <div className="relative flex h-2.5 flex-1 items-center">
+                        <div className="absolute inset-y-0 left-1/2 w-px bg-[var(--border)]" />
+                        {isPos ? (
+                          <div className="absolute inset-y-0.5 rounded-sm" style={{ left: '50%', width: `${pct}%`, background: '#10b981', opacity: 0.8 }} />
+                        ) : (
+                          <div className="absolute inset-y-0.5 rounded-sm" style={{ right: '50%', width: `${pct}%`, background: '#ef4444', opacity: 0.8 }} />
+                        )}
+                      </div>
+                      <span className="w-12 shrink-0 text-right font-mono text-[8px] tabular-nums" style={{ color: isPos ? '#10b981' : '#ef4444' }}>
+                        {(s.score >= 0 ? '+' : '') + s.score.toFixed(3) + '%'}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )

@@ -15,7 +15,7 @@ import { AssetCardData } from '@/lib/utils/types'
 
 const FRANKFURTER_BASE  = 'https://api.frankfurter.app'
 const FX_CACHE_KEY      = 'forex:frankfurter:v2'
-const FX_CURRENCIES     = ['EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY']
+export const FX_CURRENCIES     = ['EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY']
 
 // ─── Raw API response shapes ──────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ interface FrankfurterRangeResponse {
 
 // ─── Internal types ───────────────────────────────────────────────────────
 
-interface FxRateSnapshot {
+export interface FxRateSnapshot {
   current:     Record<string, number>  // currency → USD-based rate
   previous:    Record<string, number>  // previous trading day (may be empty on first ever call)
   currentDate: string                  // YYYY-MM-DD of the current rates
@@ -65,6 +65,14 @@ async function fetchFxSnapshot(): Promise<FxRateSnapshot> {
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────
+
+/**
+ * Returns the raw FxRateSnapshot (all 7-day rate data) for use in the
+ * currency strength meter and other consumers that need cross-rate history.
+ */
+export async function getForexSnapshot(): Promise<FxRateSnapshot> {
+  return cachedFetch<FxRateSnapshot>(FX_CACHE_KEY, TTL.FOREX, fetchFxSnapshot)
+}
 
 /**
  * Returns AssetCardData for all DEFAULT_FOREX_PAIRS with real previous-

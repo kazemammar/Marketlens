@@ -109,8 +109,7 @@ function SectionHeader({
       <div className="flex items-center gap-2">
         {icon}
         <span
-          className="truncate font-mono font-semibold uppercase text-[var(--text)]"
-          style={{ fontSize: '11px', letterSpacing: '0.05em' }}
+          className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]"
         >
           {label}
         </span>

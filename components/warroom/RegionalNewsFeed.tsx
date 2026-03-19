@@ -100,7 +100,7 @@ export default function RegionalNewsFeed() {
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2 shrink-0">
         <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Regional Feed
         </span>
         {!loading && (

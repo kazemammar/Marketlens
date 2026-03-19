@@ -87,7 +87,7 @@ export default function StatusBar() {
       className="flex h-6 shrink-0 items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide border-t border-[var(--border)] px-4"
       style={{ background: 'var(--bg)' }}
     >
-      <span className="shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] opacity-40">
+      <span className="shrink-0 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)] opacity-40">
         Data
       </span>
       <div className="flex items-center gap-2 sm:gap-3">

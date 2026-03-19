@@ -117,7 +117,7 @@ export default function MarketRadar({
             <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
             <circle cx="8" cy="8" r="1" fill="currentColor"/>
           </svg>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Market Radar
           </span>
         </div>

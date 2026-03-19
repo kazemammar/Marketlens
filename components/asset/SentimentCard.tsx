@@ -56,7 +56,7 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
 
   return (
     <section>
-      <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">AI Sentiment</h2>
+      <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">AI Sentiment</h2>
 
       <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-3 space-y-3">
         {loading && (

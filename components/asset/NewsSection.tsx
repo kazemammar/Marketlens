@@ -46,7 +46,7 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
   if (articles.length === 0) {
     return (
       <section>
-        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Latest News</h2>
+        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Latest News</h2>
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-10 text-center">
           <p className="text-sm text-[var(--text-muted)]">No recent news found.</p>
         </div>
@@ -56,7 +56,7 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
 
   return (
     <section>
-      <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+      <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Latest News
       </h2>
       <div className="flex flex-col divide-y divide-[var(--border)] rounded border border-[var(--border)] bg-[var(--surface)]">

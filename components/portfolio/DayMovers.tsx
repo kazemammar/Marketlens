@@ -28,7 +28,7 @@ function PanelHeader() {
       <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
         <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-      <span className="font-mono font-bold uppercase tracking-[0.14em] text-[var(--text)]" style={{ fontSize: '9px' }}>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Day&apos;s Movers
       </span>
     </div>
@@ -50,7 +50,7 @@ function ColHeader({ isWinner }: { isWinner: boolean }) {
         )}
       </svg>
       <span
-        className="font-mono text-[9px] font-semibold uppercase tracking-wide"
+        className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em]"
         style={{ color, textShadow: `0 0 8px ${color}60` }}
       >
         {label}

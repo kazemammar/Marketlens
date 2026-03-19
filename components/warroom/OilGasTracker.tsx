@@ -31,7 +31,7 @@ export default function OilGasTracker() {
           <path d="M8 2C5.5 2 4 4 4 6c0 2.5 2 4 4 7 2-3 4-4.5 4-7 0-2-1.5-4-4-4z" fill="currentColor" opacity=".6"/>
           <path d="M8 5v4M6.5 7.5L8 9l1.5-1.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
         </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Energy &amp; Metals
         </span>
       </div>

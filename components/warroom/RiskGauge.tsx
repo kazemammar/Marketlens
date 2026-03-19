@@ -635,7 +635,7 @@ export default function RiskGauge() {
           <line x1="8" y1="7" x2="8" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
           <circle cx="8" cy="12" r="0.7" fill="currentColor"/>
         </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Risk Gauge
         </span>
         <div className="flex-1" />
@@ -699,7 +699,7 @@ export default function RiskGauge() {
                   >
                     {data.score}
                   </span>
-                  <span className="mt-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: scoreColor }}>
+                  <span className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em]" style={{ color: scoreColor }}>
                     {LEVEL_LABEL[data.level] ?? data.level}
                   </span>
                 </div>

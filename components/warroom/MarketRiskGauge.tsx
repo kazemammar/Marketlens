@@ -120,7 +120,7 @@ export default function MarketRiskGauge() {
           <line x1="8" y1="7" x2="8" y2="10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
           <circle cx="8" cy="12" r="0.7" fill="currentColor"/>
         </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Market Risk Score
         </span>
       </div>

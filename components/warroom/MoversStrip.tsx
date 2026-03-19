@@ -133,7 +133,7 @@ function MoverPanel({ items, isGainer, loading }: {
       {/* Panel sub-header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-1.5">
         <span
-          className="font-mono text-[9px] font-bold uppercase tracking-[0.14em]"
+          className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em]"
           style={{ color: colorHex }}
         >
           {label}
@@ -207,7 +207,7 @@ export default function MoversStrip() {
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="font-mono font-semibold uppercase text-[var(--text)]" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Top Movers
           </span>
         </div>

@@ -55,7 +55,7 @@ function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
         <circle cx="8" cy="10" r="0.8" fill="currentColor"/>
         <circle cx="10.5" cy="10" r="0.8" fill="currentColor"/>
       </svg>
-      <span className="font-mono font-bold uppercase tracking-[0.14em] text-[var(--text)]" style={{ fontSize: '9px' }}>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Earnings Calendar
       </span>
       {upcomingCount > 0 && (
@@ -76,7 +76,7 @@ function ColHeader({ label, icon }: { label: string; icon: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-1.5">
       {icon}
-      <span className="font-mono text-[9px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+      <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
         {label}
       </span>
     </div>

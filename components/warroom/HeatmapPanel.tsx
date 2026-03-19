@@ -97,7 +97,7 @@ export default function HeatmapPanel({ stocks = [] }: { stocks?: AssetCardData[]
           <rect x="9" y="6.5" width="6" height="8.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
           <rect x="1" y="9" width="6" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
         </svg>
-        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           S&amp;P 500 Heatmap
         </span>
       </div>

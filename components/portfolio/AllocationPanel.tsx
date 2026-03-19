@@ -125,7 +125,7 @@ function PanelHeader() {
         <rect x="6" y="6" width="3" height="9" rx="0.5" fill="currentColor" opacity="0.8"/>
         <rect x="11" y="2" width="3" height="13" rx="0.5" fill="currentColor"/>
       </svg>
-      <span className="font-mono font-bold uppercase tracking-[0.14em] text-[var(--text)]" style={{ fontSize: '9px' }}>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Allocation
       </span>
     </div>

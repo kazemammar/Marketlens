@@ -106,7 +106,7 @@ export default function PredictionMarkets() {
             <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
             <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Prediction Markets
           </span>
           <span className="rounded border border-[var(--border)] px-1.5 py-px font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">

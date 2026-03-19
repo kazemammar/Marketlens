@@ -201,7 +201,7 @@ export default function PerformanceChart() {
       <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#10b981' }} aria-hidden>
         <polyline points="1,13 4,8 7,10 10,5 15,3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
-      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text)]">
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Performance
       </span>
       <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">Portfolio history</span>

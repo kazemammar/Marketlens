@@ -84,7 +84,7 @@ export default function FXMonitor() {
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
             <path d="M2 8h3l2-5 3 10 2-5h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             FX Monitor
           </span>
           {/* Indicator dot — ECB reference rates, daily publication */}

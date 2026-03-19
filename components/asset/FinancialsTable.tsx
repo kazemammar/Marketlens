@@ -43,7 +43,7 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
   if (!hasFinancials && !hasMetrics) {
     return (
       <section>
-        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Financials</h2>
+        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Financials</h2>
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-8 text-center">
           <p className="text-sm text-[var(--text-muted)]">Financial data temporarily unavailable — try again later.</p>
         </div>
@@ -56,7 +56,7 @@ export default async function FinancialsTable({ symbol }: FinancialsTableProps) 
 
   return (
     <section className="space-y-3">
-      <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">Financials</h2>
+      <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Financials</h2>
 
       {/* ── Income statement table ── */}
       {quarters.length > 0 && (

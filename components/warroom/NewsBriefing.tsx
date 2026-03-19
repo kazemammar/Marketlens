@@ -195,7 +195,7 @@ export default function NewsBriefing() {
             <rect x="1" y="7" width="10" height="2" rx="1" fill="currentColor" opacity=".6"/>
             <rect x="1" y="12" width="12" height="2" rx="1" fill="currentColor" opacity=".6"/>
           </svg>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             News Briefing
           </span>
         </div>

@@ -37,7 +37,7 @@ function PanelHeader() {
         <line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" strokeWidth="1" strokeDasharray="1.5 1.5"/>
         <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
       </svg>
-      <span className="font-mono font-bold uppercase tracking-[0.14em] text-[var(--text)]" style={{ fontSize: '9px' }}>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Exposure
       </span>
     </div>
@@ -292,7 +292,7 @@ export default function ExposurePanel({
                       style={{ background: color, boxShadow: `0 0 5px ${color}80` }}
                     />
                     <span
-                      className="font-mono text-[9px] font-bold uppercase tracking-wide"
+                      className="font-mono text-[9px] font-bold uppercase tracking-[0.1em]"
                       style={{ color }}
                     >
                       {TYPE_LABEL[type] ?? type}

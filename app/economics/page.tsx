@@ -87,7 +87,7 @@ function LargeCard({ ind }: { ind: EconomicIndicator }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+          <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
             {ind.name}
           </span>
           <div className="mt-1 font-mono text-[28px] font-bold leading-none tabular-nums text-white">
@@ -163,20 +163,20 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <div>
-          <p className="font-mono text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-1">Current Rate</p>
+          <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Current Rate</p>
           <p className="font-mono text-[22px] font-bold text-white tabular-nums">
             {fedRate?.value !== null && fedRate?.value !== undefined ? `${fedRate.value.toFixed(2)}%` : '—'}
           </p>
         </div>
         <div>
-          <p className="font-mono text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-1">Next FOMC</p>
+          <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Next FOMC</p>
           <p className="font-mono text-[13px] font-bold text-white">
             {new Date(next).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
           <p className="font-mono text-[10px] text-amber-400 mt-0.5">in {daysAway} days</p>
         </div>
         <div>
-          <p className="font-mono text-[9px] text-[var(--text-muted)] uppercase tracking-widest mb-1">Upcoming FOMC</p>
+          <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Upcoming FOMC</p>
           <div className="flex flex-col gap-0.5">
             {FOMC_DATES_2026.filter((d) => new Date(d) >= now).slice(0, 4).map((d) => (
               <p key={d} className="font-mono text-[9px] text-[var(--text-muted)]">

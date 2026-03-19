@@ -206,7 +206,7 @@ export default function BenchmarkChart({
         <polyline points="1,12 4,7 7,9 10,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         <polyline points="1,14 4,10 7,12 10,7 15,5" stroke="#10b981" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
       </svg>
-      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text)]">
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Benchmark
       </span>
       <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">vs S&amp;P 500</span>

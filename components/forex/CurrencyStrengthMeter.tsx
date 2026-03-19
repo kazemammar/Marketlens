@@ -59,6 +59,9 @@ export default function CurrencyStrengthMeter() {
     })
   }
 
+  // Currencies in strength order (strongest first) — used for lines, legend, tooltip
+  const sortedCurrencies = strengths.map(s => s.currency)
+
   if (loading) return <SkeletonMeter />
   if (error || !strengths.length) return null
 
@@ -153,53 +156,85 @@ export default function CurrencyStrengthMeter() {
                   tickFormatter={(v: number) => `${v.toFixed(1)}%`}
                 />
                 <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="4 4" />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 4,
-                    fontFamily: 'monospace',
-                    fontSize: 10,
-                  }}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  formatter={(value: any, name: any) => [
-                    typeof value === 'number' ? fmt(value as number) : String(value ?? ''),
-                    `${FLAGS[String(name)] ?? ''} ${String(name ?? '')}`,
-                  ]}
-                  labelStyle={{ color: 'var(--text-muted)', fontSize: 9 }}
-                />
-                {Object.entries(COLORS).map(([ccy, color]) =>
-                  !hiddenCurrencies.has(ccy) && (
-                    <Line
-                      key={ccy}
-                      type="monotone"
-                      dataKey={ccy}
-                      stroke={color}
-                      strokeWidth={1.5}
-                      dot={false}
-                      activeDot={{ r: 3 }}
-                    />
-                  ),
-                )}
+                <Tooltip content={<StrengthTooltip flags={FLAGS} colors={COLORS} hidden={hiddenCurrencies} />} />
+                {sortedCurrencies.filter(ccy => !hiddenCurrencies.has(ccy)).map(ccy => (
+                  <Line
+                    key={ccy}
+                    type="monotone"
+                    dataKey={ccy}
+                    stroke={COLORS[ccy]}
+                    strokeWidth={1.5}
+                    dot={false}
+                    activeDot={{ r: 3 }}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
-          {/* Interactive legend */}
+          {/* Interactive legend — sorted by current strength */}
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-            {Object.entries(COLORS).map(([ccy, color]) => (
+            {sortedCurrencies.map((ccy) => (
               <button
                 key={ccy}
                 onClick={() => toggleCurrency(ccy)}
                 className="flex items-center gap-1 font-mono text-[8px] transition-opacity"
                 style={{ opacity: hiddenCurrencies.has(ccy) ? 0.3 : 1 }}
               >
-                <span className="inline-block h-1.5 w-4 rounded-full" style={{ background: color }} />
+                <span className="inline-block h-1.5 w-4 rounded-full" style={{ background: COLORS[ccy] }} />
                 {ccy}
               </button>
             ))}
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+interface TooltipPayloadEntry {
+  name: string
+  value: number
+  color: string
+}
+
+function StrengthTooltip({
+  active, payload, label, flags, colors, hidden,
+}: {
+  active?: boolean
+  payload?: TooltipPayloadEntry[]
+  label?: string
+  flags: Record<string, string>
+  colors: Record<string, string>
+  hidden: Set<string>
+}) {
+  if (!active || !payload?.length) return null
+
+  const sorted = [...payload]
+    .filter(e => !hidden.has(e.name))
+    .sort((a, b) => b.value - a.value)
+
+  return (
+    <div
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 4,
+        fontFamily: 'monospace',
+        fontSize: 10,
+        padding: '6px 8px',
+      }}
+    >
+      <p style={{ color: 'var(--text-muted)', fontSize: 9, marginBottom: 4 }}>{label}</p>
+      {sorted.map(entry => (
+        <div key={entry.name} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 2 }}>
+          <span style={{ color: colors[entry.name], fontWeight: 700, minWidth: 52 }}>
+            {flags[entry.name] ?? ''} {entry.name}
+          </span>
+          <span style={{ color: entry.value >= 0 ? '#10b981' : '#ef4444', fontVariantNumeric: 'tabular-nums' }}>
+            {(entry.value >= 0 ? '+' : '') + entry.value.toFixed(3) + '%'}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }

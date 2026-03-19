@@ -83,7 +83,14 @@ export default function GlobalSearch({
     return () => document.removeEventListener('mousedown', onMouseDown)
   }, [])
 
-  const displayList  = dq.length >= 1 ? results : TRENDING
+  const rawList      = dq.length >= 1 ? results : TRENDING
+  const seen         = new Set<string>()
+  const displayList  = rawList.filter((a) => {
+    const k = `${a.type}-${a.symbol}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
   const showDropdown = open && (
     displayList.length > 0 ||
     (dq.length >= 1 && !loading)   // show "no results" message

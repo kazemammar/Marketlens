@@ -20,7 +20,7 @@ const RISK_STYLE: Record<string, { label: string; text: string; border: string; 
   CRITICAL: { label: 'CRITICAL RISK', text: 'text-red-400',     border: 'border-red-500/30',     dot: '#ef4444' },
 }
 
-const LABEL_CLS = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[70px] shrink-0'
+const LABEL_CLS = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[80px] shrink-0'
 const CONTENT_CLS = 'font-mono text-[12px] sm:text-[13px] leading-relaxed'
 
 export default function MarketBrief() {

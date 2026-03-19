@@ -28,7 +28,7 @@ const SENTIMENT_STYLE = {
   },
 }
 
-const LABEL_CLS    = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[70px] shrink-0'
+const LABEL_CLS    = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[80px] shrink-0'
 const CONTENT_CLS  = 'font-mono text-[12px] sm:text-[13px] leading-relaxed'
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ export default function PortfolioBrief({
             {/* RISK */}
             {brief.risk_focus && (
               <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
-                <span className={`${LABEL_CLS} text-amber-400`}>Risk</span>
+                <span className={LABEL_CLS} style={{ color: '#f59e0b' }}>Risk</span>
                 <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.risk_focus}</span>
               </div>
             )}
@@ -188,7 +188,7 @@ export default function PortfolioBrief({
             {/* ACTION */}
             {brief.action && (
               <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
-                <span className={`${LABEL_CLS} text-emerald-400`}>Action</span>
+                <span className={LABEL_CLS} style={{ color: '#10b981' }}>Action</span>
                 <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.action}</span>
               </div>
             )}
@@ -201,14 +201,14 @@ export default function PortfolioBrief({
                 <Link
                   key={i}
                   href={`/asset/${encodeURIComponent(alert.symbol)}`}
-                  className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 ${
+                  className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 max-w-[500px] ${
                     alert.type === 'risk'
                       ? 'border-red-500/30 bg-red-500/10 text-red-400'
                       : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                   }`}
                 >
-                  <span className="font-bold">{alert.symbol}</span>
-                  <span className="opacity-80">{alert.message}</span>
+                  <span className="font-bold shrink-0">{alert.symbol}</span>
+                  <span className="opacity-80 truncate" title={alert.message}>{alert.message}</span>
                 </Link>
               ))}
             </div>

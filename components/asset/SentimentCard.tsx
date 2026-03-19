@@ -16,11 +16,6 @@ const CONVICTION_STYLE = {
   low:    'bg-zinc-500/10 text-zinc-400 border-zinc-500/25',
 }
 
-const IMPACT_COLOR = {
-  bullish:   { text: 'text-emerald-400', arrow: '▲' },
-  bearish:   { text: 'text-red-400',     arrow: '▼' },
-  uncertain: { text: 'text-amber-400',   arrow: '↔' },
-}
 
 function ScoreBar({ score }: { score: number }) {
   const pos = Math.max(0, Math.min(100, score))
@@ -119,27 +114,6 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
                       {signal}
                     </li>
                   ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Catalysts */}
-            {data.catalysts && data.catalysts.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-                  Upcoming Catalysts
-                </p>
-                <ul className="space-y-1.5">
-                  {data.catalysts.map((c, i) => {
-                    const ic = IMPACT_COLOR[c.impact]
-                    return (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className={`font-mono text-[11px] font-bold shrink-0 ${ic.text}`}>{ic.arrow}</span>
-                        <span className="font-mono text-[11px] text-[var(--text)]">{c.event}</span>
-                        <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0 ml-auto pl-2">— {c.date}</span>
-                      </li>
-                    )
-                  })}
                 </ul>
               </div>
             )}

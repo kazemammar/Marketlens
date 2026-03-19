@@ -218,6 +218,7 @@ function MoverColumn({
         >
           {arrow} {label}
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       {loading ? (
@@ -349,23 +350,21 @@ export default function MoversView() {
         {/* Tab row */}
         {!error && (
           <>
-            <div className="mb-4 flex flex-wrap gap-1.5">
+            <div className="mb-3 flex overflow-x-auto border-b border-[var(--border)]">
               {TABS.map((t) => (
                 <button
                   key={t.key}
                   onClick={() => setTab(t.key)}
-                  className="rounded-full border px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wide transition-colors"
-                  style={tab === t.key ? {
-                    background:   'var(--accent)',
-                    borderColor:  'var(--accent)',
-                    color:        '#000',
-                  } : {
-                    background:   'var(--surface)',
-                    borderColor:  'var(--border)',
-                    color:        'var(--text-muted)',
-                  }}
+                  className={`relative shrink-0 px-4 pb-2 pt-1 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors ${
+                    tab === t.key
+                      ? 'text-[var(--accent)]'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  }`}
                 >
-                  {t.label}
+                  {t.label.toUpperCase()}
+                  {tab === t.key && (
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[var(--accent)]" />
+                  )}
                 </button>
               ))}
             </div>

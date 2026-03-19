@@ -120,7 +120,7 @@ function fmtPortfolioValue(v: number): string {
 function PanelHeader() {
   return (
     <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
-      <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0 text-[var(--text-muted)]" aria-hidden>
+      <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
         <rect x="1" y="9" width="3" height="6" rx="0.5" fill="currentColor" opacity="0.6"/>
         <rect x="6" y="6" width="3" height="9" rx="0.5" fill="currentColor" opacity="0.8"/>
         <rect x="11" y="2" width="3" height="13" rx="0.5" fill="currentColor"/>
@@ -128,6 +128,7 @@ function PanelHeader() {
       <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Allocation
       </span>
+      <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
     </div>
   )
 }
@@ -206,24 +207,24 @@ function DonutRing({
 
         {/* Center value — with glow */}
         <text
-          x={CX} y={CY - 5}
+          x={CX} y={CY - 4}
           textAnchor="middle"
           dominantBaseline="central"
           filter="url(#text-glow)"
           style={{
             fill:       glowColor,
             fontFamily: 'var(--font-mono), monospace',
-            fontSize:   '12px',
+            fontSize:   '15px',
             fontWeight: 700,
           }}
         >
           {centerLabel}
         </text>
         <text
-          x={CX} y={CY + 9}
+          x={CX} y={CY + 10}
           textAnchor="middle"
           dominantBaseline="central"
-          style={{ fill: 'var(--text-muted)', fontFamily: 'var(--font-mono), monospace', fontSize: '7.5px' }}
+          style={{ fill: 'var(--text-muted)', fontFamily: 'var(--font-mono), monospace', fontSize: '7px' }}
         >
           {centerSub}
         </text>

@@ -46,7 +46,10 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
   if (articles.length === 0) {
     return (
       <section>
-        <h2 className="mb-2 font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Latest News</h2>
+        <div className="mb-2 flex items-center gap-2">
+          <h2 className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Latest News</h2>
+          <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+        </div>
         <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-10 text-center">
           <p className="font-mono text-[10px] text-[var(--text-muted)]">No recent news found.</p>
         </div>

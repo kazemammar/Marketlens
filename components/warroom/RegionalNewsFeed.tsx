@@ -103,8 +103,9 @@ export default function RegionalNewsFeed() {
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Regional Feed
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         {!loading && (
-          <span className="ml-auto font-mono text-[9px] text-[var(--text-muted)]">
+          <span className="font-mono text-[9px] text-[var(--text-muted)]">
             {filtered.length} articles
           </span>
         )}

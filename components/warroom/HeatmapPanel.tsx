@@ -100,6 +100,7 @@ export default function HeatmapPanel({ stocks = [] }: { stocks?: AssetCardData[]
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           S&amp;P 500 Heatmap
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       {/* Treemap — fills all remaining height proportionally */}

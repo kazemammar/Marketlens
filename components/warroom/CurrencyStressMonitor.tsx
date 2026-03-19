@@ -37,16 +37,15 @@ export default function CurrencyStressMonitor() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
-        <div className="flex items-center gap-1.5">
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
-            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-            <path d="M8 4v4l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-            FX Stress
-          </span>
-        </div>
+      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
+        <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
+          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
+          <path d="M8 4v4l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+          FX Stress
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         {stressed.length > 0 && !loading && (
           <span className="rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber-400">
             {stressed.length} STRESSED

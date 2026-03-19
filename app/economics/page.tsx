@@ -159,6 +159,7 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
           <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
         </svg>
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Fed Watch</span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -238,6 +239,11 @@ export default function EconomicsPage() {
 
         {/* Indicators grid */}
         <div className="mb-3 flex items-center gap-2">
+          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+            <rect x="1" y="9" width="3" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+            <rect x="6" y="5" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+            <rect x="11" y="1" width="3" height="14" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
+          </svg>
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
             Key Indicators
           </span>

@@ -51,8 +51,8 @@ export default async function HomePage({
         <MarketBrief />
       </Suspense>
 
-      {/* ══ COMMODITY STRIP — 40px ══════════════════════════════════════ */}
-      <CommodityStrip initialData={homepage?.commodityStrip} />
+      {/* ══ TICKER TAPE — scrolling prices ══════════════════════════════ */}
+      <TickerTape initialData={homepage?.tickerQuotes} />
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:px-4 py-2 lg:grid-cols-[65fr_35fr]">
@@ -153,11 +153,9 @@ export default async function HomePage({
       <div className="mx-3 sm:mx-4 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />
 
       {/* ══ MARKET DASHBOARD ══════════════════════════════════════════════ */}
-      <div id="market-overview">
-        <TickerTape initialData={homepage?.tickerQuotes} />
-      </div>
+      <div id="market-overview"></div>
 
-      <main className="px-3 py-4 sm:px-4">
+      <main className="px-3 py-2 sm:px-4">
         {/* Dashboard header */}
         <div className="mb-3 flex items-center gap-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: 'var(--accent)' }} aria-hidden>

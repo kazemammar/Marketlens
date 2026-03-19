@@ -369,7 +369,7 @@ export default function PortfolioPage() {
           {/* ── Section header: POSITIONS ────────────────────────────────── */}
           <SectionHeader
             icon={
-              <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0 text-[var(--text-muted)]" aria-hidden>
+              <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
                 <rect x="1" y="3" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
                 <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.7"/>
                 <rect x="1" y="11" width="14" height="2" rx="0.5" fill="currentColor"/>
@@ -440,8 +440,10 @@ export default function PortfolioPage() {
           />
 
           {/* ── News feed ────────────────────────────────────────────────── */}
-          <div className="max-h-[500px] overflow-y-auto">
-            <PortfolioNewsFeed positionCount={activePositions.length} refreshTrigger={briefTrigger} />
+          <div className="px-3 sm:px-4 py-2">
+            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] max-h-[500px] overflow-y-auto">
+              <PortfolioNewsFeed positionCount={activePositions.length} refreshTrigger={briefTrigger} />
+            </div>
           </div>
         </>
       )}

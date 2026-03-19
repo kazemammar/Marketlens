@@ -66,6 +66,7 @@ function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
           {upcomingCount} upcoming
         </span>
       )}
+      <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
     </div>
   )
 }

@@ -205,7 +205,8 @@ export default function PerformanceChart() {
         Performance
       </span>
       <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">Portfolio history</span>
-      <div className="ml-auto flex items-center gap-1">
+      <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+      <div className="flex items-center gap-1">
         {RANGES.map((r) => (
           <button
             key={r.key}

@@ -100,7 +100,7 @@ export default function PredictionMarkets() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
@@ -113,6 +113,7 @@ export default function PredictionMarkets() {
             Polymarket
           </span>
         </div>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         <div className="flex items-center gap-1.5">
           <span className="live-dot inline-block h-1 w-1 rounded-full" style={{ background: 'var(--accent)' }} />
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">5MIN</span>

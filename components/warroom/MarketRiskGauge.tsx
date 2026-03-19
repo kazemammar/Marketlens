@@ -123,6 +123,7 @@ export default function MarketRiskGauge() {
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Market Risk Score
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       <div className="px-3 py-2">

@@ -174,46 +174,53 @@ export default function MarketTabs({
         })}
       </div>
 
-      {/* ── Sector filter pills (stocks only) ── */}
-      {activeTab === 'stock' && current.status === 'loaded' && current.data.length > 0 && (
-        <div className="flex items-center gap-px overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-1 py-0">
-          {['All', ...SECTOR_ORDER].map((sector) => {
-            const isActive = sector === activeSector
-            const color    = sector === 'All' ? 'var(--accent)' : (SECTOR_COLORS[sector] ?? 'var(--accent)')
-            return (
-              <button
-                key={sector}
-                onClick={() => setActiveSector(sector)}
-                className="relative shrink-0 px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors"
-                style={{ color: isActive ? color : 'var(--text-muted)' }}
-              >
-                {sector}
-                {isActive && (
-                  <span
-                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
-                    style={{ background: color }}
-                  />
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {/* ── View All link ── */}
+      {/* ── Sector filter pills (stocks only) with View All link ── */}
       {(() => {
         const TAB_TO_PAGE: Record<string, string> = {
           stock: '/stocks', crypto: '/crypto', forex: '/forex', commodity: '/commodities', etf: '/etf',
         }
         const activeLabel = TABS.find(t => t.id === activeTab)?.label ?? ''
+        const viewAllLink = (
+          <Link
+            href={TAB_TO_PAGE[activeTab] ?? '/'}
+            className="shrink-0 font-mono text-[9px] text-[var(--accent)] px-3 py-2 hover:underline"
+          >
+            View All {activeLabel} →
+          </Link>
+        )
+
+        if (activeTab === 'stock' && current.status === 'loaded' && current.data.length > 0) {
+          return (
+            <div className="flex items-center gap-px overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-1 py-0">
+              {['All', ...SECTOR_ORDER].map((sector) => {
+                const isActive = sector === activeSector
+                const color    = sector === 'All' ? 'var(--accent)' : (SECTOR_COLORS[sector] ?? 'var(--accent)')
+                return (
+                  <button
+                    key={sector}
+                    onClick={() => setActiveSector(sector)}
+                    className="relative shrink-0 px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors"
+                    style={{ color: isActive ? color : 'var(--text-muted)' }}
+                  >
+                    {sector}
+                    {isActive && (
+                      <span
+                        className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                        style={{ background: color }}
+                      />
+                    )}
+                  </button>
+                )
+              })}
+              <div className="flex-1" />
+              {viewAllLink}
+            </div>
+          )
+        }
+
         return (
-          <div className="mb-4 mt-3 flex justify-end">
-            <Link
-              href={TAB_TO_PAGE[activeTab] ?? '/'}
-              className="font-mono text-[9px] text-[var(--accent)] hover:underline"
-            >
-              View All {activeLabel} →
-            </Link>
+          <div className="flex justify-end border-b border-[var(--border)] bg-[var(--surface)]">
+            {viewAllLink}
           </div>
         )
       })()}

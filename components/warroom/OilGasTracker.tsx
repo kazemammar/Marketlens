@@ -34,6 +34,7 @@ export default function OilGasTracker() {
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           Energy &amp; Metals
         </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
       {/* Items grid */}

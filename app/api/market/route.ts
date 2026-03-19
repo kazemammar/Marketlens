@@ -29,14 +29,28 @@ import { AssetCardData, AssetType } from '@/lib/utils/types'
 // ─── Name maps ────────────────────────────────────────────────────────────
 
 const STOCK_NAMES: Record<string, string> = {
-  AAPL:    'Apple Inc.',        MSFT:  'Microsoft Corp.',
-  GOOGL:   'Alphabet Inc.',     AMZN:  'Amazon.com',
-  NVDA:    'NVIDIA Corp.',      META:  'Meta Platforms',
-  TSLA:    'Tesla Inc.',        'BRK.B': 'Berkshire Hathaway',
-  JPM:     'JPMorgan Chase',    V:     'Visa Inc.',
-  UNH:     'UnitedHealth',      XOM:   'Exxon Mobil',
-  JNJ:     'Johnson & Johnson', PG:    'Procter & Gamble',
-  MA:      'Mastercard',
+  // Technology
+  AAPL: 'Apple Inc.', MSFT: 'Microsoft Corp.', NVDA: 'NVIDIA Corp.',
+  // Finance
+  JPM: 'JPMorgan Chase', V: 'Visa Inc.', MA: 'Mastercard',
+  // Healthcare
+  UNH: 'UnitedHealth', LLY: 'Eli Lilly', JNJ: 'Johnson & Johnson',
+  // Consumer Disc.
+  AMZN: 'Amazon.com', TSLA: 'Tesla Inc.', HD: 'Home Depot',
+  // Consumer Staples
+  PG: 'Procter & Gamble', KO: 'Coca-Cola', PEP: 'PepsiCo',
+  // Industrial
+  CAT: 'Caterpillar', GE: 'GE Aerospace', HON: 'Honeywell',
+  // Communication
+  GOOGL: 'Alphabet Inc.', META: 'Meta Platforms', NFLX: 'Netflix',
+  // Energy
+  XOM: 'Exxon Mobil', CVX: 'Chevron', COP: 'ConocoPhillips',
+  // Real Estate
+  AMT: 'American Tower', PLD: 'Prologis', EQIX: 'Equinix',
+  // Materials
+  LIN: 'Linde', APD: 'Air Products', SHW: 'Sherwin-Williams',
+  // Utilities
+  NEE: 'NextEra Energy', DUK: 'Duke Energy', SO: 'Southern Company',
 }
 
 const ETF_NAMES: Record<string, string> = {

@@ -34,9 +34,28 @@ export const TTL = {
 // ─── Default asset lists ──────────────────────────────────────────────────
 
 export const DEFAULT_STOCKS = [
-  'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA',
-  'META', 'TSLA', 'BRK.B', 'JPM', 'V',
-  'UNH', 'XOM', 'JNJ', 'PG', 'MA',
+  // Technology
+  'AAPL', 'MSFT', 'NVDA',
+  // Finance
+  'JPM', 'V', 'MA',
+  // Healthcare
+  'UNH', 'LLY', 'JNJ',
+  // Consumer Disc.
+  'AMZN', 'TSLA', 'HD',
+  // Consumer Staples
+  'PG', 'KO', 'PEP',
+  // Industrial
+  'CAT', 'GE', 'HON',
+  // Communication
+  'GOOGL', 'META', 'NFLX',
+  // Energy
+  'XOM', 'CVX', 'COP',
+  // Real Estate
+  'AMT', 'PLD', 'EQIX',
+  // Materials
+  'LIN', 'APD', 'SHW',
+  // Utilities
+  'NEE', 'DUK', 'SO',
 ]
 
 export const DEFAULT_ETFS = [

@@ -6,6 +6,41 @@ import Link from 'next/link'
 import AssetCard from './AssetCard'
 import { AssetCardData, AssetType } from '@/lib/utils/types'
 
+// ─── Stock sector config ──────────────────────────────────────────────────
+
+const STOCK_SECTOR_MAP: Record<string, string> = {
+  AAPL: 'Technology',    MSFT: 'Technology',    NVDA: 'Technology',
+  JPM:  'Finance',       V:    'Finance',        MA:   'Finance',
+  UNH:  'Healthcare',    LLY:  'Healthcare',     JNJ:  'Healthcare',
+  AMZN: 'Consumer Disc.',TSLA: 'Consumer Disc.', HD:   'Consumer Disc.',
+  PG:   'Staples',       KO:   'Staples',        PEP:  'Staples',
+  CAT:  'Industrial',    GE:   'Industrial',     HON:  'Industrial',
+  GOOGL:'Communication', META: 'Communication',  NFLX: 'Communication',
+  XOM:  'Energy',        CVX:  'Energy',         COP:  'Energy',
+  AMT:  'Real Estate',   PLD:  'Real Estate',    EQIX: 'Real Estate',
+  LIN:  'Materials',     APD:  'Materials',      SHW:  'Materials',
+  NEE:  'Utilities',     DUK:  'Utilities',      SO:   'Utilities',
+}
+
+const SECTOR_ORDER = [
+  'Technology','Finance','Healthcare','Consumer Disc.','Staples',
+  'Industrial','Communication','Energy','Real Estate','Materials','Utilities',
+]
+
+const SECTOR_COLORS: Record<string, string> = {
+  'Technology':    '#3b82f6',
+  'Finance':       '#f59e0b',
+  'Healthcare':    '#22c55e',
+  'Consumer Disc.':'#a855f7',
+  'Staples':       '#ec4899',
+  'Industrial':    '#6366f1',
+  'Communication': '#06b6d4',
+  'Energy':        '#ef4444',
+  'Real Estate':   '#84cc16',
+  'Materials':     '#d97706',
+  'Utilities':     '#f97316',
+}
+
 // ─── Tab config ───────────────────────────────────────────────────────────
 
 interface Tab { id: AssetType; label: string; emoji: string }
@@ -62,8 +97,9 @@ export default function MarketTabs({
   initialStocks: AssetCardData[]
   initialTab?:   AssetType
 }) {
-  const [tabs,      setTabs]      = useState<Record<AssetType, TabState>>(() => makeInitial(initialStocks))
-  const [activeTab, setActiveTab] = useState<AssetType>(initialTab)
+  const [tabs,         setTabs]        = useState<Record<AssetType, TabState>>(() => makeInitial(initialStocks))
+  const [activeTab,    setActiveTab]   = useState<AssetType>(initialTab)
+  const [activeSector, setActiveSector] = useState<string>('All')
 
   const loadTab = useCallback(async (tab: AssetType) => {
     // Already loaded or in-flight — skip
@@ -102,6 +138,9 @@ export default function MarketTabs({
   }
 
   const current = tabs[activeTab]
+  const displayData = activeTab === 'stock' && activeSector !== 'All'
+    ? current.data.filter((a) => STOCK_SECTOR_MAP[a.symbol] === activeSector)
+    : current.data
 
   return (
     <section>
@@ -109,7 +148,7 @@ export default function MarketTabs({
         <TabParamSync onTabChange={handleParamChange} />
       </Suspense>
       {/* ── Tab bar ── */}
-      <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)]">
+      <div className="mb-0 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)]">
         {TABS.map((tab) => {
           const state    = tabs[tab.id]
           const isActive = tab.id === activeTab
@@ -135,6 +174,32 @@ export default function MarketTabs({
         })}
       </div>
 
+      {/* ── Sector filter pills (stocks only) ── */}
+      {activeTab === 'stock' && current.status === 'loaded' && current.data.length > 0 && (
+        <div className="flex items-center gap-px overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-1 py-0">
+          {['All', ...SECTOR_ORDER].map((sector) => {
+            const isActive = sector === activeSector
+            const color    = sector === 'All' ? 'var(--accent)' : (SECTOR_COLORS[sector] ?? 'var(--accent)')
+            return (
+              <button
+                key={sector}
+                onClick={() => setActiveSector(sector)}
+                className="relative shrink-0 px-3 py-2 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors"
+                style={{ color: isActive ? color : 'var(--text-muted)' }}
+              >
+                {sector}
+                {isActive && (
+                  <span
+                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full"
+                    style={{ background: color }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* ── View All link ── */}
       {(() => {
         const TAB_TO_PAGE: Record<string, string> = {
@@ -142,7 +207,7 @@ export default function MarketTabs({
         }
         const activeLabel = TABS.find(t => t.id === activeTab)?.label ?? ''
         return (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 mt-3 flex justify-end">
             <Link
               href={TAB_TO_PAGE[activeTab] ?? '/'}
               className="font-mono text-[9px] text-[var(--accent)] hover:underline"
@@ -163,15 +228,15 @@ export default function MarketTabs({
         }} />
       )}
 
-      {current.status === 'loaded' && current.data.length > 0 && (
+      {current.status === 'loaded' && displayData.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-          {current.data.map((asset) => (
+          {displayData.map((asset) => (
             <AssetCard key={`${asset.type}-${asset.symbol}`} asset={asset} />
           ))}
         </div>
       )}
 
-      {current.status === 'loaded' && current.data.length === 0 && (
+      {current.status === 'loaded' && displayData.length === 0 && (
         <EmptyState tab={activeTab} />
       )}
     </section>

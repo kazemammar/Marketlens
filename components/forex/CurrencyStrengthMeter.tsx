@@ -139,7 +139,7 @@ export default function CurrencyStrengthMeter() {
         </div>
 
         {/* Trend chart */}
-        <div className="flex flex-col p-3 min-h-[360px]">
+        <div className="flex flex-col p-3 min-h-[260px]">
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>

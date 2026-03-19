@@ -63,6 +63,10 @@ export default function PortfolioIntroModal() {
     if (loading) return
     if (user) return
 
+    // Don't show again if dismissed within the last 24 hours
+    const dismissed = localStorage.getItem('portfolio_modal_dismissed')
+    if (dismissed && Date.now() - Number(dismissed) < 86_400_000) return
+
     const t = setTimeout(() => setVisible(true), 1400)
     return () => clearTimeout(t)
   }, [loading, user])
@@ -75,6 +79,7 @@ export default function PortfolioIntroModal() {
   }, [visible])
 
   function dismiss() {
+    localStorage.setItem('portfolio_modal_dismissed', String(Date.now()))
     setClosing(true)
     setTimeout(() => { setVisible(false); setClosing(false) }, 280)
   }

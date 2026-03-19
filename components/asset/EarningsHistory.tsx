@@ -132,26 +132,21 @@ export default function EarningsHistory({ symbol }: { symbol: string }) {
 
   return (
     <section>
-      <div className="rounded border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+      {/* Section header — matches PeersTable / TechnicalSummary style */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
+        <h2 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+          Earnings History
+        </h2>
+        <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
+        {!loading && total > 0 && (
+          <span className="font-mono text-[9px] text-[var(--text-muted)]">
+            {total} quarters
+          </span>
+        )}
+      </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
-          <div className="flex items-center gap-2">
-            <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-[var(--text-muted)]" aria-hidden>
-              <rect x="2" y="8" width="3" height="6" rx="0.5" fill="currentColor" opacity="0.3" />
-              <rect x="6.5" y="5" width="3" height="9" rx="0.5" fill="currentColor" opacity="0.5" />
-              <rect x="11" y="2" width="3" height="12" rx="0.5" fill="currentColor" />
-            </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-              Earnings History
-            </span>
-          </div>
-          {!loading && total > 0 && (
-            <span className="font-mono text-[9px] text-[var(--text-muted)]">
-              {total} quarters
-            </span>
-          )}
-        </div>
+      <div className="rounded border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
 
         {/* Loading skeleton */}
         {loading ? (
@@ -196,10 +191,10 @@ export default function EarningsHistory({ symbol }: { symbol: string }) {
                     cursor={{ fill: 'var(--surface-2)', opacity: 0.4 }}
                   />
 
-                  {/* Estimate bars — gray */}
-                  <Bar dataKey="estimate" name="Estimate" radius={[2, 2, 0, 0]} barSize={14}>
+                  {/* Estimate bars — subtle */}
+                  <Bar dataKey="estimate" name="Estimate" radius={[2, 2, 0, 0]} barSize={14} stroke="rgba(255,255,255,0.1)" strokeWidth={1}>
                     {chartData.map((_, i) => (
-                      <Cell key={`est-${i}`} fill="var(--surface-3)" />
+                      <Cell key={`est-${i}`} fill="rgba(255,255,255,0.15)" />
                     ))}
                   </Bar>
 
@@ -254,7 +249,7 @@ export default function EarningsHistory({ symbol }: { symbol: string }) {
             {/* Legend */}
             <div className="px-3 pb-2.5 flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 rounded-sm bg-[var(--surface-3)]" />
+                <div className="h-2.5 w-2.5 rounded-sm" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.1)' }} />
                 <span className="font-mono text-[9px] text-[var(--text-muted)]">Estimate</span>
               </div>
               <div className="flex items-center gap-1.5">

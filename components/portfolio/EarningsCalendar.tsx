@@ -24,15 +24,15 @@ function fmtEps(n: number): string {
 }
 
 function urgencyConfig(days: number): { color: string; bg: string; borderHex: string } {
+  if (days <= 7) return {
+    color:     '#f97316',
+    bg:        'rgba(249,115,22,0.10)',
+    borderHex: '#f97316',
+  }
   if (days <= 14) return {
     color:     '#f59e0b',
-    bg:        'rgba(245,158,11,0.12)',
+    bg:        'rgba(245,158,11,0.10)',
     borderHex: '#f59e0b',
-  }
-  if (days <= 30) return {
-    color:     'var(--accent)',
-    bg:        'rgba(16,185,129,0.10)',
-    borderHex: '#10b981',
   }
   return {
     color:     'var(--text-muted)',
@@ -61,7 +61,7 @@ function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
       {upcomingCount > 0 && (
         <span
           className="rounded-full px-1.5 py-px font-mono text-[8px] font-bold"
-          style={{ background: 'var(--accent)', color: '#000', opacity: 0.9 }}
+          style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }}
         >
           {upcomingCount} upcoming
         </span>
@@ -86,7 +86,7 @@ function ColHeader({ label, icon }: { label: string; icon: React.ReactNode }) {
 
 // ─── Upcoming card ─────────────────────────────────────────────────────────
 
-function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) {
+function UpcomingCard({ event, delay, lastActual }: { event: EarningsItem; delay: number; lastActual: number | null }) {
   const days  = daysUntil(event.date)
   const cfg   = urgencyConfig(days)
 
@@ -117,14 +117,12 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
         el.style.boxShadow   = 'none'
       }}
     >
-      {/* Single row */}
-      <div className="flex items-center gap-1.5 px-2 py-1.5">
-        {/* Date */}
+      {/* Top row */}
+      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
         <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">
           {fmtDate(event.date)}
         </span>
 
-        {/* Symbol */}
         <Link
           href={`/asset/stock/${encodeURIComponent(event.symbol)}`}
           className="font-mono text-[12px] font-bold hover:underline"
@@ -134,18 +132,28 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
           {event.symbol}
         </Link>
 
-        {/* Quarter label */}
         <span className="rounded px-1 py-px font-mono text-[8px] font-semibold bg-[var(--surface-2)] text-[var(--text-muted)]">
           Q{event.quarter} {event.year}
         </span>
 
-        {/* Countdown pill */}
         <span
           className="ml-auto shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold tabular-nums"
           style={{ background: cfg.bg, color: cfg.color }}
         >
           {countdown}
         </span>
+      </div>
+
+      {/* Last EPS row */}
+      <div className="flex items-center gap-2 px-2 pb-1.5 font-mono text-[9px]">
+        {lastActual != null ? (
+          <>
+            <span className="text-[var(--text-muted)]">Last EPS</span>
+            <span className="tabular-nums text-[var(--text)]">{fmtEps(lastActual)}</span>
+          </>
+        ) : (
+          <span className="text-[var(--text-muted)] opacity-40">No prior EPS data</span>
+        )}
       </div>
     </div>
   )
@@ -260,6 +268,14 @@ export default function EarningsCalendar() {
   const upcoming90  = upcoming.filter((e) => daysUntil(e.date) <= 180)
   const hasAny      = upcoming90.length > 0 || recent.length > 0
 
+  // Build a map of symbol → most recent actual EPS for the upcoming cards
+  const lastActualBySymbol: Record<string, number | null> = {}
+  for (const e of recent) {
+    if (!(e.symbol in lastActualBySymbol) && e.actual != null) {
+      lastActualBySymbol[e.symbol] = e.actual
+    }
+  }
+
   return (
     <>
       <PanelHeader upcomingCount={upcoming90.length} />
@@ -281,7 +297,7 @@ export default function EarningsCalendar() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-[2fr_3fr] divide-x divide-[var(--border)] overflow-y-auto scrollbar-hide">
+        <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-[var(--border)] max-h-[400px] overflow-y-auto scrollbar-hide">
 
           {/* Upcoming column */}
           <div className="flex flex-col min-w-0">
@@ -289,9 +305,9 @@ export default function EarningsCalendar() {
               label="Upcoming"
               icon={
                 <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5 shrink-0" aria-hidden>
-                  <circle cx="5" cy="5" r="3.5" stroke="var(--accent)" strokeWidth="1.3"/>
-                  <line x1="5" y1="3" x2="5" y2="5.5" stroke="var(--accent)" strokeWidth="1.2" strokeLinecap="round"/>
-                  <circle cx="5" cy="6.2" r="0.5" fill="var(--accent)"/>
+                  <circle cx="5" cy="5" r="3.5" stroke="#f59e0b" strokeWidth="1.3"/>
+                  <line x1="5" y1="3" x2="5" y2="5.5" stroke="#f59e0b" strokeWidth="1.2" strokeLinecap="round"/>
+                  <circle cx="5" cy="6.2" r="0.5" fill="#f59e0b"/>
                 </svg>
               }
             />
@@ -304,7 +320,7 @@ export default function EarningsCalendar() {
             ) : (
               <div className="pt-1.5">
                 {upcoming90.map((e, i) => (
-                  <UpcomingCard key={`${e.symbol}-${e.date}`} event={e} delay={i * 50} />
+                  <UpcomingCard key={`${e.symbol}-${e.date}`} event={e} delay={i * 50} lastActual={lastActualBySymbol[e.symbol] ?? null} />
                 ))}
               </div>
             )}

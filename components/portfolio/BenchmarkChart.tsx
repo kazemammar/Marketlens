@@ -311,7 +311,11 @@ export default function BenchmarkChart({
                         strokeWidth={2}
                         fill="url(#gradPortfolio)"
                         dot={false}
-                        activeDot={{ r: 3, fill: '#10b981', strokeWidth: 0 }}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        activeDot={(props: any) => {
+                          const color = (props.value ?? 0) >= 0 ? '#10b981' : '#ef4444'
+                          return <circle cx={props.cx} cy={props.cy} r={3} fill={color} stroke="none" />
+                        }}
                         name="Portfolio"
                         isAnimationActive={false}
                       />

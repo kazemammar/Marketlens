@@ -119,7 +119,7 @@ export default function FXMonitor() {
             </span>
             {tooltipOpen && (
               <div
-                className="absolute right-0 top-full z-50 mt-1.5 w-56 rounded border border-[var(--border)] bg-[var(--surface-2)] shadow-lg"
+                className="absolute right-0 top-full z-50 mt-1.5 w-56 rounded border border-[var(--border)] bg-[var(--surface-2)]"
                 style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
               >
                 <div className="border-b border-[var(--border)] px-3 py-2">

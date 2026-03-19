@@ -82,7 +82,7 @@ function MoverRow({ item, rank, isGainer, delay }: {
 
       {/* Symbol */}
       <span
-        className="shrink-0 font-mono text-[12px] font-bold"
+        className="shrink-0 font-mono text-[11px] font-bold"
         style={{ color: 'var(--accent)' }}
       >
         {item.symbol}
@@ -105,7 +105,7 @@ function MoverRow({ item, rank, isGainer, delay }: {
 
       {/* Change % pill */}
       <span
-        className="shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[12px] font-bold tabular-nums"
+        className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold tabular-nums"
         style={{
           color:      colorHex,
           background: `${colorHex}15`,

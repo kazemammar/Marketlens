@@ -99,7 +99,7 @@ function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: str
         src={imageUrl}
         alt=""
         aria-hidden
-        className="h-12 w-12 shrink-0 rounded-md object-cover"
+        className="h-12 w-12 shrink-0 rounded object-cover"
         style={{ border: '1px solid var(--border)' }}
         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
       />
@@ -108,7 +108,7 @@ function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: str
   const { icon: Icon, gradient, color } = getArticleIcon(headline)
   return (
     <div
-      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br ${gradient}`}
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded bg-gradient-to-br ${gradient}`}
       style={{ border: '1px solid var(--border)' }}
       aria-hidden
     >
@@ -310,7 +310,7 @@ export default function IntelPanel() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-[var(--text-muted)] opacity-30" aria-hidden>
               <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
             </svg>
-            <p className="font-mono text-[11px] text-[var(--text-muted)]">No articles match filters</p>
+            <p className="font-mono text-[10px] text-[var(--text-muted)]">No articles match filters</p>
           </div>
         ) : (
           <>
@@ -327,7 +327,7 @@ export default function IntelPanel() {
                 >
                   <ArticleThumb headline={a.headline} imageUrl={a.imageUrl} />
                   <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-[12px] font-medium leading-snug text-[var(--text-2)]">
+                    <p className="line-clamp-2 font-mono text-[10px] font-medium leading-snug text-[var(--text-2)]">
                       {a.headline}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">

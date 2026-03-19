@@ -21,7 +21,7 @@ const RISK_STYLE: Record<string, { label: string; text: string; border: string; 
 }
 
 const LABEL_CLS = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[80px] shrink-0'
-const CONTENT_CLS = 'font-mono text-[12px] sm:text-[13px] leading-relaxed'
+const CONTENT_CLS = 'font-mono text-[10px] sm:text-[11px] leading-relaxed'
 
 export default function MarketBrief() {
   const [brief, setBrief] = useState<MarketBriefPayload | null>(null)

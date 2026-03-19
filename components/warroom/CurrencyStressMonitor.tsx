@@ -35,7 +35,7 @@ export default function CurrencyStressMonitor() {
   const stressed = pairs.filter((p) => Math.abs(p.changePercent) >= 1)
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">

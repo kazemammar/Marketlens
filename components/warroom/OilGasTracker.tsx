@@ -24,7 +24,7 @@ export default function OilGasTracker() {
   }, [])
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--warning)' }} aria-hidden>

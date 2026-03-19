@@ -97,7 +97,7 @@ function TooltipPortal({
       onMouseLeave={onMouseLeave}
     >
       <div
-        className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-2)]"
+        className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface-2)]"
         style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.4)' }}
       >
         {tip.content}

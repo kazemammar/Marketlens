@@ -94,7 +94,7 @@ export default function RegionalNewsFeed() {
 
   return (
     <div
-      className="flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]"
+      className="flex flex-col overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]"
       style={{ minHeight: '400px' }}
     >
       {/* Header */}

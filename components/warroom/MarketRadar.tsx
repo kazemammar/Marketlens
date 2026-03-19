@@ -136,7 +136,7 @@ export default function MarketRadar({
       <div className="flex-1 px-3 py-2.5 overflow-y-auto">
         {loading ? (
           <div className="space-y-2">
-            <div className="skeleton h-14 w-full rounded-lg" />
+            <div className="skeleton h-14 w-full rounded" />
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className="skeleton h-2 w-2 rounded-full" />
@@ -152,7 +152,7 @@ export default function MarketRadar({
               const s = VERDICT_STYLE[data.verdict]
               return (
                 <div
-                  className={`mb-3 flex items-center justify-between rounded-lg px-3 py-2.5 ${data.verdict !== 'MIXED' ? 'animate-verdict-pulse' : ''}`}
+                  className={`mb-3 flex items-center justify-between rounded px-3 py-2.5 ${data.verdict !== 'MIXED' ? 'animate-verdict-pulse' : ''}`}
                   style={{ background: s.bg, border: `1px solid ${s.border}`, ['--verdict-glow' as string]: s.glow }}
                 >
                   <div>

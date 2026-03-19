@@ -112,7 +112,7 @@ export default function MarketRiskGauge() {
   }, [])
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--price-down)' }} aria-hidden>
@@ -137,10 +137,10 @@ export default function MarketRiskGauge() {
 
             {/* Score display */}
             <div className="mt-1 text-center">
-              <span className="text-2xl font-bold tabular-nums" style={{ color: data.color }}>
+              <span className="font-mono text-[22px] font-bold tabular-nums" style={{ color: data.color }}>
                 {data.score}
               </span>
-              <span className="ml-1 text-xs text-[var(--text-muted)]">/100</span>
+              <span className="ml-1 font-mono text-[9px] text-[var(--text-muted)]">/100</span>
             </div>
             <div className="mt-0.5 text-center">
               <span
@@ -155,7 +155,7 @@ export default function MarketRiskGauge() {
             {data.factors.length > 0 && (
               <ul className="mt-3 space-y-1">
                 {data.factors.map((f, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-[10px] text-[var(--text-muted)]">
+                  <li key={i} className="flex items-start gap-1.5 font-mono text-[10px] text-[var(--text-muted)]">
                     <span className="mt-1 h-1 w-1 shrink-0 rounded-full" style={{ background: 'var(--price-down)' }} />
                     <span className="line-clamp-2">{f}</span>
                   </li>

@@ -66,7 +66,7 @@ function SignalRow({ sig, isNew }: { sig: Signal; isNew: boolean }) {
         strokeWidth={2}
       />
       {/* Full signal text — no truncation, wraps freely */}
-      <p className={`flex-1 leading-snug ${isHigh ? 'text-[13px] font-semibold text-[var(--text)]' : 'text-[12px] font-medium text-[var(--text-2)]'}`}>
+      <p className={`flex-1 font-mono leading-snug ${isHigh ? 'text-[11px] font-semibold text-[var(--text)]' : 'text-[10px] font-medium text-[var(--text-2)]'}`}>
         {sig.text}
       </p>
       {/* Right meta: category tag · severity badge · time */}
@@ -260,7 +260,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
                     return <Icon size={14} className="mt-0.5 shrink-0" style={{ color }} strokeWidth={2} />
                   })()}
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-medium leading-snug text-[var(--text)]">{sig.text}</p>
+                    <p className="font-mono text-[10px] font-medium leading-snug text-[var(--text)]">{sig.text}</p>
                     <div className="mt-1 flex items-center gap-2">
                       <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${SEV_BADGE[sig.severity]}`}>
                         {sig.severity}

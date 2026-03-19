@@ -79,11 +79,11 @@ function ArticleRow({ article }: { article: Article }) {
       rel="noopener noreferrer"
       className={`group flex flex-col gap-0.5 border-b border-[var(--border)] py-2 pr-3 pl-2.5 transition-colors hover:bg-[var(--surface-2)] ${SEV_LEFT[sev]}`}
     >
-      <p className={`line-clamp-2 text-[11px] font-medium leading-snug transition-colors group-hover:text-[var(--text)] ${isHigh ? 'text-[var(--text)]' : 'text-[var(--text-2)]'}`}>
+      <p className={`line-clamp-2 font-mono text-[10px] font-medium leading-snug transition-colors group-hover:text-[var(--text)] ${isHigh ? 'text-[var(--text)]' : 'text-[var(--text-2)]'}`}>
         {article.headline}
       </p>
       {isHigh && article.summary && (
-        <p className="line-clamp-1 text-[9px] leading-snug text-[var(--text-muted)] opacity-60">
+        <p className="line-clamp-1 font-mono text-[9px] leading-snug text-[var(--text-muted)] opacity-60">
           {article.summary.slice(0, 120)}
         </p>
       )}
@@ -258,7 +258,7 @@ export default function NewsBriefing() {
                   <ColumnSkeleton />
                 ) : colArticles.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-1.5 py-10">
-                    <span className="text-2xl opacity-20">{col.icon}</span>
+                    <span className="text-[18px] opacity-20">{col.icon}</span>
                     <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No articles yet</p>
                     {hasMore && (
                       <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-30">Scroll another column to load more</p>

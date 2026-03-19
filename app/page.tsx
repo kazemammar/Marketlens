@@ -20,8 +20,9 @@ import MaritimePanel        from '@/components/warroom/MaritimePanel'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
 import SectionReveal        from '@/components/layout/SectionReveal'
-import { AssetType }        from '@/lib/utils/types'
-import { getHomepageData }  from '@/lib/api/homepage'
+import { AssetType }           from '@/lib/utils/types'
+import { getHomepageData }     from '@/lib/api/homepage'
+import PortfolioIntroModal     from '@/components/ui/PortfolioIntroModal'
 
 const VALID_TABS: AssetType[] = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
@@ -178,6 +179,9 @@ export default async function HomePage({
 
       {/* ══ STATUS BAR — data freshness ══════════════════════════════════════ */}
       <StatusBar />
+
+      {/* ══ PORTFOLIO INTRO — shown once on first visit ════════════════════ */}
+      <PortfolioIntroModal />
     </div>
   )
 }

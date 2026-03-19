@@ -381,6 +381,10 @@ export default function AuthModal({
               </p>
             </form>
           )}
+          {/* Security reassurance */}
+          <p className="mt-4 text-center font-mono text-[8px] leading-[1.6] text-[var(--text-muted)] opacity-50">
+            🔒 Your data is encrypted and never sold. Google sign-in uses OAuth — we never see your password.
+          </p>
         </div>
       </div>
     </div>,

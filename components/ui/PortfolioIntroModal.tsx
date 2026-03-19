@@ -138,18 +138,19 @@ export default function PortfolioIntroModal() {
 
           {/* Headline */}
           <h2 className="font-mono text-[20px] font-bold leading-[1.15] tracking-tight text-white sm:text-[24px]">
-            What if you knew,{' '}
-            <span style={{ color: 'var(--accent)' }}>exactly,</span>
-            <br />where you stood?
+            What if you knew, <span style={{ color: 'var(--accent)' }}>exactly,</span> where you stood?
           </h2>
 
           <p className="mt-3 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">
-            Ever wondered how you&apos;re{' '}
-            <span className="text-[var(--text)]">really</span> doing — across every
-            position you hold, right now? MarketLens Portfolio answers that in
-            real time. Live P&L, AI-powered analysis of your exact holdings, and
-            risk exposure at a glance. We ship new features every week —{' '}
-            <span className="text-[var(--text)]">this is just the beginning.</span>
+            Add your positions — stocks, crypto, commodities, and more — and
+            MarketLens turns them into a{' '}
+            <span className="text-[var(--text)]">live intelligence dashboard.</span>{' '}
+            Real P&L updated in real time, AI analysis of your exact holdings,
+            and risk signals that actually tell you something.
+          </p>
+          <p className="mt-2 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">
+            We&apos;re shipping new features every week —{' '}
+            <span className="text-[var(--text)]">start now and grow with it.</span>
           </p>
 
           {/* Feature grid */}

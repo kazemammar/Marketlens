@@ -103,31 +103,17 @@ function MoverCard({
 
   return (
     <div
-      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded cursor-default"
+      className="animate-fade-up mx-2 mb-1.5 overflow-hidden rounded border border-[var(--border)] cursor-default bg-[var(--surface-2)] transition-colors duration-150 hover:border-[var(--border)] hover:bg-[var(--surface-3,var(--surface-2))]"
       style={{
-        borderLeft:        `2px solid ${colorHex}90`,
-        background:        `linear-gradient(to right, ${colorHex}14, transparent 70%)`,
+        borderLeft:        `1.5px solid ${colorHex}55`,
         animationDelay:    `${delay}ms`,
         animationFillMode: 'both',
-        transition:        'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.transform   = 'translateY(-1px)'
-        el.style.borderColor = colorHex
-        el.style.boxShadow   = `0 2px 8px ${colorHex}20`
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.transform   = 'translateY(0)'
-        el.style.borderColor = `${colorHex}90`
-        el.style.boxShadow   = 'none'
       }}
     >
       {/* Top row */}
       <div className="flex items-center gap-1.5 px-2 pt-2 pb-0.5">
         {/* Rank */}
-        <span className="w-4 shrink-0 font-mono text-[11px] tabular-nums text-[var(--text-muted)] opacity-40 text-right">
+        <span className="w-4 shrink-0 font-mono text-[10px] tabular-nums text-[var(--text-muted)] opacity-35 text-right">
           {rank}
         </span>
 
@@ -149,37 +135,37 @@ function MoverCard({
         )}
 
         {/* Name */}
-        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-[var(--text-muted)] opacity-70">
+        <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-[var(--text-muted)] opacity-60">
           {item.name}
         </span>
 
         {/* Price */}
-        <span className="shrink-0 font-mono text-[12px] font-bold tabular-nums text-[var(--text)] opacity-80">
+        <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-[var(--text)] opacity-75">
           {fmtPrice(item.price, item.type)}
         </span>
 
         {/* Change % */}
         <span
           className="shrink-0 font-mono text-[12px] font-bold tabular-nums"
-          style={{ color: colorHex, textShadow: `0 0 10px ${colorHex}50` }}
+          style={{ color: colorHex }}
         >
           {item.changePercent >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
         </span>
       </div>
 
       {/* Bar + dollar change */}
-      <div className="mx-2 mb-1 flex items-center gap-2">
-        <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--surface-2)]">
+      <div className="mx-2 mb-1.5 flex items-center gap-2">
+        <div className="h-1 flex-1 overflow-hidden rounded-full">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
               width:      `${barPct}%`,
-              background: `linear-gradient(to right, ${colorHex}60, ${colorHex})`,
-              boxShadow:  `0 0 6px ${colorHex}60`,
+              background: colorHex,
+              opacity:    0.55,
             }}
           />
         </div>
-        <span className="shrink-0 font-mono text-[10px] tabular-nums text-[var(--text-muted)] opacity-60">
+        <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-50">
           {fmtChange(item.change)}
         </span>
       </div>

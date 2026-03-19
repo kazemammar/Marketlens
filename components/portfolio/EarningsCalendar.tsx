@@ -116,8 +116,8 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
         el.style.boxShadow   = 'none'
       }}
     >
-      {/* Top row */}
-      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+      {/* Single row */}
+      <div className="flex items-center gap-1.5 px-2 py-1.5">
         {/* Date */}
         <span className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)]">
           {fmtDate(event.date)}
@@ -144,19 +144,6 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
           style={{ background: cfg.bg, color: cfg.color }}
         >
           {countdown}
-        </span>
-      </div>
-
-      {/* Sub-row: estimate + label */}
-      <div className="flex items-center gap-2 px-2 pb-1.5">
-        {event.estimate != null && event.estimate !== 0 && (
-          <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]">
-            Est. EPS: <span className="text-[var(--text)]">${event.estimate.toFixed(2)}</span>
-          </span>
-        )}
-        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60 ml-auto">
-          Est. date
-          <span className="ml-1 rounded px-1 py-px text-[7px] uppercase tracking-wide bg-[var(--surface-2)] opacity-70">EST</span>
         </span>
       </div>
     </div>
@@ -267,13 +254,14 @@ export default function EarningsCalendar() {
       .finally(() => setLoading(false))
   }, [])
 
-  const upcoming = data?.upcoming ?? []
-  const recent   = data?.recent   ?? []
-  const hasAny   = upcoming.length > 0 || recent.length > 0
+  const upcoming    = data?.upcoming ?? []
+  const recent      = data?.recent   ?? []
+  const upcoming90  = upcoming.filter((e) => daysUntil(e.date) <= 90)
+  const hasAny      = upcoming90.length > 0 || recent.length > 0
 
   return (
     <>
-      <PanelHeader upcomingCount={upcoming.length} />
+      <PanelHeader upcomingCount={upcoming90.length} />
 
       {loading ? (
         <div className="flex items-center gap-3 px-3 py-3">
@@ -292,7 +280,7 @@ export default function EarningsCalendar() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-[var(--border)] overflow-y-auto scrollbar-hide">
+        <div className="grid grid-cols-1 sm:grid-cols-[2fr_3fr] divide-x divide-[var(--border)] overflow-y-auto scrollbar-hide">
 
           {/* Upcoming column */}
           <div className="flex flex-col min-w-0">
@@ -306,7 +294,7 @@ export default function EarningsCalendar() {
                 </svg>
               }
             />
-            {upcoming.length === 0 ? (
+            {upcoming90.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-4">
                 <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50 text-center">
                   All reported this quarter
@@ -314,7 +302,7 @@ export default function EarningsCalendar() {
               </div>
             ) : (
               <div className="pt-1.5">
-                {upcoming.map((e, i) => (
+                {upcoming90.map((e, i) => (
                   <UpcomingCard key={`${e.symbol}-${e.date}`} event={e} delay={i * 50} />
                 ))}
               </div>

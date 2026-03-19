@@ -138,7 +138,7 @@ export default function PortfolioIntroModal() {
 
           {/* Headline */}
           <h2 className="font-mono text-[20px] font-bold leading-[1.15] tracking-tight text-white sm:text-[24px]">
-            What if you knew, <span style={{ color: 'var(--accent)' }}>exactly,</span> where you stood?
+            What if you knew, <span style={{ color: 'var(--accent)' }}>exactly,</span> where your portfolio stood?
           </h2>
 
           <p className="mt-3 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">

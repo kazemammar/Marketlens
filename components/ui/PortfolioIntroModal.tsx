@@ -146,9 +146,6 @@ export default function PortfolioIntroModal() {
             Real P&L updated in real time, AI analysis of your exact holdings,
             and risk signals that actually tell you something.
           </p>
-          <p className="mt-2 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">
-            We&apos;re shipping new features every week.
-          </p>
 
           {/* Feature grid */}
           <div className="mt-4 grid grid-cols-2 gap-2">
@@ -196,8 +193,13 @@ export default function PortfolioIntroModal() {
             </button>
           </div>
 
+          {/* New features line */}
+          <p className="mt-3 font-mono text-[9px] leading-[1.6] text-[var(--text-muted)]">
+            We ship new features every week — news tied to your holdings, smarter alerts, and more. Keep an eye on the platform.
+          </p>
+
           {/* Reassurance */}
-          <p className="mt-3 font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+          <p className="mt-2 font-mono text-[8px] text-[var(--text-muted)] opacity-50">
             Free to use · Sign in with Google · No credit card required
           </p>
         </div>

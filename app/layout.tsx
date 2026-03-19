@@ -7,6 +7,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import ServiceWorkerRegister from '@/components/layout/ServiceWorkerRegister'
 import InstallPrompt         from '@/components/layout/InstallPrompt'
+import { Analytics }        from '@vercel/analytics/react'
 
 const inter = Inter({
   variable: '--font-inter',
@@ -100,6 +101,7 @@ export default function RootLayout({
         </ThemeProvider>
         <ServiceWorkerRegister />
         <InstallPrompt />
+        <Analytics />
       </body>
     </html>
   )

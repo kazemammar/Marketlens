@@ -284,11 +284,11 @@ export default function RiskAlerts({
   return (
     <>
       <PanelHeader />
-      <div className="relative overflow-hidden">
-        <div className="overflow-y-auto scrollbar-hide px-2.5 py-1.5">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col overflow-y-auto scrollbar-hide px-2.5 py-1.5">
           {alerts.length === 0 ? (
             /* ── All-clear state ── */
-            <div className="flex w-full flex-col items-center justify-center gap-3 py-8 text-center">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
               <svg viewBox="0 0 40 46" fill="none" width="36" height="42" aria-hidden>
                 <defs>
                   <filter id="shield-glow">

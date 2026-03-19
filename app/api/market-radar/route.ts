@@ -1,6 +1,7 @@
-import { NextResponse }      from 'next/server'
-import { getQuotesBatched }  from '@/lib/api/finnhub'
-import { redis }             from '@/lib/cache/redis'
+import { NextResponse }          from 'next/server'
+import { getQuotesBatched }      from '@/lib/api/finnhub'
+import { getYahooQuotesBatch }   from '@/lib/api/yahoo'
+import { redis }                 from '@/lib/cache/redis'
 import type {
   SignalVerdict,
   RadarSignal,
@@ -13,12 +14,14 @@ export type { SignalVerdict, RadarSignal, MarketRadarPayload }
 export const dynamic = 'force-dynamic'
 
 // Short 90s route cache — protects Redis from concurrent users all triggering
-// 6 simultaneous quote reads. 90s is negligible vs the 15-min Finnhub quote TTL
-// so prices remain consistent with other components reading the same quote cache.
-const CACHE_KEY = 'market-radar:v3'
+// simultaneous quote reads. 90s is negligible vs the 15-min quote TTL.
+const CACHE_KEY = 'market-radar:v4'
 const CACHE_TTL = 90
 
-const SYMBOLS = ['SPY', 'QQQ', 'GLD', 'USO', 'VXX', 'TLT', 'BTC']
+// ETF symbols fetched via Finnhub
+const ETF_SYMBOLS  = ['SPY', 'QQQ', 'VXX', 'TLT']
+// Commodity futures fetched via Yahoo Finance — same source as the rest of the page
+const CMDTY_SYMBOLS = ['GC=F', 'CL=F', 'BZ=F']
 
 export async function GET() {
   // Return cached payload if fresh
@@ -27,8 +30,14 @@ export async function GET() {
     if (cached) return NextResponse.json(cached)
   } catch { /* fall through */ }
 
-  const symbols = SYMBOLS.filter((s) => s !== 'BTC')
-  const quotes  = await getQuotesBatched(symbols)
+  // Fetch ETFs (Finnhub) and commodities (Yahoo) in parallel
+  const [quotes, cmdtyQuotes] = await Promise.all([
+    getQuotesBatched(ETF_SYMBOLS),
+    getYahooQuotesBatch(CMDTY_SYMBOLS).catch(() => []),
+  ])
+
+  // Map commodity futures by symbol for easy lookup
+  const cmdty = Object.fromEntries(cmdtyQuotes.map(q => [q.symbol, q]))
 
   const signals: RadarSignal[] = []
   let buyVotes  = 0
@@ -61,22 +70,51 @@ export async function GET() {
     signals.push({ name: 'Volatility (VXX)', verdict: v, value: `$${vxx.price.toFixed(2)}`, reason: fearful ? 'Elevated fear — reduce risk' : 'Low volatility — conducive to gains' })
   }
 
-  // ── Gold (safe haven) ────────────────────────────────────────────
-  const gld = quotes.get('GLD')
-  if (gld) {
-    const riskOff = gld.changePercent > 1.2
+  // ── Gold safe-haven signal (GC=F via Yahoo — same source as commodities strip) ──
+  const gold = cmdty['GC=F']
+  if (gold) {
+    const pct     = gold.changePercent
+    const riskOff = pct > 1.2   // sharp gold rally = flight to safety = bad for equities
     const v: SignalVerdict = riskOff ? 'CASH' : 'BUY'
     riskOff ? cashVotes++ : buyVotes++
-    signals.push({ name: 'Gold', verdict: v, value: `${gld.changePercent > 0 ? '+' : ''}${gld.changePercent.toFixed(2)}%`, reason: riskOff ? 'Rising gold = risk-off rotation' : 'Gold stable — no flight to safety' })
+    // Signal is a risk-appetite indicator: green = gold calm = equities bullish
+    // (NOT a directional gold call — the value shows gold's actual move for context)
+    signals.push({
+      name:    'Gold (Safe Haven)',
+      verdict: v,
+      value:   `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`,
+      reason:  riskOff ? 'Gold surging — risk-off rotation into safety' : `Gold ${pct < 0 ? 'falling' : 'calm'} — no safe-haven demand`,
+    })
   }
 
-  // ── Oil / inflation proxy ────────────────────────────────────────
-  const uso = quotes.get('USO')
-  if (uso) {
-    const inflPressure = uso.changePercent > 2.5
+  // ── WTI Oil / inflation proxy (CL=F via Yahoo) ───────────────────
+  const wti = cmdty['CL=F']
+  if (wti) {
+    const pct          = wti.changePercent
+    const inflPressure = pct > 2.5
     const v: SignalVerdict = inflPressure ? 'CASH' : 'BUY'
     inflPressure ? cashVotes++ : buyVotes++
-    signals.push({ name: 'WTI Oil', verdict: v, value: `${uso.changePercent > 0 ? '+' : ''}${uso.changePercent.toFixed(2)}%`, reason: inflPressure ? 'High oil = inflation risk' : 'Oil stable — inflation contained' })
+    signals.push({
+      name:    'WTI Oil',
+      verdict: v,
+      value:   `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`,
+      reason:  inflPressure ? 'Oil surging — inflation risk rising' : 'Oil stable — inflation contained',
+    })
+  }
+
+  // ── Brent Oil (BZ=F via Yahoo) ───────────────────────────────────
+  const brent = cmdty['BZ=F']
+  if (brent) {
+    const pct          = brent.changePercent
+    const inflPressure = pct > 2.5
+    const v: SignalVerdict = inflPressure ? 'CASH' : 'BUY'
+    inflPressure ? cashVotes++ : buyVotes++
+    signals.push({
+      name:    'Brent Oil',
+      verdict: v,
+      value:   `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`,
+      reason:  inflPressure ? 'Brent surging — global energy inflation risk' : 'Brent stable — no energy price shock',
+    })
   }
 
   // ── Treasuries trend (risk off if TLT rising) ────────────────────

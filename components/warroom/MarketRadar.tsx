@@ -109,7 +109,7 @@ export default function MarketRadar({
   const loading = data === null && fetchLoading
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] flex flex-col h-full">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>

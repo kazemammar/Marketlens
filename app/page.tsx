@@ -55,22 +55,22 @@ export default async function HomePage({
       <CommodityStrip initialData={homepage?.commodityStrip} />
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
-      <div className="grid grid-cols-1 border-b border-[var(--border)] lg:grid-cols-[65fr_35fr] lg:h-[532px] xl:h-[632px]">
+      <div className="grid grid-cols-1 gap-1.5 px-3 sm:px-4 py-2 lg:grid-cols-[65fr_35fr]">
         {/* GeoMap — left */}
-        <div className="flex flex-col overflow-hidden lg:border-r border-[var(--border)]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
             <span className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
               Geopolitical Intelligence Map
             </span>
           </div>
-          <div className="h-[240px] sm:h-[320px] lg:flex-1" style={{ isolation: 'isolate' }}>
+          <div className="h-[240px] sm:h-[320px] lg:h-[500px] xl:h-[600px]" style={{ isolation: 'isolate' }}>
             <GeoMap />
           </div>
         </div>
 
-        {/* IntelPanel — right, fixed height = grid row height */}
-        <div className="h-[300px] sm:h-[350px] lg:h-full flex flex-col overflow-hidden bg-[var(--surface)]">
+        {/* IntelPanel — right */}
+        <div className="h-[300px] sm:h-[350px] lg:h-[540px] xl:h-[640px] flex flex-col overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
@@ -84,7 +84,7 @@ export default async function HomePage({
       </div>
 
       {/* ══ MARKET INTELLIGENCE SECTION HEADER ════════════════════════════ */}
-      <div className="flex items-center gap-3 border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 sm:px-4">
+      <div className="flex items-center gap-2 px-3 py-3 sm:px-4">
         <div className="flex items-center gap-2">
           {/* animated radar icon */}
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
@@ -104,38 +104,44 @@ export default async function HomePage({
       </div>
 
       {/* ══ DATA PANELS — Row 1: Market Radar | Risk Gauge ══════════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
-        <div className="war-panel min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full max-h-[350px] sm:max-h-none">
+      <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
+        <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
           <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={[]} showHeatmap={false} />
         </div>
-        <div className="min-w-0 overflow-hidden flex flex-col border-b sm:border-b-0 sm:h-full max-h-[350px] sm:max-h-none">
+        <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
           <RiskGauge />
         </div>
       </div>
 
       {/* ══ DATA PANELS — Row 2: FX Monitor | S&P Heatmap ═══════════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 border-b border-[var(--border)] bg-[var(--surface)] sm:h-[300px]">
-        <div className="war-panel min-w-0 overflow-hidden h-full flex flex-col border-b sm:border-b-0 max-h-[350px] sm:max-h-none">
+      <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
+        <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
           <FXMonitor />
         </div>
-        <div className="min-w-0 overflow-hidden h-full flex flex-col">
+        <div className="min-w-0 overflow-hidden flex flex-col">
           <HeatmapPanel stocks={homepage?.stocks ?? []} />
         </div>
       </div>
 
       {/* ══ DATA PANELS — Row 3: Live Signals horizontal strip ══════════ */}
-      <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+      <div className="px-3 sm:px-4 py-2">
         <SignalsPanel layout="horizontal" />
       </div>
 
       {/* ══ TOP MOVERS STRIP ══════════════════════════════════════════════ */}
-      <MoversStrip />
+      <div className="px-3 sm:px-4 py-2">
+        <MoversStrip />
+      </div>
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}
-      <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>
+      <div className="px-3 sm:px-4 py-2">
+        <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>
+      </div>
 
       {/* ══ NEWS BRIEFING — top stories by category ═══════════════════════ */}
-      <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
+      <div className="px-3 sm:px-4 py-2">
+        <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
+      </div>
 
       {/* ══ ECONOMIC INDICATORS ═══════════════════════════════════════════ */}
       <SectionReveal delay={0}><EconomicIndicators /></SectionReveal>
@@ -144,7 +150,7 @@ export default async function HomePage({
       <SectionReveal delay={0}><MaritimePanel /></SectionReveal>
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />
+      <div className="mx-3 sm:mx-4 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />
 
       {/* ══ MARKET DASHBOARD ══════════════════════════════════════════════ */}
       <div id="market-overview">

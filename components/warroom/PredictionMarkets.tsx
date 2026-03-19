@@ -98,7 +98,7 @@ export default function PredictionMarkets() {
   const markets = data ?? []
 
   return (
-    <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-2">

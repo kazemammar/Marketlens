@@ -199,10 +199,10 @@ export default function MoversStrip() {
   const losers  = data?.all.losers.slice(0, 10)  ?? []
 
   return (
-    <div className="border-b border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
 
       {/* Section header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 sm:px-4">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2 sm:px-4">
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

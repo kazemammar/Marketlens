@@ -626,7 +626,7 @@ export default function RiskGauge() {
   }, [])
 
   return (
-    <div className="flex flex-col h-full min-h-[260px] sm:min-h-0">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] flex flex-col h-full min-h-[260px] sm:min-h-0">
 
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">

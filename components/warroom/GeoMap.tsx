@@ -598,7 +598,7 @@ export default function GeoMap() {
       </div>
 
       {/* Region preset buttons */}
-      <div className="flex items-center gap-1 border-t border-[var(--border)] bg-[var(--surface)] px-2 py-1.5">
+      <div className="flex items-center gap-1 border-t border-[var(--border)] px-2 py-1.5">
         <span className="mr-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">Jump:</span>
         {PRESETS.map((p) => (
           <button

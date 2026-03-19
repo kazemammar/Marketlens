@@ -121,7 +121,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
     const filtered = filter === 'all' ? signals : signals.filter((s) => s.category === filter)
 
     return (
-      <div className="flex flex-col">
+      <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] flex flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-[var(--border)] px-3 py-2">
           <div className="flex items-center gap-1.5">
@@ -200,7 +200,7 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
 
   // ─── Vertical layout (default) ───────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] flex flex-col h-full">
       <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-1.5">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />

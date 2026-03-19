@@ -144,7 +144,7 @@ export default function PortfolioIntroModal() {
             MarketLens turns them into a{' '}
             <span className="text-[var(--text)]">live intelligence dashboard.</span>{' '}
             Real P&L updated in real time, AI analysis of your exact holdings,
-            and risk signals that actually tell you something.
+            news filtered to what you own, and risk signals that actually tell you something.
           </p>
 
           {/* Feature grid */}

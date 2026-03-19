@@ -117,9 +117,9 @@ export default function EconomicIndicators() {
   const inverted = indicators.find((i) => i.id === 'YIELD_SPREAD' && (i.value ?? 0) < 0)
 
   return (
-    <div className="px-3 py-2 sm:px-4">
-      {/* Section header */}
-      <div className="mb-2 flex items-center gap-2">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+      {/* Panel header */}
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="9" width="3" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
           <rect x="6" y="5" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
@@ -141,7 +141,7 @@ export default function EconomicIndicators() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="p-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {loading
           ? Array.from({ length: 9 }).map((_, i) => <SkeletonCard key={i} />)
           : indicators.length === 0

@@ -34,25 +34,42 @@ export default async function ForexPage() {
           />
         </div>
 
-        {/* Currency Strength Meter */}
-        <div className="mb-6">
+        {/* Currency Strength Meter — top panel */}
+        <div className="mb-1.5">
           <CurrencyStrengthMeter />
         </div>
 
-        {/* Grid */}
-        {pairs.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {pairs.map((asset) => (
-              <AssetCard key={`forex-${asset.symbol}`} asset={asset} />
-            ))}
+        {/* Currency Pairs panel */}
+        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+          {/* Panel header */}
+          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+              <path d="M3 8h10M9 5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M13 8H3M7 11L4 8l3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45"/>
+            </svg>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+              Currency Pairs
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+            <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">{pairs.length} PAIRS</span>
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
-            <p className="text-3xl">📭</p>
-            <p className="mt-3 font-mono text-[14px] font-medium text-[var(--text)]">No forex data available</p>
-            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">Check your API connection and try again.</p>
-          </div>
-        )}
+
+          {/* Grid */}
+          {pairs.length > 0 ? (
+            <div className="p-2.5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {pairs.map((asset) => (
+                <AssetCard key={`forex-${asset.symbol}`} asset={asset} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <p className="text-3xl">📭</p>
+              <p className="mt-3 font-mono text-[14px] font-medium text-[var(--text)]">No forex data available</p>
+              <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">Check your API connection and try again.</p>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   )

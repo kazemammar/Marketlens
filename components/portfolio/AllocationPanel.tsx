@@ -164,14 +164,14 @@ function DonutRing({
   const glowColor = centerGlow ?? 'rgba(16,185,129,0.5)'
 
   return (
-    <div className="relative flex shrink-0 items-center justify-center">
-      <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden>
+    <div className="relative h-[120px] w-[120px] sm:h-[150px] sm:w-[150px] shrink-0">
+      <svg className="h-full w-full" viewBox="0 0 100 100" aria-hidden>
         <defs>
-          <filter id="ring-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <filter id="alloc-ring-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="2.5" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
-          <filter id="text-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <filter id="alloc-text-glow" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur stdDeviation="3" result="blur"/>
             <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
@@ -181,7 +181,7 @@ function DonutRing({
         <circle
           cx={CX} cy={CY} r={R}
           fill="none"
-          stroke="var(--surface-2)"
+          stroke="var(--surface-3)"
           strokeWidth="7"
         />
 
@@ -196,10 +196,10 @@ function DonutRing({
             strokeDasharray={arc.dashArr}
             strokeDashoffset={arc.dashOff}
             strokeLinecap="butt"
-            filter="url(#ring-glow)"
+            filter="url(#alloc-ring-glow)"
             transform={`rotate(-90 ${CX} ${CY})`}
             style={{
-              transition: 'stroke-dasharray 0.8s ease, stroke-dashoffset 0.8s ease',
+              transition: 'stroke-dasharray 0.8s cubic-bezier(0.16,1,0.3,1), stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)',
               opacity:    0.92,
             }}
           />
@@ -210,18 +210,18 @@ function DonutRing({
           x={CX} y={CY - 4}
           textAnchor="middle"
           dominantBaseline="central"
-          filter="url(#text-glow)"
+          filter="url(#alloc-text-glow)"
           style={{
             fill:       glowColor,
             fontFamily: 'var(--font-mono), monospace',
-            fontSize:   '15px',
+            fontSize:   '13px',
             fontWeight: 700,
           }}
         >
           {centerLabel}
         </text>
         <text
-          x={CX} y={CY + 10}
+          x={CX} y={CY + 9}
           textAnchor="middle"
           dominantBaseline="central"
           style={{ fill: 'var(--text-muted)', fontFamily: 'var(--font-mono), monospace', fontSize: '7px' }}

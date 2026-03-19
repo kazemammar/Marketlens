@@ -23,9 +23,9 @@ export default function MaritimePanel() {
   ]
 
   return (
-    <div className="px-3 py-2 sm:px-4">
-      {/* Header */}
-      <div className="mb-2 flex items-center gap-2">
+    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+      {/* Panel header */}
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M8 2v4M4 8H2l2 4h8l2-4h-2M4 8h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M5 12v2M11 12v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -43,7 +43,7 @@ export default function MaritimePanel() {
       </div>
 
       {/* Chokepoint cards */}
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div className="p-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-2 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5">
@@ -98,7 +98,7 @@ export default function MaritimePanel() {
 
       {/* Ship category footer */}
       {!loading && data && (
-        <div className="mt-1.5 flex items-center gap-3">
+        <div className="flex items-center gap-3 px-3 pb-3">
           {shipCategories.map(({ label, cat, color }) => {
             const count = data.ships.filter((s) => s.category === cat).length
             return (

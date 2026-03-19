@@ -128,6 +128,16 @@ export default async function HomePage({
         <SignalsPanel layout="horizontal" />
       </div>
 
+      {/* ══ DATA PANELS — Row 4: Economic Indicators ═════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <EconomicIndicators />
+      </div>
+
+      {/* ══ DATA PANELS — Row 5: Maritime Traffic ════════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <MaritimePanel />
+      </div>
+
       {/* ══ TOP MOVERS STRIP ══════════════════════════════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
         <MoversStrip />
@@ -142,12 +152,6 @@ export default async function HomePage({
       <div className="px-3 sm:px-4 py-2">
         <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
       </div>
-
-      {/* ══ ECONOMIC INDICATORS ═══════════════════════════════════════════ */}
-      <SectionReveal delay={0}><EconomicIndicators /></SectionReveal>
-
-      {/* ══ MARITIME PANEL ════════════════════════════════════════════════ */}
-      <SectionReveal delay={0}><MaritimePanel /></SectionReveal>
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
       <div className="mx-3 sm:mx-4 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />

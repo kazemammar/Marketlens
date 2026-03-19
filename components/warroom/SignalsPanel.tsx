@@ -132,25 +132,24 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
           </div>
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
 
-          {/* Category filter tabs */}
-          <div className="flex items-center gap-px">
-            {(['all', 'price', 'news'] as CatFilter[]).map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`px-2 py-px font-mono text-[8px] font-bold uppercase rounded transition-colors ${
-                  filter === cat
-                    ? 'bg-[var(--accent)] text-[var(--bg)]'
-                    : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1" />
+          {/* Filter tabs + meta — together on the right */}
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-px">
+              {(['all', 'price', 'news'] as CatFilter[]).map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className={`px-2 py-px font-mono text-[8px] font-bold uppercase rounded transition-colors ${
+                    filter === cat
+                      ? 'bg-[var(--accent)] text-[var(--bg)]'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <span className="h-3 w-px bg-[var(--border)] opacity-50" />
             <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
               {filtered.length} signals
             </span>

@@ -347,46 +347,60 @@ export default function MoversView() {
           </div>
         )}
 
-        {/* Tab row */}
+        {/* Gainers / Losers panel */}
         {!error && (
           <>
-            <div className="mb-3 flex overflow-x-auto border-b border-[var(--border)]">
-              {TABS.map((t) => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  className={`relative shrink-0 px-4 pb-2 pt-1 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors ${
-                    tab === t.key
-                      ? 'text-[var(--accent)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text)]'
-                  }`}
-                >
-                  {t.label.toUpperCase()}
-                  {tab === t.key && (
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[var(--accent)]" />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* Gainers / Losers grid */}
-            <div
-              className="overflow-hidden rounded border border-[var(--border)]"
-              style={{ background: 'var(--surface)' }}
-            >
+            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
               {/* Panel header */}
-              <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
                 <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
                   <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-                  {TABS.find(t => t.key === tab)?.label ?? 'All'} Movers
+                  Top Movers
                 </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
                 {!loading && (
-                  <span className="ml-auto font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+                  <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">
                     {gainers.length + losers.length} tracked
                   </span>
                 )}
+                {generatedAt && (
+                  <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40 tabular-nums">
+                    {generatedAt}
+                  </span>
+                )}
+                <button
+                  onClick={() => fetchData()}
+                  disabled={loading}
+                  className="flex items-center gap-1 rounded border border-[var(--border)] px-2 py-0.5 font-mono text-[8px] text-[var(--text-muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
+                >
+                  <svg viewBox="0 0 12 12" fill="none" className={`h-2 w-2 ${loading ? 'animate-spin' : ''}`} stroke="currentColor" strokeWidth="1.5">
+                    <path d="M10 6A4 4 0 1 1 6 2" strokeLinecap="round"/>
+                    <path d="M10 2l0 4-4 0" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Refresh
+                </button>
+              </div>
+
+              {/* Asset type tabs — inside panel like StockExplorer sector tabs */}
+              <div className="flex overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-1">
+                {TABS.map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={`relative shrink-0 px-4 pb-2 pt-2 font-mono text-[10px] font-semibold tracking-[0.04em] transition-colors ${
+                      tab === t.key
+                        ? 'text-[var(--accent)]'
+                        : 'text-[var(--text-muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    {t.label.toUpperCase()}
+                    {tab === t.key && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[var(--accent)]" />
+                    )}
+                  </button>
+                ))}
               </div>
 
               {/* Two-column grid */}
@@ -398,7 +412,7 @@ export default function MoversView() {
 
             {/* Disclaimer */}
             {!loading && (
-              <p className="px-3 py-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+              <p className="px-1 py-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
                 Stocks: Finnhub · Crypto: CoinGecko · Commodities: Yahoo Finance · All data 15min delayed
               </p>
             )}

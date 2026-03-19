@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getPeers, getCompanyProfile, getQuote } from '@/lib/api/finnhub'
-import { getRatios } from '@/lib/api/fmp'
+import { getPeers, getCompanyProfile, getQuote, getFinancialMetrics } from '@/lib/api/finnhub'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 import { redis } from '@/lib/cache/redis'
 
@@ -49,7 +48,7 @@ export async function GET(
 
   const { symbol: rawSymbol } = await params
   const symbol    = decodeURIComponent(rawSymbol).toUpperCase()
-  const cacheKeyStr = `comps:v1:${symbol}`
+  const cacheKeyStr = `comps:v4:${symbol}`
 
   // 1. Cache check
   try {
@@ -63,32 +62,37 @@ export async function GET(
     const allSymbols  = [symbol, ...peerSymbols]
 
     // 3. Fetch all data in parallel by type (minimises Redis round-trips)
-    const [profileResults, quoteResults, ratioResults] = await Promise.all([
+    // Using Finnhub getFinancialMetrics for ratios — FMP's ratios-ttm endpoint
+    // requires a paid plan and returns "Limit Reach" silently on the free tier.
+    const [profileResults, quoteResults, metricsResults] = await Promise.all([
       Promise.allSettled(allSymbols.map((s) => getCompanyProfile(s))),
       Promise.allSettled(allSymbols.map((s) => getQuote(s))),
-      Promise.allSettled(allSymbols.map((s) => getRatios(s))),
+      Promise.allSettled(allSymbols.map((s) => getFinancialMetrics(s))),
     ])
 
     // 4. Assemble rows
+    // Finnhub returns roe, netProfitMargin, dividendYield as percentage values
+    // (e.g. 25 = 25%). CompRow stores them as decimal fractions (0.25) so the
+    // component's fmtPct() can multiply back by 100 for display.
     const rows: CompRow[] = allSymbols.map((sym, i) => {
-      const profile = profileResults[i].status === 'fulfilled' ? profileResults[i].value : null
-      const quote   = quoteResults[i].status   === 'fulfilled' ? quoteResults[i].value   : null
-      const ratio   = ratioResults[i].status   === 'fulfilled' ? ratioResults[i].value   : null
+      const profile = profileResults[i].status  === 'fulfilled' ? profileResults[i].value  : null
+      const quote   = quoteResults[i].status    === 'fulfilled' ? quoteResults[i].value    : null
+      const metrics = metricsResults[i].status  === 'fulfilled' ? metricsResults[i].value  : null
 
       return {
         symbol:         sym,
-        name:           profile?.name                  ?? sym,
-        logo:           profile?.logo                  ?? null,
-        industry:       profile?.finnhubIndustry       ?? null,
-        marketCap:      profile?.marketCapitalization  ?? null,
-        price:          quote?.price                   ?? null,
-        changePercent:  quote?.changePercent           ?? null,
-        peRatio:        ratio?.peRatio                 ?? null,
-        evToEbitda:     ratio?.evToEbitda              ?? null,
-        psRatio:        ratio?.psRatio                 ?? null,
-        profitMargin:   ratio?.profitMargin            ?? null,
-        returnOnEquity: ratio?.returnOnEquity          ?? null,
-        dividendYield:  ratio?.dividendYield           ?? null,
+        name:           profile?.name                 ?? sym,
+        logo:           profile?.logo                 ?? null,
+        industry:       profile?.finnhubIndustry      ?? null,
+        marketCap:      profile?.marketCapitalization ?? null,
+        price:          quote?.price                  ?? null,
+        changePercent:  quote?.changePercent          ?? null,
+        peRatio:        metrics?.peRatio              ?? null,
+        evToEbitda:     metrics?.evToEbitda           ?? null,
+        psRatio:        metrics?.psRatio              ?? null,
+        profitMargin:   metrics?.netProfitMargin  != null ? metrics.netProfitMargin  / 100 : null,
+        returnOnEquity: metrics?.roe              != null ? metrics.roe              / 100 : null,
+        dividendYield:  metrics?.dividendYield    != null ? metrics.dividendYield    / 100 : null,
         isCurrent:      sym === symbol,
       }
     })

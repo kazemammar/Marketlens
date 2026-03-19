@@ -435,18 +435,19 @@ export async function getQuotesBatched(
 
 interface FinnhubMetricResponse {
   metric: {
-    peBasicExclExtraTTM:  number | null
-    pbAnnual:             number | null
-    psAnnual:             number | null
-    roeTTM:               number | null
-    roaRfy:               number | null
-    netProfitMarginTTM:   number | null
+    peBasicExclExtraTTM:       number | null
+    pbAnnual:                   number | null
+    psAnnual:                   number | null
+    currentEvOverEbitdaAnnual:  number | null
+    roeTTM:                     number | null
+    roaRfy:                     number | null
+    netProfitMarginTTM:         number | null
     totalDebt_totalEquityAnnual: number | null
-    currentRatioAnnual:   number | null
-    '52WeekHigh':         number | null
-    '52WeekLow':          number | null
+    currentRatioAnnual:         number | null
+    '52WeekHigh':               number | null
+    '52WeekLow':                number | null
     dividendYieldIndicatedAnnual: number | null
-    marketCapitalization: number | null
+    marketCapitalization:       number | null
   }
 }
 
@@ -474,18 +475,19 @@ export async function getFinancialMetrics(symbol: string): Promise<FinancialMetr
       )
       const m = data.metric ?? {}
       return {
-        peRatio:         m.peBasicExclExtraTTM  ?? null,
-        pbRatio:         m.pbAnnual             ?? null,
-        psRatio:         m.psAnnual             ?? null,
-        roe:             m.roeTTM               ?? null,
-        roa:             m.roaRfy               ?? null,
-        netProfitMargin: m.netProfitMarginTTM   ?? null,
-        debtToEquity:    m.totalDebt_totalEquityAnnual ?? null,
-        currentRatio:    m.currentRatioAnnual   ?? null,
-        week52High:      m['52WeekHigh']         ?? null,
-        week52Low:       m['52WeekLow']          ?? null,
+        peRatio:         m.peBasicExclExtraTTM          ?? null,
+        pbRatio:         m.pbAnnual                     ?? null,
+        psRatio:         m.psAnnual                     ?? null,
+        evToEbitda:      m.currentEvOverEbitdaAnnual    ?? null,
+        roe:             m.roeTTM                       ?? null,
+        roa:             m.roaRfy                       ?? null,
+        netProfitMargin: m.netProfitMarginTTM           ?? null,
+        debtToEquity:    m.totalDebt_totalEquityAnnual  ?? null,
+        currentRatio:    m.currentRatioAnnual           ?? null,
+        week52High:      m['52WeekHigh']                ?? null,
+        week52Low:       m['52WeekLow']                 ?? null,
         dividendYield:   m.dividendYieldIndicatedAnnual ?? null,
-        marketCap:       m.marketCapitalization  ?? null,
+        marketCap:       m.marketCapitalization         ?? null,
       } satisfies FinancialMetrics
     },
   )

@@ -149,11 +149,15 @@ export async function getRatios(symbol: string): Promise<FinancialRatios | null>
     cacheKey.ratios(symbol),
     TTL.RATIOS,
     async () => {
+      // NOTE: FMP's ratios-ttm endpoint is not available on the free tier —
+      // it silently returns {"Error Message": "Limit Reach"} as 200 OK.
+      // The comps table now uses getFinancialMetrics (Finnhub) instead.
+      // This function is retained for any future paid-tier use.
       const data = await fmpGet<FmpRatios[]>(
         `/ratios-ttm/${encodeURIComponent(symbol)}`,
       )
 
-      if (!data.length) return null
+      if (!data || !data.length) return null
 
       const r = data[0]
       return {

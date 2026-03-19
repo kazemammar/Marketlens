@@ -164,6 +164,7 @@ export interface FinancialMetrics {
   peRatio:        number | null
   pbRatio:        number | null
   psRatio:        number | null
+  evToEbitda:     number | null
   roe:            number | null
   roa:            number | null
   netProfitMargin: number | null

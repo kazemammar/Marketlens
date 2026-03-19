@@ -254,7 +254,7 @@ export default function PortfolioSummary({
         </div>
 
         {/* ── Mobile: stacked ──────────────────────────────────────────── */}
-        <div className="flex min-w-0 flex-col gap-1 overflow-hidden sm:hidden">
+        <div className="flex min-w-0 flex-col gap-1 sm:hidden">
 
           {/* Row 1: value */}
           <span

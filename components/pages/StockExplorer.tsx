@@ -141,11 +141,11 @@ function MarketIndices() {
 
 function GridSkeleton({ count = 10 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex flex-col gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3.5"
+          className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-3"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-1.5">
@@ -276,7 +276,7 @@ export default function StockExplorer() {
               No data available for this sector
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {stocks.map((asset) => (
                 <AssetCard key={`${asset.type}-${asset.symbol}`} asset={asset} />
               ))}

@@ -173,7 +173,7 @@ export default function WatchlistPage() {
 
         {/* Loading skeleton */}
         {isLoading && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -193,7 +193,7 @@ export default function WatchlistPage() {
         {!isLoading && items.length === 0 && <EmptyWatchlist />}
 
         {!isLoading && items.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {items.map((item) => (
               <WatchlistCard
                 key={`${item.asset_type}-${item.symbol}`}

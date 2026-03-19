@@ -65,7 +65,7 @@ export default async function ETFPage() {
 
         {/* Grid */}
         {assets.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {assets.map((asset) => (
               <AssetCard key={`etf-${asset.symbol}`} asset={asset} />
             ))}

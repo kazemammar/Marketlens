@@ -186,7 +186,7 @@ export default function NewsPage() {
         )}
 
         {/* Articles */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <ArticleSkeleton key={i} />)
             : articles.map((a) => <ArticleCard key={a.id} article={a} />)

@@ -9,25 +9,27 @@ import { getYahooQuotesBatch } from '@/lib/api/yahoo'
 
 const STOCK_SYMBOLS = [
   // Technology
-  'AAPL','MSFT','GOOGL','NVDA','META','TSLA','AVGO','CRM','AMD','INTC','ORCL','ADBE','CSCO','NFLX','QCOM','PLTR','PANW','SNOW','NOW','SHOP','UBER','SQ','COIN','MSTR','MU',
+  'AAPL','MSFT','NVDA','AVGO','ORCL','CRM','ADBE','AMD','CSCO','QCOM','INTC','NOW','PLTR','PANW','SNPS','CDNS','MRVL','KLAC','LRCX','AMAT','MU','ADI','FTNT','WDAY','TEAM','CRWD','DDOG','ZS','HUBS','ANSS',
   // Finance
-  'JPM','V','MA','BAC','GS','MS','BLK','AXP','SCHW','C','WFC','USB','PNC','COF','AIG','MET','PRU','ICE','CME','PYPL',
+  'JPM','V','MA','BAC','GS','MS','BLK','SCHW','C','AXP','BRK.B','WFC','SPGI','ICE','CME','PGR','USB','MMC','CB','AON','MET','AIG','PRU','TRV','PNC','COF','PYPL','AJG','FITB','FIS',
   // Healthcare
-  'UNH','JNJ','LLY','PFE','ABBV','MRK','TMO','ABT','AMGN','MDT','ISRG','DHR','BMY','GILD','CVS','CI','ELV','ZTS','REGN','VRTX',
-  // Energy
-  'XOM','CVX','COP','SLB','EOG','MPC','PSX','VLO','OXY','HAL','DVN','FANG','HES','BKR','KMI','WMB','OKE','TRGP','LNG','MRO',
+  'UNH','LLY','JNJ','ABBV','MRK','TMO','ABT','PFE','AMGN','MDT','ISRG','DHR','BMY','GILD','CVS','CI','ELV','VRTX','REGN','ZTS','BDX','BSX','SYK','HCA','MCK','A','DXCM','IQV','IDXX','EW',
   // Consumer Disc.
-  'AMZN','HD','NKE','SBUX','MCD','LOW','TJX','BKNG','CMG','YUM','ABNB','MAR','RCL','LULU','DPZ',
+  'AMZN','TSLA','HD','NKE','MCD','LOW','SBUX','TJX','BKNG','CMG','ABNB','MAR','RCL','ORLY','AZO','ROST','DHI','LEN','YUM','DPZ','LULU','ULTA','DECK','GM','F','EBAY','ETSY','CPRT','BBY','GRMN',
   // Consumer Staples
-  'PG','KO','PEP','COST','WMT','PM','MO','CL','KHC','GIS','STZ','MNST','KR','SYY','HSY',
+  'PG','KO','PEP','COST','WMT','PM','MO','CL','MDLZ','KHC','GIS','STZ','MNST','KR','SYY','HSY','ADM','TAP','CAG','SJM','CLX','CHD','K','TSN','HRL','MKC','BG','LAMB','CPB','WBA',
   // Industrial
-  'CAT','DE','GE','BA','HON','UPS','LMT','RTX','MMM','UNP','FDX','WM','EMR','ITW','GD','NOC','TDG','CARR','JCI','IR',
+  'CAT','GE','HON','UPS','BA','RTX','LMT','DE','UNP','FDX','WM','ETN','ITW','EMR','GD','NOC','TDG','CSX','NSC','CARR','JCI','IR','PH','PCAR','CTAS','FAST','GWW','VRSK','ROK','SWK',
   // Communication
-  'DIS','CMCSA','T','VZ','TMUS','CHTR','SPOT','RBLX','EA','TTWO','WBD','PARA','LYV','MTCH','PINS',
+  'GOOGL','META','NFLX','DIS','CMCSA','T','VZ','TMUS','CHTR','SPOT','RBLX','EA','TTWO','WBD','PARA','LYV','MTCH','PINS','ZM','SNAP','ROKU','OMC','IPG','FOXA','NWSA',
+  // Energy
+  'XOM','CVX','COP','SLB','EOG','MPC','PSX','VLO','OXY','HAL','DVN','FANG','HES','BKR','KMI','WMB','OKE','TRGP','LNG','MRO','CTRA','EQT','APA','WFRD','FTI',
   // Real Estate
-  'AMT','PLD','CCI','EQIX','PSA','SPG','O','WELL','DLR','AVB','EQR','VICI','IRM','ARE','KIM',
+  'AMT','PLD','CCI','EQIX','PSA','SPG','O','WELL','DLR','AVB','EQR','VICI','IRM','ARE','KIM','ESS','MAA','REG','UDR','HST','CPT','BXP','PEAK','SUI','EXR',
+  // Materials
+  'LIN','APD','SHW','ECL','FCX','NEM','NUE','DOW','DD','VMC','MLM','PPG','IFF','CE','ALB','EMN','FMC','IP','PKG','AVY','SEE','CF','MOS','BALL','AMCR',
   // Utilities
-  'NEE','DUK','SO','D','AEP','SRE','EXC','XEL','ED','WEC','ES','AWK','ATO','CMS','DTE',
+  'NEE','DUK','SO','D','AEP','SRE','EXC','XEL','ED','WEC','ES','AWK','ATO','CMS','DTE','PEG','FE','PPL','EIX','ETR','CEG','EVRG','NI','LNT','AES',
 ]
 
 const COMMODITY_SYMBOLS = ['CL=F','BZ=F','GC=F','SI=F','NG=F','HG=F','ZW=F','ZC=F']
@@ -36,60 +38,88 @@ const COMMODITY_SYMBOLS = ['CL=F','BZ=F','GC=F','SI=F','NG=F','HG=F','ZW=F','ZC=
 
 const STOCK_NAMES: Record<string, string> = {
   // Technology
-  AAPL: 'Apple', MSFT: 'Microsoft', GOOGL: 'Alphabet', NVDA: 'NVIDIA', META: 'Meta',
-  TSLA: 'Tesla', AVGO: 'Broadcom', CRM: 'Salesforce', AMD: 'AMD', INTC: 'Intel',
-  ORCL: 'Oracle', ADBE: 'Adobe', CSCO: 'Cisco', NFLX: 'Netflix', QCOM: 'Qualcomm',
-  PLTR: 'Palantir', PANW: 'Palo Alto Networks', SNOW: 'Snowflake', NOW: 'ServiceNow',
-  SHOP: 'Shopify', UBER: 'Uber', SQ: 'Block', COIN: 'Coinbase', MSTR: 'MicroStrategy', MU: 'Micron',
+  AAPL: 'Apple', MSFT: 'Microsoft', NVDA: 'NVIDIA', AVGO: 'Broadcom', ORCL: 'Oracle',
+  CRM: 'Salesforce', ADBE: 'Adobe', AMD: 'AMD', CSCO: 'Cisco', QCOM: 'Qualcomm',
+  INTC: 'Intel', NOW: 'ServiceNow', PLTR: 'Palantir', PANW: 'Palo Alto Networks',
+  SNPS: 'Synopsys', CDNS: 'Cadence Design', MRVL: 'Marvell Tech', KLAC: 'KLA Corp',
+  LRCX: 'Lam Research', AMAT: 'Applied Materials', MU: 'Micron', ADI: 'Analog Devices',
+  FTNT: 'Fortinet', WDAY: 'Workday', TEAM: 'Atlassian', CRWD: 'CrowdStrike',
+  DDOG: 'Datadog', ZS: 'Zscaler', HUBS: 'HubSpot', ANSS: 'Ansys',
   // Finance
   JPM: 'JPMorgan', V: 'Visa', MA: 'Mastercard', BAC: 'Bank of America', GS: 'Goldman Sachs',
-  MS: 'Morgan Stanley', BLK: 'BlackRock', AXP: 'Amex', SCHW: 'Schwab', C: 'Citigroup',
-  WFC: 'Wells Fargo', USB: 'US Bancorp', PNC: 'PNC Financial', COF: 'Capital One',
-  AIG: 'AIG', MET: 'MetLife', PRU: 'Prudential', ICE: 'Intercontinental Exchange',
-  CME: 'CME Group', PYPL: 'PayPal',
+  MS: 'Morgan Stanley', BLK: 'BlackRock', SCHW: 'Schwab', C: 'Citigroup', AXP: 'Amex',
+  'BRK.B': 'Berkshire Hathaway', WFC: 'Wells Fargo', SPGI: 'S&P Global', ICE: 'ICE',
+  CME: 'CME Group', PGR: 'Progressive', USB: 'US Bancorp', MMC: 'Marsh McLennan',
+  CB: 'Chubb', AON: 'Aon', MET: 'MetLife', AIG: 'AIG', PRU: 'Prudential',
+  TRV: 'Travelers', PNC: 'PNC Financial', COF: 'Capital One', PYPL: 'PayPal',
+  AJG: 'Arthur J. Gallagher', FITB: 'Fifth Third', FIS: 'Fidelity NIS',
   // Healthcare
-  UNH: 'UnitedHealth', JNJ: 'J&J', LLY: 'Eli Lilly', PFE: 'Pfizer', ABBV: 'AbbVie',
-  MRK: 'Merck', TMO: 'Thermo Fisher', ABT: 'Abbott', AMGN: 'Amgen', MDT: 'Medtronic',
+  UNH: 'UnitedHealth', LLY: 'Eli Lilly', JNJ: 'J&J', ABBV: 'AbbVie', MRK: 'Merck',
+  TMO: 'Thermo Fisher', ABT: 'Abbott', PFE: 'Pfizer', AMGN: 'Amgen', MDT: 'Medtronic',
   ISRG: 'Intuitive Surgical', DHR: 'Danaher', BMY: 'Bristol Myers', GILD: 'Gilead',
-  CVS: 'CVS Health', CI: 'Cigna', ELV: 'Elevance', ZTS: 'Zoetis', REGN: 'Regeneron', VRTX: 'Vertex',
+  CVS: 'CVS Health', CI: 'Cigna', ELV: 'Elevance', VRTX: 'Vertex', REGN: 'Regeneron',
+  ZTS: 'Zoetis', BDX: 'Becton Dickinson', BSX: 'Boston Scientific', SYK: 'Stryker',
+  HCA: 'HCA Healthcare', MCK: 'McKesson', A: 'Agilent', DXCM: 'Dexcom',
+  IQV: 'IQVIA', IDXX: 'IDEXX Labs', EW: 'Edwards Lifesciences',
+  // Consumer Disc.
+  AMZN: 'Amazon', TSLA: 'Tesla', HD: 'Home Depot', NKE: 'Nike', MCD: "McDonald's",
+  LOW: 'Lowes', SBUX: 'Starbucks', TJX: 'TJX Companies', BKNG: 'Booking', CMG: 'Chipotle',
+  ABNB: 'Airbnb', MAR: 'Marriott', RCL: 'Royal Caribbean', ORLY: "O'Reilly Auto",
+  AZO: 'AutoZone', ROST: 'Ross Stores', DHI: 'D.R. Horton', LEN: 'Lennar',
+  YUM: 'Yum! Brands', DPZ: "Domino's", LULU: 'Lululemon', ULTA: 'Ulta Beauty',
+  DECK: 'Deckers Outdoor', GM: 'General Motors', F: 'Ford', EBAY: 'eBay',
+  ETSY: 'Etsy', CPRT: 'Copart', BBY: 'Best Buy', GRMN: 'Garmin',
+  // Consumer Staples
+  PG: 'P&G', KO: 'Coca-Cola', PEP: 'Pepsi', COST: 'Costco', WMT: 'Walmart',
+  PM: 'Philip Morris', MO: 'Altria', CL: 'Colgate', MDLZ: 'Mondelez', KHC: 'Kraft Heinz',
+  GIS: 'General Mills', STZ: 'Constellation Brands', MNST: 'Monster Beverage',
+  KR: 'Kroger', SYY: 'Sysco', HSY: 'Hershey', ADM: 'Archer-Daniels', TAP: 'Molson Coors',
+  CAG: 'Conagra', SJM: 'J.M. Smucker', CLX: 'Clorox', CHD: 'Church & Dwight',
+  K: 'Kellanova', TSN: 'Tyson Foods', HRL: 'Hormel', MKC: 'McCormick',
+  BG: 'Bunge', LAMB: 'Lamb Weston', CPB: "Campbell's", WBA: 'Walgreens',
+  // Industrial
+  CAT: 'Caterpillar', GE: 'GE Aerospace', HON: 'Honeywell', UPS: 'UPS', BA: 'Boeing',
+  RTX: 'RTX', LMT: 'Lockheed Martin', DE: 'Deere', UNP: 'Union Pacific', FDX: 'FedEx',
+  WM: 'Waste Management', ETN: 'Eaton', ITW: 'Illinois Tool Works', EMR: 'Emerson',
+  GD: 'General Dynamics', NOC: 'Northrop Grumman', TDG: 'TransDigm',
+  CSX: 'CSX', NSC: 'Norfolk Southern', CARR: 'Carrier', JCI: 'Johnson Controls',
+  IR: 'Ingersoll Rand', PH: 'Parker Hannifin', PCAR: 'PACCAR', CTAS: 'Cintas',
+  FAST: 'Fastenal', GWW: 'W.W. Grainger', VRSK: 'Verisk', ROK: 'Rockwell Auto', SWK: 'Stanley Black & Decker',
+  // Communication
+  GOOGL: 'Alphabet', META: 'Meta', NFLX: 'Netflix', DIS: 'Disney', CMCSA: 'Comcast',
+  T: 'AT&T', VZ: 'Verizon', TMUS: 'T-Mobile', CHTR: 'Charter', SPOT: 'Spotify',
+  RBLX: 'Roblox', EA: 'EA', TTWO: 'Take-Two', WBD: 'Warner Bros', PARA: 'Paramount',
+  LYV: 'Live Nation', MTCH: 'Match Group', PINS: 'Pinterest', ZM: 'Zoom', SNAP: 'Snap',
+  ROKU: 'Roku', OMC: 'Omnicom', IPG: 'Interpublic', FOXA: 'Fox Corp', NWSA: 'News Corp',
   // Energy
   XOM: 'Exxon', CVX: 'Chevron', COP: 'ConocoPhillips', SLB: 'Schlumberger', EOG: 'EOG Resources',
   MPC: 'Marathon Petro', PSX: 'Phillips 66', VLO: 'Valero', OXY: 'Occidental', HAL: 'Halliburton',
   DVN: 'Devon Energy', FANG: 'Diamondback', HES: 'Hess', BKR: 'Baker Hughes',
   KMI: 'Kinder Morgan', WMB: 'Williams Cos', OKE: 'ONEOK', TRGP: 'Targa Resources',
-  LNG: 'Cheniere Energy', MRO: 'Marathon Oil',
-  // Consumer Disc.
-  AMZN: 'Amazon', HD: 'Home Depot', NKE: 'Nike', SBUX: 'Starbucks', MCD: "McDonald's",
-  LOW: 'Lowes', TJX: 'TJX Companies', BKNG: 'Booking', CMG: 'Chipotle',
-  YUM: 'Yum! Brands', ABNB: 'Airbnb', MAR: 'Marriott', RCL: 'Royal Caribbean',
-  LULU: 'Lululemon', DPZ: "Domino's",
-  // Consumer Staples
-  PG: 'P&G', KO: 'Coca-Cola', PEP: 'Pepsi', COST: 'Costco', WMT: 'Walmart',
-  PM: 'Philip Morris', MO: 'Altria', CL: 'Colgate', KHC: 'Kraft Heinz',
-  GIS: 'General Mills', STZ: 'Constellation Brands', MNST: 'Monster Beverage',
-  KR: 'Kroger', SYY: 'Sysco', HSY: 'Hershey',
-  // Industrial
-  CAT: 'Caterpillar', DE: 'Deere', GE: 'GE Aerospace', BA: 'Boeing', HON: 'Honeywell',
-  UPS: 'UPS', LMT: 'Lockheed Martin', RTX: 'RTX', MMM: '3M', UNP: 'Union Pacific',
-  FDX: 'FedEx', WM: 'Waste Management', EMR: 'Emerson', ITW: 'Illinois Tool Works',
-  GD: 'General Dynamics', NOC: 'Northrop Grumman', TDG: 'TransDigm',
-  CARR: 'Carrier', JCI: 'Johnson Controls', IR: 'Ingersoll Rand',
-  // Communication
-  DIS: 'Disney', CMCSA: 'Comcast', T: 'AT&T', VZ: 'Verizon',
-  TMUS: 'T-Mobile', CHTR: 'Charter', SPOT: 'Spotify', RBLX: 'Roblox',
-  EA: 'EA', TTWO: 'Take-Two', WBD: 'Warner Bros', PARA: 'Paramount',
-  LYV: 'Live Nation', MTCH: 'Match Group', PINS: 'Pinterest',
+  LNG: 'Cheniere Energy', MRO: 'Marathon Oil', CTRA: 'Coterra Energy', EQT: 'EQT Corp',
+  APA: 'APA Corp', WFRD: 'Weatherford', FTI: 'TechnipFMC',
   // Real Estate
   AMT: 'American Tower', PLD: 'Prologis', CCI: 'Crown Castle', EQIX: 'Equinix',
   PSA: 'Public Storage', SPG: 'Simon Property', O: 'Realty Income',
   WELL: 'Welltower', DLR: 'Digital Realty', AVB: 'AvalonBay',
   EQR: 'Equity Residential', VICI: 'VICI Properties', IRM: 'Iron Mountain',
-  ARE: 'Alexandria RE', KIM: 'Kimco Realty',
+  ARE: 'Alexandria RE', KIM: 'Kimco Realty', ESS: 'Essex Property', MAA: 'Mid-America',
+  REG: 'Regency Centers', UDR: 'UDR Inc', HST: 'Host Hotels', CPT: 'Camden Property',
+  BXP: 'BXP Inc', PEAK: 'Healthpeak', SUI: 'Sun Communities', EXR: 'Extra Space',
+  // Materials
+  LIN: 'Linde', APD: 'Air Products', SHW: 'Sherwin-Williams', ECL: 'Ecolab', FCX: 'Freeport-McMoRan',
+  NEM: 'Newmont', NUE: 'Nucor', DOW: 'Dow', DD: 'DuPont', VMC: 'Vulcan Materials',
+  MLM: 'Martin Marietta', PPG: 'PPG Industries', IFF: 'IFF', CE: 'Celanese',
+  ALB: 'Albemarle', EMN: 'Eastman Chemical', FMC: 'FMC Corp', IP: 'International Paper',
+  PKG: 'Packaging Corp', AVY: 'Avery Dennison', SEE: 'Sealed Air', CF: 'CF Industries',
+  MOS: 'Mosaic', BALL: 'Ball Corp', AMCR: 'Amcor',
   // Utilities
   NEE: 'NextEra Energy', DUK: 'Duke Energy', SO: 'Southern Company', D: 'Dominion',
   AEP: 'American Electric', SRE: 'Sempra', EXC: 'Exelon', XEL: 'Xcel Energy',
   ED: 'Con Edison', WEC: 'WEC Energy', ES: 'Eversource', AWK: 'American Water',
-  ATO: 'Atmos Energy', CMS: 'CMS Energy', DTE: 'DTE Energy',
+  ATO: 'Atmos Energy', CMS: 'CMS Energy', DTE: 'DTE Energy', PEG: 'PSEG',
+  FE: 'FirstEnergy', PPL: 'PPL Corp', EIX: 'Edison Intl', ETR: 'Entergy',
+  CEG: 'Constellation Energy', EVRG: 'Evergy', NI: 'NiSource', LNT: 'Alliant Energy', AES: 'AES Corp',
 }
 
 const COMMODITY_NAMES: Record<string, string> = {

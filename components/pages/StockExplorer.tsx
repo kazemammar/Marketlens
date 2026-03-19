@@ -8,30 +8,29 @@ import { useFetch } from '@/lib/hooks/useFetch'
 // ─── Sector config ────────────────────────────────────────────────────────
 
 const STOCK_SECTORS: Record<string, string[]> = {
-  'Technology':       ['AAPL','MSFT','GOOGL','NVDA','META','TSLA','AVGO','CRM','AMD','INTC','ORCL','ADBE','CSCO','NFLX','QCOM','PLTR','PANW','SNOW','NOW','SHOP','UBER','SQ','COIN','MSTR','MU'],
-  'Finance':          ['JPM','V','MA','BAC','GS','MS','BLK','AXP','SCHW','C','WFC','USB','PNC','COF','AIG','MET','PRU','ICE','CME','PYPL'],
-  'Healthcare':       ['UNH','JNJ','LLY','PFE','ABBV','MRK','TMO','ABT','AMGN','MDT','ISRG','DHR','BMY','GILD','CVS','CI','ELV','ZTS','REGN','VRTX'],
-  'Energy':           ['XOM','CVX','COP','SLB','EOG','MPC','PSX','VLO','OXY','HAL','DVN','FANG','HES','BKR','KMI','WMB','OKE','TRGP','LNG','MRO'],
-  'Consumer Disc.':   ['AMZN','HD','NKE','SBUX','MCD','LOW','TJX','BKNG','CMG','YUM','ABNB','MAR','RCL','LULU','DPZ'],
-  'Consumer Staples': ['PG','KO','PEP','COST','WMT','PM','MO','CL','KHC','GIS','STZ','MNST','KR','SYY','HSY'],
-  'Industrial':       ['CAT','DE','GE','BA','HON','UPS','LMT','RTX','MMM','UNP','FDX','WM','EMR','ITW','GD','NOC','TDG','CARR','JCI','IR'],
-  'Communication':    ['DIS','CMCSA','T','VZ','TMUS','CHTR','SPOT','RBLX','EA','TTWO','WBD','PARA','LYV','MTCH','PINS'],
-  'Real Estate':      ['AMT','PLD','CCI','EQIX','PSA','SPG','O','WELL','DLR','AVB','EQR','VICI','IRM','ARE','KIM'],
-  'Utilities':        ['NEE','DUK','SO','D','AEP','SRE','EXC','XEL','ED','WEC','ES','AWK','ATO','CMS','DTE'],
+  'Technology':       ['AAPL','MSFT','NVDA','AVGO','ORCL','CRM','ADBE','AMD','CSCO','QCOM','INTC','NOW','PLTR','PANW','SNPS','CDNS','MRVL','KLAC','LRCX','AMAT','MU','ADI','FTNT','WDAY','TEAM','CRWD','DDOG','ZS','HUBS','ANSS'],
+  'Finance':          ['JPM','V','MA','BAC','GS','MS','BLK','SCHW','C','AXP','BRK.B','WFC','SPGI','ICE','CME','PGR','USB','MMC','CB','AON','MET','AIG','PRU','TRV','PNC','COF','PYPL','AJG','FITB','FIS'],
+  'Healthcare':       ['UNH','LLY','JNJ','ABBV','MRK','TMO','ABT','PFE','AMGN','MDT','ISRG','DHR','BMY','GILD','CVS','CI','ELV','VRTX','REGN','ZTS','BDX','BSX','SYK','HCA','MCK','A','DXCM','IQV','IDXX','EW'],
+  'Consumer Disc.':   ['AMZN','TSLA','HD','NKE','MCD','LOW','SBUX','TJX','BKNG','CMG','ABNB','MAR','RCL','ORLY','AZO','ROST','DHI','LEN','YUM','DPZ','LULU','ULTA','DECK','GM','F','EBAY','ETSY','CPRT','BBY','GRMN'],
+  'Consumer Staples': ['PG','KO','PEP','COST','WMT','PM','MO','CL','MDLZ','KHC','GIS','STZ','MNST','KR','SYY','HSY','ADM','TAP','CAG','SJM','CLX','CHD','K','TSN','HRL','MKC','BG','LAMB','CPB','WBA'],
+  'Industrial':       ['CAT','GE','HON','UPS','BA','RTX','LMT','DE','UNP','FDX','WM','ETN','ITW','EMR','GD','NOC','TDG','CSX','NSC','CARR','JCI','IR','PH','PCAR','CTAS','FAST','GWW','VRSK','ROK','SWK'],
+  'Communication':    ['GOOGL','META','NFLX','DIS','CMCSA','T','VZ','TMUS','CHTR','SPOT','RBLX','EA','TTWO','WBD','PARA','LYV','MTCH','PINS','ZM','SNAP','ROKU','OMC','IPG','FOXA','NWSA'],
+  'Energy':           ['XOM','CVX','COP','SLB','EOG','MPC','PSX','VLO','OXY','HAL','DVN','FANG','HES','BKR','KMI','WMB','OKE','TRGP','LNG','MRO','CTRA','EQT','APA','WFRD','FTI'],
+  'Real Estate':      ['AMT','PLD','CCI','EQIX','PSA','SPG','O','WELL','DLR','AVB','EQR','VICI','IRM','ARE','KIM','ESS','MAA','REG','UDR','HST','CPT','BXP','PEAK','SUI','EXR'],
+  'Materials':        ['LIN','APD','SHW','ECL','FCX','NEM','NUE','DOW','DD','VMC','MLM','PPG','IFF','CE','ALB','EMN','FMC','IP','PKG','AVY','SEE','CF','MOS','BALL','AMCR'],
+  'Utilities':        ['NEE','DUK','SO','D','AEP','SRE','EXC','XEL','ED','WEC','ES','AWK','ATO','CMS','DTE','PEG','FE','PPL','EIX','ETR','CEG','EVRG','NI','LNT','AES'],
 }
 
-// Top 3 by market cap per sector — used for the "All" tab
+// Top 2-3 mega caps per sector — used for the "All" tab
 const ALL_TOP_PICKS = [
   'AAPL','MSFT','NVDA',   // Technology
-  'JPM','V','MA',          // Finance
-  'UNH','LLY','JNJ',       // Healthcare
-  'XOM','CVX','COP',       // Energy
-  'AMZN','HD','NKE',       // Consumer Disc.
-  'PG','KO','COST',        // Consumer Staples
-  'CAT','GE','HON',        // Industrial
-  'DIS','CMCSA','T',       // Communication
-  'AMT','PLD','CCI',       // Real Estate
-  'NEE','DUK','SO',        // Utilities
+  'GOOGL','AMZN','META',  // Communication + Consumer Disc.
+  'TSLA','BRK.B','JPM',   // Consumer Disc. + Finance
+  'V','UNH','LLY',         // Finance + Healthcare
+  'XOM','HD','PG',         // Energy + Consumer Disc. + Staples
+  'CAT','NEE','AMT',       // Industrial + Utilities + Real Estate
+  'LIN','NFLX','COST',     // Materials + Communication + Staples
+  'GE','COP','ABBV',       // Industrial + Energy + Healthcare
 ]
 
 const SECTOR_KEYS = Object.keys(STOCK_SECTORS)
@@ -52,6 +51,7 @@ const SECTOR_COLORS: Record<string, string> = {
   'Industrial':       '#6366f1',
   'Communication':    '#06b6d4',
   'Real Estate':      '#84cc16',
+  'Materials':        '#d97706',
   'Utilities':        '#f97316',
 }
 
@@ -175,6 +175,7 @@ export default function StockExplorer() {
   const indFetch      = useFetch<AssetCardData[]>(sectorUrl('Industrial'),       { enabled: activeTab === 'Industrial',       refreshInterval: 5 * 60_000 })
   const commFetch     = useFetch<AssetCardData[]>(sectorUrl('Communication'),    { enabled: activeTab === 'Communication',    refreshInterval: 5 * 60_000 })
   const realEstFetch  = useFetch<AssetCardData[]>(sectorUrl('Real Estate'),      { enabled: activeTab === 'Real Estate',      refreshInterval: 5 * 60_000 })
+  const matFetch      = useFetch<AssetCardData[]>(sectorUrl('Materials'),        { enabled: activeTab === 'Materials',        refreshInterval: 5 * 60_000 })
   const utilFetch     = useFetch<AssetCardData[]>(sectorUrl('Utilities'),        { enabled: activeTab === 'Utilities',        refreshInterval: 5 * 60_000 })
 
   const fetchMap: Record<string, ReturnType<typeof useFetch<AssetCardData[]>>> = {
@@ -188,6 +189,7 @@ export default function StockExplorer() {
     'Industrial':       indFetch,
     'Communication':    commFetch,
     'Real Estate':      realEstFetch,
+    'Materials':        matFetch,
     'Utilities':        utilFetch,
   }
 

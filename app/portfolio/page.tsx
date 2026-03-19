@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth }      from '@/lib/hooks/useAuth'
 import { usePortfolio } from '@/lib/hooks/usePortfolio'
-import type { PortfolioPosition } from '@/lib/hooks/usePortfolio'
+
 import AuthModal        from '@/components/auth/AuthModal'
 import AddPositionModal from '@/components/portfolio/AddPositionModal'
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary'
@@ -37,34 +36,6 @@ const CRYPTO_TO_BINANCE: Record<string, string> = {
   UNI:  'BINANCE:UNIUSDT',
   ATOM: 'BINANCE:ATOMUSDT',
   LTC:  'BINANCE:LTCUSDT',
-}
-
-// ─── Demo data ─────────────────────────────────────────────────────────────
-
-const DEMO_POSITIONS: PortfolioPosition[] = [
-  { id: 'd1',  symbol: 'AAPL',  asset_type: 'stock',     direction: 'long',  quantity: 50,  avg_cost: 178.50, notes: 'core holding', lots: [{ id: 'l1', date: '2024-06-15', quantity: 30, price: 172.00, amount: 5160, createdAt: '2024-06-15T00:00:00Z' }, { id: 'l2', date: '2024-11-20', quantity: 20, price: 188.25, amount: 3765, createdAt: '2024-11-20T00:00:00Z' }], purchase_date: '2024-06-15', added_at: '2024-06-15T00:00:00Z', updated_at: '2024-11-20T00:00:00Z' },
-  { id: 'd2',  symbol: 'MSFT',  asset_type: 'stock',     direction: 'long',  quantity: 25,  avg_cost: 390.00, notes: null, lots: [], purchase_date: '2024-08-01', added_at: '2024-08-01T00:00:00Z', updated_at: '2024-08-01T00:00:00Z' },
-  { id: 'd3',  symbol: 'NVDA',  asset_type: 'stock',     direction: 'long',  quantity: 40,  avg_cost: 485.00, notes: 'AI play', lots: [], purchase_date: '2024-09-10', added_at: '2024-09-10T00:00:00Z', updated_at: '2024-09-10T00:00:00Z' },
-  { id: 'd4',  symbol: 'TSLA',  asset_type: 'stock',     direction: 'short', quantity: 15,  avg_cost: 340.00, notes: 'hedge', lots: [], purchase_date: '2025-01-05', added_at: '2025-01-05T00:00:00Z', updated_at: '2025-01-05T00:00:00Z' },
-  { id: 'd5',  symbol: 'BTC',   asset_type: 'crypto',    direction: 'long',  quantity: 0.8, avg_cost: 62000,  notes: null, lots: [], purchase_date: '2024-03-20', added_at: '2024-03-20T00:00:00Z', updated_at: '2024-03-20T00:00:00Z' },
-  { id: 'd6',  symbol: 'ETH',   asset_type: 'crypto',    direction: 'long',  quantity: 5,   avg_cost: 3200,   notes: null, lots: [], purchase_date: '2024-05-10', added_at: '2024-05-10T00:00:00Z', updated_at: '2024-05-10T00:00:00Z' },
-  { id: 'd7',  symbol: 'GC=F',  asset_type: 'commodity', direction: 'long',  quantity: 10,  avg_cost: 2050,   notes: 'inflation hedge', lots: [], purchase_date: '2024-07-01', added_at: '2024-07-01T00:00:00Z', updated_at: '2024-07-01T00:00:00Z' },
-  { id: 'd8',  symbol: 'CL=F',  asset_type: 'commodity', direction: 'short', quantity: 20,  avg_cost: 78.50,  notes: 'oil short', lots: [], purchase_date: '2025-02-01', added_at: '2025-02-01T00:00:00Z', updated_at: '2025-02-01T00:00:00Z' },
-  { id: 'd9',  symbol: 'JPM',   asset_type: 'stock',     direction: 'long',  quantity: 30,  avg_cost: 195.00, notes: null, lots: [], purchase_date: '2024-04-15', added_at: '2024-04-15T00:00:00Z', updated_at: '2024-04-15T00:00:00Z' },
-  { id: 'd10', symbol: 'AMZN',  asset_type: 'stock',     direction: 'long',  quantity: 20,  avg_cost: 178.00, notes: null, lots: [], purchase_date: '2024-10-01', added_at: '2024-10-01T00:00:00Z', updated_at: '2024-10-01T00:00:00Z' },
-]
-
-const DEMO_QUOTES: Record<string, { price: number; change: number; changePercent: number }> = {
-  AAPL:   { price: 215.30,  change: 2.15,   changePercent: 1.01 },
-  MSFT:   { price: 425.80,  change: -3.20,  changePercent: -0.75 },
-  NVDA:   { price: 890.50,  change: 15.40,  changePercent: 1.76 },
-  TSLA:   { price: 310.20,  change: -8.50,  changePercent: -2.67 },
-  BTC:    { price: 87500,   change: 1250,   changePercent: 1.45 },
-  ETH:    { price: 3450,    change: -45,    changePercent: -1.29 },
-  'GC=F': { price: 2380,    change: 12.50,  changePercent: 0.53 },
-  'CL=F': { price: 82.30,   change: 1.80,   changePercent: 2.24 },
-  JPM:    { price: 215.60,  change: 1.30,   changePercent: 0.61 },
-  AMZN:   { price: 198.40,  change: 4.20,   changePercent: 2.16 },
 }
 
 // ─── Empty state ───────────────────────────────────────────────────────────
@@ -153,9 +124,6 @@ function SectionHeader({
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function PortfolioPage() {
-  const searchParams = useSearchParams()
-  const isDemo = process.env.NODE_ENV === 'development' && searchParams.get('demo') === 'true'
-
   const { user, loading: authLoading } = useAuth()
   const { positions, loading: posLoading, addPosition, updatePosition, removePosition, addLotToPosition, removeLot, updateLot, refetch } = usePortfolio()
 
@@ -258,9 +226,9 @@ export default function PortfolioPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [positions.length])
 
-  const activePositions = isDemo ? DEMO_POSITIONS : positions
-  const activeQuotes    = isDemo ? DEMO_QUOTES    : quotes
-  const isLoading       = isDemo ? false          : (authLoading || posLoading)
+  const activePositions = positions
+  const activeQuotes    = quotes
+  const isLoading       = authLoading || posLoading
 
   // All-time P&L — same source as summary bar, passed to BenchmarkChart for consistency
   const allTimeStats = useMemo(() => {
@@ -291,7 +259,7 @@ export default function PortfolioPage() {
   }, [activePositions, activeQuotes])
 
   // ── Auth gate ─────────────────────────────────────────────────────────
-  if (!authLoading && !user && !isDemo) {
+  if (!authLoading && !user) {
     return (
       <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">

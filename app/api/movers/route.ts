@@ -156,22 +156,21 @@ function topLosers(items: MoverItem[], n: number): MoverItem[] {
   return [...items].sort((a, b) => a.changePercent - b.changePercent).slice(0, n)
 }
 
-// ─── Route ────────────────────────────────────────────────────────────────────
+// ─── Cache config ─────────────────────────────────────────────────────────────
 
-const CACHE_KEY = 'movers:all'
-const CACHE_TTL = 90 // seconds
+const CACHE_KEY     = 'movers:v2'
+const LOCK_KEY      = 'movers:lock'
+const CACHE_TTL     = 1_800          // keep stale data for 30 min in Redis
+const REFRESH_AFTER = 5 * 60 * 1_000 // background refresh if > 5 min old
 
-export async function GET(req: Request) {
-  const limited = withRateLimit(req, 30)
-  if (limited) return limited
+interface CachedMovers {
+  data:      MoversPayload
+  fetchedAt: number
+}
 
-  // Check Redis cache
-  try {
-    const cached = await redis.get<MoversPayload>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
-  } catch { /* fallthrough */ }
+// ─── Data fetcher ─────────────────────────────────────────────────────────────
 
-  // Fetch all sources in parallel
+async function fetchMoversData(): Promise<MoversPayload | null> {
   const [stocksResult, cryptoResult, commoditiesResult] = await Promise.allSettled([
     getQuotesBatched(STOCK_SYMBOLS, 3, 1000),
     getCryptoMarkets(1, 'usd', 30),
@@ -228,17 +227,69 @@ export async function GET(req: Request) {
   }
 
   const allItems = [...stockItems, ...cryptoItems, ...commodityItems]
+  if (allItems.length === 0) return null
 
-  const payload: MoversPayload = {
+  return {
     all:         { gainers: topGainers(allItems,       15), losers: topLosers(allItems,       15) },
     stocks:      { gainers: topGainers(stockItems,     10), losers: topLosers(stockItems,     10) },
     crypto:      { gainers: topGainers(cryptoItems,    10), losers: topLosers(cryptoItems,    10) },
     commodities: { gainers: topGainers(commodityItems, 10), losers: topLosers(commodityItems, 10) },
     generatedAt: Date.now(),
   }
+}
 
-  // Cache result (fire-and-forget)
-  redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
+function emptyPayload(): MoversPayload {
+  const empty = { gainers: [], losers: [] }
+  return { all: empty, stocks: empty, crypto: empty, commodities: empty, generatedAt: Date.now() }
+}
 
-  return NextResponse.json(payload)
+// ─── Background refresh (fire-and-forget) ────────────────────────────────────
+
+function triggerBackgroundRefresh() {
+  void (async () => {
+    const lock = await redis.set(LOCK_KEY, 1, { ex: 180, nx: true }).catch(() => null)
+    if (!lock) return  // another refresh already running
+
+    try {
+      const payload = await fetchMoversData()
+      if (payload) {
+        await redis.set(CACHE_KEY, { data: payload, fetchedAt: Date.now() } satisfies CachedMovers, { ex: CACHE_TTL })
+        console.log('[movers] background refresh complete')
+      }
+    } catch (err) {
+      console.warn('[movers] background refresh failed', err)
+    } finally {
+      redis.del(LOCK_KEY).catch(() => {})
+    }
+  })()
+}
+
+// ─── Route ────────────────────────────────────────────────────────────────────
+
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 30)
+  if (limited) return limited
+
+  // 1. Check cache
+  try {
+    const cached = await redis.get<CachedMovers>(CACHE_KEY)
+    if (cached?.data) {
+      const ageMs = Date.now() - cached.fetchedAt
+      console.log(`[movers] cache ${ageMs < REFRESH_AFTER ? 'FRESH' : 'STALE'} age=${Math.round(ageMs / 1000)}s`)
+
+      if (ageMs >= REFRESH_AFTER) {
+        triggerBackgroundRefresh()  // non-blocking
+      }
+
+      return NextResponse.json(cached.data)
+    }
+  } catch { /* fallthrough to blocking fetch */ }
+
+  // 2. No cache — cold start blocking fetch
+  console.log('[movers] cold fetch')
+  const payload = await fetchMoversData()
+  if (payload) {
+    redis.set(CACHE_KEY, { data: payload, fetchedAt: Date.now() } satisfies CachedMovers, { ex: CACHE_TTL }).catch(() => {})
+  }
+  return NextResponse.json(payload ?? emptyPayload())
 }

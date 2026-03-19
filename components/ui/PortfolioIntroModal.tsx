@@ -195,7 +195,7 @@ export default function PortfolioIntroModal() {
 
           {/* New features line */}
           <p className="mt-3 font-mono text-[9px] leading-[1.6] text-[var(--text-muted)]">
-            We ship new features every week — news tied to your holdings, smarter alerts, and more. Keep an eye on the platform.
+            We ship new features every week — keep an eye out for updates.
           </p>
 
           {/* Reassurance */}

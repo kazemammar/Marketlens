@@ -18,21 +18,67 @@ const TYPE_LABEL: Record<string, string> = {
 }
 
 const SECTOR: Record<string, string> = {
-  AAPL: 'Technology', MSFT: 'Technology', GOOGL: 'Technology', AMZN: 'Technology',
-  NVDA: 'Technology', META: 'Technology', TSLA: 'Consumer',    NFLX: 'Technology',
-  JPM:  'Finance',    BAC:  'Finance',    GS:   'Finance',     V:    'Finance',    MA: 'Finance',
-  XOM:  'Energy',     CVX:  'Energy',     COP:  'Energy',
-  JNJ:  'Healthcare', PFE:  'Healthcare', UNH:  'Healthcare',  ABBV: 'Healthcare',
-  PG:   'Consumer',   KO:   'Consumer',   WMT:  'Consumer',    NKE:  'Consumer',   DIS: 'Consumer',
+  // Technology
+  AAPL: 'Technology', MSFT: 'Technology', GOOGL: 'Technology', NVDA: 'Technology',
+  META: 'Technology', TSLA: 'Technology', AVGO: 'Technology',  CRM:  'Technology',
+  AMD:  'Technology', INTC: 'Technology', ORCL: 'Technology',  ADBE: 'Technology',
+  CSCO: 'Technology', NFLX: 'Technology', QCOM: 'Technology',  PLTR: 'Technology',
+  PANW: 'Technology', SNOW: 'Technology', NOW:  'Technology',  SHOP: 'Technology',
+  UBER: 'Technology', SQ:   'Technology', COIN: 'Technology',  MSTR: 'Technology', MU: 'Technology',
+  // Finance
+  JPM: 'Finance', V: 'Finance', MA: 'Finance', BAC: 'Finance', GS: 'Finance',
+  MS:  'Finance', BLK: 'Finance', AXP: 'Finance', SCHW: 'Finance', C: 'Finance',
+  WFC: 'Finance', USB: 'Finance', PNC: 'Finance', COF: 'Finance', AIG: 'Finance',
+  MET: 'Finance', PRU: 'Finance', ICE: 'Finance', CME: 'Finance', PYPL: 'Finance',
+  // Healthcare
+  UNH: 'Healthcare', JNJ: 'Healthcare', LLY: 'Healthcare', PFE: 'Healthcare', ABBV: 'Healthcare',
+  MRK: 'Healthcare', TMO: 'Healthcare', ABT: 'Healthcare', AMGN: 'Healthcare', MDT: 'Healthcare',
+  ISRG: 'Healthcare', DHR: 'Healthcare', BMY: 'Healthcare', GILD: 'Healthcare',
+  CVS: 'Healthcare', CI: 'Healthcare', ELV: 'Healthcare', ZTS: 'Healthcare', REGN: 'Healthcare', VRTX: 'Healthcare',
+  // Energy
+  XOM: 'Energy', CVX: 'Energy', COP: 'Energy', SLB: 'Energy', EOG: 'Energy',
+  MPC: 'Energy', PSX: 'Energy', VLO: 'Energy', OXY: 'Energy', HAL: 'Energy',
+  DVN: 'Energy', FANG: 'Energy', HES: 'Energy', BKR: 'Energy', KMI: 'Energy',
+  WMB: 'Energy', OKE: 'Energy', TRGP: 'Energy', LNG: 'Energy', MRO: 'Energy',
+  // Consumer (Disc. + Staples combined)
+  AMZN: 'Consumer', HD: 'Consumer', NKE: 'Consumer', SBUX: 'Consumer', MCD: 'Consumer',
+  LOW: 'Consumer', TJX: 'Consumer', BKNG: 'Consumer', CMG: 'Consumer', YUM: 'Consumer',
+  ABNB: 'Consumer', MAR: 'Consumer', RCL: 'Consumer', LULU: 'Consumer', DPZ: 'Consumer',
+  PG: 'Consumer', KO: 'Consumer', PEP: 'Consumer', COST: 'Consumer', WMT: 'Consumer',
+  PM: 'Consumer', MO: 'Consumer', CL: 'Consumer', KHC: 'Consumer', GIS: 'Consumer',
+  STZ: 'Consumer', MNST: 'Consumer', KR: 'Consumer', SYY: 'Consumer', HSY: 'Consumer',
+  // Industrial
+  CAT: 'Industrial', DE: 'Industrial', GE: 'Industrial', BA: 'Industrial', HON: 'Industrial',
+  UPS: 'Industrial', LMT: 'Industrial', RTX: 'Industrial', MMM: 'Industrial', UNP: 'Industrial',
+  FDX: 'Industrial', WM: 'Industrial', EMR: 'Industrial', ITW: 'Industrial',
+  GD: 'Industrial', NOC: 'Industrial', TDG: 'Industrial', CARR: 'Industrial', JCI: 'Industrial', IR: 'Industrial',
+  // Communication
+  DIS: 'Communication', CMCSA: 'Communication', T: 'Communication', VZ: 'Communication',
+  TMUS: 'Communication', CHTR: 'Communication', SPOT: 'Communication', RBLX: 'Communication',
+  EA: 'Communication', TTWO: 'Communication', WBD: 'Communication', PARA: 'Communication',
+  LYV: 'Communication', MTCH: 'Communication', PINS: 'Communication',
+  // Real Estate
+  AMT: 'Real Estate', PLD: 'Real Estate', CCI: 'Real Estate', EQIX: 'Real Estate',
+  PSA: 'Real Estate', SPG: 'Real Estate', O: 'Real Estate', WELL: 'Real Estate',
+  DLR: 'Real Estate', AVB: 'Real Estate', EQR: 'Real Estate', VICI: 'Real Estate',
+  IRM: 'Real Estate', ARE: 'Real Estate', KIM: 'Real Estate',
+  // Utilities
+  NEE: 'Utilities', DUK: 'Utilities', SO: 'Utilities', D: 'Utilities', AEP: 'Utilities',
+  SRE: 'Utilities', EXC: 'Utilities', XEL: 'Utilities', ED: 'Utilities', WEC: 'Utilities',
+  ES: 'Utilities', AWK: 'Utilities', ATO: 'Utilities', CMS: 'Utilities', DTE: 'Utilities',
 }
 
 const SECTOR_COLORS: Record<string, string> = {
-  Technology: '#38bdf8',
-  Finance:    '#a78bfa',
-  Energy:     '#f97316',
-  Healthcare: '#2dd4bf',
-  Consumer:   '#f472b6',
-  Other:      '#6b7280',
+  Technology:    '#38bdf8',
+  Finance:       '#a78bfa',
+  Energy:        '#f97316',
+  Healthcare:    '#2dd4bf',
+  Consumer:      '#f472b6',
+  Industrial:    '#818cf8',
+  Communication: '#06b6d4',
+  'Real Estate': '#84cc16',
+  Utilities:     '#fb923c',
+  Other:         '#6b7280',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

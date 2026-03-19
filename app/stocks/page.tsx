@@ -21,7 +21,7 @@ export default function StocksPage() {
                 Stock Market
               </h1>
               <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
-                Real-time prices, analysis, and AI-powered intelligence for US equities
+                Real-time prices and AI analysis for 150+ US equities across 10 sectors
               </p>
             </div>
             <StockSearch />

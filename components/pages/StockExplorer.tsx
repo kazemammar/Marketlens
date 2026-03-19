@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import AssetCard from '@/components/dashboard/AssetCard'
 import type { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
@@ -9,13 +8,31 @@ import { useFetch } from '@/lib/hooks/useFetch'
 // ─── Sector config ────────────────────────────────────────────────────────
 
 const STOCK_SECTORS: Record<string, string[]> = {
-  'Technology': ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'META', 'TSLA', 'AVGO', 'CRM', 'AMD', 'INTC', 'ORCL', 'ADBE', 'CSCO', 'NFLX', 'QCOM'],
-  'Finance':    ['JPM', 'V', 'MA', 'BAC', 'GS', 'MS', 'BLK', 'AXP', 'SCHW', 'C'],
-  'Healthcare': ['UNH', 'JNJ', 'LLY', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'AMGN', 'MDT'],
-  'Energy':     ['XOM', 'CVX', 'COP', 'SLB', 'EOG', 'MPC', 'PSX', 'VLO', 'OXY', 'HAL'],
-  'Consumer':   ['AMZN', 'HD', 'PG', 'KO', 'PEP', 'COST', 'WMT', 'MCD', 'NKE', 'SBUX'],
-  'Industrial': ['CAT', 'DE', 'GE', 'BA', 'HON', 'UPS', 'LMT', 'RTX', 'MMM', 'UNP'],
+  'Technology':       ['AAPL','MSFT','GOOGL','NVDA','META','TSLA','AVGO','CRM','AMD','INTC','ORCL','ADBE','CSCO','NFLX','QCOM','PLTR','PANW','SNOW','NOW','SHOP','UBER','SQ','COIN','MSTR','MU'],
+  'Finance':          ['JPM','V','MA','BAC','GS','MS','BLK','AXP','SCHW','C','WFC','USB','PNC','COF','AIG','MET','PRU','ICE','CME','PYPL'],
+  'Healthcare':       ['UNH','JNJ','LLY','PFE','ABBV','MRK','TMO','ABT','AMGN','MDT','ISRG','DHR','BMY','GILD','CVS','CI','ELV','ZTS','REGN','VRTX'],
+  'Energy':           ['XOM','CVX','COP','SLB','EOG','MPC','PSX','VLO','OXY','HAL','DVN','FANG','HES','BKR','KMI','WMB','OKE','TRGP','LNG','MRO'],
+  'Consumer Disc.':   ['AMZN','HD','NKE','SBUX','MCD','LOW','TJX','BKNG','CMG','YUM','ABNB','MAR','RCL','LULU','DPZ'],
+  'Consumer Staples': ['PG','KO','PEP','COST','WMT','PM','MO','CL','KHC','GIS','STZ','MNST','KR','SYY','HSY'],
+  'Industrial':       ['CAT','DE','GE','BA','HON','UPS','LMT','RTX','MMM','UNP','FDX','WM','EMR','ITW','GD','NOC','TDG','CARR','JCI','IR'],
+  'Communication':    ['DIS','CMCSA','T','VZ','TMUS','CHTR','SPOT','RBLX','EA','TTWO','WBD','PARA','LYV','MTCH','PINS'],
+  'Real Estate':      ['AMT','PLD','CCI','EQIX','PSA','SPG','O','WELL','DLR','AVB','EQR','VICI','IRM','ARE','KIM'],
+  'Utilities':        ['NEE','DUK','SO','D','AEP','SRE','EXC','XEL','ED','WEC','ES','AWK','ATO','CMS','DTE'],
 }
+
+// Top 3 by market cap per sector — used for the "All" tab
+const ALL_TOP_PICKS = [
+  'AAPL','MSFT','NVDA',   // Technology
+  'JPM','V','MA',          // Finance
+  'UNH','LLY','JNJ',       // Healthcare
+  'XOM','CVX','COP',       // Energy
+  'AMZN','HD','NKE',       // Consumer Disc.
+  'PG','KO','COST',        // Consumer Staples
+  'CAT','GE','HON',        // Industrial
+  'DIS','CMCSA','T',       // Communication
+  'AMT','PLD','CCI',       // Real Estate
+  'NEE','DUK','SO',        // Utilities
+]
 
 const SECTOR_KEYS = Object.keys(STOCK_SECTORS)
 const TABS        = ['All', ...SECTOR_KEYS]
@@ -25,13 +42,17 @@ function sectorUrl(sector: string) {
 }
 
 const SECTOR_COLORS: Record<string, string> = {
-  'All':        '#10b981',
-  'Technology': '#3b82f6',
-  'Finance':    '#f59e0b',
-  'Healthcare': '#22c55e',
-  'Energy':     '#ef4444',
-  'Consumer':   '#a855f7',
-  'Industrial': '#6366f1',
+  'All':              '#10b981',
+  'Technology':       '#3b82f6',
+  'Finance':          '#f59e0b',
+  'Healthcare':       '#22c55e',
+  'Energy':           '#ef4444',
+  'Consumer Disc.':   '#a855f7',
+  'Consumer Staples': '#ec4899',
+  'Industrial':       '#6366f1',
+  'Communication':    '#06b6d4',
+  'Real Estate':      '#84cc16',
+  'Utilities':        '#f97316',
 }
 
 // ─── Market Indices strip ──────────────────────────────────────────────────
@@ -144,28 +165,37 @@ function GridSkeleton({ count = 10 }: { count?: number }) {
 export default function StockExplorer() {
   const [activeTab, setActiveTab] = useState('All')
 
-  // "All" tab: uses /api/market?tab=stock (default curated list)
-  const allFetch  = useFetch<AssetCardData[]>('/api/market?tab=stock',   { enabled: activeTab === 'All',        refreshInterval: 5 * 60_000 })
-  const techFetch = useFetch<AssetCardData[]>(sectorUrl('Technology'),   { enabled: activeTab === 'Technology', refreshInterval: 5 * 60_000 })
-  const finFetch  = useFetch<AssetCardData[]>(sectorUrl('Finance'),      { enabled: activeTab === 'Finance',    refreshInterval: 5 * 60_000 })
-  const hlthFetch = useFetch<AssetCardData[]>(sectorUrl('Healthcare'),   { enabled: activeTab === 'Healthcare', refreshInterval: 5 * 60_000 })
-  const nrgFetch  = useFetch<AssetCardData[]>(sectorUrl('Energy'),       { enabled: activeTab === 'Energy',     refreshInterval: 5 * 60_000 })
-  const conFetch  = useFetch<AssetCardData[]>(sectorUrl('Consumer'),     { enabled: activeTab === 'Consumer',   refreshInterval: 5 * 60_000 })
-  const indFetch  = useFetch<AssetCardData[]>(sectorUrl('Industrial'),   { enabled: activeTab === 'Industrial', refreshInterval: 5 * 60_000 })
+  const allFetch      = useFetch<AssetCardData[]>(`/api/stocks/batch?symbols=${ALL_TOP_PICKS.join(',')}`, { enabled: activeTab === 'All',              refreshInterval: 5 * 60_000 })
+  const techFetch     = useFetch<AssetCardData[]>(sectorUrl('Technology'),       { enabled: activeTab === 'Technology',       refreshInterval: 5 * 60_000 })
+  const finFetch      = useFetch<AssetCardData[]>(sectorUrl('Finance'),          { enabled: activeTab === 'Finance',          refreshInterval: 5 * 60_000 })
+  const hlthFetch     = useFetch<AssetCardData[]>(sectorUrl('Healthcare'),       { enabled: activeTab === 'Healthcare',       refreshInterval: 5 * 60_000 })
+  const nrgFetch      = useFetch<AssetCardData[]>(sectorUrl('Energy'),           { enabled: activeTab === 'Energy',           refreshInterval: 5 * 60_000 })
+  const consDiscFetch = useFetch<AssetCardData[]>(sectorUrl('Consumer Disc.'),   { enabled: activeTab === 'Consumer Disc.',   refreshInterval: 5 * 60_000 })
+  const consStapFetch = useFetch<AssetCardData[]>(sectorUrl('Consumer Staples'), { enabled: activeTab === 'Consumer Staples', refreshInterval: 5 * 60_000 })
+  const indFetch      = useFetch<AssetCardData[]>(sectorUrl('Industrial'),       { enabled: activeTab === 'Industrial',       refreshInterval: 5 * 60_000 })
+  const commFetch     = useFetch<AssetCardData[]>(sectorUrl('Communication'),    { enabled: activeTab === 'Communication',    refreshInterval: 5 * 60_000 })
+  const realEstFetch  = useFetch<AssetCardData[]>(sectorUrl('Real Estate'),      { enabled: activeTab === 'Real Estate',      refreshInterval: 5 * 60_000 })
+  const utilFetch     = useFetch<AssetCardData[]>(sectorUrl('Utilities'),        { enabled: activeTab === 'Utilities',        refreshInterval: 5 * 60_000 })
 
   const fetchMap: Record<string, ReturnType<typeof useFetch<AssetCardData[]>>> = {
-    'All':        allFetch,
-    'Technology': techFetch,
-    'Finance':    finFetch,
-    'Healthcare': hlthFetch,
-    'Energy':     nrgFetch,
-    'Consumer':   conFetch,
-    'Industrial': indFetch,
+    'All':              allFetch,
+    'Technology':       techFetch,
+    'Finance':          finFetch,
+    'Healthcare':       hlthFetch,
+    'Energy':           nrgFetch,
+    'Consumer Disc.':   consDiscFetch,
+    'Consumer Staples': consStapFetch,
+    'Industrial':       indFetch,
+    'Communication':    commFetch,
+    'Real Estate':      realEstFetch,
+    'Utilities':        utilFetch,
   }
 
   const current = fetchMap[activeTab]
   const stocks  = current.data ?? []
   const loading = current.loading && stocks.length === 0
+
+  const totalStocks = SECTOR_KEYS.reduce((acc, s) => acc + STOCK_SECTORS[s].length, 0)
 
   return (
     <div className="space-y-4">
@@ -184,7 +214,7 @@ export default function StockExplorer() {
           </span>
           <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-            {SECTOR_KEYS.reduce((acc, s) => acc + STOCK_SECTORS[s].length, 0)} stocks
+            {totalStocks}+ stocks
           </span>
         </div>
 
@@ -215,7 +245,7 @@ export default function StockExplorer() {
         {/* Stock grid */}
         <div className="bg-[var(--surface)] p-4">
           {loading ? (
-            <GridSkeleton count={activeTab === 'All' ? 15 : STOCK_SECTORS[activeTab]?.length ?? 10} />
+            <GridSkeleton count={activeTab === 'All' ? ALL_TOP_PICKS.length : STOCK_SECTORS[activeTab]?.length ?? 10} />
           ) : stocks.length === 0 ? (
             <p className="py-12 text-center font-mono text-[10px] text-[var(--text-muted)]">
               No data available for this sector

@@ -28,6 +28,9 @@ const SENTIMENT_STYLE = {
   },
 }
 
+const LABEL_CLS    = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[70px] shrink-0'
+const CONTENT_CLS  = 'font-mono text-[12px] sm:text-[13px] leading-relaxed'
+
 // ─── Component ────────────────────────────────────────────────────────────
 
 export default function PortfolioBrief({
@@ -54,7 +57,6 @@ export default function PortfolioBrief({
         .finally(() => setLoading(false))
     }
 
-    // On mount or positionCount change — normal fetch
     fetchBrief()
     const id = setInterval(fetchBrief, 30 * 60 * 1_000)
     return () => clearInterval(id)
@@ -66,7 +68,6 @@ export default function PortfolioBrief({
     if (prevTrigger.current === undefined) { prevTrigger.current = refreshTrigger; return }
     if (refreshTrigger === prevTrigger.current) return
     prevTrigger.current = refreshTrigger
-    // Bust cache then refetch
     fetch('/api/portfolio/brief', { method: 'DELETE' })
       .catch(() => {})
       .finally(() => {
@@ -113,6 +114,39 @@ export default function PortfolioBrief({
 
   if (!brief) return null
 
+  // ── Badge cluster (shared) ────────────────────────────────────────────
+  const badges = (
+    <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${style.pill}`}
+      >
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.dot, boxShadow: `0 0 5px ${style.dot}` }} />
+        {brief.sentiment}
+      </span>
+
+      <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--text-muted)] opacity-60">
+        AI Brief
+      </span>
+
+      <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]" suppressHydrationWarning>
+        {timeAgo(brief.generatedAt)}
+      </span>
+
+      <button
+        onClick={handleManualRefresh}
+        disabled={refreshing}
+        className="flex items-center justify-center rounded p-0.5 text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-40"
+        title="Refresh AI brief"
+        aria-label="Refresh AI brief"
+      >
+        <svg viewBox="0 0 12 12" fill="none" className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} aria-hidden>
+          <path d="M10 6A4 4 0 1 1 6 2a4 4 0 0 1 2.83 1.17L10 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          <polyline points="8,1 10,4 7,4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+    </div>
+  )
+
   return (
     <div
       className="animate-fade-up"
@@ -123,74 +157,46 @@ export default function PortfolioBrief({
         boxShadow:    'inset 3px 0 20px rgba(0,0,0,0.04)',
       }}
     >
-      <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
+      {brief.overview ? (
+        /* ── Structured layout ─────────────────────────────────────────── */
+        <div className="px-4 py-3 space-y-2.5">
+          {badges}
 
-        {/* Badge cluster */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Sentiment pill */}
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.1em] ${style.pill}`}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ background: style.dot, boxShadow: `0 0 5px ${style.dot}` }}
-            />
-            {brief.sentiment}
-          </span>
+          <div className="space-y-2 pt-0.5">
+            {/* OVERVIEW */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+              <span className={LABEL_CLS}>Overview</span>
+              <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.overview}</span>
+            </div>
 
-          {/* AI label */}
-          <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--text-muted)] opacity-60">
-            AI Brief
-          </span>
+            {/* MOVERS */}
+            {brief.movers && (
+              <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+                <span className={LABEL_CLS}>Movers</span>
+                <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.movers}</span>
+              </div>
+            )}
 
-          {/* Timestamp */}
-          <span
-            className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]"
-            suppressHydrationWarning
-          >
-            {timeAgo(brief.generatedAt)}
-          </span>
+            {/* RISK */}
+            {brief.risk_focus && (
+              <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+                <span className={`${LABEL_CLS} text-amber-400`}>Risk</span>
+                <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.risk_focus}</span>
+              </div>
+            )}
 
-          {/* Refresh button */}
-          <button
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            className="flex items-center justify-center rounded p-0.5 text-[var(--text-muted)] transition hover:text-[var(--text)] disabled:opacity-40"
-            title="Refresh AI brief"
-            aria-label="Refresh AI brief"
-          >
-            <svg
-              viewBox="0 0 12 12"
-              fill="none"
-              className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`}
-              aria-hidden
-            >
-              <path
-                d="M10 6A4 4 0 1 1 6 2a4 4 0 0 1 2.83 1.17L10 4"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-              />
-              <polyline
-                points="8,1 10,4 7,4"
-                stroke="currentColor"
-                strokeWidth="1.3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Brief text + alerts */}
-        <div className="min-w-0 flex-1">
-          <p className="font-mono text-[12px] sm:text-[13px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
-            {brief.brief}
-          </p>
+            {/* ACTION */}
+            {brief.action && (
+              <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+                <span className={`${LABEL_CLS} text-emerald-400`}>Action</span>
+                <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.action}</span>
+              </div>
+            )}
+          </div>
 
           {/* Alert chips */}
           {brief.alerts.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
               {brief.alerts.map((alert, i) => (
                 <Link
                   key={i}
@@ -208,8 +214,37 @@ export default function PortfolioBrief({
             </div>
           )}
         </div>
+      ) : (
+        /* ── Fallback: old single-paragraph layout ─────────────────────── */
+        <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
+          {badges}
 
-      </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[12px] sm:text-[13px] leading-relaxed" style={{ color: 'var(--text-2)' }}>
+              {brief.brief}
+            </p>
+
+            {brief.alerts.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {brief.alerts.map((alert, i) => (
+                  <Link
+                    key={i}
+                    href={`/asset/${encodeURIComponent(alert.symbol)}`}
+                    className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 ${
+                      alert.type === 'risk'
+                        ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                        : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
+                    }`}
+                  >
+                    <span className="font-bold">{alert.symbol}</span>
+                    <span className="opacity-80">{alert.message}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

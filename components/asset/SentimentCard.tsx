@@ -10,6 +10,18 @@ const LABEL_CONFIG: Record<SentimentLabel, { colorVar: string; bgVar: string; ic
   Neutral: { colorVar: 'var(--text-muted)', bgVar: 'var(--surface-2)',                icon: '➡️' },
 }
 
+const CONVICTION_STYLE = {
+  high:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
+  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
+  low:    'bg-zinc-500/10 text-zinc-400 border-zinc-500/25',
+}
+
+const IMPACT_COLOR = {
+  bullish:   { text: 'text-emerald-400', arrow: '▲' },
+  bearish:   { text: 'text-red-400',     arrow: '▼' },
+  uncertain: { text: 'text-amber-400',   arrow: '↔' },
+}
+
 function ScoreBar({ score }: { score: number }) {
   const pos = Math.max(0, Math.min(100, score))
   const colorStyle = { background: pos >= 60 ? 'var(--price-up)' : pos <= 40 ? 'var(--price-down)' : 'var(--warning)' }
@@ -72,12 +84,17 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
 
         {data && !loading && (
           <>
-            {/* Label badge */}
-            <div className="flex items-center gap-3">
+            {/* Label badge + conviction badge */}
+            <div className="flex flex-wrap items-center gap-2">
               <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold" style={{ color: cfg.colorVar, background: cfg.bgVar }}>
                 <span>{cfg.icon}</span>
                 {data.label}
               </span>
+              {data.conviction && (
+                <span className={`inline-flex items-center rounded border px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em] ${CONVICTION_STYLE[data.conviction]}`}>
+                  {data.conviction === 'high' ? 'High Conviction' : data.conviction === 'medium' ? 'Medium' : 'Low'}
+                </span>
+              )}
               <span className="text-xs text-[var(--text-muted)]">
                 Analyzed {dateStr || '…'}
               </span>
@@ -103,6 +120,38 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Catalysts */}
+            {data.catalysts && data.catalysts.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  Upcoming Catalysts
+                </p>
+                <ul className="space-y-1.5">
+                  {data.catalysts.map((c, i) => {
+                    const ic = IMPACT_COLOR[c.impact]
+                    return (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className={`font-mono text-[11px] font-bold shrink-0 ${ic.text}`}>{ic.arrow}</span>
+                        <span className="font-mono text-[11px] text-[var(--text)]">{c.event}</span>
+                        <span className="font-mono text-[10px] text-[var(--text-muted)] shrink-0 ml-auto pl-2">— {c.date}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {/* Contrarian risk */}
+            {data.contrarian_risk && (
+              <div className="flex items-start gap-2 rounded border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+                <span className="font-mono text-[11px] text-amber-400 shrink-0">⚠</span>
+                <p className="font-mono text-[10px] leading-relaxed text-amber-400/80">
+                  <span className="font-bold text-amber-400">Contrarian: </span>
+                  {data.contrarian_risk}
+                </p>
               </div>
             )}
           </>

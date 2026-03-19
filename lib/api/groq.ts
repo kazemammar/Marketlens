@@ -18,21 +18,35 @@ function getClient(): Groq {
 
 // ─── Internal ─────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are a financial analyst AI. Given a list of news headlines about an asset, analyze the overall market sentiment.
+const SYSTEM_PROMPT = `You are a senior equity research analyst. Given news headlines about an asset, provide a structured sentiment assessment following institutional research standards.
 
-Respond with valid JSON only — no markdown fences, no explanation. Use this exact shape:
+Respond with valid JSON only — no markdown fences, no explanation:
 {
   "label": "Bullish" | "Bearish" | "Neutral",
-  "score": <integer 0–100, where 100 = extremely bullish, 0 = extremely bearish, 50 = neutral>,
-  "summary": "<2–3 sentence summary of the overall sentiment>",
-  "keySignals": ["<signal 1>", "<signal 2>", "<signal 3>"]
-}`
+  "score": <integer 0-100, where 100 = extremely bullish, 0 = extremely bearish>,
+  "summary": "<2-3 sentence assessment. Be specific about what's driving sentiment. Don't just say 'positive news' — name the drivers.>",
+  "keySignals": ["<signal 1>", "<signal 2>", "<signal 3>"],
+  "catalysts": [
+    { "event": "<upcoming event that could move the stock>", "date": "<approximate date or timeframe>", "impact": "bullish" | "bearish" | "uncertain" }
+  ],
+  "conviction": "high" | "medium" | "low",
+  "contrarian_risk": "<1 sentence: what could flip this thesis? What is the market missing?>"
+}
+
+Rules:
+- catalysts should list 1-3 upcoming events (earnings, FDA decisions, product launches, macro data) with estimated timing
+- conviction reflects how confident the signal is — "low" if headlines are mixed or thin
+- contrarian_risk should identify the non-consensus risk — what bears say if sentiment is bullish, what bulls say if bearish
+- Be specific to THIS asset, not generic market commentary`
 
 interface GroqSentimentResponse {
-  label:      SentimentLabel
-  score:      number
-  summary:    string
-  keySignals: string[]
+  label:           SentimentLabel
+  score:           number
+  summary:         string
+  keySignals:      string[]
+  catalysts?:      Array<{ event: string; date: string; impact: 'bullish' | 'bearish' | 'uncertain' }>
+  conviction?:     'high' | 'medium' | 'low'
+  contrarian_risk?: string
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────
@@ -66,7 +80,7 @@ export async function analyzeSentiment(
           { role: 'user',   content: userMessage },
         ],
         temperature:  0.2,
-        max_tokens:   512,
+        max_tokens:   700,
         response_format: { type: 'json_object' },
       })
 
@@ -75,11 +89,14 @@ export async function analyzeSentiment(
 
       return {
         symbol,
-        label:      isValidLabel(parsed.label) ? parsed.label : 'Neutral',
-        score:      clamp(parsed.score ?? 50, 0, 100),
-        summary:    parsed.summary  ?? 'Insufficient data for analysis.',
-        keySignals: Array.isArray(parsed.keySignals) ? parsed.keySignals.slice(0, 5) : [],
-        analyzedAt: Date.now(),
+        label:           isValidLabel(parsed.label) ? parsed.label : 'Neutral',
+        score:           clamp(parsed.score ?? 50, 0, 100),
+        summary:         parsed.summary ?? 'Insufficient data for analysis.',
+        keySignals:      Array.isArray(parsed.keySignals) ? parsed.keySignals.slice(0, 5) : [],
+        catalysts:       Array.isArray(parsed.catalysts) ? parsed.catalysts.slice(0, 3) : undefined,
+        conviction:      (['high', 'medium', 'low'] as const).includes(parsed.conviction as 'high' | 'medium' | 'low') ? parsed.conviction : undefined,
+        contrarian_risk: typeof parsed.contrarian_risk === 'string' ? parsed.contrarian_risk : undefined,
+        analyzedAt:      Date.now(),
       } satisfies SentimentAnalysis
     },
   )
@@ -97,30 +114,34 @@ function clamp(value: number, min: number, max: number): number {
 
 // ─── Asset Context ────────────────────────────────────────────────────────
 
-const CONTEXT_SYSTEM_PROMPT = `You are a geopolitical and financial intelligence analyst. Given an asset (stock, crypto, commodity, forex, or ETF) and recent news headlines, identify the key EXTERNAL FORCES currently affecting this asset.
+const CONTEXT_SYSTEM_PROMPT = `You are a senior geopolitical and financial intelligence analyst at a multi-strategy hedge fund. Given an asset and recent news headlines, provide a structured analysis of external forces AND a concise investment view.
 
-Categorize each force into one of these types:
-- "geopolitical" — wars, sanctions, tariffs, trade tensions, elections, political instability
-- "macro" — Fed policy, interest rates, inflation, GDP, unemployment, currency strength
-- "sector" — industry competition, regulation, technology disruption, supply chain
-- "environmental" — climate events, weather, ESG policy, energy transition
-- "sentiment" — social media buzz, analyst upgrades/downgrades, institutional buying/selling, retail interest
-
-Respond with valid JSON only — no markdown fences. Use this exact shape:
+Respond with valid JSON only — no markdown fences:
 {
   "factors": [
     {
       "category": "geopolitical" | "macro" | "sector" | "environmental" | "sentiment",
       "title": "<short 3-6 word title>",
-      "description": "<1 sentence explaining the impact on this specific asset>",
+      "description": "<1 sentence — connect the event to a SPECIFIC impact on this asset's price, revenue, or demand>",
       "impact": "bullish" | "bearish" | "neutral",
       "severity": "HIGH" | "MED" | "LOW"
     }
   ],
-  "summary": "<2-3 sentence executive summary of the overall external environment for this asset>"
+  "summary": "<2-3 sentence executive summary of the external environment for this asset>",
+  "thesis": "<1 sentence investment thesis — would you be long or short this asset right now, and why?>",
+  "competitive_position": "<1-2 sentences on how this company/asset is positioned vs competitors. What is its moat or vulnerability?>",
+  "catalyst_calendar": [
+    { "event": "<specific upcoming event>", "date": "<approximate date>", "significance": "HIGH" | "MED" | "LOW" }
+  ]
 }
 
-Return 4-8 factors, ordered by severity (HIGH first). Be specific to THIS asset — don't give generic market commentary. Connect world events to concrete impacts on the asset's price, revenue, supply chain, or demand.`
+Rules:
+- Return 4-8 factors, ordered by severity (HIGH first)
+- Be specific to THIS asset — connect world events to concrete business impacts
+- thesis should be opinionated: "Long on strength of..." or "Avoid due to..."
+- competitive_position: name specific competitors when relevant
+- catalyst_calendar: 2-4 upcoming dates that matter for this asset (earnings, regulatory, product launches)
+- Don't give generic market commentary — every sentence should be about THIS specific asset`
 
 export interface AssetContextFactor {
   category:    'geopolitical' | 'macro' | 'sector' | 'environmental' | 'sentiment'
@@ -131,10 +152,14 @@ export interface AssetContextFactor {
 }
 
 export interface AssetContext {
-  symbol:     string
-  factors:    AssetContextFactor[]
-  summary:    string
-  analyzedAt: number
+  symbol:                string
+  factors:               AssetContextFactor[]
+  summary:               string
+  // New fields (optional for backward compat)
+  thesis?:               string
+  competitive_position?: string
+  catalyst_calendar?:    Array<{ event: string; date: string; significance: 'HIGH' | 'MED' | 'LOW' }>
+  analyzedAt:            number
 }
 
 export async function analyzeAssetContext(
@@ -164,18 +189,27 @@ export async function analyzeAssetContext(
           { role: 'user',   content: userMessage },
         ],
         temperature: 0.3,
-        max_tokens:  1024,
+        max_tokens:  1200,
         response_format: { type: 'json_object' },
       })
 
       const raw    = completion.choices[0]?.message?.content ?? '{}'
-      const parsed = JSON.parse(raw) as { factors?: AssetContextFactor[]; summary?: string }
+      const parsed = JSON.parse(raw) as {
+        factors?:              AssetContextFactor[]
+        summary?:              string
+        thesis?:               string
+        competitive_position?: string
+        catalyst_calendar?:    Array<{ event: string; date: string; significance: 'HIGH' | 'MED' | 'LOW' }>
+      }
 
       return {
         symbol,
-        factors:    Array.isArray(parsed.factors) ? parsed.factors.slice(0, 8) : [],
-        summary:    parsed.summary ?? 'Context analysis unavailable.',
-        analyzedAt: Date.now(),
+        factors:               Array.isArray(parsed.factors) ? parsed.factors.slice(0, 8) : [],
+        summary:               parsed.summary ?? 'Context analysis unavailable.',
+        thesis:                typeof parsed.thesis === 'string' ? parsed.thesis : undefined,
+        competitive_position:  typeof parsed.competitive_position === 'string' ? parsed.competitive_position : undefined,
+        catalyst_calendar:     Array.isArray(parsed.catalyst_calendar) ? parsed.catalyst_calendar.slice(0, 4) : undefined,
+        analyzedAt:            Date.now(),
       }
     },
   )

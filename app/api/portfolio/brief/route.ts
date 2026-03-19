@@ -8,6 +8,12 @@ import Groq                       from 'groq-sdk'
 // ─── Types ────────────────────────────────────────────────────────────────
 
 export interface PortfolioBriefPayload {
+  // New structured fields
+  overview?:   string
+  movers?:     string
+  risk_focus?: string
+  action?:     string
+  // Existing fields (kept for backward compat)
   brief:       string
   alerts:      Array<{ symbol: string; type: 'risk' | 'opportunity'; message: string }>
   sentiment:   'bullish' | 'bearish' | 'mixed'
@@ -22,23 +28,29 @@ interface PositionRow {
 
 // ─── Prompt ───────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are a personal portfolio analyst. Given a trader's positions and recent news, write a personalized briefing about what's affecting THEIR specific holdings right now.
+const SYSTEM_PROMPT = `You are a personal portfolio analyst at a top-tier wealth management firm. Given a trader's positions and recent news, write a structured briefing personalized to THEIR specific holdings.
 
 Respond with valid JSON only — no markdown fences, no explanation:
 {
-  "brief": "<4-6 sentences. Reference specific positions by symbol. Mention what's moving for or against them based on their direction (long/short). Be direct and actionable.>",
+  "overview": "<1-2 sentences. Quick snapshot: how many positions are positive/negative, what's leading. Reference specific symbols.>",
+  "movers": "<2-3 sentences. What's moving in their portfolio and why. Reference specific symbols with direction. For shorts, price down = positive for them.>",
+  "risk_focus": "<1-2 sentences. The single biggest risk to their portfolio right now. Be specific — name the position, the threat, and the price level or event.>",
+  "action": "<1-2 sentences. Specific, actionable suggestion. Reference a position by symbol. Mention upcoming events (earnings dates, data releases) that affect their holdings.>",
   "alerts": [
-    { "symbol": "AAPL", "type": "risk", "message": "<1 sentence>" }
+    { "symbol": "AAPL", "type": "risk", "message": "<1 sentence — specific and actionable>" }
   ],
-  "sentiment": "bullish"
+  "sentiment": "bullish",
+  "brief": "<4-6 sentence summary tying it all together — fallback for old UI clients>"
 }
 
 Rules:
 - Only reference symbols that are in the user's portfolio
 - alerts should have 2-5 items, focused on the most impactful developments
-- For short positions, rising prices are risks; for long positions, falling prices are risks
-- sentiment reflects the overall outlook for the user's portfolio specifically
-- sentiment must be exactly one of: "bullish", "bearish", "mixed"`
+- For short positions: rising prices are risks, falling prices are opportunities
+- sentiment must be exactly one of: "bullish", "bearish", "mixed"
+- Be opinionated and direct — don't hedge everything with "could" and "might"
+- The action field should contain a genuine suggestion, not "monitor your positions"
+- Lead with what changed, not a generic recap`
 
 // ─── Route ────────────────────────────────────────────────────────────────
 
@@ -122,16 +134,20 @@ export async function GET(req: Request) {
         { role: 'user',   content: userMessage },
       ],
       temperature:     0.3,
-      max_tokens:      800,
+      max_tokens:      1000,
       response_format: { type: 'json_object' },
     })
 
     const raw    = completion.choices[0]?.message?.content ?? '{}'
-    const parsed = JSON.parse(raw) as Partial<PortfolioBriefPayload>
+    const parsed = JSON.parse(raw) as Record<string, unknown>
 
     const payload: PortfolioBriefPayload = {
+      overview:    typeof parsed.overview === 'string' ? parsed.overview : undefined,
+      movers:      typeof parsed.movers === 'string' ? parsed.movers : undefined,
+      risk_focus:  typeof parsed.risk_focus === 'string' ? parsed.risk_focus : undefined,
+      action:      typeof parsed.action === 'string' ? parsed.action : undefined,
       brief:       typeof parsed.brief === 'string' ? parsed.brief : 'Portfolio analysis unavailable.',
-      alerts:      Array.isArray(parsed.alerts) ? parsed.alerts.slice(0, 5) : [],
+      alerts:      Array.isArray(parsed.alerts) ? (parsed.alerts as PortfolioBriefPayload['alerts']).slice(0, 5) : [],
       sentiment:   (['bullish', 'bearish', 'mixed'] as const).includes(parsed.sentiment as 'bullish' | 'bearish' | 'mixed')
                      ? (parsed.sentiment as 'bullish' | 'bearish' | 'mixed')
                      : 'mixed',

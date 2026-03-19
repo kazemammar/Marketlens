@@ -13,7 +13,6 @@ const CAT_CONFIG: Record<AssetContextFactor['category'], { label: string; color:
   sentiment:    { label: 'Sentiment',    color: '#22d3ee', bg: 'rgba(34,211,238,0.12)'  },
 }
 
-// Small SVG icons per category (inline, no external lib needed)
 function CatIcon({ category }: { category: AssetContextFactor['category'] }) {
   const color = CAT_CONFIG[category].color
   const icons: Record<AssetContextFactor['category'], React.ReactNode> = {
@@ -56,6 +55,12 @@ const SEV_BADGE: Record<AssetContextFactor['severity'], string> = {
   LOW:  'border-[var(--border)] bg-transparent text-[var(--text-muted)]',
 }
 
+const SEV_CAL_COLOR: Record<'HIGH' | 'MED' | 'LOW', string> = {
+  HIGH: 'text-red-400',
+  MED:  'text-amber-400',
+  LOW:  'text-zinc-400',
+}
+
 const IMPACT_ICON: Record<AssetContextFactor['impact'], { icon: string; color: string }> = {
   bullish: { icon: '▲', color: 'var(--price-up)' },
   bearish: { icon: '▼', color: 'var(--price-down)' },
@@ -67,6 +72,13 @@ function ago(ts: number): string {
   if (m < 1)  return 'just now'
   if (m < 60) return `${m}m ago`
   return `${Math.floor(m / 60)}h ago`
+}
+
+function thesisBorderColor(thesis: string): string {
+  const t = thesis.toLowerCase()
+  if (t.includes('long') || t.includes('bullish')) return '#10b981'
+  if (t.includes('short') || t.includes('avoid') || t.includes('bearish')) return '#ef4444'
+  return '#f59e0b'
 }
 
 export default function AssetContext({ symbol, type }: { symbol: string; type: AssetType }) {
@@ -97,13 +109,11 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
 
       {loading ? (
         <div className="bg-[var(--surface)]">
-          {/* Summary skeleton */}
           <div className="space-y-1.5 border-b border-[var(--border)] px-4 py-3">
             <div className="skeleton h-2.5 w-full rounded" />
             <div className="skeleton h-2.5 w-4/5 rounded" />
             <div className="skeleton h-2.5 w-3/5 rounded" />
           </div>
-          {/* Factor skeletons */}
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-start gap-3 border-b border-[var(--border)] px-4 py-3">
               <div className="skeleton h-5 w-5 rounded" />
@@ -137,7 +147,6 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                 key={i}
                 className="flex items-start gap-3 border-b border-[var(--border)] px-4 py-3 transition hover:bg-[var(--surface-2)]"
               >
-                {/* Category icon */}
                 <div
                   className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded"
                   style={{ background: cat.bg }}
@@ -145,7 +154,6 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                   <CatIcon category={factor.category} />
                 </div>
 
-                {/* Content */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-0.5 flex flex-wrap items-center gap-1.5">
                     <span className="font-mono text-[11px] font-bold text-[var(--text)]">{factor.title}</span>
@@ -161,7 +169,6 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
                   </p>
                 </div>
 
-                {/* Right: impact + severity */}
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className="font-mono text-[14px] font-bold leading-none" style={{ color: impact.color }}>
                     {impact.icon}
@@ -173,6 +180,55 @@ export default function AssetContext({ symbol, type }: { symbol: string; type: A
               </div>
             )
           })}
+
+          {/* Investment Thesis */}
+          {data.thesis && (
+            <div
+              className="flex items-start gap-3 border-b border-[var(--border)] px-4 py-3"
+              style={{ borderLeft: `3px solid ${thesisBorderColor(data.thesis)}` }}
+            >
+              <div className="min-w-0 flex-1">
+                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                  Thesis
+                </span>
+                <p className="mt-0.5 font-mono text-[12px] sm:text-[13px] leading-relaxed text-[var(--text)]">
+                  {data.thesis}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Competitive Position */}
+          {data.competitive_position && (
+            <div className="border-b border-[var(--border)] px-4 py-3">
+              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Competitive Edge
+              </span>
+              <p className="mt-0.5 font-mono text-[11px] leading-relaxed text-[var(--text-2)]">
+                {data.competitive_position}
+              </p>
+            </div>
+          )}
+
+          {/* Catalyst Calendar */}
+          {data.catalyst_calendar && data.catalyst_calendar.length > 0 && (
+            <div className="px-4 py-3">
+              <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+                Catalysts
+              </span>
+              <ul className="mt-1.5 space-y-1.5">
+                {data.catalyst_calendar.map((c, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <span className={`font-mono text-[9px] font-bold uppercase ${SEV_CAL_COLOR[c.significance]}`}>
+                      ● {c.significance}
+                    </span>
+                    <span className="font-mono text-[11px] text-[var(--text)]">{c.event}</span>
+                    <span className="font-mono text-[10px] text-[var(--text-muted)] ml-auto shrink-0 pl-2">— {c.date}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

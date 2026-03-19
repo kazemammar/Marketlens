@@ -48,12 +48,16 @@ export interface NewsArticle {
 // ─── AI Sentiment ─────────────────────────────────────────────────────────
 
 export interface SentimentAnalysis {
-  symbol: string
-  label: SentimentLabel
-  score: number // 0–100, higher = more bullish
-  summary: string
-  keySignals: string[]
-  analyzedAt: number // unix timestamp (ms)
+  symbol:      string
+  label:       SentimentLabel
+  score:       number // 0–100, higher = more bullish
+  summary:     string
+  keySignals:  string[]
+  // New fields (optional for backward compat)
+  catalysts?:       Array<{ event: string; date: string; impact: 'bullish' | 'bearish' | 'uncertain' }>
+  conviction?:      'high' | 'medium' | 'low'
+  contrarian_risk?: string
+  analyzedAt:  number // unix timestamp (ms)
 }
 
 // ─── Company financials ───────────────────────────────────────────────────

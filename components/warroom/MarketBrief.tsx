@@ -20,6 +20,8 @@ const RISK_STYLE: Record<string, { label: string; text: string; border: string; 
   CRITICAL: { label: 'CRITICAL RISK', text: 'text-red-400',     border: 'border-red-500/30',     dot: '#ef4444' },
 }
 
+const LABEL_CLS = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[70px] shrink-0'
+const CONTENT_CLS = 'font-mono text-[12px] sm:text-[13px] leading-relaxed'
 
 export default function MarketBrief() {
   const [brief, setBrief] = useState<MarketBriefPayload | null>(null)
@@ -63,6 +65,45 @@ export default function MarketBrief() {
   const riskLevel = risk?.level ?? 'MODERATE'
   const rs = RISK_STYLE[riskLevel] ?? RISK_STYLE.MODERATE
 
+  // ── Badge cluster (shared between both layouts) ───────────────────────────
+  const badges = (
+    <div className="flex flex-wrap items-center gap-2">
+      <div
+        className="flex items-center gap-1.5 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1"
+        style={{
+          background: 'rgba(16,185,129,0.15)',
+          border: '1px solid rgba(16,185,129,0.35)',
+          boxShadow: '0 0 12px rgba(16,185,129,0.15)',
+        }}
+      >
+        <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+        <span
+          className="font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.16em]"
+          style={{ color: 'var(--accent)' }}
+        >
+          AI Brief
+        </span>
+      </div>
+
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 sm:px-2.5 sm:py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] ${rs.text} ${rs.border}`}
+        style={{ background: 'var(--surface-2)' }}
+      >
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: rs.dot, boxShadow: `0 0 5px ${rs.dot}` }} />
+        {rs.label}
+      </span>
+
+      <span
+        className="font-mono text-[9px] tabular-nums"
+        style={{ color: stalenessColor(brief.generatedAt) }}
+        title={`Generated at ${new Date(brief.generatedAt).toLocaleTimeString()}`}
+        suppressHydrationWarning
+      >
+        {timeAgo(brief.generatedAt)}
+      </span>
+    </div>
+  )
+
   return (
     <div
       className="animate-fade-up"
@@ -73,53 +114,59 @@ export default function MarketBrief() {
         boxShadow: 'inset 3px 0 20px rgba(16,185,129,0.05)',
       }}
     >
-      <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
+      {brief.overnight ? (
+        /* ── Structured layout ─────────────────────────────────────────── */
+        <div className="px-4 py-3 space-y-2.5">
+          {badges}
 
-          {/* ── Badge cluster ────────────────────────────────────────────── */}
-          <div className="flex flex-wrap items-center gap-2">
-
-            {/* AI BRIEF filled pill */}
-            <div
-              className="flex items-center gap-1.5 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1"
-              style={{
-                background: 'rgba(16,185,129,0.15)',
-                border: '1px solid rgba(16,185,129,0.35)',
-                boxShadow: '0 0 12px rgba(16,185,129,0.15)',
-              }}
-            >
-              <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-              <span
-                className="font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.16em]"
-                style={{ color: 'var(--accent)' }}
-              >
-                AI Brief
-              </span>
+          <div className="space-y-2 pt-0.5">
+            {/* OVERNIGHT */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+              <span className={LABEL_CLS}>Overnight</span>
+              <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.overnight}</span>
             </div>
 
-            {/* Risk pill */}
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 sm:px-2.5 sm:py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em] ${rs.text} ${rs.border}`}
-              style={{ background: 'var(--surface-2)' }}
-            >
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ background: rs.dot, boxShadow: `0 0 5px ${rs.dot}` }}
-              />
-              {rs.label}
-            </span>
+            {/* MACRO */}
+            {brief.macro && (
+              <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+                <span className={LABEL_CLS}>Macro</span>
+                <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.macro}</span>
+              </div>
+            )}
 
-            {/* Timestamp */}
-            <span
-              className="font-mono text-[9px] tabular-nums"
-              style={{ color: stalenessColor(brief.generatedAt) }}
-              title={`Generated at ${new Date(brief.generatedAt).toLocaleTimeString()}`}
-              suppressHydrationWarning
-            >
-              {timeAgo(brief.generatedAt)}
-            </span>
+            {/* SECTORS */}
+            {brief.sectors && (
+              <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+                <span className={LABEL_CLS}>Sectors</span>
+                <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.sectors}</span>
+              </div>
+            )}
+
+            {/* WATCH — watchlist chips */}
+            {brief.watchlist && brief.watchlist.length > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
+                <span className={`${LABEL_CLS} sm:pt-0.5`}>Watch</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {brief.watchlist.map((w) => (
+                    <Link
+                      key={w.symbol}
+                      href={`/asset/${w.type}/${encodeURIComponent(w.symbol)}`}
+                      title={w.reason}
+                      className={`inline-flex items-center gap-1 rounded border px-2 py-1 font-mono text-[10px] font-semibold transition-all hover:scale-105 hover:opacity-80 ${DIR_COLOR[w.direction] ?? DIR_COLOR.volatile}`}
+                    >
+                      {DIR_ARROW[w.direction] ?? '↕'} {w.symbol}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+        </div>
+      ) : (
+        /* ── Fallback: old single-paragraph layout ─────────────────────── */
+        <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
+          {badges}
 
-          {/* ── Brief text ───────────────────────────────────────────────── */}
           <p
             className="min-w-0 flex-1 text-[12px] sm:text-[13px] leading-relaxed"
             style={{ color: 'var(--text-2)' }}
@@ -127,7 +174,6 @@ export default function MarketBrief() {
             {brief.brief}
           </p>
 
-          {/* ── Asset badges ─────────────────────────────────────────────── */}
           {brief.affectedAssets.length > 0 && (
             <div className="hidden lg:flex shrink-0 items-center gap-1.5">
               {brief.affectedAssets.slice(0, 5).map((a) => (
@@ -141,8 +187,8 @@ export default function MarketBrief() {
               ))}
             </div>
           )}
-
-      </div>
+        </div>
+      )}
     </div>
   )
 }

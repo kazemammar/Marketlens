@@ -114,6 +114,12 @@ export default function PortfolioIntroModal() {
             <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--accent)]">
               Portfolio Intelligence
             </span>
+            <span
+              className="rounded-sm px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase tracking-[0.1em]"
+              style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.3)' }}
+            >
+              New
+            </span>
           </div>
           <button
             onClick={dismiss}
@@ -128,16 +134,16 @@ export default function PortfolioIntroModal() {
         </div>
 
         {/* Main content */}
-        <div className="px-6 pb-5 pt-5">
+        <div className="px-4 pb-5 pt-5 sm:px-6">
 
           {/* Headline */}
-          <h2 className="font-mono text-[24px] font-bold leading-[1.15] tracking-tight text-white">
+          <h2 className="font-mono text-[20px] font-bold leading-[1.15] tracking-tight text-white sm:text-[24px]">
             What if you knew,{' '}
             <span style={{ color: 'var(--accent)' }}>exactly,</span>
             <br />where you stood?
           </h2>
 
-          <p className="mt-3 font-mono text-[11px] leading-[1.7] text-[var(--text-muted)]">
+          <p className="mt-3 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">
             Most traders watch prices. MarketLens Portfolio watches{' '}
             <span className="text-[var(--text)]">you</span> — tracking every
             position in real time, surfacing signals your eye would miss, and
@@ -145,7 +151,7 @@ export default function PortfolioIntroModal() {
           </p>
 
           {/* Feature grid */}
-          <div className="mt-5 grid grid-cols-2 gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-2">
             {FEATURES.map((f) => (
               <div
                 key={f.label}
@@ -169,11 +175,11 @@ export default function PortfolioIntroModal() {
           <div className="mt-5 h-px w-full bg-[var(--border)]" />
 
           {/* CTAs */}
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
             <Link
               href="/portfolio"
               onClick={dismiss}
-              className="flex flex-1 items-center justify-center gap-2 border border-[var(--accent)] bg-[var(--accent-dim)] px-4 py-2.5 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--accent)] transition-all hover:bg-[var(--accent)] hover:text-black"
+              className="flex w-full items-center justify-center gap-2 border border-[var(--accent)] bg-[var(--accent-dim)] px-4 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--accent)] transition-all hover:bg-[var(--accent)] hover:text-black sm:flex-1 sm:py-2.5"
               style={{ boxShadow: '0 0 20px var(--accent-glow)' }}
             >
               Build Your Portfolio
@@ -184,7 +190,7 @@ export default function PortfolioIntroModal() {
             </Link>
             <button
               onClick={dismiss}
-              className="px-4 py-2.5 font-mono text-[10px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+              className="w-full py-2.5 font-mono text-[10px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)] sm:w-auto sm:px-4"
             >
               Maybe later
             </button>

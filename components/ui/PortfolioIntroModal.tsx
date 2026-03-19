@@ -144,11 +144,11 @@ export default function PortfolioIntroModal() {
           </h2>
 
           <p className="mt-3 font-mono text-[10px] leading-[1.7] text-[var(--text-muted)] sm:text-[11px]">
-            Think of it as your{' '}
-            <span className="text-[var(--text)]">personal trading desk</span> — real-time
-            P&L, AI-powered insights on your actual holdings, and risk signals
-            built around the positions you carry. We ship new features regularly,
-            so it only gets better from here.
+            Most traders watch prices. MarketLens Portfolio{' '}
+            <span className="text-[var(--text)]">has your back</span> — tracking every
+            position in real time, surfacing signals your eye would miss, and
+            turning your holdings into a live intelligence dashboard. We keep
+            adding new features, so the best is still ahead.
           </p>
 
           {/* Feature grid */}

@@ -135,10 +135,7 @@ function MoverCard({
         )}
 
         {/* Name */}
-        <span
-          className="min-w-0 flex-1 truncate font-mono text-[10px] opacity-60"
-          style={{ color: colorHex }}
-        >
+        <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-[var(--text-muted)] opacity-60">
           {item.name}
         </span>
 

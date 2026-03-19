@@ -46,17 +46,17 @@ function sectorUrl(sector: string, tick = 0) {
 
 const SECTOR_COLORS: Record<string, string> = {
   'All':              '#10b981',
-  'Technology':       '#3b82f6',
-  'Finance':          '#f59e0b',
-  'Healthcare':       '#22c55e',
-  'Energy':           '#ef4444',
-  'Consumer Disc.':   '#a855f7',
-  'Consumer Staples': '#ec4899',
-  'Industrial':       '#6366f1',
-  'Communication':    '#06b6d4',
-  'Real Estate':      '#84cc16',
-  'Materials':        '#d97706',
-  'Utilities':        '#f97316',
+  'Technology':       '#60a5fa',
+  'Finance':          '#818cf8',
+  'Healthcare':       '#2dd4bf',
+  'Energy':           '#f59e0b',
+  'Consumer Disc.':   '#fb7185',
+  'Consumer Staples': '#fb7185',
+  'Industrial':       '#94a3b8',
+  'Communication':    '#22d3ee',
+  'Real Estate':      '#a78bfa',
+  'Materials':        '#6b7280',
+  'Utilities':        '#fdba74',
 }
 
 // ─── Market Indices strip ──────────────────────────────────────────────────

@@ -7,10 +7,10 @@ import type { QuoteData }         from './PositionsTable'
 
 const TYPE_COLORS: Record<string, string> = {
   stock:     '#10b981',
-  crypto:    '#f97316',
+  crypto:    '#8b5cf6',
   forex:     '#38bdf8',
   commodity: '#f59e0b',
-  etf:       '#a78bfa',
+  etf:       '#64748b',
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -94,17 +94,17 @@ const SECTOR: Record<string, string> = {
 }
 
 const SECTOR_COLORS: Record<string, string> = {
-  Technology:    '#38bdf8',
-  Finance:       '#a78bfa',
-  Energy:        '#f97316',
+  Technology:    '#60a5fa',
+  Finance:       '#818cf8',
+  Energy:        '#f59e0b',
   Healthcare:    '#2dd4bf',
-  Consumer:      '#f472b6',
-  Industrial:    '#818cf8',
-  Communication: '#06b6d4',
-  'Real Estate': '#84cc16',
-  Materials:     '#d97706',
-  Utilities:     '#fb923c',
-  Other:         '#6b7280',
+  Consumer:      '#fb7185',
+  Industrial:    '#94a3b8',
+  Communication: '#22d3ee',
+  'Real Estate': '#a78bfa',
+  Materials:     '#6b7280',
+  Utilities:     '#fdba74',
+  Other:         '#475569',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

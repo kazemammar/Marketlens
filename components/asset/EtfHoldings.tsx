@@ -26,17 +26,17 @@ interface EtfData {
 // ─── Sector colors ────────────────────────────────────────────────────────
 
 const SECTOR_COLOR: Record<string, string> = {
-  'Technology':             '#3b82f6',
-  'Healthcare':             '#22c55e',
-  'Financial Services':     '#f59e0b',
-  'Consumer Cyclical':      '#a855f7',
-  'Communication Services': '#ec4899',
-  'Industrials':            '#6366f1',
-  'Consumer Defensive':     '#14b8a6',
-  'Energy':                 '#ef4444',
-  'Utilities':              '#84cc16',
-  'Real Estate':            '#f97316',
-  'Basic Materials':        '#64748b',
+  'Technology':             '#60a5fa',
+  'Healthcare':             '#2dd4bf',
+  'Financial Services':     '#818cf8',
+  'Consumer Cyclical':      '#fb7185',
+  'Communication Services': '#22d3ee',
+  'Industrials':            '#94a3b8',
+  'Consumer Defensive':     '#fb7185',
+  'Energy':                 '#f59e0b',
+  'Utilities':              '#fdba74',
+  'Real Estate':            '#a78bfa',
+  'Basic Materials':        '#6b7280',
 }
 
 function sectorColor(s: string): string {

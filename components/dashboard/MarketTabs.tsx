@@ -28,17 +28,17 @@ const SECTOR_ORDER = [
 ]
 
 const SECTOR_COLORS: Record<string, string> = {
-  'Technology':    '#3b82f6',
-  'Finance':       '#f59e0b',
-  'Healthcare':    '#22c55e',
-  'Consumer Disc.':'#a855f7',
-  'Staples':       '#ec4899',
-  'Industrial':    '#6366f1',
-  'Communication': '#06b6d4',
-  'Energy':        '#ef4444',
-  'Real Estate':   '#84cc16',
-  'Materials':     '#d97706',
-  'Utilities':     '#f97316',
+  'Technology':    '#60a5fa',
+  'Finance':       '#818cf8',
+  'Healthcare':    '#2dd4bf',
+  'Consumer Disc.':'#fb7185',
+  'Staples':       '#fb7185',
+  'Industrial':    '#94a3b8',
+  'Communication': '#22d3ee',
+  'Energy':        '#f59e0b',
+  'Real Estate':   '#a78bfa',
+  'Materials':     '#6b7280',
+  'Utilities':     '#fdba74',
 }
 
 // ─── Tab config ───────────────────────────────────────────────────────────

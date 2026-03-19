@@ -8,10 +8,10 @@ import type { QuoteData }         from './PositionsTable'
 
 const TYPE_COLORS: Record<string, string> = {
   stock:     '#10b981',
-  crypto:    '#f97316',
+  crypto:    '#8b5cf6',
   forex:     '#38bdf8',
   commodity: '#f59e0b',
-  etf:       '#a78bfa',
+  etf:       '#64748b',
 }
 
 const TYPE_LABEL: Record<string, string> = {

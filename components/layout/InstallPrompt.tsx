@@ -62,7 +62,7 @@ export default function InstallPrompt() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[9998] animate-slide-up safe-bottom">
       <div
-        className="mx-3 mb-3 overflow-hidden rounded-2xl border border-white/10 bg-[#111113] p-4"
+        className="mx-3 mb-3 overflow-hidden rounded border border-white/10 bg-[#111113] p-4"
         style={{ boxShadow: '0 -4px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(16,185,129,0.08)' }}
       >
         {/* Dismiss */}
@@ -79,7 +79,7 @@ export default function InstallPrompt() {
         <div className="flex items-start gap-3.5">
           {/* Icon */}
           <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded"
             style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)' }}
           >
             <svg viewBox="0 0 14 14" fill="none" className="h-7 w-7" aria-hidden>
@@ -89,14 +89,14 @@ export default function InstallPrompt() {
           </div>
 
           <div className="min-w-0 flex-1 pr-6">
-            <h3 className="font-mono text-[14px] font-bold text-white">Install MarketLens</h3>
-            <p className="mt-0.5 font-mono text-[11px] leading-relaxed text-zinc-400">
+            <h3 className="font-mono text-[14px] font-bold text-[var(--text)]">Install MarketLens</h3>
+            <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-[var(--text-muted)]">
               Add to your home screen for instant access to live markets and AI analysis.
             </p>
 
             {/* iOS: Share button instructions */}
             {isIOS && (
-              <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5">
+              <div className="mt-3 flex items-center gap-2.5 rounded bg-white/[0.04] px-3 py-2.5">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={1.8} className="h-5 w-5 shrink-0" aria-hidden>
                   <path d="M8 10l4-6 4 6M12 4v12" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M5 18h14" strokeLinecap="round"/>
@@ -112,7 +112,7 @@ export default function InstallPrompt() {
             {!isIOS && hasPrompt && (
               <button
                 onClick={handleInstall}
-                className="mt-3 w-full rounded-xl py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90 active:opacity-75"
+                className="mt-3 w-full rounded py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90 active:opacity-75"
                 style={{ background: '#10b981' }}
               >
                 Install App
@@ -121,8 +121,8 @@ export default function InstallPrompt() {
 
             {/* Android: manual instructions fallback */}
             {!isIOS && !hasPrompt && (
-              <div className="mt-3 flex items-center gap-2.5 rounded-xl bg-white/[0.04] px-3 py-2.5">
-                <span className="font-mono text-lg leading-none text-zinc-300">⋮</span>
+              <div className="mt-3 flex items-center gap-2.5 rounded bg-white/[0.04] px-3 py-2.5">
+                <span className="font-mono text-[14px] leading-none text-zinc-300">⋮</span>
                 <p className="font-mono text-[11px] text-zinc-300">
                   Tap <span className="font-bold text-white">Menu (⋮)</span> then{' '}
                   <span className="font-bold text-white">"Add to Home screen"</span>

@@ -49,7 +49,7 @@ function BackBtn({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Back"
-      className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+      className="flex h-7 w-7 items-center justify-center rounded text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
     >
       <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5" aria-hidden>
         <path d="M8 5H2M5 2L2 5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -284,7 +284,7 @@ export default function AddPositionModal({
   if (!isOpen) return null
 
   const showDropdown = dropOpen && (results.length > 0 || (dq.length >= 1 && !searching))
-  const inputCls = 'no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50'
+  const inputCls = 'no-focus-ring h-11 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50'
 
   return createPortal(
     <div
@@ -293,7 +293,7 @@ export default function AddPositionModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full mx-4 max-w-[440px] overflow-y-auto rounded-xl shadow-2xl"
+        className="relative w-full mx-4 max-w-[440px] overflow-y-auto rounded shadow-black/50"
         style={{
           backgroundColor: 'var(--surface)',
           border:          '1px solid var(--border)',
@@ -309,7 +309,7 @@ export default function AddPositionModal({
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+          className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
         >
           <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5" aria-hidden>
             <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -330,7 +330,7 @@ export default function AddPositionModal({
                 </label>
 
                 {prefill ? (
-                  <div className="flex h-11 items-center gap-2.5 rounded-lg border border-[var(--accent)]/30 bg-[var(--surface-2)] px-3">
+                  <div className="flex h-11 items-center gap-2.5 rounded border border-[var(--accent)]/30 bg-[var(--surface-2)] px-3">
                     <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase ${TYPE_COLORS[prefill.type] ?? 'bg-zinc-800 text-zinc-400'}`}>
                       {prefill.type}
                     </span>
@@ -338,7 +338,7 @@ export default function AddPositionModal({
                     <span className="ml-auto font-mono text-[9px] text-[var(--text-muted)] opacity-50">pre-selected</span>
                   </div>
                 ) : (
-                  <div ref={wrapRef} className="no-focus-ring relative rounded-lg border border-[var(--border)] bg-[var(--surface)] transition-colors focus-within:border-[var(--accent)]/50">
+                  <div ref={wrapRef} className="no-focus-ring relative rounded border border-[var(--border)] bg-[var(--surface)] transition-colors focus-within:border-[var(--accent)]/50">
                     <div className="flex h-11 items-center gap-2.5 px-3">
                       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                         className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)]" aria-hidden>
@@ -372,7 +372,7 @@ export default function AddPositionModal({
 
                     {showDropdown && (
                       <div
-                        className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-2xl shadow-black/50"
+                        className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] shadow-black/50 shadow-black/50"
                         style={{ maxHeight: '240px', overflowY: 'auto' }}
                       >
                         {dq.length >= 1 && results.length === 0 && !searching && (
@@ -418,7 +418,7 @@ export default function AddPositionModal({
 
               {/* Existing position banner */}
               {existingPosition && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-3.5 py-3">
+                <div className="flex items-start gap-2.5 rounded border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-3.5 py-3">
                   <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 shrink-0 mt-px text-[var(--accent)]" aria-hidden>
                     <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
                     <line x1="8" y1="5.5" x2="8" y2="8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -438,7 +438,8 @@ export default function AddPositionModal({
                 type="button"
                 onClick={() => setStep('method')}
                 disabled={!selected}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="w-full flex items-center justify-center gap-2 rounded py-2.5 font-mono text-[12px] font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ background: 'var(--accent)' }}
               >
                 Next
                 <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5" aria-hidden>
@@ -470,7 +471,7 @@ export default function AddPositionModal({
                       key={d}
                       type="button"
                       onClick={() => setDirection(d)}
-                      className={`flex-1 rounded-lg border py-2.5 font-mono text-[12px] font-semibold uppercase tracking-wide transition-all duration-150 ${
+                      className={`flex-1 rounded border py-2.5 font-mono text-[12px] font-semibold uppercase tracking-wide transition-all duration-150 ${
                         direction === d
                           ? d === 'long' ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'border-red-500/50 bg-red-500/10 text-red-400'
                           : 'border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--accent)]/30 hover:text-[var(--text)]'
@@ -493,7 +494,7 @@ export default function AddPositionModal({
                     key={m.id}
                     type="button"
                     onClick={() => { setMethod(m.id); setStep('details') }}
-                    className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-4 text-center transition-all duration-150 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/5"
+                    className="flex flex-col items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface-2)] px-3 py-4 text-center transition-all duration-150 hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/5"
                   >
                     <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border)] font-mono text-[13px] font-bold text-[var(--text-muted)]">
                       {m.icon}
@@ -601,7 +602,7 @@ export default function AddPositionModal({
 
               {/* Receipt preview */}
               {method !== 'trackonly' && receiptQty !== null && priceToUse > 0 && (
-                <div className="rounded-lg border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-3">
+                <div className="rounded border border-[var(--accent)]/20 bg-[var(--accent)]/5 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.08em] text-[var(--text-muted)]">Purchase</p>
@@ -644,8 +645,8 @@ export default function AddPositionModal({
 
               {/* Error */}
               {error && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
-                  <span className="mt-px text-sm text-red-400" aria-hidden>⚠</span>
+                <div className="flex items-start gap-2.5 rounded border border-red-500/20 bg-red-500/5 px-4 py-3">
+                  <span className="mt-px font-mono text-[10px] text-red-400" aria-hidden>⚠</span>
                   <p className="font-mono text-[11px] leading-relaxed text-red-400">{error}</p>
                 </div>
               )}
@@ -655,7 +656,7 @@ export default function AddPositionModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] py-2.5 font-mono text-[12px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
+                  className="flex-1 rounded border border-[var(--border)] bg-[var(--surface)] py-2.5 font-mono text-[12px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
                 >
                   Cancel
                 </button>
@@ -663,7 +664,8 @@ export default function AddPositionModal({
                   type="button"
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 rounded py-2.5 font-mono text-[12px] font-semibold text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  style={{ background: 'var(--accent)' }}
                 >
                   {submitting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
                   {existingPosition && method !== 'trackonly' ? 'Add Purchase' : 'Add Position'}

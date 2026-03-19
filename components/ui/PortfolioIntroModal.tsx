@@ -140,7 +140,7 @@ export default function PortfolioIntroModal() {
         <div className="px-4 pb-5 pt-5 sm:px-6">
 
           {/* Headline */}
-          <h2 className="font-mono text-[20px] font-bold leading-[1.15] tracking-tight text-white sm:text-[24px]">
+          <h2 className="font-mono text-[20px] font-bold leading-[1.15] tracking-tight text-[var(--text)] sm:text-[24px]">
             What if you knew, <span style={{ color: 'var(--accent)' }}>exactly,</span> where your portfolio stood?
           </h2>
 

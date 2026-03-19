@@ -107,7 +107,7 @@ export default function EditPositionModal({
       onClick={() => { if (!confirmDel) onClose() }}
     >
       <div
-        className="relative w-full mx-4 max-w-[440px] overflow-y-auto rounded-xl shadow-2xl"
+        className="relative w-full mx-4 max-w-[440px] overflow-y-auto rounded shadow-black/50"
         style={{
           backgroundColor: 'var(--surface)',
           border:          '1px solid var(--border)',
@@ -124,7 +124,7 @@ export default function EditPositionModal({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+            className="absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded text-[var(--text-muted)] transition hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
           >
             <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5" aria-hidden>
               <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
@@ -153,7 +153,7 @@ export default function EditPositionModal({
 
               {/* Position P&L card */}
               {quoteData && position.quantity != null && position.avg_cost != null && (
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 flex items-center justify-between gap-4">
+                <div className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 flex items-center justify-between gap-4">
                   <div>
                     <span className="font-mono text-[8px] uppercase tracking-wide text-[var(--text-muted)]">Your Position</span>
                     <p className="font-mono text-[11px] text-[var(--text)] mt-0.5">
@@ -188,7 +188,7 @@ export default function EditPositionModal({
           {/* Delete confirmation overlay */}
           {confirmDel ? (
             <div className="flex flex-col gap-4">
-              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4 text-center">
+              <div className="rounded border border-red-500/20 bg-red-500/5 p-4 text-center">
                 <p className="font-mono text-[13px] font-semibold text-red-400">Delete {position.symbol}?</p>
                 <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
                   This cannot be undone.
@@ -201,7 +201,7 @@ export default function EditPositionModal({
                 <button
                   type="button"
                   onClick={() => { setConfirmDel(false); setError('') }}
-                  className="flex-1 rounded-lg border border-[var(--border)] py-2.5 font-mono text-[12px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
+                  className="flex-1 rounded border border-[var(--border)] py-2.5 font-mono text-[12px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
                 >
                   Cancel
                 </button>
@@ -209,7 +209,7 @@ export default function EditPositionModal({
                   type="button"
                   onClick={handleDelete}
                   disabled={deleting}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-red-500/40 bg-red-500/10 py-2.5 font-mono text-[12px] font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 rounded border border-red-500/40 bg-red-500/10 py-2.5 font-mono text-[12px] font-semibold text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
                 >
                   {deleting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-400/30 border-t-red-400" />}
                   Delete
@@ -230,7 +230,7 @@ export default function EditPositionModal({
                       key={d}
                       type="button"
                       onClick={() => setDirection(d)}
-                      className={`flex-1 rounded-lg border py-2.5 font-mono text-[12px] font-semibold uppercase tracking-wide transition-all duration-150 ${
+                      className={`flex-1 rounded border py-2.5 font-mono text-[12px] font-semibold uppercase tracking-wide transition-all duration-150 ${
                         direction === d
                           ? d === 'long'
                             ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
@@ -256,7 +256,7 @@ export default function EditPositionModal({
                   placeholder="e.g. 100"
                   min="0"
                   step="any"
-                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
@@ -272,7 +272,7 @@ export default function EditPositionModal({
                   placeholder="e.g. 185.50"
                   min="0"
                   step="any"
-                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
@@ -287,14 +287,14 @@ export default function EditPositionModal({
                   onChange={(e) => setNotes(e.target.value.slice(0, 200))}
                   placeholder="e.g. swing trade, hedge..."
                   maxLength={200}
-                  className="no-focus-ring h-11 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
+                  className="no-focus-ring h-11 w-full rounded border border-[var(--border)] bg-[var(--surface)] px-3.5 font-mono text-[12px] text-[var(--text)] outline-none transition-all placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]/50"
                 />
               </div>
 
               {/* Error */}
               {error && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3">
-                  <span className="mt-px text-sm text-red-400" aria-hidden>⚠</span>
+                <div className="flex items-start gap-2.5 rounded border border-red-500/20 bg-red-500/5 px-4 py-3">
+                  <span className="mt-px font-mono text-[10px] text-red-400" aria-hidden>⚠</span>
                   <p className="font-mono text-[11px] leading-relaxed text-red-400">{error}</p>
                 </div>
               )}
@@ -304,7 +304,7 @@ export default function EditPositionModal({
                 <button
                   type="button"
                   onClick={() => setConfirmDel(true)}
-                  className="rounded-lg border border-red-500/30 px-4 py-2.5 font-mono text-[11px] text-red-400 transition hover:bg-red-500/10"
+                  className="rounded border border-red-500/30 px-4 py-2.5 font-mono text-[11px] text-red-400 transition hover:bg-red-500/10"
                 >
                   Delete
                 </button>
@@ -312,14 +312,15 @@ export default function EditPositionModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex-1 rounded-lg border border-[var(--border)] py-2.5 font-mono text-[12px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
+                    className="flex-1 rounded border border-[var(--border)] py-2.5 font-mono text-[12px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:bg-emerald-500 disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-2 rounded py-2.5 font-mono text-[12px] font-semibold text-black transition hover:opacity-90 disabled:opacity-50"
+                    style={{ background: 'var(--accent)' }}
                   >
                     {submitting && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
                     Save

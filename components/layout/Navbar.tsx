@@ -66,7 +66,7 @@ function NavLinksFallback() {
         <Link
           key={href}
           href={href}
-          className="flex h-8 items-center rounded-md px-3 text-[11px] font-medium tracking-wide text-[var(--text-muted)]"
+          className="flex h-8 items-center rounded px-3 text-[11px] font-medium tracking-wide text-[var(--text-muted)]"
         >
           {label}
         </Link>
@@ -146,7 +146,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         <Link
           href="/portfolio"
           onClick={onClose}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-3 font-mono text-[11px] font-semibold tracking-wide text-white transition-colors"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded py-3 font-mono text-[10px] font-semibold tracking-wide text-black transition-colors"
           style={{ background: 'var(--accent)' }}
         >
           <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
@@ -158,7 +158,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         <Link
           href="/watchlist"
           onClick={onClose}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] py-3 font-mono text-[11px] font-medium tracking-wide text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded border border-[var(--border)] py-3 font-mono text-[11px] font-medium tracking-wide text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
         >
           <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>
             <path d="M7 1l1.8 3.7 4 .6-2.9 2.8.7 4L7 10.4 3.4 12.1l.7-4-2.9-2.8 4-.6L7 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
@@ -176,7 +176,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
               key={href}
               href={href}
               onClick={onClose}
-              className={`flex min-h-[44px] items-center justify-center rounded-lg py-3 text-[11px] font-medium tracking-wide transition-colors ${
+              className={`flex min-h-[44px] items-center justify-center rounded py-3 text-[11px] font-medium tracking-wide transition-colors ${
                 isActive
                   ? 'bg-[var(--accent-dim)] text-[var(--accent)]'
                   : 'text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text-2)]'
@@ -244,7 +244,7 @@ export default function Navbar() {
           >
             {/* Icon with glow */}
             <div
-              className="flex h-7 w-7 items-center justify-center rounded-lg"
+              className="flex h-7 w-7 items-center justify-center rounded"
               style={{
                 background: 'rgba(16,185,129,0.12)',
                 border: '1px solid rgba(16,185,129,0.28)',
@@ -311,7 +311,7 @@ export default function Navbar() {
           <button
             onClick={() => setPaletteOpen(true)}
             aria-label="Search (⌘K)"
-            className="group flex h-8 items-center gap-2 rounded-lg px-3 font-mono text-[10px] transition-all duration-150 hover:bg-white/[0.06]"
+            className="group flex h-8 items-center gap-2 rounded px-3 font-mono text-[10px] transition-all duration-150 hover:bg-white/[0.06]"
             style={{
               border: '1px solid var(--border)',
               color: 'var(--text-muted)',
@@ -343,7 +343,7 @@ export default function Navbar() {
           <button
             onClick={toggle}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/[0.06]"
+            className="flex h-8 w-8 items-center justify-center rounded transition-all duration-150 hover:bg-white/[0.06]"
             style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
           >
             {theme === 'dark' ? (
@@ -370,7 +370,7 @@ export default function Navbar() {
             onClick={() => setMobileOpen((o) => !o)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 hover:bg-white/[0.06] lg:hidden"
+            className="flex h-8 w-8 items-center justify-center rounded transition-all duration-150 hover:bg-white/[0.06] lg:hidden"
             style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4" aria-hidden>

@@ -492,15 +492,15 @@ export async function getFinancialMetrics(symbol: string): Promise<FinancialMetr
 }
 
 /**
- * Fetch last 4 quarters of earnings surprises from Finnhub /stock/earnings.
+ * Fetch last 8 quarters of earnings surprises from Finnhub /stock/earnings.
  */
 export async function getEarnings(symbol: string): Promise<EarningsData[]> {
   return cachedFetch(
-    `earnings:${symbol.toUpperCase()}`,
+    `earnings:v2:${symbol.toUpperCase()}`,
     TTL.FINANCIALS,
     async () => {
       const data = await finnhubGet<FinnhubEarningsItem[]>(
-        `/stock/earnings?symbol=${encodeURIComponent(symbol)}&limit=4`,
+        `/stock/earnings?symbol=${encodeURIComponent(symbol)}&limit=8`,
       )
       return data.map((e): EarningsData => ({
         period:          e.period,

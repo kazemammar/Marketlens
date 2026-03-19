@@ -27,6 +27,7 @@ import ForexStrength     from '@/components/asset/ForexStrength'
 import ForexCentralBanks from '@/components/asset/ForexCentralBanks'
 import EtfOverview       from '@/components/asset/EtfOverview'
 import EtfHoldings       from '@/components/asset/EtfHoldings'
+import EarningsHistory   from '@/components/asset/EarningsHistory'
 
 export const dynamic = 'force-dynamic'
 
@@ -336,6 +337,7 @@ export default async function AssetPage({ params }: AssetPageProps) {
       {type === 'stock' && (
         <div className="mx-auto mt-3 w-full max-w-screen-xl space-y-3 px-4 sm:px-6">
           <PeersTable symbol={symbol} />
+          <EarningsHistory symbol={symbol} />
           <TechnicalSummary symbol={symbol} />
         </div>
       )}

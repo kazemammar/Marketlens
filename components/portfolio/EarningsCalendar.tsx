@@ -147,11 +147,18 @@ function UpcomingCard({ event, delay }: { event: EarningsItem; delay: number }) 
         </span>
       </div>
 
-      {/* Sub-row */}
-      <p className="px-2 pb-1.5 font-mono text-[9px] text-[var(--text-muted)] opacity-60">
-        Est. report date
-        <span className="ml-1.5 rounded px-1 py-px text-[7px] uppercase tracking-wide bg-[var(--surface-2)] opacity-70">EST</span>
-      </p>
+      {/* Sub-row: estimate + label */}
+      <div className="flex items-center gap-2 px-2 pb-1.5">
+        {event.estimate != null && event.estimate !== 0 && (
+          <span className="font-mono text-[9px] tabular-nums text-[var(--text-muted)]">
+            Est. EPS: <span className="text-[var(--text)]">${event.estimate.toFixed(2)}</span>
+          </span>
+        )}
+        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60 ml-auto">
+          Est. date
+          <span className="ml-1 rounded px-1 py-px text-[7px] uppercase tracking-wide bg-[var(--surface-2)] opacity-70">EST</span>
+        </span>
+      </div>
     </div>
   )
 }
@@ -209,27 +216,39 @@ function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
           Q{event.quarter} {event.year}
         </span>
 
-        {/* Beat/miss pill */}
-        {hasBoth && (
+        {/* Beat/miss badge — prominent */}
+        {event.surprisePercent != null && (
           <span
-            className="ml-auto shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold tabular-nums"
-            style={{ background: beatBg, color: colorHex, textShadow: `0 0 8px ${colorHex}40` }}
+            className="ml-auto shrink-0 rounded px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums"
+            style={{
+              background: beat ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+              color:      beat ? '#22c55e' : '#ef4444',
+              border:     `1px solid ${beat ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+            }}
           >
-            {beat ? '▲ Beat' : '▼ Miss'}
-            {event.surprisePercent != null && (
-              <span> {event.surprisePercent >= 0 ? '+' : ''}{event.surprisePercent.toFixed(1)}%</span>
-            )}
+            {beat ? '▲ BEAT' : '▼ MISS'} {Math.abs(event.surprisePercent).toFixed(1)}%
           </span>
         )}
       </div>
 
       {/* EPS detail row */}
-      {hasBoth && (
-        <p className="px-2 pb-1.5 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-60">
-          {fmtEps(event.actual!)} vs {fmtEps(event.estimate!)} est
-        </p>
+      {hasBoth && event.actual != null && event.estimate != null && event.estimate !== 0 && (
+        <div className="flex items-center gap-2 px-2 pb-1.5 font-mono text-[9px]">
+          <span className="text-[var(--text-muted)]">
+            Est: <span className="text-[var(--text)] tabular-nums">${event.estimate.toFixed(2)}</span>
+          </span>
+          <span className="text-[var(--text-muted)]">
+            Act:{' '}
+            <span
+              className="tabular-nums"
+              style={{ color: beat ? '#22c55e' : '#ef4444' }}
+            >
+              ${event.actual.toFixed(2)}
+            </span>
+          </span>
+        </div>
       )}
-      {!hasBoth && <div className="pb-1.5" />}
+      {(!hasBoth || event.estimate === 0) && <div className="pb-1.5" />}
     </div>
   )
 }

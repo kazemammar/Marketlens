@@ -143,7 +143,7 @@ function MoverCard({
 
         {/* Type pill (only on All tab) */}
         {showType && (
-          <span className={`shrink-0 rounded px-1 py-px font-mono text-[7px] font-bold uppercase tracking-wide ${TYPE_COLORS[item.type] ?? 'bg-zinc-800 text-zinc-400'}`}>
+          <span className={`shrink-0 rounded px-1 py-px font-mono text-[8px] font-bold uppercase tracking-wide ${TYPE_COLORS[item.type] ?? 'bg-zinc-800 text-zinc-400'}`}>
             {item.type}
           </span>
         )}

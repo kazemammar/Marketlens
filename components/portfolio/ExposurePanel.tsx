@@ -174,9 +174,6 @@ export default function ExposurePanel({
     byType[p.asset_type].push(p)
   }
 
-  // Tick positions (as percentages)
-  const ticks = [0, 25, 50, 75, 100]
-
   return (
     <>
       <PanelHeader />
@@ -186,67 +183,36 @@ export default function ExposurePanel({
         <div>
           <p className="mb-1.5 font-mono text-[9px] uppercase tracking-wide text-[var(--text-muted)]">Net Direction</p>
 
-          {/* Gauge bar h-5 */}
-          <div
-            className="relative h-5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]"
-            style={{ boxShadow: 'inset 0 1px 4px rgba(0,0,0,0.3)' }}
-          >
+          {/* Gauge bar */}
+          <div className="relative h-5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
+            {/* Center divider — first in DOM so fill renders on top */}
+            <div
+              className="absolute inset-y-0"
+              style={{ left: '50%', width: '1px', background: 'rgba(255,255,255,0.2)' }}
+            />
+
             {/* Fill from center outward */}
             {isLong ? (
               <div
-                className="absolute top-0 h-full rounded-full"
+                className="absolute inset-y-0 rounded-r-full"
                 style={{
                   left:       '50%',
                   width:      `${fillPct}%`,
-                  background: `linear-gradient(to right, ${fillColor}55, ${fillColor})`,
-                  boxShadow:  `inset 0 0 8px ${fillColor}25, ${fillPct > 2 ? `${fillPct > 0 ? `calc(50% + ${fillPct}% - 4px)` : '50%'} 0 8px 2px ${fillColor}60` : 'none'}`,
+                  background: fillColor,
                   transition: 'width 1000ms ease-out',
                 }}
               />
             ) : (
               <div
-                className="absolute top-0 h-full rounded-full"
+                className="absolute inset-y-0 rounded-l-full"
                 style={{
                   right:      '50%',
                   width:      `${fillPct}%`,
-                  background: `linear-gradient(to left, ${fillColor}55, ${fillColor})`,
-                  boxShadow:  `inset 0 0 8px ${fillColor}25`,
+                  background: fillColor,
                   transition: 'width 1000ms ease-out',
                 }}
               />
             )}
-
-            {/* Glow at leading edge */}
-            {fillPct > 3 && (
-              <div
-                className="absolute top-1/2 -translate-y-1/2 h-3 w-1.5 rounded-full"
-                style={{
-                  [isLong ? 'left' : 'right']: `calc(50% + ${fillPct}% - 3px)`,
-                  background:                   fillColor,
-                  boxShadow:                    `0 0 8px 4px ${fillColor}60`,
-                  opacity:                      0.9,
-                  zIndex:                       10,
-                }}
-              />
-            )}
-
-            {/* Tick marks at 0%, 25%, 50%, 75%, 100% */}
-            {ticks.map((tick) => (
-              <div
-                key={tick}
-                className="absolute top-0 z-20 h-full"
-                style={{
-                  left:       `${tick}%`,
-                  width:      '1px',
-                  background: tick === 50
-                    ? 'rgba(255,255,255,0.35)'
-                    : tick === 0 || tick === 100
-                    ? 'transparent'
-                    : 'var(--border)',
-                  opacity: 0.7,
-                }}
-              />
-            ))}
           </div>
 
           {/* Labels */}

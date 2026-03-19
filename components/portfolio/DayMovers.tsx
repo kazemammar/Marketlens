@@ -24,7 +24,7 @@ function fmtPnl(pnl: number): string {
 
 function PanelHeader() {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
       <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
         <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -54,8 +54,9 @@ function ColHeader({ isWinner }: { isWinner: boolean }) {
         className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em]"
         style={{ color, textShadow: `0 0 8px ${color}60` }}
       >
-        {label}
+        {isWinner ? '▲' : '▼'} {label}
       </span>
+      <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
     </div>
   )
 }
@@ -93,7 +94,7 @@ function EmptyLosers() {
 // ─── Mover card ───────────────────────────────────────────────────────────
 
 function MoverCard({
-  symbol, type, direction, changePercent, price, quantity, avgCost, isWinner, delay,
+  symbol, type, direction, changePercent, price, quantity, avgCost, isWinner, delay, rank,
 }: {
   symbol:        string
   type:          string
@@ -104,6 +105,7 @@ function MoverCard({
   avgCost:       number | null
   isWinner:      boolean
   delay:         number
+  rank:          number
 }) {
   const colorHex = isWinner ? '#22c55e' : '#ef4444'
   const barPct   = Math.min(Math.abs(changePercent) / 5, 1) * 100
@@ -118,81 +120,66 @@ function MoverCard({
 
   return (
     <div
-      className="animate-fade-up mx-2 mb-2 overflow-hidden rounded cursor-default"
+      className="animate-fade-up mx-2 mb-1.5 overflow-hidden rounded border border-[var(--border)] cursor-default bg-[var(--surface-2)] transition-colors duration-150"
       style={{
-        borderLeft:         `2px solid ${colorHex}90`,
-        background:         `linear-gradient(to right, ${colorHex}08, transparent 70%)`,
-        animationDelay:     `${delay}ms`,
-        animationFillMode:  'both',
-        transition:         'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.transform   = 'translateY(-1px)'
-        el.style.borderColor = `${colorHex}`
-        el.style.boxShadow   = `0 2px 8px ${colorHex}20`
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.transform   = 'translateY(0)'
-        el.style.borderColor = `${colorHex}90`
-        el.style.boxShadow   = 'none'
+        borderLeft:        `1.5px solid ${colorHex}55`,
+        animationDelay:    `${delay}ms`,
+        animationFillMode: 'both',
       }}
     >
-      {/* Top row: symbol + price + change% */}
-      <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-0.5">
+      {/* Top row: rank + symbol + direction pill + price + change% */}
+      <div className="flex items-center gap-1.5 px-2 pt-2 pb-0.5">
+        {/* Rank */}
+        <span className="w-4 shrink-0 text-right font-mono text-[10px] tabular-nums text-[var(--text-muted)] opacity-35">
+          {rank}
+        </span>
+
         <Link
           href={`/asset/${type}/${encodeURIComponent(symbol)}`}
-          className="font-mono text-[12px] font-bold hover:underline"
-          style={{ color: 'var(--accent)' }}
+          className="font-mono text-[12px] font-bold hover:underline shrink-0"
+          style={{ color: colorHex }}
           onClick={(e) => e.stopPropagation()}
         >
           {symbol}
         </Link>
 
         {/* Direction pill */}
-        <span className={`rounded px-1 py-px font-mono text-[8px] font-bold ${
+        <span className={`shrink-0 rounded px-1 py-px font-mono text-[8px] font-bold ${
           direction === 'long' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
         }`}>
           {direction === 'long' ? '▲ L' : '▼ S'}
         </span>
 
         {/* Current price */}
-        <span className="font-mono text-[11px] tabular-nums text-[var(--text-muted)] opacity-60">
+        <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-[var(--text)] opacity-75">
           {fmtPrice(price, type)}
         </span>
 
         {/* Change % */}
         <span
-          className="ml-auto font-mono text-[12px] font-bold tabular-nums"
-          style={{ color: colorHex, textShadow: `0 0 10px ${colorHex}50` }}
+          className="ml-auto shrink-0 font-mono text-[12px] font-bold tabular-nums"
+          style={{ color: colorHex }}
         >
           {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
         </span>
       </div>
 
-      {/* P&L bar h-1.5 */}
-      <div className="mx-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-2)]">
-        <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{
-            width:      `${barPct}%`,
-            background: `linear-gradient(to right, ${colorHex}60, ${colorHex})`,
-            boxShadow:  `0 0 6px ${colorHex}60`,
-          }}
-        />
+      {/* Bar + P&L dollar */}
+      <div className="mx-2 mb-1.5 flex items-center gap-2">
+        <div className="h-1 flex-1 overflow-hidden rounded-full">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${barPct}%`, background: colorHex, opacity: 0.55 }}
+          />
+        </div>
+        {pnlDollar != null && (
+          <span
+            className="shrink-0 font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-50"
+          >
+            {fmtPnl(pnlDollar)}
+          </span>
+        )}
       </div>
-
-      {/* P&L dollar amount */}
-      {pnlDollar != null && (
-        <p
-          className="px-2 pb-1.5 pt-0.5 font-mono text-[10px] tabular-nums"
-          style={{ color: pnlDollar >= 0 ? '#22c55e' : '#ef4444', opacity: 0.7 }}
-        >
-          {fmtPnl(pnlDollar)}
-        </p>
-      )}
-      {pnlDollar == null && <div className="pb-1.5" />}
     </div>
   )
 }
@@ -259,7 +246,7 @@ export default function DayMovers({
               ) : (
                 <div className="pt-1.5">
                   {winners.map((m, i) => (
-                    <MoverCard key={m.symbol} {...m} delay={i * 50} />
+                    <MoverCard key={m.symbol} {...m} rank={i + 1} delay={i * 50} />
                   ))}
                 </div>
               )}
@@ -273,7 +260,7 @@ export default function DayMovers({
               ) : (
                 <div className="pt-1.5">
                   {losers.map((m, i) => (
-                    <MoverCard key={m.symbol} {...m} delay={i * 50} />
+                    <MoverCard key={m.symbol} {...m} rank={i + 1} delay={i * 50} />
                   ))}
                 </div>
               )}

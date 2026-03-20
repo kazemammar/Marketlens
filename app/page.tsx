@@ -4,6 +4,7 @@ import { Suspense }      from 'react'
 import TickerTape        from '@/components/layout/TickerTape'
 import MarketTabs        from '@/components/dashboard/MarketTabs'
 import MarketBrief       from '@/components/warroom/MarketBrief'
+import MarketPulse       from '@/components/warroom/MarketPulse'
 import CommodityStrip    from '@/components/warroom/CommodityStrip'
 import GeoMap            from '@/components/warroom/GeoMap'
 import IntelPanel        from '@/components/warroom/IntelPanel'
@@ -41,7 +42,10 @@ export default async function HomePage({
   return (
     <div className="min-h-screen">
 
-      {/* ══ AI BRIEF BAR — full width slim ══════════════════════════════ */}
+      {/* ══ LIVE PULSE — news-driven, refreshes every 5 min ════════════ */}
+      <MarketPulse />
+
+      {/* ══ HOURLY BRIEF — structured AI analysis, refreshes every hour ═ */}
       <Suspense fallback={
         <div className="ai-brief-bar flex h-10 items-center gap-3 border-b border-[var(--border)] px-4">
           <div className="skeleton h-2 w-2 rounded-full" />

@@ -38,6 +38,19 @@ export default function MarketBrief() {
       .finally(() => setLoading(false))
   }, [])
 
+  // Refresh every 60 minutes — brief is cached hourly
+  useEffect(() => {
+    const id = setInterval(() => {
+      Promise.all([
+        fetch('/api/market-brief').then((r) => r.ok ? r.json() as Promise<MarketBriefPayload> : null),
+        fetch('/api/market-risk').then((r)  => r.ok ? r.json() as Promise<MarketRiskPayload>  : null),
+      ])
+        .then(([b, r]) => { if (b) setBrief(b); if (r) setRisk(r) })
+        .catch(() => {})
+    }, 60 * 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   // ── Loading skeleton ──────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -81,7 +94,7 @@ export default function MarketBrief() {
           className="font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.16em]"
           style={{ color: 'var(--accent)' }}
         >
-          AI Brief
+          Hourly Brief
         </span>
       </div>
 

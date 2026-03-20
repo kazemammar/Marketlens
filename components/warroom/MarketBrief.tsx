@@ -21,7 +21,7 @@ const RISK_STYLE: Record<string, { label: string; text: string; border: string; 
 }
 
 const LABEL_CLS = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[80px] shrink-0'
-const CONTENT_CLS = 'font-mono text-[10px] sm:text-[11px] leading-relaxed'
+const CONTENT_CLS = 'min-w-0 font-mono text-[10px] sm:text-[11px] leading-relaxed'
 
 export default function MarketBrief() {
   const [brief, setBrief] = useState<MarketBriefPayload | null>(null)
@@ -177,29 +177,33 @@ export default function MarketBrief() {
         </div>
       ) : (
         /* ── Fallback: old single-paragraph layout ─────────────────────── */
-        <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-4 px-4 py-3">
-          {badges}
+        <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:gap-4">
+          {/* Badge cluster — own row on mobile, shrink-0 column on desktop */}
+          <div className="shrink-0">{badges}</div>
 
-          <p
-            className="min-w-0 flex-1 text-[12px] sm:text-[13px] leading-relaxed"
-            style={{ color: 'var(--text-2)' }}
-          >
-            {brief.brief}
-          </p>
+          {/* Text + asset chips — stacked, full-width on mobile */}
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <p
+              className="text-[12px] leading-relaxed sm:text-[13px]"
+              style={{ color: 'var(--text-2)' }}
+            >
+              {brief.brief}
+            </p>
 
-          {brief.affectedAssets.length > 0 && (
-            <div className="hidden lg:flex shrink-0 items-center gap-1.5">
-              {brief.affectedAssets.slice(0, 5).map((a) => (
-                <Link
-                  key={a.symbol}
-                  href={`/asset/${a.type}/${encodeURIComponent(a.symbol)}`}
-                  className={`inline-flex items-center gap-1 rounded border px-2 py-1 font-mono text-[10px] font-semibold transition-all hover:scale-105 hover:opacity-80 ${DIR_COLOR[a.direction] ?? DIR_COLOR.volatile}`}
-                >
-                  {DIR_ARROW[a.direction] ?? '↕'} {a.symbol}
-                </Link>
-              ))}
-            </div>
-          )}
+            {(brief.affectedAssets ?? []).length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(brief.affectedAssets ?? []).slice(0, 5).map((a) => (
+                  <Link
+                    key={a.symbol}
+                    href={`/asset/${a.type}/${encodeURIComponent(a.symbol)}`}
+                    className={`inline-flex items-center gap-1 rounded border px-2 py-1 font-mono text-[10px] font-semibold transition-all hover:scale-105 hover:opacity-80 ${DIR_COLOR[a.direction] ?? DIR_COLOR.volatile}`}
+                  >
+                    {DIR_ARROW[a.direction] ?? '↕'} {a.symbol}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

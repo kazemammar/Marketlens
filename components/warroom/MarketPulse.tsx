@@ -53,9 +53,12 @@ export default function MarketPulse() {
   return (
     <div className="flex min-h-10 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 sm:px-4">
 
-      {/* Pulsing dot + label + timestamp */}
+      {/* LIVE badge + label + timestamp */}
       <div className="flex shrink-0 items-center gap-1.5">
-        <span className="live-dot h-2 w-2 rounded-full bg-[var(--accent)] animate-pulse" />
+        <div className="flex items-center gap-1 rounded px-1 py-0.5" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
+          <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-red-400">LIVE</span>
+        </div>
         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
           AI BRIEF
         </span>

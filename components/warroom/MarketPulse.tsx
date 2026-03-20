@@ -51,7 +51,7 @@ export default function MarketPulse() {
   if (!data) return null
 
   return (
-    <div className="flex min-h-10 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 sm:px-4">
+    <div className="flex flex-col gap-1.5 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2 sm:flex-row sm:min-h-10 sm:items-center sm:gap-3 sm:py-1.5 sm:px-4">
 
       {/* LIVE badge + label + timestamp */}
       <div className="flex shrink-0 items-center gap-1.5">
@@ -69,12 +69,12 @@ export default function MarketPulse() {
 
       <span className="hidden text-[var(--border)] sm:block">|</span>
 
-      {/* Pulse text */}
-      <p className="min-w-0 flex-1 text-[11px] leading-snug">
+      {/* Pulse text — full-width on mobile, flex-1 on desktop */}
+      <p className="min-w-0 text-[11px] leading-snug sm:flex-1">
         <span className="text-[var(--text)]">{data.pulse}</span>
       </p>
 
-      {/* Asset chips */}
+      {/* Asset chips — wrap below text on mobile */}
       {(data.affectedAssets ?? []).length > 0 && (
         <div className="flex shrink-0 flex-wrap items-center gap-1">
           {(data.affectedAssets ?? []).slice(0, 5).map((a) => (

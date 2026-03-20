@@ -5,7 +5,7 @@ import Groq from 'groq-sdk'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const CACHE_KEY = 'market-brief:daily'
-const CACHE_TTL = 300 // 5 minutes
+const CACHE_TTL = 3600 // 60 minutes — hourly brief
 const RISK_KEY  = 'market-risk:v6'
 
 const BREAKING_KEYWORDS = [

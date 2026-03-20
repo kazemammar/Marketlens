@@ -1,7 +1,8 @@
 // GET /api/etf/[symbol]
-// Returns ETF details, holdings, and performance via FMP
+// Placeholder — ETF detail data is fetched directly by the asset page server component.
+// Use /api/etf/holdings/[symbol] for holdings and /api/etf/overview/[symbol] for overview.
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   _req: NextRequest,
@@ -9,5 +10,5 @@ export async function GET(
 ) {
   const { symbol } = await params
   void symbol
-  return Response.json({ todo: true })
+  return NextResponse.json({ error: 'Not implemented — use /api/etf/holdings/[symbol] or /api/etf/overview/[symbol]' }, { status: 501 })
 }

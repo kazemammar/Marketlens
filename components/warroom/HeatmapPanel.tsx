@@ -1,5 +1,6 @@
 'use client'
 
+import { useFetch } from '@/lib/hooks/useFetch'
 import type { AssetCardData } from '@/lib/utils/types'
 
 const MCAP_WEIGHT: Record<string, number> = {
@@ -84,7 +85,9 @@ function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
   )
 }
 
-export default function HeatmapPanel({ stocks = [] }: { stocks?: AssetCardData[] }) {
+export default function HeatmapPanel({ initialStocks = [] }: { initialStocks?: AssetCardData[] }) {
+  const { data } = useFetch<AssetCardData[]>('/api/market?tab=stock', { refreshInterval: 30 * 60_000 })
+  const stocks = data ?? initialStocks
   const rows = buildTreemapRows(stocks)
 
   return (

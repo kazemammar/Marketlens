@@ -109,6 +109,9 @@ export default function StatusBar() {
           )
         })}
       </div>
+      <span className="ml-auto shrink-0 font-mono text-[8px] text-[var(--text-muted)] opacity-30">
+        · Prices may be up to 15 min delayed
+      </span>
     </div>
   )
 }

@@ -123,7 +123,7 @@ export default async function HomePage({
           <FXMonitor />
         </div>
         <div className="min-w-0 overflow-hidden flex flex-col">
-          <HeatmapPanel stocks={homepage?.stocks ?? []} />
+          <HeatmapPanel initialStocks={homepage?.stocks ?? []} />
         </div>
       </div>
 

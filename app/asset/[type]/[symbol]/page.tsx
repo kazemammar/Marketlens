@@ -128,23 +128,29 @@ async function getEtfData(symbol: string): Promise<{
   logoUrl?: string
 } | null> {
   try {
-    const q = await getQuote(symbol)
-    if (q === null) return null
+    const [quoteRes, profileRes] = await Promise.allSettled([
+      getQuote(symbol),
+      getCompanyProfile(symbol),
+    ])
+    if (quoteRes.status !== 'fulfilled' || quoteRes.value === null) return null
+    const q = quoteRes.value
+    const p = profileRes.status === 'fulfilled' ? profileRes.value : null
     const price = q.price > 0 ? q.price : q.previousClose
     if (price <= 0) return null
     return {
       asset: {
         symbol,
-        name:          symbol,
+        name:          p?.name ?? symbol,
         type:          'etf',
         price,
         change:        q.price > 0 ? q.change        : 0,
         changePercent: q.price > 0 ? q.changePercent : 0,
-        currency:      'USD',
+        currency:      p?.currency ?? 'USD',
         open:          q.open  > 0 ? q.open  : price,
         high:          q.high  > 0 ? q.high  : price,
         low:           q.low   > 0 ? q.low   : price,
       },
+      logoUrl: p?.logo || undefined,
     }
   } catch {
     return null

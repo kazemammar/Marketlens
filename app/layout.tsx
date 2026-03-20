@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono, DM_Sans } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 import { AuthProvider }  from '@/lib/hooks/useAuth'
@@ -23,6 +23,14 @@ const jetbrainsMono = JetBrains_Mono({
   weight:   ['400', '500', '600', '700'],
 })
 
+// Logo wordmark only — never used for body text
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
+  subsets:  ['latin'],
+  display:  'swap',
+  weight:   ['400', '700', '800'],
+})
+
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://marketlens.live'
 
 const SITE_TITLE       = 'MarketLens — Live Market Data & AI Analysis'
@@ -38,20 +46,28 @@ export const metadata: Metadata = {
   authors:  [{ name: 'Kazem Julien Ammar' }],
   creator:  'Kazem Julien Ammar',
   metadataBase: new URL(BASE_URL),
+  icons: {
+    icon: [
+      { url: '/marketlens-icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png',   type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png',   type: 'image/png', sizes: '16x16' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
   openGraph: {
     type:        'website',
     locale:      'en_US',
     url:         BASE_URL,
     siteName:    'MarketLens',
-    title:       SITE_TITLE,
-    description: 'Real-time financial intelligence. AI-powered analysis across stocks, crypto, forex, commodities & ETFs.',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MarketLens — Financial Intelligence Platform' }],
+    title:       'MarketLens — Live Market Data & AI Analysis',
+    description: 'Free real-time financial intelligence. AI-powered market analysis, geopolitical risk mapping, and portfolio analytics.',
+    images: [{ url: '/logo/marketlens-icon-512x512.png', width: 512, height: 512, alt: 'MarketLens' }],
   },
   twitter: {
-    card:        'summary_large_image',
-    title:       SITE_TITLE,
-    description: 'Real-time financial intelligence. AI-powered analysis across stocks, crypto, forex, commodities & ETFs.',
-    images:      ['/og-image.png'],
+    card:        'summary',
+    title:       'MarketLens — Live Market Data & AI Analysis',
+    description: 'Free real-time financial intelligence. AI-powered market analysis, geopolitical risk mapping, and portfolio analytics.',
+    images:      ['/logo/marketlens-icon-512x512.png'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -87,7 +103,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-[var(--bg)]`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${dmSans.variable} antialiased bg-[var(--bg)]`}
         suppressHydrationWarning
       >
         <ThemeProvider>

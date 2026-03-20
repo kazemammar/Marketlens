@@ -242,44 +242,34 @@ export default function Navbar() {
             className="flex shrink-0 items-center gap-2.5 select-none"
             aria-label="MarketLens home"
           >
-            {/* Icon with glow */}
-            <div
-              className="flex h-7 w-7 items-center justify-center rounded"
-              style={{
-                background: 'rgba(16,185,129,0.12)',
-                border: '1px solid rgba(16,185,129,0.28)',
-                boxShadow: '0 0 16px rgba(16,185,129,0.2), inset 0 1px 0 rgba(16,185,129,0.15)',
-              }}
-            >
-              <svg viewBox="0 0 14 14" fill="none" className="h-3.5 w-3.5" aria-hidden>
-                <polyline
-                  points="1,11 4,7 7,8.5 10,4 13,2"
-                  stroke="var(--accent)"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            {/* Icon — always visible */}
+            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <defs>
+                <filter id="navLogoGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="b"/>
+                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <linearGradient id="navLogoFill" x1="50" y1="15" x2="50" y2="78" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#00FF88" stopOpacity="0.35"/>
+                  <stop offset="100%" stopColor="#00FF88" stopOpacity="0.02"/>
+                </linearGradient>
+              </defs>
+              <rect x="5" y="5" width="90" height="90" rx="18" stroke="#00FF88" strokeWidth="2" fill="none" opacity="0.2"/>
+              <polygon points="14,68 28,52 40,58 54,28 66,38 78,18 86,24 86,78 14,78" fill="url(#navLogoFill)"/>
+              <polyline points="14,68 28,52 40,58 54,28 66,38 78,18 86,24" stroke="#00FF88" strokeWidth="3" strokeLinejoin="round" fill="none" filter="url(#navLogoGlow)"/>
+              <line x1="14" y1="78" x2="86" y2="78" stroke="#00FF88" strokeWidth="1.5" opacity="0.15"/>
+            </svg>
+
+            {/* Wordmark + LIVE — hidden on mobile, visible on md+ */}
+            <div className="hidden md:flex flex-col leading-none">
+              <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '17px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.3px' }}>
+                market<span style={{ color: '#00FF88', fontWeight: 800 }}>lens</span>
+              </span>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)', opacity: 0.7 }} />
+                <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '7px', fontWeight: 400, color: 'var(--text-muted)', letterSpacing: '1px', opacity: 0.5 }}>LIVE</span>
+              </div>
             </div>
-
-            {/* Wordmark */}
-            <span className="hidden sm:flex items-baseline gap-0" style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.03em' }}>
-              <span style={{ color: 'var(--text)' }}>Market</span>
-              <span style={{ color: 'var(--accent)', textShadow: '0 0 16px rgba(16,185,129,0.5)' }}>Lens</span>
-            </span>
-
-            {/* LIVE pill */}
-            <span
-              className="hidden sm:flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold tracking-[0.18em]"
-              style={{
-                background: 'rgba(16,185,129,0.10)',
-                border: '1px solid rgba(16,185,129,0.22)',
-                color: 'var(--accent)',
-              }}
-            >
-              <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-              LIVE
-            </span>
           </Link>
 
           {/* ── Byline ───────────────────────────────────────────────── */}

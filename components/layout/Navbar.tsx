@@ -250,8 +250,9 @@ export default function Navbar() {
                   <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
                 </filter>
                 <linearGradient id="navLogoFill" x1="50" y1="15" x2="50" y2="78" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#00FF88" stopOpacity="0.35"/>
-                  <stop offset="100%" stopColor="#00FF88" stopOpacity="0.02"/>
+                  <stop offset="0%"   stopColor="#00FF88" stopOpacity="0.30"/>
+                  <stop offset="70%"  stopColor="#00FF88" stopOpacity="0.05"/>
+                  <stop offset="100%" stopColor="#00FF88" stopOpacity="0"/>
                 </linearGradient>
               </defs>
               <rect x="5" y="5" width="90" height="90" rx="18" stroke="#00FF88" strokeWidth="2" fill="none" opacity="0.2"/>
@@ -261,11 +262,11 @@ export default function Navbar() {
             </svg>
 
             {/* Wordmark + LIVE — hidden on mobile, visible on md+ */}
-            <div className="hidden md:flex flex-col leading-none">
-              <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '17px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.3px' }}>
-                market<span style={{ color: '#00FF88', fontWeight: 800 }}>lens</span>
+            <div className="hidden md:flex flex-col justify-center leading-none" style={{ height: '32px' }}>
+              <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '15px', fontWeight: 700, color: '#F0F0F5', letterSpacing: '-0.3px', lineHeight: 1 }}>
+                Market<span style={{ color: '#00FF88', fontWeight: 800 }}>Lens</span>
               </span>
-              <div className="flex items-center gap-1 mt-0.5">
+              <div className="flex items-center gap-1" style={{ marginTop: '3px' }}>
                 <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)', opacity: 0.7 }} />
                 <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '7px', fontWeight: 400, color: 'var(--text-muted)', letterSpacing: '1px', opacity: 0.5 }}>LIVE</span>
               </div>

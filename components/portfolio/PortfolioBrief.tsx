@@ -196,19 +196,19 @@ export default function PortfolioBrief({
 
           {/* Alert chips */}
           {brief.alerts.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 overflow-hidden pt-0.5">
+            <div className="flex flex-col gap-1.5 pt-0.5 sm:flex-row sm:flex-wrap">
               {brief.alerts.map((alert, i) => (
                 <Link
                   key={i}
                   href={`/asset/${encodeURIComponent(alert.symbol)}`}
-                  className={`inline-flex max-w-full max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 ${
+                  className={`flex w-full items-start gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 sm:w-auto ${
                     alert.type === 'risk'
                       ? 'border-red-500/30 bg-red-500/10 text-red-400'
                       : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                   }`}
                 >
                   <span className="shrink-0 font-bold">{alert.symbol}</span>
-                  <span className="truncate opacity-80" title={alert.message}>{alert.message}</span>
+                  <span className="whitespace-normal opacity-80">{alert.message}</span>
                 </Link>
               ))}
             </div>
@@ -225,19 +225,19 @@ export default function PortfolioBrief({
             </p>
 
             {brief.alerts.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5 overflow-hidden">
+              <div className="mt-2 flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
                 {brief.alerts.map((alert, i) => (
                   <Link
                     key={i}
                     href={`/asset/${encodeURIComponent(alert.symbol)}`}
-                    className={`inline-flex max-w-full max-w-[calc(100vw-2rem)] items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 ${
+                    className={`flex w-full items-start gap-1.5 rounded border px-2 py-1 font-mono text-[10px] transition hover:opacity-80 sm:w-auto ${
                       alert.type === 'risk'
                         ? 'border-red-500/30 bg-red-500/10 text-red-400'
                         : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                     }`}
                   >
                     <span className="shrink-0 font-bold">{alert.symbol}</span>
-                    <span className="truncate opacity-80" title={alert.message}>{alert.message}</span>
+                    <span className="whitespace-normal opacity-80">{alert.message}</span>
                   </Link>
                 ))}
               </div>

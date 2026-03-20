@@ -409,6 +409,12 @@ code, pre, kbd {
   padding-top: constant(safe-area-inset-top);
   padding-top: env(safe-area-inset-top, 0px);
 }
+
+/* Offset content below the fixed navbar (52px) + iOS status bar */
+.navbar-offset {
+  padding-top: calc(52px + constant(safe-area-inset-top));
+  padding-top: calc(52px + env(safe-area-inset-top, 0px));
+}
 /* Safe area padding for phones with home indicator */
 .safe-bottom {
   padding-bottom: constant(safe-area-inset-bottom);

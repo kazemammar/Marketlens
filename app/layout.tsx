@@ -110,7 +110,8 @@ export default function RootLayout({
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
               <Navbar />
-              <div className="flex-1">{children}</div>
+              {/* Push content below the fixed navbar (52px) + iOS status bar safe area */}
+              <div className="flex-1 navbar-offset">{children}</div>
               <Footer />
             </div>
           </AuthProvider>

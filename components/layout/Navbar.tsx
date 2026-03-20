@@ -219,28 +219,12 @@ export default function Navbar() {
 
   return (
     <>
-      {/*
-        iOS safe-area blackout — position:fixed so it's ALWAYS at the absolute top
-        regardless of sticky quirks. Covers exactly the Dynamic Island / status bar zone.
-      */}
-      <div
-        aria-hidden
-        className="fixed left-0 right-0 top-0 z-[201]"
-        style={{ height: 'env(safe-area-inset-top, 0px)', background: 'var(--bg)' }}
-      />
-
       <header
-        className="sticky top-0 z-[200] w-full safe-top"
+        className="fixed left-0 right-0 top-0 z-[200] w-full safe-top"
         style={{
           background:           'var(--bg)',
-          backdropFilter:       'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           borderBottom:         '1px solid var(--border)',
           boxShadow:            '0 1px 0 rgba(16,185,129,0.06), 0 4px 24px rgba(0,0,0,0.15)',
-          // Force own GPU compositing layer so iOS WebKit never paints
-          // transformed page elements above the nav
-          transform:            'translateZ(0)',
-          WebkitTransform:      'translateZ(0)',
         }}
       >
         <div className="flex h-[52px] items-center gap-3 px-3 sm:px-4">

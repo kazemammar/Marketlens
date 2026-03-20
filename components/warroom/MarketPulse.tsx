@@ -72,9 +72,9 @@ export default function MarketPulse() {
       </p>
 
       {/* Asset chips */}
-      {data.affectedAssets.length > 0 && (
+      {(data.affectedAssets ?? []).length > 0 && (
         <div className="flex shrink-0 flex-wrap items-center gap-1">
-          {data.affectedAssets.slice(0, 5).map((a) => (
+          {(data.affectedAssets ?? []).slice(0, 5).map((a) => (
             <Link
               key={a.symbol}
               href={`/asset/${a.type}/${encodeURIComponent(a.symbol)}`}

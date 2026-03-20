@@ -4,6 +4,9 @@ import { searchCrypto } from '@/lib/api/coingecko'
 import { DEFAULT_FOREX_PAIRS, DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import { Asset } from '@/lib/utils/types'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { redis } from '@/lib/cache/redis'
+
+const CACHE_TTL = 600  // 10 min — search results don't change often
 
 export async function GET(req: NextRequest) {
   const limited = withRateLimit(req, 30)
@@ -17,6 +20,12 @@ export async function GET(req: NextRequest) {
   }
 
   const term = q.toLowerCase()
+  const cacheKey = `search:v1:${term}`
+
+  try {
+    const cached = await redis.get<Asset[]>(cacheKey)
+    if (cached) return NextResponse.json(cached.slice(0, limit))
+  } catch { /* fall through */ }
 
   // ── Run all three searches concurrently ───────────────────────────────
   const [finnhubResults, cgResults] = await Promise.allSettled([
@@ -72,7 +81,8 @@ export async function GET(req: NextRequest) {
     ...forex,
     ...commodities,
     ...etfs.slice(0, 4),
-  ].slice(0, limit)
+  ]
 
-  return NextResponse.json(all)
+  redis.set(cacheKey, all, { ex: CACHE_TTL }).catch(() => {})
+  return NextResponse.json(all.slice(0, limit))
 }

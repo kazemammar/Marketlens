@@ -1,7 +1,6 @@
-export const dynamic = 'force-dynamic'
-
 import { NextResponse } from 'next/server'
 import { getPeers, getCompanyProfile } from '@/lib/api/finnhub'
+import { redis } from '@/lib/cache/redis'
 
 export interface PeerInfo {
   symbol:    string
@@ -11,11 +10,20 @@ export interface PeerInfo {
   marketCap: number | null
 }
 
+const CACHE_TTL = 86_400  // 24 hours — peer lists are stable
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
   const { symbol } = await params
+  const cacheKey = `peers:v1:${symbol.toUpperCase()}`
+
+  try {
+    const cached = await redis.get<PeerInfo[]>(cacheKey)
+    if (cached) return NextResponse.json(cached)
+  } catch { /* fall through */ }
+
   try {
     const peerSymbols = await getPeers(symbol)
     const peerData = await Promise.allSettled(
@@ -37,6 +45,8 @@ export async function GET(
     const peers = peerData
       .map(r => r.status === 'fulfilled' ? r.value : null)
       .filter((p): p is PeerInfo => p !== null)
+
+    redis.set(cacheKey, peers, { ex: CACHE_TTL }).catch(() => {})
     return NextResponse.json(peers)
   } catch (err) {
     console.error('[api/stock/peers]', err)

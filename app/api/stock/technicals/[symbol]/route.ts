@@ -1,7 +1,6 @@
-export const dynamic = 'force-dynamic'
-
 import { NextResponse } from 'next/server'
 import { getQuote, getFinancialMetrics, getPriceTarget } from '@/lib/api/finnhub'
+import { redis } from '@/lib/cache/redis'
 
 interface TechSignal {
   name:   string
@@ -27,11 +26,25 @@ interface TechResponse {
   neutralCount:  number
 }
 
+const CACHE_TTL = 300  // 5 min — technical signals are price-based
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
   const { symbol } = await params
+  const cacheKey = `technicals:v1:${symbol.toUpperCase()}`
+
+  try {
+    const cached = await redis.get<TechResponse>(cacheKey)
+    if (cached) return NextResponse.json(cached)
+  } catch { /* fall through */ }
+
+  const empty: TechResponse = {
+    signals: [], priceContext: null,
+    overallSignal: 'neutral', bullCount: 0, bearCount: 0, neutralCount: 0,
+  }
+
   try {
     const [quoteRes, metricsRes, targetRes] = await Promise.allSettled([
       getQuote(symbol),
@@ -43,12 +56,10 @@ export async function GET(
     const metrics = metricsRes.status === 'fulfilled' ? metricsRes.value : null
     const target  = targetRes.status  === 'fulfilled' ? targetRes.value  : null
 
-    const empty: TechResponse = {
-      signals: [], priceContext: null,
-      overallSignal: 'neutral', bullCount: 0, bearCount: 0, neutralCount: 0,
+    if (!quote || quote.price <= 0) {
+      redis.set(cacheKey, empty, { ex: CACHE_TTL }).catch(() => {})
+      return NextResponse.json(empty)
     }
-
-    if (!quote || quote.price <= 0) return NextResponse.json(empty)
 
     const price    = quote.price
     const signals: TechSignal[] = []
@@ -154,15 +165,15 @@ export async function GET(
       targetMedian: target?.median        ?? null,
     }
 
-    return NextResponse.json<TechResponse>({
+    const result: TechResponse = {
       signals, priceContext, overallSignal,
       bullCount, bearCount, neutralCount,
-    })
+    }
+
+    redis.set(cacheKey, result, { ex: CACHE_TTL }).catch(() => {})
+    return NextResponse.json(result)
   } catch (err) {
     console.error('[api/stock/technicals]', err)
-    return NextResponse.json<TechResponse>({
-      signals: [], priceContext: null,
-      overallSignal: 'neutral', bullCount: 0, bearCount: 0, neutralCount: 0,
-    })
+    return NextResponse.json(empty)
   }
 }

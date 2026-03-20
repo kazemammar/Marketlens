@@ -127,6 +127,22 @@ export default function MarketTabs({
     }
   }, [tabs])
 
+  // Silent background refresh for the active tab every 30 min (matches server cache TTL)
+  // Uses a separate fetch that doesn't touch loading state so UX stays smooth
+  const refreshActiveTab = useCallback(async (tab: AssetType) => {
+    try {
+      const res = await fetch(`/api/market?tab=${tab}`)
+      if (!res.ok) return
+      const data = await res.json() as AssetCardData[]
+      setTabs((prev) => ({ ...prev, [tab]: { data, status: 'loaded' } }))
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => refreshActiveTab(activeTab), 30 * 60_000)
+    return () => clearInterval(id)
+  }, [activeTab, refreshActiveTab])
+
   function handleTabClick(tab: AssetType) {
     setActiveTab(tab)
     loadTab(tab)

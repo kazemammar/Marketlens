@@ -46,7 +46,7 @@ export default function StatusBar() {
   })
   const [tick, setTick] = useState(0)
 
-  // Probe each endpoint once for its cache freshness
+  // Probe endpoints on mount and every 5 min so freshness stays accurate as data ages
   useEffect(() => {
     const probes: Array<[string, string]> = [
       ['Stocks',   '/api/market?tab=stock'],
@@ -54,23 +54,27 @@ export default function StatusBar() {
       ['News',     '/api/news?page=1&limit=1'],
       ['AI Brief', '/api/market-brief'],
     ]
-    for (const [label, path] of probes) {
-      fetch(path, { method: 'HEAD' }).catch(() => null)
-      // Fall back: mark as "now" if the endpoint responds
-      fetch(path)
-        .then(async (r) => {
-          if (!r.ok) return
-          const data = await r.json() as Record<string, unknown>
-          // Try to extract a timestamp from common fields
-          const ts =
-            (typeof data.cachedAt === 'number' ? data.cachedAt : null) ??
-            (typeof data.generatedAt === 'number' ? data.generatedAt : null) ??
-            (Array.isArray(data) && data.length > 0 ? Date.now() : null) ??
-            Date.now()
-          setTimes((prev) => ({ ...prev, [label]: ts }))
-        })
-        .catch(() => {})
+
+    function runProbes() {
+      for (const [label, path] of probes) {
+        fetch(path)
+          .then(async (r) => {
+            if (!r.ok) return
+            const data = await r.json() as Record<string, unknown>
+            const ts =
+              (typeof data.cachedAt === 'number' ? data.cachedAt : null) ??
+              (typeof data.generatedAt === 'number' ? data.generatedAt : null) ??
+              (Array.isArray(data) && data.length > 0 ? Date.now() : null) ??
+              Date.now()
+            setTimes((prev) => ({ ...prev, [label]: ts }))
+          })
+          .catch(() => {})
+      }
     }
+
+    runProbes()
+    const id = setInterval(runProbes, 5 * 60_000)
+    return () => clearInterval(id)
   }, [])
 
   // Re-render every 10 s to update relative times

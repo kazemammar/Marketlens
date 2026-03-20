@@ -1,8 +1,19 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { MarketPulsePayload } from '@/app/api/market-pulse/route'
-import { timeAgo }            from '@/lib/utils/timeago'
+
+const DIR_COLOR: Record<string, string> = {
+  up:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+  down:     'text-red-400 bg-red-500/10 border-red-500/25',
+  volatile: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
+}
+const DIR_ARROW: Record<string, string> = { up: '▲', down: '▼', volatile: '↕' }
+
+function ts(ms: number) {
+  return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+}
 
 export default function MarketPulse() {
   const [data,    setData]    = useState<MarketPulsePayload | null>(null)
@@ -27,17 +38,11 @@ export default function MarketPulse() {
 
   if (loading) {
     return (
-      <div
-        className="border-b"
-        style={{
-          borderColor: 'rgba(16,185,129,0.15)',
-          borderLeft:  '3px solid rgba(16,185,129,0.25)',
-          background:  'linear-gradient(to right, rgba(16,185,129,0.04), transparent 60%)',
-        }}
-      >
-        <div className="flex items-center gap-3 px-4 py-2">
-          <div className="skeleton h-4 w-14 rounded-full shrink-0" />
-          <div className="skeleton h-3 w-full max-w-md rounded" />
+      <div className="flex h-10 animate-pulse items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4">
+        <div className="h-2 w-2 rounded-full bg-[var(--surface-2)]" />
+        <div className="h-2.5 flex-1 max-w-2xl rounded bg-[var(--surface-2)]" />
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map((i) => <div key={i} className="h-5 w-12 rounded bg-[var(--surface-2)]" />)}
         </div>
       </div>
     )
@@ -46,66 +51,41 @@ export default function MarketPulse() {
   if (!data) return null
 
   return (
-    <div
-      className="animate-fade-up border-b"
-      style={{
-        borderColor: 'rgba(16,185,129,0.2)',
-        borderLeft:  '3px solid #10b981',
-        background:  'linear-gradient(to right, rgba(16,185,129,0.06), rgba(16,185,129,0.01) 50%, transparent)',
-      }}
-    >
-      <div className="flex flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-start sm:gap-4">
+    <div className="flex min-h-10 items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 sm:px-4">
 
-        {/* Badge */}
-        <div className="flex shrink-0 items-center gap-2">
-          <div
-            className="flex items-center gap-1.5 rounded-full px-2 py-0.5"
-            style={{
-              background: 'rgba(16,185,129,0.15)',
-              border:     '1px solid rgba(16,185,129,0.35)',
-              boxShadow:  '0 0 10px rgba(16,185,129,0.12)',
-            }}
-          >
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-            <span
-              className="font-mono text-[9px] font-bold uppercase tracking-[0.16em]"
-              style={{ color: 'var(--accent)' }}
-            >
-              Live
-            </span>
-          </div>
-          <span
-            className="font-mono text-[9px] tabular-nums text-[var(--text-muted)] opacity-50"
-            suppressHydrationWarning
-          >
-            {timeAgo(data.generatedAt)}
-          </span>
-        </div>
-
-        {/* Pulse sentence */}
-        <p
-          className="min-w-0 flex-1 font-mono text-[11px] sm:text-[12px] leading-relaxed"
-          style={{ color: 'var(--text-2, var(--text))' }}
-        >
-          {data.pulse}
-        </p>
-
-        {/* Top headline chips — hidden on mobile, visible on md+ */}
-        {data.headlines.length > 0 && (
-          <div className="hidden lg:flex shrink-0 flex-col gap-1 max-w-[260px]">
-            {data.headlines.slice(0, 3).map((h, i) => (
-              <p
-                key={i}
-                className="truncate font-mono text-[9px] text-[var(--text-muted)] opacity-50"
-                title={h}
-              >
-                · {h}
-              </p>
-            ))}
-          </div>
-        )}
-
+      {/* Pulsing dot + label + timestamp */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <span className="live-dot h-2 w-2 rounded-full bg-[var(--accent)] animate-pulse" />
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+          AI BRIEF
+        </span>
+        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50" suppressHydrationWarning>
+          {ts(data.generatedAt)}
+        </span>
       </div>
+
+      <span className="hidden text-[var(--border)] sm:block">|</span>
+
+      {/* Pulse text */}
+      <p className="min-w-0 flex-1 text-[11px] leading-snug">
+        <span className="text-[var(--text)]">{data.pulse}</span>
+      </p>
+
+      {/* Asset chips */}
+      {data.affectedAssets.length > 0 && (
+        <div className="flex shrink-0 flex-wrap items-center gap-1">
+          {data.affectedAssets.slice(0, 5).map((a) => (
+            <Link
+              key={a.symbol}
+              href={`/asset/${a.type}/${encodeURIComponent(a.symbol)}`}
+              className={`inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 font-mono text-[9px] font-bold transition hover:opacity-75 ${DIR_COLOR[a.direction] ?? DIR_COLOR.volatile}`}
+            >
+              {DIR_ARROW[a.direction] ?? '↕'} {a.symbol}
+            </Link>
+          ))}
+        </div>
+      )}
+
     </div>
   )
 }

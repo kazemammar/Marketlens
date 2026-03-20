@@ -238,14 +238,7 @@ export default function Navbar() {
         <div className="flex h-[52px] items-center gap-3 px-3 sm:px-4">
 
           {/* ── Logo ─────────────────────────────────────────────────── */}
-          {/* Mobile: icon only */}
-          <div className="md:hidden">
-            <MarketLensLogo size={32} showWordmark={false} />
-          </div>
-          {/* Desktop: icon + wordmark */}
-          <div className="hidden md:block">
-            <MarketLensLogo size={36} showWordmark={true} />
-          </div>
+          <MarketLensLogo size={36} showWordmark={true} />
 
           {/* ── Byline ───────────────────────────────────────────────── */}
           <span className="hidden lg:block text-[10px] font-medium tracking-wide" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>

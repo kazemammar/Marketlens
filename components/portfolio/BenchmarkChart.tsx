@@ -313,7 +313,8 @@ export default function BenchmarkChart({
                         dot={false}
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         activeDot={(props: any) => {
-                          const color = (props.value ?? 0) >= 0 ? '#10b981' : '#ef4444'
+                          const val = props.payload?.portfolioReturn ?? props.value ?? 0
+                          const color = val >= 0 ? '#10b981' : '#ef4444'
                           return <circle cx={props.cx} cy={props.cy} r={3} fill={color} stroke="none" />
                         }}
                         name="Portfolio"

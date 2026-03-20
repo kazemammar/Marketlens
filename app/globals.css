@@ -404,8 +404,16 @@ code, pre, kbd {
 }
 .animate-slide-up { animation: slide-up 0.35s cubic-bezier(0.16,1,0.3,1) both; }
 
+/* Safe area padding for Dynamic Island / notch (needs constant() cascade for iOS < 11.2) */
+.safe-top {
+  padding-top: constant(safe-area-inset-top);
+  padding-top: env(safe-area-inset-top, 0px);
+}
 /* Safe area padding for phones with home indicator */
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
 /* ─── Scrollbar hide utility ─────────────────────────────────────────────── */
 .scrollbar-hide::-webkit-scrollbar { display: none; }

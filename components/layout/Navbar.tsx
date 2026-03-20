@@ -220,15 +220,13 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-[200] w-full"
+        className="sticky top-0 z-[200] w-full safe-top"
         style={{
           background:           'var(--bg)',
           backdropFilter:       'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           borderBottom:         '1px solid var(--border)',
           boxShadow:            '0 1px 0 rgba(16,185,129,0.06), 0 4px 24px rgba(0,0,0,0.15)',
-          // Extend into the iOS status bar safe area
-          paddingTop:           'env(safe-area-inset-top)',
           // Force own GPU compositing layer so iOS WebKit never paints
           // transformed page elements above the nav
           transform:            'translateZ(0)',

@@ -4,7 +4,7 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="mt-auto border-t border-[var(--border)] bg-[var(--surface)]">
+    <footer className="mt-auto border-t border-[var(--border)] bg-[var(--surface)] safe-bottom">
       <div className="mx-auto max-w-screen-2xl px-4 py-4 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 

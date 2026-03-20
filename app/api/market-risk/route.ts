@@ -43,8 +43,8 @@ export interface MarketRiskPayload {
 const BRIEF_KEY   = 'market-brief:daily'
 const RISK_KEY    = 'market-risk:v6'
 const HISTORY_KEY = 'market-risk:history'
-const CACHE_TTL   = 300   // 5 minutes
-const HISTORY_MAX = 12    // ~1 hour at 5-min intervals
+const CACHE_TTL   = 1_800  // 30 minutes — brief only changes hourly, no value recomputing more often
+const HISTORY_MAX = 12     // ~6 hours at 30-min intervals
 
 // ─── Category keyword lists ────────────────────────────────────────────────
 
@@ -230,7 +230,7 @@ export async function GET(req: Request) {
       // Dedup-aware: append to history if last point is >4 minutes old
       const latest = history[0]
       const elapsed = latest ? Date.now() - latest.timestamp : Infinity
-      if (elapsed > 4 * 60_000) {
+      if (elapsed > 25 * 60_000) {
         await appendHistory({ score: cached.score, timestamp: Date.now() })
         // Re-read so the response includes the just-appended point
         const freshHistory = await readHistory()

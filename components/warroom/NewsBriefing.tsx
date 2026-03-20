@@ -145,6 +145,12 @@ export default function NewsBriefing() {
 
   useEffect(() => { fetchPage(1) }, [fetchPage])
 
+  // Silently refresh page 1 every 5 minutes so headlines don't go stale
+  useEffect(() => {
+    const id = setInterval(() => fetchPage(1), 5 * 60_000)
+    return () => clearInterval(id)
+  }, [fetchPage])
+
   // ── Distribute into category buckets & sort ──────────────────────────
   const byCategory: Record<NewsCategory, Article[]> = {
     GEOPOLITICAL: [], MARKETS: [], ENERGY: [], CRYPTO: [], TECH: [],

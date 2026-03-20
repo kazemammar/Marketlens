@@ -111,7 +111,7 @@ function SkeletonCard() {
 }
 
 export default function EconomicIndicators() {
-  const { data, loading } = useFetch<EconomicIndicator[]>('/api/economics', { refreshInterval: 30 * 60_000 })
+  const { data, loading } = useFetch<EconomicIndicator[]>('/api/economics', { refreshInterval: 3 * 60 * 60_000 })
   const indicators = data ?? []
 
   const inverted = indicators.find((i) => i.id === 'YIELD_SPREAD' && (i.value ?? 0) < 0)

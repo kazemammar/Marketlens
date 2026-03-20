@@ -1,8 +1,8 @@
 // GET /api/forex/[pair]
-// Returns forex rate for a currency pair via Finnhub
-// Example: /api/forex/EUR-USD
+// Placeholder — forex data is fetched directly by the asset page server component via Frankfurter.
+// Use /api/market?tab=forex for the full forex cards list.
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   _req: NextRequest,
@@ -10,5 +10,5 @@ export async function GET(
 ) {
   const { pair } = await params
   void pair
-  return Response.json({ todo: true })
+  return NextResponse.json({ error: 'Not implemented — use /api/market?tab=forex for forex rates' }, { status: 501 })
 }

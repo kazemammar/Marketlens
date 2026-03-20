@@ -1,8 +1,8 @@
 // GET /api/crypto/[symbol]
-// Returns crypto price and metadata via CoinGecko
-// No API key required for basic endpoints
+// Placeholder — crypto data is fetched directly by the asset page server component via CoinGecko.
+// Use /api/crypto/stats/[symbol] for on-chain stats.
 
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   _req: NextRequest,
@@ -10,5 +10,5 @@ export async function GET(
 ) {
   const { symbol } = await params
   void symbol
-  return Response.json({ todo: true })
+  return NextResponse.json({ error: 'Not implemented — use /api/crypto/stats/[symbol] for on-chain data' }, { status: 501 })
 }

@@ -219,6 +219,16 @@ export default function Navbar() {
 
   return (
     <>
+      {/*
+        iOS safe-area blackout — position:fixed so it's ALWAYS at the absolute top
+        regardless of sticky quirks. Covers exactly the Dynamic Island / status bar zone.
+      */}
+      <div
+        aria-hidden
+        className="fixed left-0 right-0 top-0 z-[201]"
+        style={{ height: 'env(safe-area-inset-top, 0px)', background: 'var(--bg)' }}
+      />
+
       <header
         className="sticky top-0 z-[200] w-full safe-top"
         style={{

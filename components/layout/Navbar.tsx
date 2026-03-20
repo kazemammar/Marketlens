@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useTheme } from './ThemeProvider'
 import CommandPalette from './CommandPalette'
 import UserMenu from '@/components/auth/UserMenu'
+import MarketLensLogo from './MarketLensLogo'
 
 const NAV_LINKS = [
   { label: 'Dashboard',   href: '/'            },
@@ -237,41 +238,14 @@ export default function Navbar() {
         <div className="flex h-[52px] items-center gap-3 px-3 sm:px-4">
 
           {/* ── Logo ─────────────────────────────────────────────────── */}
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2.5 select-none"
-            aria-label="MarketLens home"
-          >
-            {/* Icon — always visible */}
-            <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <defs>
-                <filter id="navLogoGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="b"/>
-                  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-                <linearGradient id="navLogoFill" x1="50" y1="15" x2="50" y2="78" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%"   stopColor="#00FF88" stopOpacity="0.30"/>
-                  <stop offset="70%"  stopColor="#00FF88" stopOpacity="0.05"/>
-                  <stop offset="100%" stopColor="#00FF88" stopOpacity="0"/>
-                </linearGradient>
-              </defs>
-              <rect x="5" y="5" width="90" height="90" rx="18" stroke="#00FF88" strokeWidth="2" fill="none" opacity="0.2"/>
-              <polygon points="14,68 28,52 40,58 54,28 66,38 78,18 86,24 86,78 14,78" fill="url(#navLogoFill)"/>
-              <polyline points="14,68 28,52 40,58 54,28 66,38 78,18 86,24" stroke="#00FF88" strokeWidth="3" strokeLinejoin="round" fill="none" filter="url(#navLogoGlow)"/>
-              <line x1="14" y1="78" x2="86" y2="78" stroke="#00FF88" strokeWidth="1.5" opacity="0.15"/>
-            </svg>
-
-            {/* Wordmark + LIVE — hidden on mobile, visible on md+ */}
-            <div className="hidden md:flex flex-col justify-center leading-none" style={{ height: '32px' }}>
-              <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '15px', fontWeight: 700, color: '#F0F0F5', letterSpacing: '-0.3px', lineHeight: 1 }}>
-                Market<span style={{ color: '#00FF88', fontWeight: 800 }}>Lens</span>
-              </span>
-              <div className="flex items-center gap-1" style={{ marginTop: '3px' }}>
-                <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)', opacity: 0.7 }} />
-                <span style={{ fontFamily: 'var(--font-dm-sans), sans-serif', fontSize: '7px', fontWeight: 400, color: 'var(--text-muted)', letterSpacing: '1px', opacity: 0.5 }}>LIVE</span>
-              </div>
-            </div>
-          </Link>
+          {/* Mobile: icon only */}
+          <div className="md:hidden">
+            <MarketLensLogo size={32} showWordmark={false} />
+          </div>
+          {/* Desktop: icon + wordmark */}
+          <div className="hidden md:block">
+            <MarketLensLogo size={36} showWordmark={true} />
+          </div>
 
           {/* ── Byline ───────────────────────────────────────────────── */}
           <span className="hidden lg:block text-[10px] font-medium tracking-wide" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>

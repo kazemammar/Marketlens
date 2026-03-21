@@ -23,7 +23,7 @@ export interface NewsCluster {
 
 // ─── Stop words ───────────────────────────────────────────────────────────
 
-const STOP_WORDS = new Set([
+export const STOP_WORDS = new Set([
   'the','a','is','and','to','of','in','for','on','with','by','at','from','has',
   'have','been','was','were','will','are','this','that','an','it','its','not',
   'but','or','as','after','before','says','said','could','would','more','than',
@@ -93,7 +93,7 @@ const WORD_SUBS: Record<string, string> = {
 
 // ─── Similarity helpers ───────────────────────────────────────────────────
 
-function getSignificantWords(headline: string): Set<string> {
+export function getSignificantWords(headline: string): Set<string> {
   let text = headline.toLowerCase()
   for (const [pattern, replacement] of PHRASE_SUBS) {
     text = text.replace(pattern, replacement)

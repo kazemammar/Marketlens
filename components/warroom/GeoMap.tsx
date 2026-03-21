@@ -257,19 +257,11 @@ const SHIPPING_LANES = {
 
 // ─── Status colours ───────────────────────────────────────────────────────
 
-const STATUS_COLORS: Record<ChokepointStatus, string> = {
-  NORMAL:    '#f59e0b',  // default amber (matches existing chokepoint-marker CSS)
-  ELEVATED:  '#f59e0b',  // keep amber for elevated — already noticeable
+const STATUS_COLORS_MAP: Record<ChokepointStatus, string> = {
+  NORMAL:    '#10b981',  // green
+  ELEVATED:  '#f59e0b',  // amber
   DISRUPTED: '#ef4444',  // red
   BLOCKED:   '#dc2626',  // dark red
-}
-
-// Override: ELEVATED gets a distinct orange to differentiate from NORMAL
-const STATUS_COLORS_MAP: Record<ChokepointStatus, string> = {
-  NORMAL:    '#f59e0b',
-  ELEVATED:  '#fb923c',
-  DISRUPTED: '#ef4444',
-  BLOCKED:   '#dc2626',
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -288,6 +280,8 @@ interface MarkerRef {
   el:            HTMLElement
   group:         keyof LayerState
   chokepointId?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  popup?:        any
 }
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
@@ -342,9 +336,8 @@ function chokepointPopup(c: typeof CHOKEPOINTS[0], status: ChokepointStatus = 'N
         <p style="font-weight:700;font-size:12px;color:#f1f5f9;margin:0">${c.name}</p>
         <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}44">${status}</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:6px">
-        <div style="font-size:10px;color:#64748b">Oil/day: <span style="color:#fbbf24">${c.traffic}</span></div>
-        <div style="font-size:10px;color:#64748b">% Global oil: <span style="color:#fbbf24">${c.oilPct}</span></div>
+      <div style="font-size:10px;color:#64748b;margin-bottom:6px">
+        <span style="color:#fbbf24">${c.traffic} oil</span> · <span style="color:#fbbf24">${c.lngPct} global LNG</span>
       </div>
       <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;line-height:1.5">${c.description}</p>
       ${c.assets.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px">${assetBadges}</div>` : ''}
@@ -473,7 +466,7 @@ export default function GeoMap() {
         map.addSource('shipping-lanes', { type: 'geojson', data: SHIPPING_LANES as import('maplibre-gl').GeoJSONSourceSpecification['data'] })
         map.addLayer({ id: 'shipping-lanes-layer', type: 'line', source: 'shipping-lanes',
           layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint:  { 'line-color': '#3b82f6', 'line-opacity': 0.2, 'line-width': 1.5, 'line-dasharray': [4, 4] } })
+          paint:  { 'line-color': '#64748b', 'line-opacity': 0.15, 'line-width': 1.5, 'line-dasharray': [4, 4] } })
 
         // Conflict zones
         for (const z of CONFLICT_ZONES) {
@@ -493,13 +486,13 @@ export default function GeoMap() {
           markersRef.current.push({ el, group: 'conflicts' })
         }
 
-        // Chokepoints — store chokepointId for dynamic color updates
+        // Chokepoints — store chokepointId + popup ref for dynamic updates
         for (const c of CHOKEPOINTS) {
           const el = document.createElement('div')
           el.className = 'chokepoint-marker'
           const popup = new mgl.Popup({ offset: 14, closeButton: true, maxWidth: '270px' }).setHTML(chokepointPopup(c))
           new mgl.Marker({ element: el }).setLngLat([c.lng, c.lat]).setPopup(popup).addTo(map)
-          markersRef.current.push({ el, group: 'chokepoints', chokepointId: c.id })
+          markersRef.current.push({ el, group: 'chokepoints', chokepointId: c.id, popup })
         }
 
         // Military bases
@@ -535,7 +528,7 @@ export default function GeoMap() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Update chokepoint marker colors when status arrives ──────────────
+  // ── Update chokepoint marker colors + popup HTML when status changes ─
   useEffect(() => {
     if (!mapReady) return
     for (const m of markersRef.current) {
@@ -547,6 +540,10 @@ export default function GeoMap() {
         m.el.style.boxShadow   = status !== 'NORMAL'
           ? `0 0 12px ${color}99`
           : `0 0 8px ${color}66`
+        if (m.popup) {
+          const def = CHOKEPOINTS.find(c => c.id === m.chokepointId)
+          if (def) m.popup.setHTML(chokepointPopup(def, status))
+        }
       }
     }
   }, [chokepointStatus, mapReady])

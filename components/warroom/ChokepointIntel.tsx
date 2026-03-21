@@ -163,11 +163,19 @@ export default function ChokepointIntel() {
           Chokepoint Intelligence
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        {disruptedCount > 0 && (
-          <span className="rounded border border-red-500/30 bg-red-500/10 px-1.5 py-px font-mono text-[8px] font-bold text-red-400">
-            ⚠ {disruptedCount} ELEVATED
-          </span>
-        )}
+        {disruptedCount > 0 && (() => {
+          const hasBlocked   = chokepoints.some(c => c.status === 'BLOCKED')
+          const hasDisrupted = chokepoints.some(c => c.status === 'DISRUPTED')
+          const worstLabel   = hasBlocked ? 'BLOCKED' : hasDisrupted ? 'DISRUPTED' : 'ELEVATED'
+          const color        = hasBlocked ? 'border-red-600/40 bg-red-600/10 text-red-400'
+                             : hasDisrupted ? 'border-red-500/30 bg-red-500/10 text-red-400'
+                             : 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+          return (
+            <span className={`rounded border px-1.5 py-px font-mono text-[8px] font-bold ${color}`}>
+              ⚠ {disruptedCount} {worstLabel}
+            </span>
+          )
+        })()}
         <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">5MIN CACHE</span>
       </div>
 

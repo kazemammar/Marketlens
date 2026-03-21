@@ -2,30 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { categorizeArticle, type NewsCategory } from '@/lib/utils/news-helpers'
+import type { NewsCluster } from '@/lib/utils/news-clustering'
+import type { SourceMeta } from '@/lib/utils/source-registry'
 
-// ─── Types ────────────────────────────────────────────────────────────────
-
-interface Article {
-  headline:    string
-  url:         string
-  source:      string
-  publishedAt: number | string
-  summary:     string
-}
-
-// ─── Severity classification ──────────────────────────────────────────────
-
-const HIGH_KW = ['war','attack','strike','sanction','blockade','invasion','missile','drone','crisis','crash','collapse','emergency','default','coup','explosion','seized','airstrike','ceasefire','nuclear']
-const MED_KW  = ['tariff','trade','regulation','election','gdp','inflation','rate hike','rate cut','deficit','devaluation','recession','unemployment','fomc','opec','earnings','output cut','supply cut']
-
-function severity(text: string): 'HIGH' | 'MED' | 'LOW' {
-  const l = text.toLowerCase()
-  if (HIGH_KW.some((k) => l.includes(k))) return 'HIGH'
-  if (MED_KW.some((k)  => l.includes(k))) return 'MED'
-  return 'LOW'
-}
-
-// ─── Visual config ────────────────────────────────────────────────────────
+// ─── Severity styling ─────────────────────────────────────────────────────
 
 const SEV_ORDER = { HIGH: 0, MED: 1, LOW: 2 } as const
 
@@ -47,10 +27,18 @@ const COL_ACCENT: Record<string, string> = {
   ENERGY:       '#f97316',
 }
 
+// ─── Source tier dot ──────────────────────────────────────────────────────
+
+function tierColor(meta: SourceMeta): string | null {
+  if (meta.tier === 1) return '#10b981'
+  if (meta.tier === 2) return '#3b82f6'
+  return null
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function ago(ts: number | string) {
-  const d = Date.now() - (typeof ts === 'number' ? ts : new Date(ts).getTime())
+function ago(ts: number) {
+  const d = Date.now() - ts
   const m = Math.floor(d / 60_000)
   if (m < 1)  return 'now'
   if (m < 60) return `${m}m`
@@ -67,32 +55,69 @@ const COLUMNS: { id: NewsCategory; label: string; icon: string; desc: string }[]
   { id: 'ENERGY',       label: 'Energy & Commodities', icon: '⚡', desc: 'Oil · Gas · Gold · Wheat' },
 ]
 
-// ─── Article row ──────────────────────────────────────────────────────────
+// ─── Cluster row ──────────────────────────────────────────────────────────
 
-function ArticleRow({ article }: { article: Article }) {
-  const sev     = severity(`${article.headline} ${article.summary}`)
-  const isHigh  = sev === 'HIGH'
+function ClusterRow({ cluster }: { cluster: NewsCluster }) {
+  const [expanded, setExpanded] = useState(false)
+  const sev    = cluster.severity
+  const isHigh = sev === 'HIGH'
+  const tc     = tierColor(cluster.sourceMeta)
+
   return (
     <a
-      href={article.url}
+      href={cluster.url}
       target="_blank"
       rel="noopener noreferrer"
       className={`group flex flex-col gap-0.5 border-b border-[var(--border)] py-2 pr-3 pl-2.5 transition-colors hover:bg-[var(--surface-2)] ${SEV_LEFT[sev]}`}
     >
       <p className={`line-clamp-2 font-mono text-[10px] font-medium leading-snug transition-colors group-hover:text-[var(--text)] ${isHigh ? 'text-[var(--text)]' : 'text-[var(--text-2)]'}`}>
-        {article.headline}
+        {cluster.headline}
       </p>
-      {isHigh && article.summary && (
+      {isHigh && cluster.summary && (
         <p className="line-clamp-1 font-mono text-[9px] leading-snug text-[var(--text-muted)] opacity-60">
-          {article.summary.slice(0, 120)}
+          {cluster.summary.slice(0, 120)}
         </p>
       )}
-      <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[8px] text-[var(--text-muted)]">
+      <div className="mt-0.5 flex flex-wrap items-center gap-1 font-mono text-[8px] text-[var(--text-muted)]">
         <span className={`rounded border px-1 py-px font-bold uppercase ${SEV_BADGE[sev]}`}>{sev}</span>
-        <span className="font-semibold opacity-80">{article.source}</span>
+
+        {/* Tier dot */}
+        {tc && <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: tc }} />}
+
+        <span className="font-semibold opacity-80">{cluster.source}</span>
+
+        {/* State media badge */}
+        {cluster.sourceMeta.stateMedia && (
+          <span
+            className={`rounded border px-1 py-px font-bold uppercase text-[7px] ${
+              cluster.sourceMeta.stateMedia.level === 'high'
+                ? 'border-red-500/30 bg-red-500/15 text-red-400'
+                : 'border-amber-500/25 bg-amber-500/10 text-amber-400'
+            }`}
+          >
+            {cluster.sourceMeta.stateMedia.level === 'high' ? '⚠ STATE' : '! GOV'}
+          </span>
+        )}
+
         <span className="opacity-30">·</span>
-        <span className="opacity-60">{ago(article.publishedAt)}</span>
+        <span className="opacity-60">{ago(cluster.latestAt)}</span>
+
+        {/* Multi-source badge */}
+        {cluster.sourceCount > 1 && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded(!expanded) }}
+            className="rounded bg-[var(--surface-2)] px-1 py-px text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+          >
+            +{cluster.sourceCount - 1} sources
+          </button>
+        )}
       </div>
+
+      {expanded && (
+        <p className="mt-0.5 font-mono text-[8px] text-[var(--text-muted)] opacity-60 leading-snug">
+          {cluster.allSources.join(' · ')}
+        </p>
+      )}
     </a>
   )
 }
@@ -116,13 +141,12 @@ function ColumnSkeleton() {
 // ─── Main component ───────────────────────────────────────────────────────
 
 export default function NewsBriefing() {
-  const [articles,    setArticles]    = useState<Article[]>([])
+  const [clusters,    setClusters]    = useState<NewsCluster[]>([])
   const [loading,     setLoading]     = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [page,        setPage]        = useState(1)
   const [hasMore,     setHasMore]     = useState(false)
 
-  // Track whether we've auto-filled once to avoid loops
   const autoFilled = useRef(false)
 
   const fetchPage = useCallback(async (p: number) => {
@@ -130,10 +154,10 @@ export default function NewsBriefing() {
     else           setLoadingMore(true)
 
     try {
-      const res  = await fetch(`/api/news?page=${p}&limit=100`)
-      const data = await res.json() as { articles: Article[]; hasMore: boolean }
-      if (data?.articles) {
-        setArticles((prev) => p === 1 ? data.articles : [...prev, ...data.articles])
+      const res  = await fetch(`/api/news?page=${p}&limit=80&clustered=true`)
+      const data = await res.json() as { clusters: NewsCluster[]; hasMore: boolean }
+      if (data?.clusters) {
+        setClusters((prev) => p === 1 ? data.clusters : [...prev, ...data.clusters])
         setHasMore(data.hasMore)
         setPage(p)
       }
@@ -145,31 +169,29 @@ export default function NewsBriefing() {
 
   useEffect(() => { fetchPage(1) }, [fetchPage])
 
-  // Silently refresh page 1 every 5 minutes so headlines don't go stale
+  // Refresh every 5 minutes
   useEffect(() => {
     const id = setInterval(() => fetchPage(1), 5 * 60_000)
     return () => clearInterval(id)
   }, [fetchPage])
 
-  // ── Distribute into category buckets & sort ──────────────────────────
-  const byCategory: Record<NewsCategory, Article[]> = {
+  // ── Distribute clusters into category buckets & sort ─────────────────
+  const byCategory: Record<NewsCategory, NewsCluster[]> = {
     GEOPOLITICAL: [], MARKETS: [], ENERGY: [], CRYPTO: [], TECH: [],
   }
-  for (const a of articles) {
-    byCategory[categorizeArticle(a.headline)].push(a)
+  for (const c of clusters) {
+    byCategory[categorizeArticle(c.headline)].push(c)
   }
   for (const cat of Object.keys(byCategory) as NewsCategory[]) {
     byCategory[cat].sort((a, b) => {
-      const diff = SEV_ORDER[severity(`${a.headline} ${a.summary}`)] -
-                   SEV_ORDER[severity(`${b.headline} ${b.summary}`)]
+      // Sort by severity first, then by latestAt
+      const diff = SEV_ORDER[a.severity] - SEV_ORDER[b.severity]
       if (diff !== 0) return diff
-      const ta = typeof a.publishedAt === 'number' ? a.publishedAt : new Date(a.publishedAt).getTime()
-      const tb = typeof b.publishedAt === 'number' ? b.publishedAt : new Date(b.publishedAt).getTime()
-      return tb - ta
+      return b.latestAt - a.latestAt
     })
   }
 
-  // Auto-fill: if any visible column has < 4 articles after first load, fetch page 2
+  // Auto-fill if any visible column is thin
   const visibleCats = COLUMNS.map((c) => c.id)
   const thinColumn  = !loading && hasMore && !autoFilled.current &&
     visibleCats.some((cat) => byCategory[cat].length < 4)
@@ -181,7 +203,6 @@ export default function NewsBriefing() {
     }
   }, [thinColumn, fetchPage])
 
-  // ── Per-column scroll handler triggers next page load ─────────────────
   const handleColumnScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.currentTarget
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100
@@ -207,13 +228,12 @@ export default function NewsBriefing() {
         </div>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         <div className="flex items-center gap-3">
-          {/* Severity legend */}
           <div className="hidden sm:flex items-center gap-2 font-mono text-[8px] text-[var(--text-muted)] opacity-50">
             <span className="flex items-center gap-1"><span className="inline-block h-2 w-0.5 rounded-full bg-red-500/70" />HIGH</span>
             <span className="flex items-center gap-1"><span className="inline-block h-2 w-0.5 rounded-full bg-amber-500/50" />MED</span>
           </div>
           <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-            {loading ? 'Loading…' : `${articles.length} stories`}
+            {loading ? 'Loading…' : `${clusters.length} stories`}
           </span>
         </div>
       </div>
@@ -221,7 +241,7 @@ export default function NewsBriefing() {
       {/* 3-column grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {COLUMNS.map((col, colIdx) => {
-          const colArticles = byCategory[col.id]
+          const colClusters = byCategory[col.id]
           const accent      = COL_ACCENT[col.id] ?? 'var(--accent)'
           return (
             <div
@@ -253,19 +273,19 @@ export default function NewsBriefing() {
                     className="shrink-0 rounded px-1.5 py-px font-mono text-[8px] font-bold tabular-nums"
                     style={{ background: `${accent}15`, color: accent }}
                   >
-                    {colArticles.length}
+                    {colClusters.length}
                   </span>
                 )}
               </div>
 
-              {/* Scrollable article list */}
+              {/* Scrollable cluster list */}
               <div className="relative">
                 {loading ? (
                   <ColumnSkeleton />
-                ) : colArticles.length === 0 ? (
+                ) : colClusters.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-1.5 py-10">
                     <span className="text-[18px] opacity-20">{col.icon}</span>
-                    <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No articles yet</p>
+                    <p className="font-mono text-[10px] text-[var(--text-muted)] opacity-50">No stories yet</p>
                     {hasMore && (
                       <p className="font-mono text-[8px] text-[var(--text-muted)] opacity-30">Scroll another column to load more</p>
                     )}
@@ -276,11 +296,10 @@ export default function NewsBriefing() {
                     style={{ maxHeight: '480px' }}
                     onScroll={handleColumnScroll}
                   >
-                    {colArticles.map((a, i) => (
-                      <ArticleRow key={`${col.id}-${i}`} article={a} />
+                    {colClusters.map((c, i) => (
+                      <ClusterRow key={`${col.id}-${c.id}-${i}`} cluster={c} />
                     ))}
 
-                    {/* Column-level load indicator */}
                     <div className="flex items-center justify-center py-3">
                       {loadingMore ? (
                         <div className="flex items-center gap-1.5">
@@ -296,8 +315,7 @@ export default function NewsBriefing() {
                   </div>
                 )}
 
-                {/* Gradient fade */}
-                {!loading && colArticles.length > 5 && (
+                {!loading && colClusters.length > 5 && (
                   <div
                     className="pointer-events-none absolute bottom-0 left-0 right-0 h-12"
                     style={{ background: 'linear-gradient(to top, var(--surface), transparent)' }}

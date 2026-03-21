@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { NewsArticle } from '@/lib/utils/types'
+import type { NewsCluster } from '@/lib/utils/news-clustering'
+import type { SourceMeta } from '@/lib/utils/source-registry'
 import { formatRelativeTime } from '@/lib/utils/formatters'
 
 // ─── Category config ──────────────────────────────────────────────────────
@@ -18,28 +19,39 @@ const CATEGORIES = [
 // ─── API response shape ───────────────────────────────────────────────────
 
 interface NewsResponse {
-  articles: NewsArticle[]
+  clusters: NewsCluster[]
   total:    number
   page:     number
   hasMore:  boolean
 }
 
-// ─── Single article card ──────────────────────────────────────────────────
+// ─── Source tier dot ──────────────────────────────────────────────────────
 
-function ArticleCard({ article }: { article: NewsArticle }) {
+function tierColor(meta: SourceMeta): string | null {
+  if (meta.tier === 1) return '#10b981'
+  if (meta.tier === 2) return '#3b82f6'
+  return null
+}
+
+// ─── Single cluster card ──────────────────────────────────────────────────
+
+function ClusterCard({ cluster }: { cluster: NewsCluster }) {
+  const [expanded, setExpanded] = useState(false)
+  const tc = tierColor(cluster.sourceMeta)
+
   return (
     <a
-      href={article.url}
+      href={cluster.url}
       target="_blank"
       rel="noopener noreferrer"
       className="group flex gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5 transition hover:border-[var(--accent)]/30"
     >
       {/* Thumbnail */}
-      {article.imageUrl ? (
+      {cluster.imageUrl ? (
         <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded bg-[var(--surface-2)] sm:h-24 sm:w-36">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={article.imageUrl}
+            src={cluster.imageUrl}
             alt=""
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             loading="lazy"
@@ -54,18 +66,52 @@ function ArticleCard({ article }: { article: NewsArticle }) {
       {/* Content */}
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 font-mono text-[12px] font-semibold leading-snug text-[var(--text)] transition-colors group-hover:text-[var(--accent)]">
-          {article.headline}
+          {cluster.headline}
         </p>
-        {article.summary && (
+        {cluster.summary && (
           <p className="mt-1.5 line-clamp-2 hidden font-mono text-[10px] leading-relaxed text-[var(--text-muted)] sm:block">
-            {article.summary}
+            {cluster.summary}
           </p>
         )}
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] text-[var(--text-muted)]">
-          <span className="font-semibold text-[var(--text)]">{article.source}</span>
+
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-[var(--text-muted)]">
+          {/* Tier dot */}
+          {tc && <span className="h-1.5 w-1.5 rounded-full" style={{ background: tc }} />}
+
+          <span className="font-semibold text-[var(--text)]">{cluster.source}</span>
+
+          {/* State media badge */}
+          {cluster.sourceMeta.stateMedia && (
+            <span
+              className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${
+                cluster.sourceMeta.stateMedia.level === 'high'
+                  ? 'border-red-500/30 bg-red-500/15 text-red-400'
+                  : 'border-amber-500/25 bg-amber-500/10 text-amber-400'
+              }`}
+            >
+              {cluster.sourceMeta.stateMedia.level === 'high' ? '⚠ STATE' : '! GOV'}
+            </span>
+          )}
+
           <span>·</span>
-          <span>{formatRelativeTime(article.publishedAt)}</span>
+          <span>{formatRelativeTime(cluster.latestAt)}</span>
+
+          {/* Multi-source badge */}
+          {cluster.sourceCount > 1 && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded(!expanded) }}
+              className="rounded bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-muted)] transition hover:text-[var(--text)]"
+            >
+              +{cluster.sourceCount - 1} sources
+            </button>
+          )}
         </div>
+
+        {expanded && (
+          <p className="mt-1 font-mono text-[9px] text-[var(--text-muted)] opacity-70 leading-snug">
+            {cluster.allSources.join(' · ')}
+          </p>
+        )}
       </div>
 
       <span className="shrink-0 self-center text-[var(--text-muted)] opacity-0 transition-opacity group-hover:opacity-100" aria-hidden>
@@ -77,7 +123,7 @@ function ArticleCard({ article }: { article: NewsArticle }) {
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────
 
-function ArticleSkeleton() {
+function ClusterSkeleton() {
   return (
     <div className="flex gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5">
       <div className="h-20 w-28 shrink-0 animate-pulse rounded bg-[var(--surface-2)] sm:h-24 sm:w-36" />
@@ -97,23 +143,23 @@ function ArticleSkeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────
 
 export default function NewsPage() {
-  const [category,  setCategory]  = useState('all')
-  const [articles,  setArticles]  = useState<NewsArticle[]>([])
-  const [page,      setPage]      = useState(1)
-  const [hasMore,   setHasMore]   = useState(false)
-  const [loading,   setLoading]   = useState(true)
+  const [category,    setCategory]    = useState('all')
+  const [clusters,    setClusters]    = useState<NewsCluster[]>([])
+  const [page,        setPage]        = useState(1)
+  const [hasMore,     setHasMore]     = useState(false)
+  const [loading,     setLoading]     = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [total,     setTotal]     = useState(0)
+  const [total,       setTotal]       = useState(0)
 
   const fetchPage = useCallback(async (cat: string, pg: number, append: boolean) => {
     if (pg === 1) setLoading(true)
     else          setLoadingMore(true)
 
     try {
-      const res  = await fetch(`/api/news?category=${cat}&page=${pg}`)
+      const res  = await fetch(`/api/news?category=${cat}&page=${pg}&clustered=true`)
       const data = await res.json() as NewsResponse
 
-      setArticles((prev) => append ? [...prev, ...data.articles] : data.articles)
+      setClusters((prev) => append ? [...prev, ...(data.clusters ?? [])] : (data.clusters ?? []))
       setHasMore(data.hasMore)
       setTotal(data.total)
       setPage(pg)
@@ -125,14 +171,13 @@ export default function NewsPage() {
     }
   }, [])
 
-  // Initial load + category change
   useEffect(() => {
     fetchPage(category, 1, false)
   }, [category, fetchPage])
 
   function handleCategoryChange(cat: string) {
     if (cat === category) return
-    setArticles([])
+    setClusters([])
     setPage(1)
     setHasMore(false)
     setCategory(cat)
@@ -178,26 +223,26 @@ export default function NewsPage() {
           })}
         </div>
 
-        {/* Article count */}
+        {/* Count */}
         {!loading && total > 0 && (
           <p className="mb-4 font-mono text-[10px] text-[var(--text-muted)]">
-            {total} article{total !== 1 ? 's' : ''} found
+            {total} cluster{total !== 1 ? 's' : ''} found
           </p>
         )}
 
-        {/* Articles */}
+        {/* Clusters */}
         <div className="space-y-2">
           {loading
-            ? Array.from({ length: 8 }).map((_, i) => <ArticleSkeleton key={i} />)
-            : articles.map((a) => <ArticleCard key={a.id} article={a} />)
+            ? Array.from({ length: 8 }).map((_, i) => <ClusterSkeleton key={i} />)
+            : clusters.map((c) => <ClusterCard key={c.id} cluster={c} />)
           }
         </div>
 
         {/* Empty state */}
-        {!loading && articles.length === 0 && (
+        {!loading && clusters.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <p className="text-4xl">📭</p>
-            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">No articles found</p>
+            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">No stories found</p>
             <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
               Try a different category or check back later.
             </p>
@@ -218,7 +263,7 @@ export default function NewsPage() {
                   Loading…
                 </>
               ) : (
-                'Load more articles'
+                'Load more stories'
               )}
             </button>
           </div>

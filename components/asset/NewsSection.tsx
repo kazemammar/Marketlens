@@ -3,6 +3,8 @@ import { formatRelativeTime } from '@/lib/utils/formatters'
 import { getCompanyNews } from '@/lib/api/finnhub'
 import { getRelatedNewsForAsset } from '@/lib/api/rss'
 import { categorizeArticle, CAT_BADGE, CAT_LABEL } from '@/lib/utils/news-helpers'
+import { clusterArticles } from '@/lib/utils/news-clustering'
+import type { NewsCluster } from '@/lib/utils/news-clustering'
 import NewsThumb from './NewsThumb'
 
 interface NewsSectionProps {
@@ -10,7 +12,7 @@ interface NewsSectionProps {
   type:   AssetType
 }
 
-async function fetchNews(symbol: string, type: AssetType) {
+async function fetchNews(symbol: string, type: AssetType): Promise<NewsCluster[]> {
   try {
     let finnhubArticles: NewsArticle[] = []
 
@@ -34,16 +36,17 @@ async function fetchNews(symbol: string, type: AssetType) {
     })
 
     merged.sort((a, b) => b.publishedAt - a.publishedAt)
-    return merged.slice(0, 15)
+    const clusters = clusterArticles(merged)
+    return clusters.slice(0, 12)
   } catch {
     return []
   }
 }
 
 export default async function NewsSection({ symbol, type }: NewsSectionProps) {
-  const articles = await fetchNews(symbol, type)
+  const clusters = await fetchNews(symbol, type)
 
-  if (articles.length === 0) {
+  if (clusters.length === 0) {
     return (
       <section>
         <div className="mb-2 flex items-center gap-2">
@@ -63,36 +66,64 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
         Latest News
       </h2>
       <div className="flex flex-col divide-y divide-[var(--border)] rounded border border-[var(--border)] bg-[var(--surface)]">
-        {articles.map((article) => {
-          const cat = categorizeArticle(article.headline)
+        {clusters.map((cluster: NewsCluster) => {
+          const cat = categorizeArticle(cluster.headline)
+          const tc  = cluster.sourceMeta.tier === 1 ? '#10b981'
+                    : cluster.sourceMeta.tier === 2 ? '#3b82f6'
+                    : null
           return (
             <a
-              key={article.id}
-              href={article.url}
+              key={cluster.id}
+              href={cluster.url}
               target="_blank"
               rel="noopener noreferrer"
               className="group flex gap-3 p-3 transition hover:bg-[var(--surface-2)]"
             >
               <NewsThumb
-                src={article.imageUrl}
-                headline={article.headline}
-                source={article.source}
+                src={cluster.imageUrl}
+                headline={cluster.headline}
+                source={cluster.source}
                 size="md"
               />
 
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 font-mono text-[11px] font-medium leading-snug text-[var(--text)] transition-colors group-hover:text-[var(--accent)]">
-                  {article.headline}
+                  {cluster.headline}
                 </p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] text-[var(--text-muted)]">
-                  <span className="font-semibold">{article.source}</span>
+                  {/* Tier dot */}
+                  {tc && <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: tc }} />}
+
+                  <span className="font-semibold">{cluster.source}</span>
+
+                  {/* State media badge */}
+                  {cluster.sourceMeta.stateMedia && (
+                    <span
+                      className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${
+                        cluster.sourceMeta.stateMedia.level === 'high'
+                          ? 'border-red-500/30 bg-red-500/15 text-red-400'
+                          : 'border-amber-500/25 bg-amber-500/10 text-amber-400'
+                      }`}
+                    >
+                      {cluster.sourceMeta.stateMedia.level === 'high' ? '⚠ STATE' : '! GOV'}
+                    </span>
+                  )}
+
                   <span>·</span>
-                  <span>{formatRelativeTime(article.publishedAt)}</span>
+                  <span>{formatRelativeTime(cluster.latestAt)}</span>
+
                   <span
                     className={`inline rounded border px-1 py-px text-[8px] font-bold uppercase ${CAT_BADGE[cat]}`}
                   >
                     {CAT_LABEL[cat]}
                   </span>
+
+                  {/* Multi-source badge */}
+                  {cluster.sourceCount > 1 && (
+                    <span className="rounded bg-[var(--surface-2)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--text-muted)]">
+                      +{cluster.sourceCount - 1} sources
+                    </span>
+                  )}
                 </div>
               </div>
 

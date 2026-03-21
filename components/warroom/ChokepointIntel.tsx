@@ -200,7 +200,7 @@ export default function ChokepointIntel() {
                 style={{ background: STATUS_COLORS[cp.status] }}
               />
               <span className="font-mono text-[8px] font-bold" style={{ color: STATUS_COLORS[cp.status] }}>
-                {cp.name.split(' ')[0].toUpperCase()}
+                {cp.name.toUpperCase()}
               </span>
               {cp.matchedHeadlines > 0 && (
                 <span className="font-mono text-[8px] text-[var(--text-muted)]">

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import type { Metadata } from 'next'
 import AssetCard from '@/components/dashboard/AssetCard'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import OilEnergyPanel from '@/components/warroom/OilEnergyPanel'
 import { getYahooQuotesBatch, getYahooSparkline } from '@/lib/api/yahoo'
 import { DEFAULT_COMMODITIES } from '@/lib/utils/constants'
 import { AssetCardData } from '@/lib/utils/types'
@@ -57,6 +58,11 @@ export default async function CommoditiesPage() {
             placeholder="Search commodities, e.g. Gold, Oil..."
             className="w-full max-w-lg"
           />
+        </div>
+
+        {/* EIA Energy Intelligence */}
+        <div className="mb-6">
+          <OilEnergyPanel />
         </div>
 
         {/* Grid */}

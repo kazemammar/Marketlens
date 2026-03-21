@@ -15,6 +15,7 @@ import SignalsPanel      from '@/components/warroom/SignalsPanel'
 import TrendingKeywords from '@/components/warroom/TrendingKeywords'
 import HeatmapPanel      from '@/components/warroom/HeatmapPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
+import OilEnergyPanel      from '@/components/warroom/OilEnergyPanel'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import MoversStrip         from '@/components/warroom/MoversStrip'
 import NewsBriefing         from '@/components/warroom/NewsBriefing'
@@ -143,7 +144,12 @@ export default async function HomePage({
         <EconomicIndicators />
       </div>
 
-      {/* ══ DATA PANELS — Row 5: Chokepoint Intelligence ════════════════ */}
+      {/* ══ OIL & ENERGY ANALYTICS — EIA weekly data ══════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <OilEnergyPanel />
+      </div>
+
+      {/* ══ DATA PANELS — Row 6: Chokepoint Intelligence ════════════════ */}
       <div className="px-3 sm:px-4 py-2">
         <ChokepointIntel />
       </div>

@@ -327,9 +327,6 @@ function chokepointPopup(c: typeof CHOKEPOINTS[0], status: ChokepointStatus = 'N
   const assetBadges = c.assets.map((a) =>
     `<a href="${assetHref(a)}" style="background:#f59e0b18;border:1px solid #f59e0b33;color:#fcd34d;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600;text-decoration:none;display:inline-block">${a}</a>`
   ).join(' ')
-  const footer = c.assets.length
-    ? `<a href="${relatedHref(c.assets)}" style="display:block;margin-top:6px;padding-top:6px;border-top:1px solid #1e293b;color:#3b82f6;font-size:10px;font-weight:500;text-decoration:none">View related assets →</a>`
-    : ''
   return `
     <div style="min-width:210px">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
@@ -341,7 +338,6 @@ function chokepointPopup(c: typeof CHOKEPOINTS[0], status: ChokepointStatus = 'N
       </div>
       <p style="font-size:11px;color:#94a3b8;margin:0 0 6px;line-height:1.5">${c.description}</p>
       ${c.assets.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px">${assetBadges}</div>` : ''}
-      ${footer}
     </div>`
 }
 

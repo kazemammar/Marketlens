@@ -12,6 +12,7 @@ import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
 import RiskGauge         from '@/components/warroom/RiskGauge'
 import SignalsPanel      from '@/components/warroom/SignalsPanel'
+import TrendingKeywords from '@/components/warroom/TrendingKeywords'
 import HeatmapPanel      from '@/components/warroom/HeatmapPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
@@ -132,7 +133,12 @@ export default async function HomePage({
         <SignalsPanel layout="horizontal" />
       </div>
 
-      {/* ══ DATA PANELS — Row 4: Economic Indicators ═════════════════════ */}
+      {/* ══ DATA PANELS — Row 4: Trending Keywords ════════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <TrendingKeywords />
+      </div>
+
+      {/* ══ DATA PANELS — Row 5: Economic Indicators ═════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
         <EconomicIndicators />
       </div>

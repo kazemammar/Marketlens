@@ -16,7 +16,8 @@ function formatValue(s: EiaSeries): string {
 function formatChange(s: EiaSeries): string {
   if (s.change == null) return '—'
   const abs = Math.abs(s.change)
-  if (s.unit === '$/bbl') return abs.toFixed(2)
+  if (s.unit === '$/bbl')  return abs.toFixed(2)
+  if (s.unit === 'Mbbl/d') return abs.toFixed(3)   // production: 0.010 not 0.0
   return abs.toFixed(1)
 }
 
@@ -66,7 +67,6 @@ function ArrowDown() {
 function EnergyCard({ series: s }: { series: EiaSeries }) {
   const changeColor = getChangeColor(s.id, s.change)
   const isUp        = (s.change ?? 0) > 0
-  const isDown      = (s.change ?? 0) < 0
   const inv         = isInventory(s.id)
 
   return (
@@ -87,9 +87,11 @@ function EnergyCard({ series: s }: { series: EiaSeries }) {
         <span className="font-mono text-[18px] font-bold leading-none tabular-nums text-[var(--text)]">
           {formatValue(s)}
         </span>
-        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">
-          {s.unit !== '$/bbl' ? s.unit : 'bbl'}
-        </span>
+        {s.unit !== '$/bbl' && (
+          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">
+            {s.unit}
+          </span>
+        )}
       </div>
 
       {/* Change row */}

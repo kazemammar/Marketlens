@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFinanceNews } from '@/lib/api/rss'
-import { NewsArticle } from '@/lib/utils/types'
+import { getFinanceNews }            from '@/lib/api/rss'
+import { clusterArticles }           from '@/lib/utils/news-clustering'
+import type { NewsArticle }          from '@/lib/utils/types'
 
 // Keyword sets for each category filter
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -15,24 +16,35 @@ function matchesCategory(article: NewsArticle, category: string): boolean {
   if (category === 'all') return true
   const keywords = CATEGORY_KEYWORDS[category]
   if (!keywords) return true
-
   const haystack = `${article.headline} ${article.summary}`.toLowerCase()
   return keywords.some((kw) => haystack.includes(kw))
 }
 
 export async function GET(req: NextRequest) {
-  const category = req.nextUrl.searchParams.get('category')?.toLowerCase() ?? 'all'
-  const page     = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') ?? '1', 10))
-  const perPage  = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') ?? '20', 10)))
+  const category  = req.nextUrl.searchParams.get('category')?.toLowerCase() ?? 'all'
+  const page      = Math.max(1, parseInt(req.nextUrl.searchParams.get('page')  ?? '1',  10))
+  const perPage   = Math.min(200, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') ?? '20', 10)))
+  const clustered = req.nextUrl.searchParams.get('clustered') === 'true'
 
   try {
     const all      = await getFinanceNews()
     const filtered = category === 'all' ? all : all.filter((a) => matchesCategory(a, category))
 
-    // Paginate
+    if (clustered) {
+      const allClusters = clusterArticles(filtered)
+      const start = (page - 1) * perPage
+      const slice = allClusters.slice(start, start + perPage)
+      return NextResponse.json({
+        clusters: slice,
+        total:    allClusters.length,
+        page,
+        hasMore:  start + perPage < allClusters.length,
+      })
+    }
+
+    // Backward-compatible flat response
     const start = (page - 1) * perPage
     const slice = filtered.slice(start, start + perPage)
-
     return NextResponse.json({
       articles: slice,
       total:    filtered.length,
@@ -41,6 +53,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (err) {
     console.error('[api/news]', err)
-    return NextResponse.json({ articles: [], total: 0, page: 1, hasMore: false })
+    const empty = clustered
+      ? { clusters: [], total: 0, page: 1, hasMore: false }
+      : { articles: [], total: 0, page: 1, hasMore: false }
+    return NextResponse.json(empty)
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse }      from 'next/server'
 import { getQuotesBatched }  from '@/lib/api/finnhub'
 import { redis }             from '@/lib/cache/redis'
 import { getFinanceNews }    from '@/lib/api/rss'
+import { HIGH_KW, MED_KW }  from '@/lib/utils/severity-keywords'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,18 +54,10 @@ const SIGNAL_CONTEXT: Record<string, { up: string; down: string }> = {
   XLF:  { up: 'banks leading rally',       down: 'yield curve headwinds' },
 }
 
-const HIGH_NEWS = [
-  'war', 'attack', 'strike', 'sanction', 'blockade', 'invasion', 'missile',
-  'drone', 'crisis', 'collapse', 'emergency', 'opec cut', 'opec+', 'fed rate',
-  'rate hike', 'rate cut', 'default', 'recession', 'crash', 'coup', 'airstrike',
-  'ceasefire', 'nuclear', 'explosion', 'seized',
-]
-const MED_NEWS = [
-  'tariff', 'trade deal', 'election', 'gdp', 'inflation', 'deficit',
-  'regulation', 'summit', 'meeting', 'ban', 'devaluation', 'earnings',
-  'fomc', 'unemployment', 'cpi', 'jobs report', 'output cut', 'supply cut',
-  'interest rate', 'central bank', 'federal reserve', 'opec', 'ipo',
-]
+// Signals route uses shared HIGH_KW / MED_KW plus a few extra trigger terms
+// specific to market signal detection (not article severity classification)
+const HIGH_NEWS = [...HIGH_KW, 'fed rate']
+const MED_NEWS  = [...MED_KW,  'trade deal', 'summit', 'meeting', 'ban', 'cpi', 'jobs report', 'interest rate', 'central bank', 'federal reserve', 'ipo']
 
 function newsIcon(headline: string): string {
   const h = headline.toLowerCase()

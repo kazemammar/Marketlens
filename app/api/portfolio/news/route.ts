@@ -5,22 +5,14 @@ import { getRelatedNewsForAsset }     from '@/lib/api/rss'
 import { getAssetKeywords }           from '@/lib/utils/news-helpers'
 import { redis }                      from '@/lib/cache/redis'
 import type { NewsArticle }           from '@/lib/utils/types'
-
-// ─── Severity classification ──────────────────────────────────────────────
-
-const HIGH_KW = ['war','attack','strike','sanction','blockade','invasion','missile','drone','crisis','crash','collapse','emergency','default','coup','explosion','seized']
-const MED_KW  = ['tariff','trade','regulation','election','gdp','inflation','rate hike','rate cut','deficit','devaluation','recession','unemployment','fomc','opec']
-
-function severity(text: string): 'HIGH' | 'MED' | 'LOW' {
-  const t = text.toLowerCase()
-  if (HIGH_KW.some((kw) => t.includes(kw))) return 'HIGH'
-  if (MED_KW.some((kw)  => t.includes(kw))) return 'MED'
-  return 'LOW'
-}
+import { classifySeverity }           from '@/lib/utils/severity-keywords'
+import { clusterArticles }            from '@/lib/utils/news-clustering'
+import type { SourceMeta }            from '@/lib/utils/source-registry'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
 export interface PortfolioNewsArticle {
+  id:               string
   headline:         string
   summary:          string
   source:           string
@@ -28,6 +20,22 @@ export interface PortfolioNewsArticle {
   imageUrl?:        string
   publishedAt:      number
   severity:         'HIGH' | 'MED' | 'LOW'
+  matchedPositions: Array<{ symbol: string; direction: 'long' | 'short' }>
+}
+
+export interface PortfolioNewsCluster {
+  id:               string
+  headline:         string
+  summary:          string
+  source:           string
+  sourceMeta:       SourceMeta
+  url:              string
+  imageUrl?:        string
+  publishedAt:      number
+  latestAt:         number
+  severity:         'HIGH' | 'MED' | 'LOW'
+  sourceCount:      number
+  allSources:       string[]
   matchedPositions: Array<{ symbol: string; direction: 'long' | 'short' }>
 }
 
@@ -51,9 +59,9 @@ export async function GET(req: Request) {
   }
 
   // Check per-user cache
-  const cacheKey = `portfolio:news:${user.id}`
+  const cacheKey = `portfolio:news:v2:${user.id}`
   try {
-    const cached = await redis.get<{ articles: PortfolioNewsArticle[]; generatedAt: number }>(cacheKey)
+    const cached = await redis.get<{ clusters: PortfolioNewsCluster[]; generatedAt: number }>(cacheKey)
     if (cached) return NextResponse.json(cached)
   } catch { /* fall through */ }
 
@@ -64,7 +72,7 @@ export async function GET(req: Request) {
     .eq('user_id', user.id)
 
   if (error || !positions || positions.length === 0) {
-    return NextResponse.json({ articles: [], generatedAt: Date.now() })
+    return NextResponse.json({ clusters: [], generatedAt: Date.now() })
   }
 
   const rows = positions as PositionRow[]
@@ -74,7 +82,7 @@ export async function GET(req: Request) {
     rows.map((p) => getRelatedNewsForAsset(p.symbol, p.asset_type))
   )
 
-  // Merge + deduplicate by URL
+  // Merge + deduplicate by URL, track which positions match each article
   const urlMap = new Map<string, { article: NewsArticle; positions: PositionRow[] }>()
 
   results.forEach((result, idx) => {
@@ -84,7 +92,6 @@ export async function GET(req: Request) {
       if (!article.url) continue
       const existing = urlMap.get(article.url)
       if (existing) {
-        // Add this position to the match list if not already there
         if (!existing.positions.some((p) => p.symbol === pos.symbol)) {
           existing.positions.push(pos)
         }
@@ -94,13 +101,12 @@ export async function GET(req: Request) {
     }
   })
 
-  // Build tagged articles
+  // Build tagged articles (with id for clustering)
   const articles: PortfolioNewsArticle[] = []
 
   for (const { article, positions: matched } of urlMap.values()) {
     const text = `${article.headline} ${article.summary}`
 
-    // Verify each matched position actually has keyword overlap
     const verifiedPositions = matched.filter((p) => {
       const keywords = getAssetKeywords(p.symbol, p.asset_type)
       const t = text.toLowerCase()
@@ -108,13 +114,14 @@ export async function GET(req: Request) {
     })
 
     articles.push({
+      id:               article.id,
       headline:         article.headline,
       summary:          article.summary,
       source:           article.source,
       url:              article.url,
       imageUrl:         article.imageUrl,
       publishedAt:      article.publishedAt,
-      severity:         severity(text),
+      severity:         classifySeverity(text),
       matchedPositions: verifiedPositions.map((p) => ({
         symbol:    p.symbol,
         direction: p.direction,
@@ -122,11 +129,46 @@ export async function GET(req: Request) {
     })
   }
 
-  // Sort by recency, cap at 50
+  // Sort by recency, take top 50 before clustering
   articles.sort((a, b) => b.publishedAt - a.publishedAt)
   const top50 = articles.slice(0, 50)
 
-  const payload = { articles: top50, generatedAt: Date.now() }
+  // Build position lookup for merging across cluster articles
+  const articleById = new Map(top50.map(a => [a.id, a]))
+
+  // Cluster the articles
+  const rawClusters = clusterArticles(top50 as unknown as NewsArticle[])
+
+  const clusters: PortfolioNewsCluster[] = rawClusters.map(cluster => {
+    // Merge matchedPositions from all articles in this cluster
+    const posMap = new Map<string, { symbol: string; direction: 'long' | 'short' }>()
+    for (const a of cluster.articles) {
+      const orig = articleById.get(a.id)
+      if (orig) {
+        for (const pos of orig.matchedPositions) {
+          posMap.set(pos.symbol, pos)
+        }
+      }
+    }
+
+    return {
+      id:               cluster.id,
+      headline:         cluster.headline,
+      summary:          cluster.summary,
+      source:           cluster.source,
+      sourceMeta:       cluster.sourceMeta,
+      url:              cluster.url,
+      imageUrl:         cluster.imageUrl,
+      publishedAt:      cluster.publishedAt,
+      latestAt:         cluster.latestAt,
+      severity:         cluster.severity,
+      sourceCount:      cluster.sourceCount,
+      allSources:       cluster.allSources,
+      matchedPositions: [...posMap.values()],
+    }
+  })
+
+  const payload = { clusters, generatedAt: Date.now() }
 
   redis.set(cacheKey, payload, { ex: 300 }).catch(() => {})
 
@@ -138,7 +180,9 @@ export async function DELETE(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
-  const cacheKey = `portfolio:news:${user.id}`
-  await redis.del(cacheKey).catch(() => {})
+  // Bust both old and new cache keys
+  const cacheKey    = `portfolio:news:${user.id}`
+  const cacheKeyV2  = `portfolio:news:v2:${user.id}`
+  await Promise.allSettled([redis.del(cacheKey), redis.del(cacheKeyV2)])
   return NextResponse.json({ success: true })
 }

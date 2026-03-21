@@ -31,18 +31,79 @@ const STOP_WORDS = new Set([
   'may','can','us','no','do','if','what','all','so','just','how','who','when',
   'where','why','also','most','some','very','much','even','did','be','get','had',
   'other','only',
+  // Finance-specific generic words — too common to drive clustering on their own
+  'prices','price','rise','rises','rose','fell','fall','falls','down','high','low',
+  'fears','fear','amid','surge','surges','surged','drop','drops','dropped',
+  'week','day','year','month','first','time',
 ])
+
+// ─── Semantic normalization ───────────────────────────────────────────────
+//
+// Multi-word phrases are collapsed to a single token before splitting so that
+// "Federal Reserve raises rates 25bps" and "Fed hikes by quarter point" share
+// enough significant words to meet the Jaccard threshold.
+
+// Applied on the full lowercase string before tokenizing (longer phrases first)
+const PHRASE_SUBS: Array<[RegExp, string]> = [
+  [/\bfederal reserve\b/g,              'fed'],
+  [/\beuropean central bank\b/g,        'ecb'],
+  [/\bbank of england\b/g,              'boe'],
+  [/\bbank of japan\b/g,                'boj'],
+  [/\bpeople's bank of china\b/g,       'pboc'],
+  [/\btrump administration\b/g,         'whitehouse'],
+  [/\bbiden administration\b/g,         'whitehouse'],
+  [/\binterest rates?\b/g,              'rate'],
+  [/\bbasis points?\b/g,                'basispoints'],
+  [/\bopec\+/g,                         'opec'],
+  [/\bwhite house\b/g,                  'whitehouse'],
+  [/\bwall street\b/g,                  'wallstreet'],
+  [/\bsupply chain\b/g,                 'supplychain'],
+  [/\btrade war\b/g,                    'tradewar'],
+  [/\bdebt ceiling\b/g,                 'debtceiling'],
+]
+
+// Applied per-token after splitting (verb forms + synonyms → canonical root)
+const WORD_SUBS: Record<string, string> = {
+  // Rate / policy actions
+  'raises':  'hike', 'raised':      'hike', 'hikes':       'hike', 'hiked':      'hike',
+  'lifts':   'hike', 'lifted':      'hike',
+  'cuts':    'cut',  'lowers':      'cut',  'lowered':     'cut',  'reduces':    'cut',
+  'reduced': 'cut',  'slashes':     'cut',  'slashed':     'cut',  'trims':      'cut',  'trimmed': 'cut',
+  'holds':   'hold', 'paused':      'pause','pauses':      'pause',
+  // Rate terms
+  'rates':   'rate', 'bps':         'basispoints',
+  // Orgs
+  'fomc':    'fed',
+  // Commodities
+  'crude':   'oil',  'brent':       'oil',  'wti':         'oil',
+  'bullion': 'gold',
+  // Equities / reporting
+  'equities':'stocks','equity':     'stocks',
+  'reports': 'report','posts':      'report','reported':   'report',
+  'profit':  'earnings','profits':  'earnings','revenue':  'earnings',
+  // Conflict / geopolitical
+  'attacks': 'attack','attacked':   'attack',
+  'sanctions':'sanction','sanctioned':'sanction',
+  'tariffs': 'tariff',
+  'invaded': 'invasion','invades':  'invasion',
+  'negotiations':'talks','negotiation':'talks',
+  'collapses':'fail','collapsed':   'fail',  'collapse':   'fail',
+  'break':   'fail', 'breaks':     'fail',  'breakdown':  'fail',
+}
 
 // ─── Similarity helpers ───────────────────────────────────────────────────
 
 function getSignificantWords(headline: string): Set<string> {
-  return new Set(
-    headline
-      .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, '')
-      .split(/\s+/)
-      .filter(w => w.length > 2 && !STOP_WORDS.has(w)),
-  )
+  let text = headline.toLowerCase()
+  for (const [pattern, replacement] of PHRASE_SUBS) {
+    text = text.replace(pattern, replacement)
+  }
+  const words = text
+    .replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOP_WORDS.has(w))
+    .map(w => WORD_SUBS[w] ?? w)
+  return new Set(words)
 }
 
 function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
@@ -58,7 +119,7 @@ function shouldCluster(a: NewsArticle, b: NewsArticle): boolean {
   if (Math.abs(a.publishedAt - b.publishedAt) > SIX_HOURS) return false
   const wordsA = getSignificantWords(a.headline)
   const wordsB = getSignificantWords(b.headline)
-  return jaccardSimilarity(wordsA, wordsB) >= 0.4
+  return jaccardSimilarity(wordsA, wordsB) >= 0.33
 }
 
 // ─── Severity ordering ────────────────────────────────────────────────────

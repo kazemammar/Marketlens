@@ -70,7 +70,11 @@ export const ENTITY_REGISTRY: Record<string, Entity> = {
   QQQ:   { id: 'QQQ',   name: 'Nasdaq 100',        type: 'index',
            searchTerms: ['nasdaq', 'tech stocks', 'technology sector', 'big tech'] },
   VXX:   { id: 'VXX',   name: 'VIX',              type: 'index',
-           searchTerms: ['vix', 'volatility index', 'fear index', 'options volatility', 'market fear'] },
+           // VIX is derivative — it spikes when markets sell off.
+           // Search terms must match what actually appears in fear-driven headlines.
+           searchTerms: ['vix', 'volatility', 'market selloff', 'markets tumble', 'stocks plunge',
+                         'recession fears', 'risk aversion', 'panic selling', 'market turmoil',
+                         'investors flee', 'markets fall', 'stocks fall', 'market panic'] },
 
   // ── Commodities ────────────────────────────────────────────────────────────
   GLD:   { id: 'GLD',   name: 'Gold',              type: 'commodity',

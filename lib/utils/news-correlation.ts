@@ -56,8 +56,13 @@ export function explainMove(
         confidence = 75
         matchType  = 'keyword'
       } else if (matched.length === 1) {
-        // Only surface single-term matches for specific (long) terms
-        confidence = matched[0].length > 6 ? 70 : 50
+        const term = matched[0]
+        // Short terms (≤4 chars) get full confidence only if they're proper nouns / tickers
+        // that won't appear by coincidence (e.g. "vix", "fed"). Generic commodity words
+        // like "oil" (3 chars) correctly stay at 50.
+        const isProperAcronym = term.length <= 4 && /^[a-z]+$/.test(term) &&
+          entity.searchTerms.some(t => t === entity.name.toLowerCase() || t === entity.id.toLowerCase())
+        confidence = (term.length > 6 || isProperAcronym) ? 70 : 50
         matchType  = 'keyword'
       }
     }
@@ -99,6 +104,27 @@ export function explainMove(
       sourceCount: best.cluster.sourceCount,
       confidence:  best.confidence,
       matchType:   best.matchType,
+    }
+  }
+
+  // ── VXX/VIX derivative fallback ──────────────────────────────────────────
+  // VIX is a fear gauge — it always spikes because of broader market events,
+  // not because of VIX-specific news. If we found no direct match, use the
+  // highest-severity recent cluster as the macro catalyst proxy.
+  if (symbol === 'VXX' && recent.length > 0) {
+    const SEV: Record<string, number> = { HIGH: 3, MED: 2, LOW: 1 }
+    const proxy = recent.sort((a, b) =>
+      (SEV[b.severity] ?? 0) - (SEV[a.severity] ?? 0) || b.latestAt - a.latestAt
+    )[0]
+    if (proxy) {
+      return {
+        type:        'explained',
+        headline:    proxy.headline,
+        source:      proxy.source,
+        sourceCount: proxy.sourceCount,
+        confidence:  60,
+        matchType:   'keyword',
+      }
     }
   }
 

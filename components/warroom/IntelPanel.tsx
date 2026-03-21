@@ -4,17 +4,14 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { Flame, TrendingUp, Shield, Landmark, Bitcoin, ArrowLeftRight, Globe, Fuel } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { categorizeArticle, type NewsCategory } from '@/lib/utils/news-helpers'
+import type { NewsCluster } from '@/lib/utils/news-clustering'
+import type { SourceMeta } from '@/lib/utils/source-registry'
 
-interface Article {
-  headline:    string
-  summary:     string
-  url:         string
-  source:      string
-  publishedAt: string | number
-  imageUrl?:   string
-}
+// ─── Types ────────────────────────────────────────────────────────────────
 
-interface FeedResponse { articles: Article[]; total: number; hasMore: boolean }
+interface ClusteredResponse { clusters: NewsCluster[]; total: number; hasMore: boolean }
+
+// ─── Filters ──────────────────────────────────────────────────────────────
 
 const REGIONS = [
   { id: 'all',      label: 'ALL',      keywords: [] as string[] },
@@ -29,15 +26,7 @@ type RegionId  = typeof REGIONS[number]['id']
 type Severity  = 'ALL' | 'HIGH' | 'MED' | 'LOW'
 type CatFilter = 'ALL' | NewsCategory
 
-const HIGH_KW = ['war','attack','strike','sanction','blockade','invasion','missile','drone','crisis','crash','collapse','emergency','opec cut','opec+','default','coup','explosion','seized']
-const MED_KW  = ['tariff','trade','regulation','election','gdp','inflation','rate hike','rate cut','deficit','devaluation','recession','unemployment','fomc','opec']
-
-function impact(text: string): 'HIGH' | 'MED' | 'LOW' {
-  const l = text.toLowerCase()
-  if (HIGH_KW.some((k) => l.includes(k))) return 'HIGH'
-  if (MED_KW.some((k)  => l.includes(k))) return 'MED'
-  return 'LOW'
-}
+// ─── Severity styling ─────────────────────────────────────────────────────
 
 const IMP_BADGE: Record<string, string> = {
   HIGH: 'text-white border-transparent bg-[#ff4444]',
@@ -59,6 +48,14 @@ const SEV_ACTIVE: Record<Severity, string> = {
 }
 
 const INACTIVE_PILL = 'border border-[var(--border)] bg-transparent text-[var(--text-muted)] hover:text-[var(--text-2)]'
+
+// ─── Tier dot color ───────────────────────────────────────────────────────
+
+function tierColor(meta: SourceMeta): string | null {
+  if (meta.tier === 1) return '#10b981' // green — wire/gov
+  if (meta.tier === 2) return '#3b82f6' // blue  — major outlets
+  return null
+}
 
 // ─── Article thumbnail ────────────────────────────────────────────────────
 
@@ -117,8 +114,10 @@ function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: str
   )
 }
 
-function ago(ts: string | number) {
-  const d = Date.now() - (typeof ts === 'number' ? ts : new Date(ts).getTime())
+// ─── Time helper ──────────────────────────────────────────────────────────
+
+function ago(ts: number) {
+  const d = Date.now() - ts
   const m = Math.floor(d / 60_000)
   if (m < 1)  return 'now'
   if (m < 60) return `${m}m`
@@ -147,37 +146,118 @@ function Pill({ active, activeClass, onClick, children }: {
   )
 }
 
+// ─── Cluster row ──────────────────────────────────────────────────────────
+
+function ClusterRow({ cluster, index }: { cluster: NewsCluster; index: number }) {
+  const [sourcesExpanded, setSourcesExpanded] = useState(false)
+
+  const tc   = tierColor(cluster.sourceMeta)
+  const sev  = cluster.severity
+
+  return (
+    <a
+      href={cluster.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`group flex gap-2.5 border-b border-[var(--border)] border-l-2 px-3 py-2 transition-all duration-150 hover:bg-[var(--surface-2)] animate-fade-up ${IMP_BORDER[sev]}`}
+      style={{ animationDelay: `${Math.min(index * 12, 180)}ms` }}
+    >
+      <ArticleThumb headline={cluster.headline} imageUrl={cluster.imageUrl} />
+
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-2 font-mono text-[10px] font-medium leading-snug text-[var(--text-2)]">
+          {cluster.headline}
+        </p>
+
+        {/* Meta row */}
+        <div className="mt-1 flex flex-wrap items-center gap-1">
+          {/* Severity badge */}
+          <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${IMP_BADGE[sev]}`}>
+            {sev}
+          </span>
+
+          {/* Tier dot */}
+          {tc && (
+            <span
+              className="h-1 w-1 shrink-0 rounded-full"
+              style={{ background: tc }}
+            />
+          )}
+
+          {/* Source name */}
+          <span className="font-mono text-[9px] text-[var(--text-muted)]">
+            {cluster.source}
+          </span>
+
+          {/* State media badge */}
+          {cluster.sourceMeta.stateMedia && (
+            <span
+              className={`rounded border px-1 py-px font-mono text-[7px] font-bold uppercase ${
+                cluster.sourceMeta.stateMedia.level === 'high'
+                  ? 'border-red-500/30 bg-red-500/15 text-red-400'
+                  : 'border-amber-500/25 bg-amber-500/10 text-amber-400'
+              }`}
+            >
+              {cluster.sourceMeta.stateMedia.level === 'high' ? '⚠ STATE' : '! GOV'}
+            </span>
+          )}
+
+          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">·</span>
+
+          {/* Time — from latest article in cluster */}
+          <span className="font-mono text-[9px] text-[var(--text-muted)]">
+            {ago(cluster.latestAt)}
+          </span>
+
+          {/* Multi-source badge */}
+          {cluster.sourceCount > 1 && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSourcesExpanded(!sourcesExpanded) }}
+              className="rounded bg-[var(--surface-2)] px-1 py-px font-mono text-[8px] text-[var(--text-muted)] transition-colors hover:text-[var(--text)]"
+            >
+              +{cluster.sourceCount - 1} sources
+            </button>
+          )}
+        </div>
+
+        {/* Expanded source list */}
+        {sourcesExpanded && (
+          <p className="mt-0.5 font-mono text-[8px] leading-snug text-[var(--text-muted)] opacity-60">
+            {cluster.allSources.join(' · ')}
+          </p>
+        )}
+      </div>
+    </a>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────
 
 export default function IntelPanel() {
   const [region,   setRegion]   = useState<RegionId>('all')
   const [severity, setSeverity] = useState<Severity>('ALL')
   const [category, setCategory] = useState<CatFilter>('ALL')
-  const [all,      setAll]      = useState<Article[]>([])
+  const [all,      setAll]      = useState<NewsCluster[]>([])
   const [loading,  setLoading]  = useState(true)
   const [updating, setUpdating] = useState(false)
   const [page,     setPage]     = useState(1)
   const [hasMore,  setHasMore]  = useState(false)
-  const [fetching, setFetching] = useState(false)  // fetching next page
+  const [fetching, setFetching] = useState(false)
 
-  const scrollRef  = useRef<HTMLDivElement>(null)
+  const scrollRef   = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const fetchPage = useCallback(async (p: number, reset: boolean) => {
-    if (reset) {
-      setLoading(true)
-    } else {
-      setFetching(true)
-    }
+    if (reset) setLoading(true)
+    else       setFetching(true)
     if (!reset && p === 1) setUpdating(true)
 
     try {
-      // Load 100 on first fetch to fill the panel; 50 for subsequent pages
-      const limit = (reset && p === 1) ? 100 : 50
-      const res  = await fetch(`/api/news?page=${p}&limit=${limit}`)
-      const data = await res.json() as FeedResponse
-      if (reset || p === 1) setAll(data.articles)
-      else setAll((prev) => [...prev, ...data.articles])
+      const limit = (reset && p === 1) ? 80 : 40
+      const res   = await fetch(`/api/news?page=${p}&limit=${limit}&clustered=true`)
+      const data  = await res.json() as ClusteredResponse
+      if (reset || p === 1) setAll(data.clusters ?? [])
+      else setAll((prev) => [...prev, ...(data.clusters ?? [])])
       setHasMore(data.hasMore)
       setPage(p)
     } catch { /* silent */ }
@@ -187,7 +267,7 @@ export default function IntelPanel() {
     if (!reset && p === 1) setTimeout(() => setUpdating(false), 800)
   }, [])
 
-  // Initial load + polling
+  // Initial load + polling every 2 minutes
   useEffect(() => {
     fetchPage(1, true)
     const id = setInterval(() => fetchPage(1, false), 120_000)
@@ -196,7 +276,7 @@ export default function IntelPanel() {
 
   // Infinite scroll via IntersectionObserver
   useEffect(() => {
-    const sentinel = sentinelRef.current
+    const sentinel  = sentinelRef.current
     const container = scrollRef.current
     if (!sentinel || !container) return
 
@@ -218,16 +298,16 @@ export default function IntelPanel() {
 
   let visible = region === 'all'
     ? all
-    : all.filter((a) => {
-        const h = `${a.headline} ${a.summary}`.toLowerCase()
+    : all.filter((c) => {
+        const h = `${c.headline} ${c.summary}`.toLowerCase()
         return def.keywords.some((k) => h.includes(k))
       })
 
   if (severity !== 'ALL') {
-    visible = visible.filter((a) => impact(`${a.headline} ${a.summary}`) === severity)
+    visible = visible.filter((c) => c.severity === severity)
   }
   if (category !== 'ALL') {
-    visible = visible.filter((a) => categorizeArticle(a.headline) === category)
+    visible = visible.filter((c) => categorizeArticle(c.headline) === category)
   }
 
   return (
@@ -258,6 +338,7 @@ export default function IntelPanel() {
             </button>
           ))}
         </div>
+        {/* Live counter shows cluster count */}
         <div className="flex shrink-0 items-center gap-2 px-3">
           <div className="flex items-center gap-1">
             <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
@@ -296,7 +377,7 @@ export default function IntelPanel() {
         ))}
       </div>
 
-      {/* Scrollable article list */}
+      {/* Scrollable cluster list */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {loading ? (
           Array.from({ length: 12 }).map((_, i) => (
@@ -310,43 +391,17 @@ export default function IntelPanel() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-[var(--text-muted)] opacity-30" aria-hidden>
               <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
             </svg>
-            <p className="font-mono text-[10px] text-[var(--text-muted)]">No articles match filters</p>
+            <p className="font-mono text-[10px] text-[var(--text-muted)]">No stories match filters</p>
           </div>
         ) : (
           <>
-            {visible.map((a, i) => {
-              const imp = impact(`${a.headline} ${a.summary}`)
-              return (
-                <a
-                  key={i}
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`group flex gap-2.5 border-b border-[var(--border)] border-l-2 px-3 py-2 transition-all duration-150 hover:bg-[var(--surface-2)] animate-fade-up ${IMP_BORDER[imp]}`}
-                  style={{ animationDelay: `${Math.min(i * 12, 180)}ms` }}
-                >
-                  <ArticleThumb headline={a.headline} imageUrl={a.imageUrl} />
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 font-mono text-[10px] font-medium leading-snug text-[var(--text-2)]">
-                      {a.headline}
-                    </p>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className={`rounded border px-1 py-px font-mono text-[8px] font-bold uppercase ${IMP_BADGE[imp]}`}>
-                        {imp}
-                      </span>
-                      <span className="font-mono text-[9px] text-[var(--text-muted)]">{a.source}</span>
-                      <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">·</span>
-                      <span className="font-mono text-[9px] text-[var(--text-muted)]">{ago(a.publishedAt)}</span>
-                    </div>
-                  </div>
-                </a>
-              )
-            })}
+            {visible.map((c, i) => (
+              <ClusterRow key={c.id} cluster={c} index={i} />
+            ))}
 
-            {/* Sentinel — triggers next page load when scrolled into view */}
+            {/* Sentinel — triggers next page */}
             <div ref={sentinelRef} className="h-4" />
 
-            {/* Subtle loading indicator */}
             {fetching && (
               <div className="flex items-center justify-center gap-2 py-3">
                 <span className="h-2 w-2 animate-spin rounded-full border border-[var(--text-muted)] border-t-transparent" />
@@ -356,7 +411,7 @@ export default function IntelPanel() {
 
             {!hasMore && all.length > 0 && (
               <p className="py-3 text-center font-mono text-[9px] text-[var(--text-muted)] opacity-30">
-                All articles loaded
+                All stories loaded
               </p>
             )}
           </>

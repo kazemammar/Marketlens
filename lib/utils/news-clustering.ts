@@ -78,7 +78,7 @@ export function clusterArticles(articles: NewsArticle[]): NewsCluster[] {
     if (assigned.has(article.id)) continue
 
     // Start a new cluster from this article
-    const clusterArticles: NewsArticle[] = [article]
+    const members: NewsArticle[] = [article]
     assigned.add(article.id)
 
     // Find matching candidates (different source, within time window, similar headline)
@@ -86,13 +86,13 @@ export function clusterArticles(articles: NewsArticle[]): NewsCluster[] {
       if (assigned.has(candidate.id)) continue
       if (candidate.source === article.source) continue  // no same-source clustering
       if (shouldCluster(article, candidate)) {
-        clusterArticles.push(candidate)
+        members.push(candidate)
         assigned.add(candidate.id)
       }
     }
 
     // Sort by tier (lowest = most authoritative), then by recency within tier
-    const withMeta = clusterArticles.map(a => ({ article: a, meta: getSourceMeta(a.source) }))
+    const withMeta = members.map(a => ({ article: a, meta: getSourceMeta(a.source) }))
     withMeta.sort((a, b) =>
       a.meta.tier !== b.meta.tier
         ? a.meta.tier - b.meta.tier
@@ -104,14 +104,14 @@ export function clusterArticles(articles: NewsArticle[]): NewsCluster[] {
     const bestImage = withMeta.find(m => m.article.imageUrl)?.article.imageUrl
 
     // Highest severity across all articles in cluster
-    const severities = clusterArticles.map(a => classifySeverity(`${a.headline} ${a.summary}`))
+    const severities = members.map(a => classifySeverity(`${a.headline} ${a.summary}`))
     const highestSev = severities.sort((a, b) => (SEV_ORDER[b] ?? 0) - (SEV_ORDER[a] ?? 0))[0] ?? 'LOW'
 
     // Unique sources
-    const allSources = [...new Set(clusterArticles.map(a => a.source))]
+    const allSources = [...new Set(members.map(a => a.source))]
 
     // Merged related symbols
-    const allSymbols = [...new Set(clusterArticles.flatMap(a => a.relatedSymbols ?? []))]
+    const allSymbols = [...new Set(members.flatMap(a => a.relatedSymbols ?? []))]
 
     clusters.push({
       id:             primary.article.id,
@@ -121,9 +121,9 @@ export function clusterArticles(articles: NewsArticle[]): NewsCluster[] {
       source:         primary.article.source,
       sourceMeta:     primary.meta,
       imageUrl:       bestImage,
-      publishedAt:    Math.min(...clusterArticles.map(a => a.publishedAt)),
-      latestAt:       Math.max(...clusterArticles.map(a => a.publishedAt)),
-      articles:       clusterArticles,
+      publishedAt:    Math.min(...members.map(a => a.publishedAt)),
+      latestAt:       Math.max(...members.map(a => a.publishedAt)),
+      articles:       members,
       sourceCount:    allSources.length,
       allSources,
       severity:       highestSev,

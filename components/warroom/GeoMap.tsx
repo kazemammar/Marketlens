@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { Ship, MaritimeData } from '@/lib/api/maritime'
+import type { ChokepointStatus, ChokepointIntelPayload } from '@/lib/api/chokepoints'
 
 function escapeHtml(str: string): string {
   return str
@@ -39,35 +39,35 @@ const CONFLICT_ZONES = [
 ]
 
 const CHOKEPOINTS = [
-  { id: 'hormuz',    name: 'Strait of Hormuz',     lat: 26.6,  lng: 56.2,
+  { id: 'hormuz',      name: 'Strait of Hormuz',     lat: 26.6,  lng: 56.2,
     traffic: '~21M bbl/day', oilPct: '21%', lngPct: '17%',
     description: 'World\'s most critical oil chokepoint. Iranian closure threat would spike Brent above $120.',
     assets: ['USO', 'BNO', 'XOM', 'CVX'] },
-  { id: 'suez',      name: 'Suez Canal',            lat: 30.0,  lng: 32.3,
+  { id: 'suez',        name: 'Suez Canal',            lat: 30.0,  lng: 32.3,
     traffic: '~50 ships/day', oilPct: '9%', lngPct: '8%',
     description: 'Disruption adds 10–14 days via Cape of Good Hope route, raising freight costs 40%.',
     assets: ['USO', 'FRO'] },
-  { id: 'malacca',   name: 'Strait of Malacca',     lat: 2.5,   lng: 101.8,
+  { id: 'malacca',     name: 'Strait of Malacca',     lat: 2.5,   lng: 101.8,
     traffic: '~80K vessels/yr', oilPct: '40%', lngPct: '—',
     description: '40% of global trade. Blockage would strangle Asia-Pacific energy supply.',
     assets: ['USO', 'UNG'] },
-  { id: 'bab',       name: 'Bab el-Mandeb',         lat: 12.6,  lng: 43.3,
+  { id: 'babelMandeb', name: 'Bab el-Mandeb',         lat: 12.6,  lng: 43.3,
     traffic: '~6.2M bbl/day', oilPct: '6%', lngPct: '3%',
     description: 'Houthi threats have already rerouted major shipping volumes away from Red Sea.',
     assets: ['USO', 'BNO'] },
-  { id: 'bosphorus', name: 'Turkish Straits',        lat: 41.0,  lng: 29.0,
+  { id: 'bosphorus',   name: 'Turkish Straits',        lat: 41.0,  lng: 29.0,
     traffic: '~50K vessels/yr', oilPct: '3%', lngPct: '—',
     description: 'Sole Black Sea exit. Controls Russian and Kazakh oil and Ukrainian grain exports.',
     assets: ['WEAT', 'USO'] },
-  { id: 'panama',    name: 'Panama Canal',           lat: 9.1,   lng: -79.7,
+  { id: 'panama',      name: 'Panama Canal',           lat: 9.1,   lng: -79.7,
     traffic: '~14K vessels/yr', oilPct: '1%', lngPct: '11%',
     description: 'Drought-reduced capacity. US LNG exports to Asia-Pacific significantly impacted.',
     assets: ['UNG', 'WEAT'] },
-  { id: 'capeofgood', name: 'Cape of Good Hope',     lat: -34.3, lng: 18.5,
+  { id: 'capeofgood',  name: 'Cape of Good Hope',      lat: -34.3, lng: 18.5,
     traffic: '~20K vessels/yr', oilPct: '5%', lngPct: '—',
     description: 'Alternative route when Suez disrupted. Adds 14 days and 30–40% extra fuel costs.',
     assets: ['USO'] },
-  { id: 'danish',    name: 'Danish Straits',         lat: 55.7,  lng: 11.0,
+  { id: 'danish',      name: 'Danish Straits',         lat: 55.7,  lng: 11.0,
     traffic: '~40K vessels/yr', oilPct: '2%', lngPct: '—',
     description: 'Baltic Sea exit. Controls Russian Baltic oil exports and LNG routes to Europe.',
     assets: ['USO', 'UNG'] },
@@ -148,6 +148,130 @@ const NUCLEAR_SITES = [
   { id: 'yongbyon',     name: 'Yongbyon Complex',  lat: 39.8, lng: 125.8, country: 'N.Korea', note: 'North Korean plutonium/enrichment complex. Active weapons program.' },
 ]
 
+// ─── Shipping lanes (major global trade routes) ───────────────────────────
+
+const SHIPPING_LANES = {
+  type: 'FeatureCollection' as const,
+  features: [
+    {
+      type: 'Feature' as const,
+      properties: { name: 'Persian Gulf → Asia (via Hormuz & Malacca)', route: 'eastbound-oil' },
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [50.0, 26.5],   // Persian Gulf
+          [56.5, 26.3],   // Hormuz
+          [60.0, 23.0],   // Arabian Sea
+          [70.0, 15.0],   // Indian Ocean
+          [80.0, 8.0],    // Sri Lanka
+          [95.0, 5.0],    // Malacca approach
+          [101.0, 2.5],   // Malacca Strait
+          [104.0, 1.3],   // Singapore
+          [115.0, 5.0],   // South China Sea
+          [120.0, 22.0],  // East China Sea
+          [135.0, 34.0],  // Japan
+        ],
+      },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'Persian Gulf → Europe (via Suez)', route: 'westbound-oil' },
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [50.0, 26.5],   // Persian Gulf
+          [56.5, 26.3],   // Hormuz
+          [58.0, 22.0],   // Gulf of Oman
+          [51.0, 16.0],   // Arabian Sea
+          [44.0, 12.8],   // Bab el-Mandeb
+          [39.0, 20.0],   // Red Sea
+          [33.0, 28.0],   // Suez approach
+          [32.3, 30.0],   // Suez Canal
+          [30.0, 33.0],   // Mediterranean
+          [15.0, 37.0],   // Central Med
+          [5.0, 36.5],    // Gibraltar approach
+          [-5.0, 40.0],   // Atlantic
+          [0.0, 48.0],    // Bay of Biscay
+          [-3.0, 52.0],   // English Channel
+          [3.0, 51.5],    // Rotterdam
+        ],
+      },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'Cape of Good Hope Route (Suez alternative)', route: 'cape-route' },
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [44.0, 12.8],   // Bab el-Mandeb
+          [48.0, 5.0],    // Horn of Africa
+          [45.0, -5.0],   // East Africa
+          [40.0, -15.0],  // Mozambique Channel
+          [35.0, -25.0],  // South Africa east
+          [20.0, -35.0],  // Cape of Good Hope
+          [5.0, -30.0],   // South Atlantic
+          [-5.0, -10.0],  // West Africa
+          [-15.0, 15.0],  // Canary Islands
+          [-10.0, 36.0],  // Gibraltar
+          [3.0, 51.5],    // Rotterdam
+        ],
+      },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'US Gulf → Europe (Transatlantic)', route: 'transatlantic' },
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [-90.0, 28.0],  // Gulf of Mexico
+          [-85.0, 25.0],  // Florida Strait
+          [-75.0, 30.0],  // US East Coast
+          [-50.0, 42.0],  // Mid-Atlantic
+          [-20.0, 48.0],  // Eastern Atlantic
+          [-5.0, 50.0],   // English Channel
+          [3.0, 51.5],    // Rotterdam
+        ],
+      },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'US Gulf → Asia (via Panama)', route: 'panama-asia' },
+      geometry: {
+        type: 'LineString' as const,
+        coordinates: [
+          [-90.0, 28.0],  // Gulf of Mexico
+          [-85.0, 22.0],  // Caribbean
+          [-80.0, 10.0],  // Panama approach
+          [-79.7, 9.1],   // Panama Canal
+          [-82.0, 5.0],   // Pacific entry
+          [-100.0, 10.0], // Eastern Pacific
+          [-140.0, 20.0], // Central Pacific
+          [-180.0, 25.0], // Date line
+          [160.0, 30.0],  // Western Pacific
+          [135.0, 34.0],  // Japan
+        ],
+      },
+    },
+  ],
+}
+
+// ─── Status colours ───────────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<ChokepointStatus, string> = {
+  NORMAL:    '#f59e0b',  // default amber (matches existing chokepoint-marker CSS)
+  ELEVATED:  '#f59e0b',  // keep amber for elevated — already noticeable
+  DISRUPTED: '#ef4444',  // red
+  BLOCKED:   '#dc2626',  // dark red
+}
+
+// Override: ELEVATED gets a distinct orange to differentiate from NORMAL
+const STATUS_COLORS_MAP: Record<ChokepointStatus, string> = {
+  NORMAL:    '#f59e0b',
+  ELEVATED:  '#fb923c',
+  DISRUPTED: '#ef4444',
+  BLOCKED:   '#dc2626',
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────
 
 interface LayerState {
@@ -157,43 +281,13 @@ interface LayerState {
   bases:       boolean
   cables:      boolean
   nuclear:     boolean
-  ships:       boolean
+  lanes:       boolean
 }
 
-// ─── Ship category colors ──────────────────────────────────────────────────
-
-const SHIP_COLORS: Record<string, string> = {
-  tanker:   '#f97316',
-  lng:      '#a855f7',
-  cargo:    '#3b82f6',
-  military: '#ef4444',
-}
-
-function shipColor(category: string): string {
-  return SHIP_COLORS[category] ?? '#666666'
-}
-
-function shipPopup(s: Ship): string {
-  const color  = shipColor(s.category)
-  const status = s.status === 'REROUTED'
-    ? `<span style="background:#ef444420;border:1px solid #ef444440;color:#fca5a5;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${escapeHtml(s.status)}</span>`
-    : `<span style="background:#10b98120;border:1px solid #10b98130;color:#6ee7b7;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700">${escapeHtml(s.status)}</span>`
-  return `
-    <div style="min-width:190px">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <div style="width:8px;height:8px;background:${color};clip-path:polygon(50% 0%,100% 100%,0% 100%);transform:rotate(${s.heading}deg);flex-shrink:0"></div>
-        <span style="font-weight:700;font-size:12px;color:#f1f5f9">${escapeHtml(s.name)}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:10px;margin-bottom:6px">
-        <div style="color:#64748b">Type: <span style="color:#e2e8f0">${escapeHtml(s.type)}</span></div>
-        <div style="color:#64748b">Flag: <span style="color:#e2e8f0">${escapeHtml(s.flag)}</span></div>
-        <div style="color:#64748b">Speed: <span style="color:#e2e8f0">${s.speed} kn</span></div>
-        <div style="color:#64748b">HDG: <span style="color:#e2e8f0">${s.heading}°</span></div>
-        <div style="color:#64748b">Cargo: <span style="color:#e2e8f0">${s.cargo}</span></div>
-        <div style="color:#64748b">To: <span style="color:#e2e8f0">${s.destination}</span></div>
-      </div>
-      ${status}
-    </div>`
+interface MarkerRef {
+  el:            HTMLElement
+  group:         keyof LayerState
+  chokepointId?: string
 }
 
 // ─── Popup HTML ───────────────────────────────────────────────────────────
@@ -234,7 +328,8 @@ function conflictPopup(z: typeof CONFLICT_ZONES[0]) {
     </div>`
 }
 
-function chopointPopup(c: typeof CHOKEPOINTS[0]) {
+function chokepointPopup(c: typeof CHOKEPOINTS[0], status: ChokepointStatus = 'NORMAL') {
+  const statusColor = STATUS_COLORS_MAP[status]
   const assetBadges = c.assets.map((a) =>
     `<a href="${assetHref(a)}" style="background:#f59e0b18;border:1px solid #f59e0b33;color:#fcd34d;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600;text-decoration:none;display:inline-block">${a}</a>`
   ).join(' ')
@@ -243,7 +338,10 @@ function chopointPopup(c: typeof CHOKEPOINTS[0]) {
     : ''
   return `
     <div style="min-width:210px">
-      <p style="font-weight:700;font-size:12px;color:#f1f5f9;margin:0 0 5px">${c.name}</p>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+        <p style="font-weight:700;font-size:12px;color:#f1f5f9;margin:0">${c.name}</p>
+        <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}44">${status}</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:6px">
         <div style="font-size:10px;color:#64748b">Oil/day: <span style="color:#fbbf24">${c.traffic}</span></div>
         <div style="font-size:10px;color:#64748b">% Global oil: <span style="color:#fbbf24">${c.oilPct}</span></div>
@@ -278,15 +376,15 @@ const PRESETS = [
 export default function GeoMap() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef       = useRef<unknown>(null)
-  const markersRef   = useRef<{ el: HTMLElement; group: keyof LayerState }[]>([])
+  const markersRef   = useRef<MarkerRef[]>([])
 
   const [layers, setLayers] = useState<LayerState>({
     conflicts: true, chokepoints: true, pipelines: true,
-    bases: false, cables: false, nuclear: false, ships: true,
+    bases: false, cables: false, nuclear: false, lanes: true,
   })
-  const [mapReady,    setMapReady]    = useState(false)
-  const [utcTime,     setUtcTime]     = useState('')
-  const [shipData,    setShipData]    = useState<MaritimeData | null>(null)
+  const [mapReady,         setMapReady]         = useState(false)
+  const [utcTime,          setUtcTime]          = useState('')
+  const [chokepointStatus, setChokepointStatus] = useState<Record<string, ChokepointStatus>>({})
 
   useEffect(() => {
     const tick = () => setUtcTime(new Date().toUTCString().slice(17, 25))
@@ -295,17 +393,19 @@ export default function GeoMap() {
     return () => clearInterval(id)
   }, [])
 
-  // ── Fetch maritime traffic ────────────────────────────────────────────
+  // ── Fetch chokepoint status for dynamic marker colors ────────────────
   useEffect(() => {
-    async function fetchShips() {
+    async function fetchStatus() {
       try {
-        const res  = await fetch('/api/maritime')
-        const data = await res.json() as MaritimeData
-        setShipData(data)
+        const res  = await fetch('/api/chokepoints')
+        const data = await res.json() as ChokepointIntelPayload
+        const map: Record<string, ChokepointStatus> = {}
+        for (const cp of data.chokepoints) map[cp.id] = cp.status
+        setChokepointStatus(map)
       } catch { /* silent */ }
     }
-    fetchShips()
-    const id = setInterval(fetchShips, 5 * 60 * 1000)
+    fetchStatus()
+    const id = setInterval(fetchStatus, 5 * 60_000)
     return () => clearInterval(id)
   }, [])
 
@@ -342,7 +442,6 @@ export default function GeoMap() {
       map.addControl(new mgl.AttributionControl({ compact: true }), 'bottom-right')
       mapRef.current = map
 
-      // If the tile server is unreachable or style fails, clear the loading spinner
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map.on('error', (e: any) => {
         console.warn('[GeoMap] map error:', e?.error?.message ?? e)
@@ -350,11 +449,11 @@ export default function GeoMap() {
         setMapReady(true)
       })
 
-      // Hard failsafe: show map container after 12 s regardless
       failsafeTimer = setTimeout(() => setMapReady(true), 12_000)
 
       map.on('load', () => {
         clearTimeout(failsafeTimer)
+
         // Pipelines
         map.addSource('pipelines', { type: 'geojson', data: PIPELINES as import('maplibre-gl').GeoJSONSourceSpecification['data'] })
         map.addLayer({ id: 'pipelines-glow', type: 'line', source: 'pipelines',
@@ -369,6 +468,12 @@ export default function GeoMap() {
         map.addLayer({ id: 'cables-line', type: 'line', source: 'cables',
           layout: { 'line-join': 'round', visibility: 'none' },
           paint:  { 'line-color': '#8b5cf6', 'line-width': 1, 'line-opacity': 0.6, 'line-dasharray': [2, 3] } })
+
+        // Shipping lanes
+        map.addSource('shipping-lanes', { type: 'geojson', data: SHIPPING_LANES as import('maplibre-gl').GeoJSONSourceSpecification['data'] })
+        map.addLayer({ id: 'shipping-lanes-layer', type: 'line', source: 'shipping-lanes',
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint:  { 'line-color': '#3b82f6', 'line-opacity': 0.2, 'line-width': 1.5, 'line-dasharray': [4, 4] } })
 
         // Conflict zones
         for (const z of CONFLICT_ZONES) {
@@ -388,13 +493,13 @@ export default function GeoMap() {
           markersRef.current.push({ el, group: 'conflicts' })
         }
 
-        // Chokepoints
+        // Chokepoints — store chokepointId for dynamic color updates
         for (const c of CHOKEPOINTS) {
           const el = document.createElement('div')
           el.className = 'chokepoint-marker'
-          const popup = new mgl.Popup({ offset: 14, closeButton: true, maxWidth: '270px' }).setHTML(chopointPopup(c))
+          const popup = new mgl.Popup({ offset: 14, closeButton: true, maxWidth: '270px' }).setHTML(chokepointPopup(c))
           new mgl.Marker({ element: el }).setLngLat([c.lng, c.lat]).setPopup(popup).addTo(map)
-          markersRef.current.push({ el, group: 'chokepoints' })
+          markersRef.current.push({ el, group: 'chokepoints', chokepointId: c.id })
         }
 
         // Military bases
@@ -430,43 +535,21 @@ export default function GeoMap() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Add/refresh ship markers when data arrives ───────────────────────
+  // ── Update chokepoint marker colors when status arrives ──────────────
   useEffect(() => {
-    if (!mapReady || !mapRef.current || !shipData) return
-
-    // Remove existing ship markers
-    const remaining = markersRef.current.filter(({ el, group }) => {
-      if (group === 'ships') { el.remove(); return false }
-      return true
-    })
-    markersRef.current = remaining
-
-    import('maplibre-gl').then((mgl) => {
-      const map = mapRef.current as import('maplibre-gl').Map
-      for (const ship of shipData.ships) {
-        const color   = shipColor(ship.category)
-        const el      = document.createElement('div')
-        const size    = 10
-        Object.assign(el.style, {
-          width:           `${size}px`,
-          height:          `${size}px`,
-          cursor:          'pointer',
-          display:         layers.ships ? '' : 'none',
-          // SVG triangle rotated to heading
-          background:      'transparent',
-        })
-        // Use an SVG data URI for the ship triangle
-        el.innerHTML = `<svg viewBox="0 0 10 14" width="${size}" height="${size + 4}" xmlns="http://www.w3.org/2000/svg" style="transform:rotate(${ship.heading}deg);filter:drop-shadow(0 0 2px ${color}80)">
-          <polygon points="5,0 10,14 5,11 0,14" fill="${color}" opacity="0.9"/>
-        </svg>`
-
-        const popup = new mgl.Popup({ offset: 12, closeButton: true, maxWidth: '240px' }).setHTML(shipPopup(ship))
-        new mgl.Marker({ element: el }).setLngLat([ship.lng, ship.lat]).setPopup(popup).addTo(map)
-        markersRef.current.push({ el, group: 'ships' })
+    if (!mapReady) return
+    for (const m of markersRef.current) {
+      if (m.group === 'chokepoints' && m.chokepointId) {
+        const status = chokepointStatus[m.chokepointId] ?? 'NORMAL'
+        const color  = STATUS_COLORS_MAP[status]
+        m.el.style.background  = color
+        m.el.style.borderColor = `${color}80`
+        m.el.style.boxShadow   = status !== 'NORMAL'
+          ? `0 0 12px ${color}99`
+          : `0 0 8px ${color}66`
       }
-    }).catch(() => {})
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shipData, mapReady])
+    }
+  }, [chokepointStatus, mapReady])
 
   // ── Sync layer visibility ────────────────────────────────────────────
   useEffect(() => {
@@ -481,6 +564,9 @@ export default function GeoMap() {
     if (m.getLayer?.('cables-line')) {
       m.setLayoutProperty('cables-line', 'visibility', vis(layers.cables))
     }
+    if (m.getLayer?.('shipping-lanes-layer')) {
+      m.setLayoutProperty('shipping-lanes-layer', 'visibility', vis(layers.lanes))
+    }
     for (const { el, group } of markersRef.current) {
       el.style.display = layers[group] ? '' : 'none'
     }
@@ -493,13 +579,13 @@ export default function GeoMap() {
   }
 
   const LAYER_CFG = [
-    { key: 'conflicts'  as keyof LayerState, label: 'Conflict Zones', dot: '#ef4444' },
-    { key: 'chokepoints'as keyof LayerState, label: 'Chokepoints',    dot: '#f59e0b' },
-    { key: 'pipelines'  as keyof LayerState, label: 'Pipelines',      dot: '#3b82f6' },
-    { key: 'bases'      as keyof LayerState, label: 'Military Bases', dot: '#a78bfa' },
-    { key: 'cables'     as keyof LayerState, label: 'Undersea Cables',dot: '#8b5cf6' },
-    { key: 'nuclear'    as keyof LayerState, label: 'Nuclear Sites',  dot: '#facc15' },
-    { key: 'ships'      as keyof LayerState, label: 'Ships',          dot: '#f97316' },
+    { key: 'conflicts'   as keyof LayerState, label: 'Conflict Zones',  dot: '#ef4444' },
+    { key: 'chokepoints' as keyof LayerState, label: 'Chokepoints',     dot: '#f59e0b' },
+    { key: 'pipelines'   as keyof LayerState, label: 'Pipelines',       dot: '#3b82f6' },
+    { key: 'lanes'       as keyof LayerState, label: 'Shipping Lanes',  dot: '#3b82f6' },
+    { key: 'bases'       as keyof LayerState, label: 'Military Bases',  dot: '#a78bfa' },
+    { key: 'cables'      as keyof LayerState, label: 'Undersea Cables', dot: '#8b5cf6' },
+    { key: 'nuclear'     as keyof LayerState, label: 'Nuclear Sites',   dot: '#facc15' },
   ] as const
 
   const PIPELINE_LEGEND = [
@@ -508,6 +594,14 @@ export default function GeoMap() {
     { name: 'Trans-Arabian', color: '#f59e0b', status: 'Inactive'},
     { name: 'Keystone',      color: '#ef4444', status: 'Active'  },
     { name: 'Nord Stream',   color: '#64748b', status: 'Damaged' },
+  ]
+
+  // Key chokepoints to show in the footer status bar
+  const FOOTER_CHOKEPOINTS = [
+    { label: 'HORMUZ',   id: 'hormuz'      },
+    { label: 'SUEZ',     id: 'suez'        },
+    { label: 'MALACCA',  id: 'malacca'     },
+    { label: 'BAB-EL',   id: 'babelMandeb' },
   ]
 
   return (
@@ -567,26 +661,27 @@ export default function GeoMap() {
           </div>
         )}
 
-        {/* Ship legend — bottom center */}
-        {layers.ships && shipData && (
-          <div className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded border border-white/10 bg-black/60 px-2.5 py-1.5 backdrop-blur-md shadow-black/50">
-            <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Vessels by Chokepoint</p>
-            <div className="flex items-center gap-3">
-              {[
-                { label: 'HORMUZ',   count: shipData.chokepoints.hormuz,      color: '#f59e0b' },
-                { label: 'SUEZ',     count: shipData.chokepoints.suez,         color: '#3b82f6' },
-                { label: 'MALACCA',  count: shipData.chokepoints.malacca,      color: '#10b981' },
-                { label: 'BAB-EL',   count: shipData.chokepoints.babelMandeb,  color: '#ef4444' },
-              ].map((cp) => (
-                <div key={cp.label} className="flex items-center gap-1">
-                  <span className="font-mono text-[9px] font-bold" style={{ color: cp.color }}>{cp.label}</span>
-                  <span className="font-mono text-[9px] text-white/60">·</span>
-                  <span className="font-mono text-[9px] font-bold text-white/80">{cp.count}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Chokepoint status bar — bottom center */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 rounded border border-white/10 bg-black/70 px-3 py-1.5 backdrop-blur-sm">
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-white/30">
+            Chokepoints
+          </span>
+          {FOOTER_CHOKEPOINTS.map(cp => {
+            const status = chokepointStatus[cp.id] ?? 'NORMAL'
+            const color  = STATUS_COLORS_MAP[status]
+            return (
+              <div key={cp.id} className="flex items-center gap-1">
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${status !== 'NORMAL' ? 'live-dot' : ''}`}
+                  style={{ background: color }}
+                />
+                <span className="font-mono text-[9px] font-bold" style={{ color }}>
+                  {cp.label}
+                </span>
+              </div>
+            )
+          })}
+        </div>
 
         {/* Loading */}
         {!mapReady && (

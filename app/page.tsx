@@ -17,7 +17,7 @@ import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import MoversStrip         from '@/components/warroom/MoversStrip'
 import NewsBriefing         from '@/components/warroom/NewsBriefing'
-import MaritimePanel        from '@/components/warroom/MaritimePanel'
+import ChokepointIntel      from '@/components/warroom/ChokepointIntel'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
 import SectionReveal        from '@/components/layout/SectionReveal'
@@ -137,9 +137,9 @@ export default async function HomePage({
         <EconomicIndicators />
       </div>
 
-      {/* ══ DATA PANELS — Row 5: Maritime Traffic ════════════════════════ */}
+      {/* ══ DATA PANELS — Row 5: Chokepoint Intelligence ════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <MaritimePanel />
+        <ChokepointIntel />
       </div>
 
       {/* ══ TOP MOVERS STRIP ══════════════════════════════════════════════ */}

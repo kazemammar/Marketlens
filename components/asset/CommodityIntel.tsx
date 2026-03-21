@@ -1,7 +1,7 @@
 'use client'
 
-import type { Ship, MaritimeData } from '@/lib/api/maritime'
 import { useFetch } from '@/lib/hooks/useFetch'
+import type { ChokepointIntelPayload, ChokepointStatus } from '@/lib/api/chokepoints'
 
 // ─── Static intel data (mirrored from GeoMap.tsx) ─────────────────────────
 
@@ -57,24 +57,17 @@ const PIPELINES = [
 
 // ─── Commodity configuration ──────────────────────────────────────────────
 
-const COMMODITY_SHIP_CATEGORY: Record<string, 'tanker' | 'lng' | 'cargo' | ''> = {
-  USO: 'tanker', BNO: 'tanker',
-  UNG: 'lng',
-  WEAT: 'cargo', CORN: 'cargo',
-  GLD: '', SLV: '', CPER: '', PPLT: '', URA: '',
-}
-
 // ─── Color helpers ────────────────────────────────────────────────────────
 
 const SEVERITY_COLOR: Record<number, string> = { 3: '#ef4444', 2: '#f97316', 1: '#f59e0b' }
 const RISK_COLOR: Record<string, string> = {
   CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#64748b',
 }
-const STATUS_COLOR: Record<string, string> = {
-  TRANSITING: 'var(--price-up)',
-  REROUTED:   '#f97316',
-  DELAYED:    '#ef4444',
-  ANCHORED:   '#64748b',
+const CHOKEPOINT_STATUS_COLOR: Record<ChokepointStatus, string> = {
+  NORMAL:    '#10b981',
+  ELEVATED:  '#f59e0b',
+  DISRUPTED: '#ef4444',
+  BLOCKED:   '#dc2626',
 }
 const PIPELINE_STATUS_COLOR: Record<string, string> = {
   active:   '#22c55e',
@@ -111,20 +104,14 @@ function RiskDot({ severity }: { severity: number }) {
 // ─── Main component ───────────────────────────────────────────────────────
 
 export default function CommodityIntel({ symbol }: { symbol: string }) {
-  const { data: maritime } = useFetch<MaritimeData>('/api/maritime', { refreshInterval: 5 * 60_000 })
-  const ships      = maritime?.ships ?? null
-  const chokepoints = maritime?.chokepoints ?? null
+  const { data: intel } = useFetch<ChokepointIntelPayload>('/api/chokepoints', { refreshInterval: 5 * 60_000 })
 
-  const sym         = symbol.toUpperCase()
-  const shipCat     = COMMODITY_SHIP_CATEGORY[sym] ?? ''
-  const hasShips    = shipCat !== ''
-  const isPipeline  = ['USO', 'BNO', 'UNG'].includes(sym)
+  const sym        = symbol.toUpperCase()
+  const isPipeline = ['USO', 'BNO', 'UNG'].includes(sym)
 
-  const matchedConflicts  = CONFLICT_ZONES.filter(z => z.assets.includes(sym as never))
+  const matchedConflicts   = CONFLICT_ZONES.filter(z => z.assets.includes(sym as never))
   const matchedChokepoints = CHOKEPOINTS.filter(c => c.assets.includes(sym as never))
-  const matchedPipelines  = PIPELINES.filter(p => p.assets.includes(sym))
-
-  const filteredShips = ships?.filter(s => shipCat && s.category === shipCat) ?? []
+  const matchedPipelines   = PIPELINES.filter(p => p.assets.includes(sym))
 
   // Nothing to show
   if (matchedConflicts.length === 0 && matchedChokepoints.length === 0 && matchedPipelines.length === 0) {
@@ -191,109 +178,39 @@ export default function CommodityIntel({ symbol }: { symbol: string }) {
       )}
 
       {/* ── Section 2: Chokepoints & Maritime ────────────────────────────── */}
-      {hasShips && matchedChokepoints.length > 0 && (
+      {matchedChokepoints.length > 0 && (
         <div className="bg-[var(--surface)]">
           <SectionHeader label="Chokepoints & Maritime" />
 
           {/* Chokepoint grid */}
           <div className="grid grid-cols-1 gap-px bg-[var(--border)] sm:grid-cols-2">
             {matchedChokepoints.map(cp => {
-              const vesselCount = cp.shipKey && chokepoints
-                ? chokepoints[cp.shipKey]
-                : null
-              // Congestion proxy: vessels / max possible
-              const maxVessels = 25
-              const pct = vesselCount != null ? Math.min((vesselCount / maxVessels) * 100, 100) : null
-              const congColor = pct == null ? '#64748b' : pct > 70 ? '#ef4444' : pct > 40 ? '#f97316' : '#22c55e'
+              const liveItem  = intel?.chokepoints.find(c => c.id === cp.id || c.id === cp.shipKey)
+              const status    = liveItem?.status ?? 'NORMAL'
+              const color     = CHOKEPOINT_STATUS_COLOR[status]
               return (
                 <div key={cp.id} className="bg-[var(--surface)] px-4 py-3">
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <span className="font-mono text-[11px] font-bold text-[var(--text)]">{cp.name}</span>
-                    {vesselCount != null && (
-                      <span className="shrink-0 font-mono text-[9px] font-bold" style={{ color: congColor }}>
-                        {vesselCount} vessels
-                      </span>
-                    )}
+                    <span
+                      className="shrink-0 rounded-sm px-1.5 py-px font-mono text-[8px] font-bold uppercase"
+                      style={{ background: `${color}18`, color, border: `1px solid ${color}33` }}
+                    >
+                      {status}
+                    </span>
                   </div>
                   <div className="flex gap-3 mb-1.5 font-mono text-[9px] text-[var(--text-muted)]">
                     <span>Oil: <span className="text-[var(--text)]">{cp.oilPct}</span></span>
                     <span>LNG: <span className="text-[var(--text)]">{cp.lngPct}</span></span>
                     <span className="text-[var(--text-muted)]">{cp.traffic}</span>
                   </div>
-                  <p className="font-mono text-[9px] leading-relaxed text-[var(--text-muted)] mb-2">
-                    {cp.description}
+                  <p className="font-mono text-[9px] leading-relaxed text-[var(--text-muted)]">
+                    {liveItem?.riskDriver ?? cp.description}
                   </p>
-                  {/* Congestion bar */}
-                  {pct != null && (
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-[var(--surface-3)]">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%`, background: congColor }}
-                      />
-                    </div>
-                  )}
                 </div>
               )
             })}
           </div>
-
-          {/* Vessel list */}
-          {filteredShips.length > 0 && (
-            <div className="border-t border-[var(--border)]">
-              <div className="flex items-center justify-between px-4 py-2">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-                  Tracked Vessels
-                </span>
-                <span className="font-mono text-[9px] text-[var(--text-muted)]">
-                  {filteredShips.length} {shipCat} vessels
-                </span>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px]">
-                  <thead>
-                    <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
-                      {['Vessel', 'Flag', 'Chokepoint', 'Status', 'Destination', 'Cargo'].map(h => (
-                        <th key={h} className="px-3 py-1.5 text-left font-mono text-[8px] font-bold uppercase tracking-[0.08em] text-[var(--text-muted)]">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
-                    {filteredShips.slice(0, 10).map(ship => (
-                      <tr key={ship.id} className="hover:bg-[var(--surface-2)]">
-                        <td className="px-3 py-1.5 font-mono text-[10px] font-semibold text-[var(--text)]">{ship.name}</td>
-                        <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--text-muted)]">{ship.flag}</td>
-                        <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--text-muted)] capitalize">
-                          {ship.chokepoint === 'babelMandeb' ? 'Bab el-Mandeb' : ship.chokepoint}
-                        </td>
-                        <td className="px-3 py-1.5">
-                          <span
-                            className="font-mono text-[9px] font-bold"
-                            style={{ color: STATUS_COLOR[ship.status] ?? '#64748b' }}
-                          >
-                            {ship.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--text-muted)]">{ship.destination}</td>
-                        <td className="px-3 py-1.5 font-mono text-[9px] text-[var(--text-muted)]">{ship.cargo}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Ships loading state */}
-          {ships === null && (
-            <div className="border-t border-[var(--border)] px-4 py-3">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 animate-spin rounded-full border border-[var(--accent)]/30 border-t-[var(--accent)]" />
-                <span className="font-mono text-[9px] text-[var(--text-muted)]">Loading vessel tracking data…</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

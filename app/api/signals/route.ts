@@ -1,21 +1,32 @@
-import { NextResponse }      from 'next/server'
-import { getQuotesBatched }  from '@/lib/api/finnhub'
-import { redis }             from '@/lib/cache/redis'
-import { getFinanceNews }    from '@/lib/api/rss'
-import { HIGH_KW, MED_KW }  from '@/lib/utils/severity-keywords'
+import { NextResponse }        from 'next/server'
+import { getQuotesBatched }    from '@/lib/api/finnhub'
+import { redis }               from '@/lib/cache/redis'
+import { getFinanceNews }      from '@/lib/api/rss'
+import { HIGH_KW, MED_KW }    from '@/lib/utils/severity-keywords'
+import { clusterArticles }     from '@/lib/utils/news-clustering'
+import type { NewsCluster }    from '@/lib/utils/news-clustering'
+import { explainMove }         from '@/lib/utils/news-correlation'
+import type { NewsArticle }    from '@/lib/utils/types'
 
 export const dynamic = 'force-dynamic'
 
-const CACHE_KEY = 'signals:v4'
+const CACHE_KEY = 'signals:v5'
 const CACHE_TTL = 300 // 5 min
 
 export interface Signal {
-  id:        string
-  icon:      string
-  text:      string
-  category:  'price' | 'news' | 'technical' | 'macro'
-  severity:  'HIGH' | 'MED' | 'LOW'
-  timestamp: number
+  id:          string
+  icon:        string
+  text:        string
+  category:    'price' | 'news' | 'technical' | 'macro' | 'correlation'
+  severity:    'HIGH' | 'MED' | 'LOW'
+  timestamp:   number
+  explanation?: {
+    type:        'explained' | 'silent_divergence'
+    headline?:   string
+    source?:     string
+    sourceCount: number
+    confidence:  number
+  }
 }
 
 const SIGNAL_SYMBOLS = [
@@ -32,7 +43,7 @@ const ASSET_LABELS: Record<string, string> = {
   JPM:  'JPMorgan',     XLE:  'Energy Sector',  XLF:  'Financials',
 }
 
-// Context clues added to signal text based on symbol + direction
+// Fallback context for small moves (<1.5%) that don't warrant news correlation
 const SIGNAL_CONTEXT: Record<string, { up: string; down: string }> = {
   SPY:  { up: 'broad market rally',        down: 'broad sell-off' },
   QQQ:  { up: 'tech stocks leading',       down: 'tech under pressure' },
@@ -54,8 +65,7 @@ const SIGNAL_CONTEXT: Record<string, { up: string; down: string }> = {
   XLF:  { up: 'banks leading rally',       down: 'yield curve headwinds' },
 }
 
-// Signals route uses shared HIGH_KW / MED_KW plus a few extra trigger terms
-// specific to market signal detection (not article severity classification)
+// Signals route uses shared keyword lists plus a few extra trigger terms
 const HIGH_NEWS = [...HIGH_KW, 'fed rate']
 const MED_NEWS  = [...MED_KW,  'trade deal', 'summit', 'meeting', 'ban', 'cpi', 'jobs report', 'interest rate', 'central bank', 'federal reserve', 'ipo']
 
@@ -76,7 +86,7 @@ function newsIcon(headline: string): string {
 
 function priceIcon(symbol: string, positive: boolean): string {
   if (['GLD', 'SLV'].includes(symbol))          return '🥇'
-  if (['USO', 'BNO', 'UNG'].includes(symbol))   return positive ? '🛢️' : '🛢️'
+  if (['USO', 'BNO', 'UNG'].includes(symbol))   return '🛢️'
   if (symbol === 'VXX')                          return positive ? '⚠️' : '✅'
   if (symbol === 'TLT')                          return '🏦'
   if (symbol === 'WEAT')                         return '🌾'
@@ -103,7 +113,15 @@ export async function GET() {
   const signals: Signal[] = []
   const now = Date.now()
 
-  // ── Price-move signals ──────────────────────────────────────────────────
+  // ── Fetch news once — shared by price correlation + keyword signals ────────
+  let articles: NewsArticle[] = []
+  let clusters: NewsCluster[]  = []
+  try {
+    articles = await getFinanceNews()
+    clusters = clusterArticles(articles)
+  } catch { /* non-fatal — falls back to SIGNAL_CONTEXT */ }
+
+  // ── Price-move signals ─────────────────────────────────────────────────────
   try {
     const quotes = await getQuotesBatched(SIGNAL_SYMBOLS)
 
@@ -111,36 +129,60 @@ export async function GET() {
       const q = quotes.get(sym)
       if (!q || q.changePercent === 0) continue
       const pct = q.changePercent
-      if (Math.abs(pct) < 0.5) continue  // only signal moves ≥ 0.5%
+      if (Math.abs(pct) < 0.5) continue
 
       const positive = pct > 0
       const label    = ASSET_LABELS[sym] ?? sym
-      const icon     = priceIcon(sym, positive)
       const dir      = positive ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`
-      const ctx      = SIGNAL_CONTEXT[sym]
-      const context  = ctx ? (positive ? ctx.up : ctx.down) : undefined
+      const absMove  = Math.abs(pct)
 
-      let text = `${label} ${dir}`
-      if (context) text += ` — ${context}`
+      // Run correlation only for meaningful moves
+      const expl = absMove >= 1.5 ? explainMove(sym, pct, clusters) : null
+
+      // ── Build signal text ──
+      let text: string
+      if (expl?.type === 'explained' && expl.headline) {
+        const headline = expl.headline.length > 100
+          ? expl.headline.slice(0, 100) + '…'
+          : expl.headline
+        text = `${label} ${dir} — ${headline}`
+      } else if (expl?.type === 'silent_divergence' && absMove >= 2) {
+        text = `${label} ${dir} — no catalyst found`
+      } else {
+        const ctx = SIGNAL_CONTEXT[sym]
+        const context = ctx ? (positive ? ctx.up : ctx.down) : undefined
+        text = context ? `${label} ${dir} — ${context}` : `${label} ${dir}`
+      }
+
+      const isSilent = expl?.type === 'silent_divergence' && absMove >= 2
+      const icon     = isSilent ? '⚡' : priceIcon(sym, positive)
 
       signals.push({
         id:        `price-${sym}-${now}`,
         icon,
         text,
-        category:  'price',
+        category:  isSilent ? 'correlation' : 'price',
         severity:  severity(pct),
         timestamp: now - Math.floor(Math.random() * 600_000),
+        ...(absMove >= 1.5 && expl ? {
+          explanation: {
+            type:        expl.type,
+            headline:    expl.headline   ?? undefined,
+            source:      expl.source     ?? undefined,
+            sourceCount: expl.sourceCount,
+            confidence:  expl.confidence,
+          },
+        } : {}),
       })
     }
   } catch { /* non-fatal */ }
 
-  // ── News keyword signals ────────────────────────────────────────────────
+  // ── News keyword signals ───────────────────────────────────────────────────
   try {
-    const articles = await getFinanceNews()
     const seen = new Set<string>()
 
     for (const a of articles.slice(0, 60)) {
-      const lower = a.headline.toLowerCase()
+      const lower    = a.headline.toLowerCase()
       const matchHigh = HIGH_NEWS.find((k) => lower.includes(k))
       const matchMed  = MED_NEWS.find((k)  => lower.includes(k))
       if (!matchHigh && !matchMed) continue
@@ -161,7 +203,7 @@ export async function GET() {
     }
   } catch { /* non-fatal */ }
 
-  // ── Sort by severity then recency, cap at 20 ───────────────────────────
+  // ── Sort by severity then recency, cap at 20 ──────────────────────────────
   const SEV_ORDER: Record<string, number> = { HIGH: 0, MED: 1, LOW: 2 }
   const result = signals
     .sort((a, b) => {

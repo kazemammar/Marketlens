@@ -5,8 +5,8 @@ import { getSignificantWords, STOP_WORDS }     from '@/lib/utils/news-clustering
 
 export interface TrendingKeyword {
   keyword:        string
-  currentCount:   number       // mentions in last 2 hours
-  baselineCount:  number       // average mentions per 2-hour window in prior 24h
+  currentCount:   number       // mentions in last 6 hours
+  baselineCount:  number       // average mentions per 6-hour window in prior 24h
   spike:          number       // ratio: currentCount / baselineAvg
   severity:       'HIGH' | 'MED' | 'LOW'
   sources:        string[]     // unique sources mentioning this keyword recently
@@ -21,11 +21,11 @@ export interface TrendingPayload {
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
-const WINDOW_MS   = 2  * 60 * 60 * 1_000   // 2-hour recent window
+const WINDOW_MS   = 6  * 60 * 60 * 1_000   // 6-hour recent window
 const BASELINE_MS = 24 * 60 * 60 * 1_000   // 24-hour lookback period
 
-// Number of 2-hour windows in the baseline period (22 hours of baseline)
-const BASELINE_WINDOWS = (BASELINE_MS - WINDOW_MS) / WINDOW_MS  // = 11
+// Number of 6-hour windows in the baseline period (18 hours of baseline = 3 windows)
+const BASELINE_WINDOWS = (BASELINE_MS - WINDOW_MS) / WINDOW_MS  // = 3
 
 // Words that are structurally always present in financial news.
 // A spike in these tells us nothing — filter them even if STOP_WORDS doesn't.
@@ -38,6 +38,12 @@ const ALWAYS_COMMON = new Set([
   'data', 'plan', 'expected', 'according', 'major', 'latest', 'first',
   'high', 'low', 'rise', 'fall', 'gain', 'loss', 'drop', 'surge', 'hit',
   'news', 'update', 'amid', 'following', 'despite', 'ahead',
+  // Geographic / directional — appear in "South Korea", "North Sea", etc. but carry
+  // no standalone financial signal
+  'north', 'south', 'east', 'west', 'central', 'northern', 'southern', 'eastern', 'western',
+  // Overly generic modifiers
+  'former', 'current', 'next', 'back', 'end', 'top', 'key', 'big',
+  'government', 'official', 'officials',
 ])
 
 // ─── Helpers ──────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { cachedFetch }                           from '@/lib/cache/redis'
 import { getFinanceNews }                        from '@/lib/api/rss'
 import { detectTrending, type TrendingPayload }  from '@/lib/utils/trending-keywords'
 
-const CACHE_KEY = 'trending:keywords:v1'
+const CACHE_KEY = 'trending:keywords:v2'
 const CACHE_TTL = 300  // 5 minutes
 
 export async function GET() {

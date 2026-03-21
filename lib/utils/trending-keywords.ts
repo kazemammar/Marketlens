@@ -38,8 +38,7 @@ const ALWAYS_COMMON = new Set([
   'data', 'plan', 'expected', 'according', 'major', 'latest', 'first',
   'high', 'low', 'rise', 'fall', 'gain', 'loss', 'drop', 'surge', 'hit',
   'news', 'update', 'amid', 'following', 'despite', 'ahead',
-  // Geographic / directional — appear in "South Korea", "North Sea", etc. but carry
-  // no standalone financial signal
+  // Geographic / directional — appear in "South Korea", "North Sea", etc.
   'north', 'south', 'east', 'west', 'central', 'northern', 'southern', 'eastern', 'western',
   // Overly generic modifiers
   'former', 'current', 'next', 'back', 'end', 'top', 'key', 'big',
@@ -65,6 +64,71 @@ function extractTerms(headline: string): string[] {
   }
 
   return [...unigrams, ...bigrams]
+}
+
+// Jaccard similarity between two word sets
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 0
+  const intersection = [...a].filter(w => b.has(w)).length
+  const union = new Set([...a, ...b]).size
+  return intersection / union
+}
+
+// ─── Story deduplication ──────────────────────────────────────────────────
+//
+// Many trending terms come from the same story (e.g. "elon", "musk",
+// "twitter", "jury", "elon musk", "jury finds" all from one headline cluster).
+// Group keywords whose sample headlines are similar (Jaccard ≥ 0.25), then
+// keep only the most representative term per story group.
+
+function deduplicateByStory(keywords: TrendingKeyword[]): TrendingKeyword[] {
+  const assigned = new Set<number>()
+  const result: TrendingKeyword[] = []
+
+  for (let i = 0; i < keywords.length; i++) {
+    if (assigned.has(i)) continue
+
+    const wordsI = getSignificantWords(keywords[i].sampleHeadline)
+    const group  = [i]
+
+    for (let j = i + 1; j < keywords.length; j++) {
+      if (assigned.has(j)) continue
+      const wordsJ = getSignificantWords(keywords[j].sampleHeadline)
+      if (jaccard(wordsI, wordsJ) >= 0.25) {
+        group.push(j)
+        assigned.add(j)
+      }
+    }
+    assigned.add(i)
+
+    const groupKws = group.map(idx => keywords[idx])
+
+    // Merge all sources across the story group
+    const allSources = [...new Set(groupKws.flatMap(k => k.sources))]
+
+    // Pick best representative: prefer bigrams first, then highest spike
+    const rep = [...groupKws].sort((a, b) => {
+      const aBig = a.keyword.includes(' ') ? 1 : 0
+      const bBig = b.keyword.includes(' ') ? 1 : 0
+      if (bBig !== aBig) return bBig - aBig
+      return b.spike - a.spike
+    })[0]
+
+    // Recalculate severity with merged source count
+    const spike = rep.spike
+    let severity: TrendingKeyword['severity'] = 'LOW'
+    if      (spike >= 5 && allSources.length >= 4) severity = 'HIGH'
+    else if (spike >= 3 || allSources.length >= 3) severity = 'MED'
+
+    result.push({
+      ...rep,
+      sources:  allSources,
+      severity,
+    })
+  }
+
+  // Re-sort by spike after deduplication
+  return result.sort((a, b) => b.spike - a.spike || b.sources.length - a.sources.length)
 }
 
 // ─── Core function ────────────────────────────────────────────────────────
@@ -96,13 +160,12 @@ export function detectTrending(articles: NewsArticle[]): TrendingPayload {
       if (existing) {
         existing.count++
         existing.sources.add(article.source)
-        // firstSeen tracks the earliest, not the latest
         if (article.publishedAt < existing.firstSeen) existing.firstSeen = article.publishedAt
       } else {
         recentCounts.set(term, {
-          count:    1,
-          sources:  new Set([article.source]),
-          headline: article.headline,   // newest-first, so this is the most recent
+          count:     1,
+          sources:   new Set([article.source]),
+          headline:  article.headline,
           firstSeen: article.publishedAt,
         })
       }
@@ -130,14 +193,12 @@ export function detectTrending(articles: NewsArticle[]): TrendingPayload {
 
     const spike = baselineAvg > 0
       ? data.count / baselineAvg
-      // No baseline presence → treat every mention as 3× the threshold (very novel)
-      : data.count * 3
+      : data.count * 3  // novel term — no prior baseline
 
     // Filter: spike must be at least 2× above the per-window baseline
     if (baselineAvg > 0 && spike < 2.0) continue
 
-    // Severity: based on spike magnitude and source diversity
-    let severity: 'HIGH' | 'MED' | 'LOW' = 'LOW'
+    let severity: TrendingKeyword['severity'] = 'LOW'
     if      (spike >= 5 && data.sources.size >= 4) severity = 'HIGH'
     else if (spike >= 3 || data.sources.size >= 3) severity = 'MED'
 
@@ -153,11 +214,12 @@ export function detectTrending(articles: NewsArticle[]): TrendingPayload {
     })
   }
 
-  // Sort by spike ratio (desc), break ties by source diversity
+  // Sort by spike ratio, then deduplicate to one entry per story
   trending.sort((a, b) => b.spike - a.spike || b.sources.length - a.sources.length)
+  const deduped = deduplicateByStory(trending)
 
   return {
-    keywords:    trending.slice(0, 12),
+    keywords:    deduped.slice(0, 12),
     generatedAt: now,
   }
 }

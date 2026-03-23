@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { EconomicIndicator } from '@/app/api/economics/route'
+import CentralBankRates from '@/components/economics/CentralBankRates'
 
 // ─── Mini sparkline SVG ────────────────────────────────────────────────────
 
@@ -235,6 +236,11 @@ export default function EconomicsPage() {
         {/* Fed Watch */}
         <div className="mb-5">
           <FedWatch fedRate={fedRate} />
+        </div>
+
+        {/* Central Bank Policy Rates */}
+        <div className="mb-5">
+          <CentralBankRates />
         </div>
 
         {/* Indicators grid */}

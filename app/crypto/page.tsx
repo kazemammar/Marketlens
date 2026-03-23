@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 
 import type { Metadata } from 'next'
-import AssetCard from '@/components/dashboard/AssetCard'
-import GlobalSearch from '@/components/search/GlobalSearch'
+import AssetCard          from '@/components/dashboard/AssetCard'
+import GlobalSearch        from '@/components/search/GlobalSearch'
+import CryptoIntelPanels   from '@/components/crypto/CryptoIntelPanels'
 import { getCryptoMarkets } from '@/lib/api/coingecko'
-import { AssetCardData } from '@/lib/utils/types'
+import { AssetCardData }    from '@/lib/utils/types'
 
 export const metadata: Metadata = {
   title: 'Crypto',
@@ -46,6 +47,9 @@ export default async function CryptoPage() {
             className="w-full max-w-lg"
           />
         </div>
+
+        {/* Intel panels — stablecoin peg monitor + BTC ETF flows */}
+        <CryptoIntelPanels />
 
         {/* Grid */}
         {assets.length > 0 ? (

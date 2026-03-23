@@ -6,24 +6,22 @@ import type { CentralBankRate } from '@/lib/api/central-banks'
 
 // ─── Direction badge ──────────────────────────────────────────────────────
 
-function DirectionBadge({ direction, bps }: { direction: CentralBankRate['direction']; bps: number | null }) {
-  if (!direction) return null
-
-  if (direction === 'HIKE') {
+function DirectionBadge({ direction, change }: { direction: CentralBankRate['direction']; change: number | null }) {
+  if (direction === 'hike') {
     return (
       <span className="inline-flex items-center gap-0.5 rounded border border-red-500/30 bg-red-500/10 px-1.5 py-px font-mono text-[8px] font-bold text-red-400">
-        ▲ HIKE{bps != null && bps !== 0 ? ` +${bps}bp` : ''}
+        ▲ HIKE{change != null && change !== 0 ? ` +${change}bp` : ''}
       </span>
     )
   }
-  if (direction === 'CUT') {
+  if (direction === 'cut') {
     return (
       <span className="inline-flex items-center gap-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-px font-mono text-[8px] font-bold text-emerald-400">
-        ▼ CUT{bps != null && bps !== 0 ? ` ${bps}bp` : ''}
+        ▼ CUT{change != null && change !== 0 ? ` ${change}bp` : ''}
       </span>
     )
   }
-  // HOLD
+  // hold
   return (
     <span className="inline-flex items-center gap-0.5 rounded border border-[var(--border)] bg-[var(--surface-2)] px-1.5 py-px font-mono text-[8px] font-bold text-[var(--text-muted)]">
       ► HOLD
@@ -34,19 +32,18 @@ function DirectionBadge({ direction, bps }: { direction: CentralBankRate['direct
 // ─── Single bank card ─────────────────────────────────────────────────────
 
 function BankCard({ bank }: { bank: CentralBankRate }) {
-  function formatDate(d: string | null): string {
-    if (!d) return ''
+  function formatDate(d: string): string {
     const dt = new Date(d + 'T12:00:00Z')
     return dt.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })
   }
 
   return (
     <div className="flex flex-col gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5 transition hover:border-[var(--accent)]/30">
-      {/* Flag + bank acronym */}
+      {/* Flag + bank name */}
       <div className="flex items-center gap-1.5">
         <span className="text-[13px] leading-none">{bank.flag}</span>
         <div>
-          <span className="font-mono text-[10px] font-bold text-[var(--text)]">{bank.name}</span>
+          <span className="font-mono text-[10px] font-bold text-[var(--text)]">{bank.bank}</span>
           <span className="ml-1 font-mono text-[8px] text-[var(--text-muted)] opacity-60">{bank.country}</span>
         </div>
       </div>
@@ -54,22 +51,18 @@ function BankCard({ bank }: { bank: CentralBankRate }) {
       {/* Rate */}
       <div className="flex items-baseline gap-0.5">
         <span className="font-mono text-[22px] font-bold leading-none tabular-nums text-[var(--text)]">
-          {bank.rate != null ? bank.rate.toFixed(2) : '—'}
+          {bank.rate.toFixed(2)}
         </span>
-        {bank.rate != null && (
-          <span className="font-mono text-[10px] text-[var(--text-muted)] opacity-60">%</span>
-        )}
+        <span className="font-mono text-[10px] text-[var(--text-muted)] opacity-60">%</span>
       </div>
 
       {/* Direction badge */}
-      <DirectionBadge direction={bank.direction} bps={bank.bps} />
+      <DirectionBadge direction={bank.direction} change={bank.change} />
 
       {/* Last updated */}
-      {bank.date && (
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50 leading-none">
-          {formatDate(bank.date)}
-        </span>
-      )}
+      <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50 leading-none">
+        {formatDate(bank.lastUpdated)}
+      </span>
     </div>
   )
 }
@@ -93,16 +86,16 @@ function SkeletonCard() {
 
 export default function CentralBankRates() {
   const { data, loading } = useFetch<CentralBanksPayload>('/api/central-banks', {
-    refreshInterval: 30 * 60_000,  // 30 min — data is weekly/monthly
+    refreshInterval: 30 * 60_000,
   })
 
-  const rates = data?.rates ?? []
+  // Only render cards where we have a real rate (null rates are filtered server-side)
+  const validRates = (data?.rates ?? []).filter(r => r.rate != null)
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
       {/* Panel header */}
       <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-        {/* Bank / institution icon */}
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="11" width="14" height="2" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="3" y="5"  width="2"  height="6" stroke="currentColor" strokeWidth="1.1"/>
@@ -114,20 +107,20 @@ export default function CentralBankRates() {
           Central Bank Policy Rates
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">FRED · 6H CACHE</span>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">API NINJAS · 6H CACHE</span>
       </div>
 
       {/* Cards grid */}
       <div className="grid grid-cols-2 gap-1.5 p-3 sm:grid-cols-3 lg:grid-cols-5">
         {loading
           ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)
-          : rates.length === 0
+          : validRates.length === 0
             ? (
                 <p className="col-span-full py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
-                  Central bank data unavailable — add FRED_API_KEY to enable
+                  Central bank data unavailable — add API_NINJAS_KEY to enable
                 </p>
               )
-            : rates.map(bank => <BankCard key={bank.id} bank={bank} />)
+            : validRates.map(bank => <BankCard key={bank.id} bank={bank} />)
         }
       </div>
     </div>

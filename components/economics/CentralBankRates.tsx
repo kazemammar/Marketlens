@@ -107,7 +107,7 @@ export default function CentralBankRates() {
           Central Bank Policy Rates
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">API NINJAS · 6H CACHE</span>
+        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">FRED · BOE · BOC · 6H CACHE</span>
       </div>
 
       {/* Cards grid */}
@@ -117,7 +117,7 @@ export default function CentralBankRates() {
           : validRates.length === 0
             ? (
                 <p className="col-span-full py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
-                  Central bank data unavailable — add API_NINJAS_KEY to enable
+                  Central bank data unavailable
                 </p>
               )
             : validRates.map(bank => <BankCard key={bank.id} bank={bank} />)

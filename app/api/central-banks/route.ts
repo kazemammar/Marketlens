@@ -8,8 +8,8 @@ export interface CentralBanksPayload {
   generatedAt: number
 }
 
-const CACHE_KEY = 'central-banks:rates:v2'  // bumped: switched from FRED → API Ninjas
-const CACHE_TTL = 6 * 60 * 60              // 6 hours — API Ninjas updates every ~4h
+const CACHE_KEY = 'central-banks:rates:v4'  // bumped: fixed BoE date parsing
+const CACHE_TTL = 6 * 60 * 60              // 6 hours
 
 export async function GET() {
   const data = await cachedFetch<CentralBanksPayload>(

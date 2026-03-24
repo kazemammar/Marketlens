@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import StockExplorer from '@/components/pages/StockExplorer'
 import StockSearch from '@/components/pages/StockSearch'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import EarningsCalendar from '@/components/warroom/EarningsCalendar'
+import PanelErrorBoundary from '@/components/ui/PanelErrorBoundary'
 
 export const metadata: Metadata = {
   title: 'Stocks',
@@ -34,6 +36,13 @@ export default function StocksPage() {
 
         {/* Explorer: indices strip + sector tabs + grid */}
         <StockExplorer />
+
+        {/* Earnings Calendar — full week, anchor-linked from dashboard */}
+        <div id="earnings" className="mt-8 scroll-mt-20">
+          <PanelErrorBoundary fallbackTitle="Earnings Calendar">
+            <EarningsCalendar />
+          </PanelErrorBoundary>
+        </div>
 
       </div>
     </div>

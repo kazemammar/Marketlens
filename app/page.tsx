@@ -186,10 +186,10 @@ export default async function HomePage({
         </PanelErrorBoundary>
       </div>
 
-      {/* Earnings Calendar */}
+      {/* Earnings Calendar — top 8 on dashboard; full list on /stocks#earnings */}
       <div className="px-3 sm:px-4 py-2">
         <PanelErrorBoundary fallbackTitle="Earnings Calendar">
-          <EarningsCalendar />
+          <EarningsCalendar limit={8} />
         </PanelErrorBoundary>
       </div>
 

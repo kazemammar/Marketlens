@@ -3,7 +3,8 @@
 // Warms the most-frequently-read endpoints so the first real user request
 // always hits a warm cache (no cold-start latency spikes).
 //
-// Vercel Hobby plan runs crons at most once/day.
+// Vercel Hobby plan allows only 1 cron job (runs at most once/day).
+// This single cron warms all caches AND runs daily tasks (snapshots).
 // For frequent warming during market hours, set up an external cron:
 //   Service: https://cron-job.org (free)
 //   URL: https://marketlens.live/api/cron/warm
@@ -57,6 +58,8 @@ export async function GET(req: NextRequest) {
     warm('predictions',        '/api/predictions'),
     warm('fear_greed',         '/api/fear-greed'),
     warm('commodities_strip',  '/api/commodities-strip'),
+    // Daily tasks (previously a separate cron — merged for Hobby plan 1-cron limit)
+    warm('portfolio_snapshots', '/api/cron/snapshot'),
   ])
 
   return NextResponse.json({ ok: true, ran: new Date().toISOString(), results })

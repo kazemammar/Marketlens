@@ -3,7 +3,7 @@ export const STOCK_SECTORS: Record<string, string[]> = {
   'Finance':          ['JPM','V','MA','BAC','GS','MS','BLK','SCHW','C','AXP','BRK.B','WFC','SPGI','ICE','CME','PGR','USB','MMC','CB','AON','MET','AIG','PRU','TRV','PNC','COF','PYPL','AJG','FITB','FIS'],
   'Healthcare':       ['UNH','LLY','JNJ','ABBV','MRK','TMO','ABT','PFE','AMGN','MDT','ISRG','DHR','BMY','GILD','CVS','CI','ELV','VRTX','REGN','ZTS','BDX','BSX','SYK','HCA','MCK','A','DXCM','IQV','IDXX','EW'],
   'Consumer Disc.':   ['AMZN','TSLA','HD','NKE','MCD','LOW','SBUX','TJX','BKNG','CMG','ABNB','MAR','RCL','ORLY','AZO','ROST','DHI','LEN','YUM','DPZ','LULU','ULTA','DECK','GM','F','EBAY','ETSY','CPRT','BBY','GRMN'],
-  'Consumer Staples': ['PG','KO','PEP','COST','WMT','PM','MO','CL','MDLZ','KHC','GIS','STZ','MNST','KR','SYY','HSY','ADM','TAP','CAG','SJM','CLX','CHD','K','TSN','HRL','MKC','BG','LAMB','CPB','WBA'],
+  'Consumer Staples': ['PG','KO','PEP','COST','WMT','PM','MO','CL','MDLZ','KHC','GIS','STZ','MNST','KR','SYY','HSY','ADM','TAP','CAG','SJM','CLX','CHD','K','TSN','HRL','MKC','BG','CPB','WBA'],
   'Industrial':       ['CAT','GE','HON','UPS','BA','RTX','LMT','DE','UNP','FDX','WM','ETN','ITW','EMR','GD','NOC','TDG','CSX','NSC','CARR','JCI','IR','PH','PCAR','CTAS','FAST','GWW','VRSK','ROK','SWK'],
   'Communication':    ['GOOGL','META','NFLX','DIS','CMCSA','T','VZ','TMUS','CHTR','SPOT','RBLX','EA','TTWO','WBD','PARA','LYV','MTCH','PINS','ZM','SNAP','ROKU','OMC','IPG','FOXA','NWSA'],
   'Energy':           ['XOM','CVX','COP','SLB','EOG','MPC','PSX','VLO','OXY','HAL','DVN','FANG','HES','BKR','KMI','WMB','OKE','TRGP','LNG','MRO','CTRA','EQT','APA','WFRD','FTI'],

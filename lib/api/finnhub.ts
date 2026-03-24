@@ -584,15 +584,11 @@ export interface AggregateIndicatorResult {
 
 export async function getAggregateIndicator(symbol: string): Promise<AggregateIndicatorResult | null> {
   try {
-    const res = await fetch(
-      `${FINNHUB_BASE_URL}/scan/technical-indicator?symbol=${symbol}&resolution=D`,
-      {
-        headers: { 'X-Finnhub-Token': process.env.FINNHUB_API_KEY ?? '' },
-        next: { revalidate: 300 },
-      }
+    if (await isRateLimited()) return null
+    if (!(await checkCallQuota())) return null
+    return await finnhubGet<AggregateIndicatorResult>(
+      `/scan/technical-indicator?symbol=${encodeURIComponent(symbol)}&resolution=D`,
     )
-    if (!res.ok) return null
-    return await res.json() as AggregateIndicatorResult
   } catch {
     return null
   }
@@ -614,18 +610,13 @@ export interface EconomicEvent {
 
 export async function getEconomicCalendar(from: string, to: string): Promise<EconomicEvent[]> {
   try {
-    const res = await fetch(
-      `${FINNHUB_BASE_URL}/calendar/economic?from=${from}&to=${to}`,
-      {
-        headers: { 'X-Finnhub-Token': process.env.FINNHUB_API_KEY ?? '' },
-        next: { revalidate: 3600 },
-      }
+    if (await isRateLimited()) return []
+    if (!(await checkCallQuota())) return []
+    const data = await finnhubGet<{ economicCalendar: EconomicEvent[] }>(
+      `/calendar/economic?from=${from}&to=${to}`,
     )
-    if (!res.ok) return []
-    const data = await res.json()
-    const events: EconomicEvent[] = (data.economicCalendar ?? [])
-    return events
-      .filter((e: EconomicEvent) => e.country === 'United States' && (e.impact === 'high' || e.impact === 'medium'))
+    return (data.economicCalendar ?? [])
+      .filter((e: EconomicEvent) => (e.country === 'United States' || e.country === 'US') && (e.impact === 'high' || e.impact === 'medium'))
       .sort((a: EconomicEvent, b: EconomicEvent) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   } catch {
     return []
@@ -648,21 +639,15 @@ export interface EarningsEvent {
 
 export async function getEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
   try {
-    const res = await fetch(
-      `${FINNHUB_BASE_URL}/calendar/earnings?from=${from}&to=${to}`,
-      {
-        headers: { 'X-Finnhub-Token': process.env.FINNHUB_API_KEY ?? '' },
-        next: { revalidate: 3600 },
-      }
-    )
-    if (!res.ok) return []
-    const data = await res.json()
-    const events: EarningsEvent[] = (data.earningsCalendar ?? []).map((e: {
+    if (await isRateLimited()) return []
+    if (!(await checkCallQuota())) return []
+    const data = await finnhubGet<{ earningsCalendar: Array<{
       symbol: string; date: string; hour: string
       epsEstimate?: number | null; epsActual?: number | null
       revenueEstimate?: number | null; revenueActual?: number | null
       quarter: number; year: number
-    }) => ({
+    }> }>(`/calendar/earnings?from=${from}&to=${to}`)
+    return (data.earningsCalendar ?? []).map((e) => ({
       symbol: e.symbol,
       date: e.date,
       hour: e.hour,
@@ -672,8 +657,7 @@ export async function getEarningsCalendar(from: string, to: string): Promise<Ear
       revenueActual: e.revenueActual ?? null,
       quarter: e.quarter,
       year: e.year,
-    }))
-    return events.sort((a: EarningsEvent, b: EarningsEvent) => a.date.localeCompare(b.date))
+    })).sort((a, b) => a.date.localeCompare(b.date))
   } catch {
     return []
   }

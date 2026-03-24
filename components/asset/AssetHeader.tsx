@@ -28,7 +28,7 @@ export default function AssetHeader({ asset, logoUrl, exchange, industry }: Asse
       {/* Left: logo + identity */}
       <div className="flex items-center gap-4">
         {logoUrl && (
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border border-[var(--border)] bg-white p-1">
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] p-1">
             <Image
               src={logoUrl}
               alt={`${name} logo`}

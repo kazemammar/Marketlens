@@ -59,14 +59,14 @@ const PIPELINES = [
 
 // ─── Color helpers ────────────────────────────────────────────────────────
 
-const SEVERITY_COLOR: Record<number, string> = { 3: '#ef4444', 2: '#f97316', 1: '#f59e0b' }
+const SEVERITY_COLOR: Record<number, string> = { 3: 'var(--danger)', 2: '#f97316', 1: 'var(--warning)' }
 const RISK_COLOR: Record<string, string> = {
-  CRITICAL: '#ef4444', HIGH: '#f97316', MEDIUM: '#f59e0b', LOW: '#64748b',
+  CRITICAL: 'var(--danger)', HIGH: '#f97316', MEDIUM: 'var(--warning)', LOW: 'var(--text-muted)',
 }
 const CHOKEPOINT_STATUS_COLOR: Record<ChokepointStatus, string> = {
-  NORMAL:    '#10b981',
-  ELEVATED:  '#f59e0b',
-  DISRUPTED: '#ef4444',
+  NORMAL:    'var(--accent)',
+  ELEVATED:  'var(--warning)',
+  DISRUPTED: 'var(--danger)',
   BLOCKED:   '#dc2626',
 }
 const PIPELINE_STATUS_COLOR: Record<string, string> = {

@@ -59,8 +59,8 @@ function CbPanel({ side, align }: { side: CbSide; align: 'left' | 'right' }) {
       : `${side.rateChange!.toFixed(2)} CUT`
     : 'HOLD'
   const changeColor = changed
-    ? side.rateChange! > 0 ? '#ef4444' : '#22c55e'
-    : '#64748b'
+    ? side.rateChange! > 0 ? 'var(--price-down)' : 'var(--price-up)'
+    : 'var(--text-muted)'
 
   const textAlign = align === 'right' ? 'text-right' : 'text-left'
   const itemsAlign = align === 'right' ? 'items-end' : 'items-start'

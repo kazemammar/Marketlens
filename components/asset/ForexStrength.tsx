@@ -16,8 +16,8 @@ const PAIR_INFO: Record<string, { fullName: string; classification: string; desc
 }
 
 const CLASS_COLOR: Record<string, string> = {
-  Major:  '#22c55e',
-  Minor:  '#f59e0b',
+  Major:  'var(--price-up)',
+  Minor:  'var(--warning)',
   Exotic: '#a855f7',
 }
 

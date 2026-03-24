@@ -105,7 +105,8 @@ export async function analyzeSentiment(
       })
 
       const raw = completion.choices[0]?.message?.content ?? '{}'
-      const parsed = JSON.parse(raw) as Partial<GroqSentimentResponse>
+      let parsed: Partial<GroqSentimentResponse>
+      try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
       return {
         symbol,
@@ -230,13 +231,14 @@ export async function analyzeAssetContext(
       })
 
       const raw    = completion.choices[0]?.message?.content ?? '{}'
-      const parsed = JSON.parse(raw) as {
+      let parsed: {
         factors?:              AssetContextFactor[]
         summary?:              string
         thesis?:               string
         competitive_position?: string
         catalyst_calendar?:    Array<{ event: string; date: string; significance: 'HIGH' | 'MED' | 'LOW' }>
       }
+      try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
       return {
         symbol,

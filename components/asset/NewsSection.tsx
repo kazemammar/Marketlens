@@ -68,7 +68,7 @@ export default async function NewsSection({ symbol, type }: NewsSectionProps) {
       <div className="flex flex-col divide-y divide-[var(--border)] rounded border border-[var(--border)] bg-[var(--surface)]">
         {clusters.map((cluster: NewsCluster) => {
           const cat = categorizeArticle(cluster.headline)
-          const tc  = cluster.sourceMeta.tier === 1 ? '#10b981'
+          const tc  = cluster.sourceMeta.tier === 1 ? 'var(--accent)'
                     : cluster.sourceMeta.tier === 2 ? '#3b82f6'
                     : null
           return (

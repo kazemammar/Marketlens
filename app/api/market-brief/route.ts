@@ -219,7 +219,8 @@ export async function GET(req: Request) {
     })
 
     const raw    = completion.choices[0]?.message?.content ?? '{}'
-    const parsed = JSON.parse(raw) as Record<string, unknown>
+    let parsed: Record<string, unknown>
+    try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
     const payload: MarketBriefPayload = {
       // v2 narrative fields

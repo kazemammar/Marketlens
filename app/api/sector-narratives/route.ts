@@ -81,7 +81,8 @@ export async function GET(req: Request) {
     })
 
     const raw = completion.choices[0]?.message?.content ?? '{}'
-    const parsed = JSON.parse(raw) as Record<string, string>
+    let parsed: Record<string, string>
+    try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
     // Validate: only keep string values for known sectors
     const narratives: Record<string, string> = {}

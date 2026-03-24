@@ -95,11 +95,12 @@ Rules:
     })
 
     const raw = completion.choices[0]?.message?.content ?? '{}'
-    const parsed = JSON.parse(raw) as WhatIfResult
+    let parsed: Partial<WhatIfResult>
+    try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
     const result: WhatIfResult = {
-      impact: ['positive', 'negative', 'mixed'].includes(parsed.impact) ? parsed.impact : 'mixed',
-      severity: ['HIGH', 'MEDIUM', 'LOW'].includes(parsed.severity) ? parsed.severity : 'MEDIUM',
+      impact: (['positive', 'negative', 'mixed'] as const).includes(parsed.impact as 'positive' | 'negative' | 'mixed') ? parsed.impact! : 'mixed',
+      severity: (['HIGH', 'MEDIUM', 'LOW'] as const).includes(parsed.severity as 'HIGH' | 'MEDIUM' | 'LOW') ? parsed.severity! : 'MEDIUM',
       summary: typeof parsed.summary === 'string' ? parsed.summary : 'Analysis unavailable.',
       positions: Array.isArray(parsed.positions) ? parsed.positions.slice(0, 20) : [],
       hedges: Array.isArray(parsed.hedges) ? parsed.hedges.slice(0, 3) : [],

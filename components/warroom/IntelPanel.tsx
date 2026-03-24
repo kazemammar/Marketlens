@@ -29,8 +29,8 @@ type CatFilter = 'ALL' | NewsCategory
 // ─── Severity styling ─────────────────────────────────────────────────────
 
 const IMP_BADGE: Record<string, string> = {
-  HIGH: 'text-white border-transparent bg-[#ff4444]',
-  MED:  'text-black border-transparent bg-[#f59e0b]',
+  HIGH: 'text-white border-transparent bg-[var(--danger)]',
+  MED:  'text-black border-transparent bg-[var(--warning)]',
   LOW:  'border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)]',
 }
 

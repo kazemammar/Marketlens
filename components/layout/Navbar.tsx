@@ -147,7 +147,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         <Link
           href="/portfolio"
           onClick={onClose}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded py-3 font-mono text-[10px] font-semibold tracking-wide text-black transition-colors"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded py-3 font-mono text-[10px] font-semibold tracking-wide text-white transition-colors"
           style={{ background: 'var(--accent)' }}
         >
           <svg viewBox="0 0 14 14" fill="none" className="h-3 w-3" aria-hidden>

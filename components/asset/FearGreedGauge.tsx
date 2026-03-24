@@ -14,11 +14,11 @@ interface FngResponse {
 }
 
 function getColor(score: number): string {
-  if (score <= 25) return '#ff4444'
+  if (score <= 25) return 'var(--danger)'
   if (score <= 45) return '#f97316'
-  if (score <= 55) return '#f59e0b'
+  if (score <= 55) return 'var(--warning)'
   if (score <= 75) return '#a3e635'
-  return '#00ff88'
+  return 'var(--accent)'
 }
 
 function SemicircleGauge({ score, color }: { score: number; color: string }) {

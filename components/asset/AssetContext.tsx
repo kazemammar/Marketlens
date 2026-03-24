@@ -6,12 +6,12 @@ import { useFetch } from '@/lib/hooks/useFetch'
 
 // Category config
 const CAT_CONFIG: Record<AssetContextFactor['category'], { label: string; color: string; bg: string }> = {
-  geopolitical: { label: 'Geopolitical', color: '#ff6b6b', bg: 'rgba(255,107,107,0.12)' },
-  macro:        { label: 'Macro',        color: '#60a5fa', bg: 'rgba(96,165,250,0.12)'  },
-  sector:       { label: 'Sector',       color: '#c084fc', bg: 'rgba(192,132,252,0.12)' },
-  environmental:{ label: 'Environment',  color: '#4ade80', bg: 'rgba(74,222,128,0.12)'  },
-  sentiment:    { label: 'Sentiment',    color: '#22d3ee', bg: 'rgba(34,211,238,0.12)'  },
-  regulatory:   { label: 'Regulatory',   color: '#f59e0b', bg: 'rgba(245,158,11,0.12)'  },
+  geopolitical: { label: 'Geopolitical', color: 'var(--danger)',  bg: 'var(--danger-dim)'  },
+  macro:        { label: 'Macro',        color: '#60a5fa',       bg: 'rgba(96,165,250,0.12)'  },
+  sector:       { label: 'Sector',       color: '#c084fc',       bg: 'rgba(192,132,252,0.12)' },
+  environmental:{ label: 'Environment',  color: 'var(--accent)', bg: 'var(--accent-dim)'  },
+  sentiment:    { label: 'Sentiment',    color: '#22d3ee',       bg: 'rgba(34,211,238,0.12)'  },
+  regulatory:   { label: 'Regulatory',   color: 'var(--warning)',bg: 'var(--warning-dim)' },
 }
 
 function CatIcon({ category }: { category: AssetContextFactor['category'] }) {
@@ -83,9 +83,9 @@ function ago(ts: number): string {
 
 function thesisBorderColor(thesis: string): string {
   const t = thesis.toLowerCase()
-  if (t.includes('long') || t.includes('bullish')) return '#10b981'
-  if (t.includes('short') || t.includes('avoid') || t.includes('bearish')) return '#ef4444'
-  return '#f59e0b'
+  if (t.includes('long') || t.includes('bullish')) return 'var(--price-up)'
+  if (t.includes('short') || t.includes('avoid') || t.includes('bearish')) return 'var(--price-down)'
+  return 'var(--warning)'
 }
 
 export default function AssetContext({ symbol, type }: { symbol: string; type: AssetType }) {

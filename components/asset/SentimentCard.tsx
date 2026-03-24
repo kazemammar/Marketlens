@@ -16,8 +16,8 @@ const LABEL_CONFIG: Record<SentimentLabel, { colorVar: string; bgVar: string; ic
 }
 
 const CONVICTION_STYLE = {
-  high:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/25',
-  medium: 'bg-amber-500/10 text-amber-400 border-amber-500/25',
+  high:   'bg-[rgba(var(--price-up-rgb),0.1)] text-[var(--price-up)] border-[rgba(var(--price-up-rgb),0.25)]',
+  medium: 'bg-[var(--warning-dim)] text-[var(--warning)] border-[rgba(var(--warning-rgb,245,158,11),0.25)]',
   low:    'bg-zinc-500/10 text-zinc-400 border-zinc-500/25',
 }
 
@@ -199,10 +199,10 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
 
             {/* Contrarian risk */}
             {data.contrarian_risk && (
-              <div className="flex items-start gap-2 rounded border border-amber-500/20 bg-amber-500/5 px-3 py-2">
-                <span className="font-mono text-[11px] text-amber-400 shrink-0">⚠</span>
-                <p className="font-mono text-[10px] leading-relaxed text-amber-400/80">
-                  <span className="font-bold text-amber-400">Contrarian: </span>
+              <div className="flex items-start gap-2 rounded border border-[var(--warning)]/20 bg-[var(--warning-dim)] px-3 py-2">
+                <span className="font-mono text-[11px] text-[var(--warning)] shrink-0">⚠</span>
+                <p className="font-mono text-[10px] leading-relaxed text-[var(--warning)] opacity-80">
+                  <span className="font-bold text-[var(--warning)]">Contrarian: </span>
                   {data.contrarian_risk}
                 </p>
               </div>

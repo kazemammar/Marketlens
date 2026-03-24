@@ -47,7 +47,7 @@ export default function InsiderActivity({ symbol }: { symbol: string }) {
         <div>
           {txns.slice(0, 10).map((t, i) => {
             const isPurchase = t.type === 'Purchase'
-            const borderColor = isPurchase ? '#00ff88' : '#ff4444'
+            const borderColor = isPurchase ? 'var(--price-up)' : 'var(--price-down)'
             const typeColor = isPurchase ? 'var(--price-up)' : 'var(--price-down)'
             return (
               <div

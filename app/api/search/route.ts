@@ -6,7 +6,7 @@ import { Asset } from '@/lib/utils/types'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 import { redis } from '@/lib/cache/redis'
 
-const CACHE_TTL = 600  // 10 min — search results don't change often
+const CACHE_TTL = 300  // 5 min — per cache spec
 
 export async function GET(req: NextRequest) {
   const limited = withRateLimit(req, 30)

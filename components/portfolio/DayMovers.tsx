@@ -39,7 +39,7 @@ function PanelHeader() {
 // ─── Column header ────────────────────────────────────────────────────────
 
 function ColHeader({ isWinner }: { isWinner: boolean }) {
-  const color = isWinner ? '#22c55e' : '#ef4444'
+  const color = isWinner ? 'var(--price-up)' : 'var(--price-down)'
   const label = isWinner ? 'Winners' : 'Losers'
   return (
     <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-1.5">
@@ -66,7 +66,7 @@ function ColHeader({ isWinner }: { isWinner: boolean }) {
 function EmptyWinners() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-4">
-      <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: '#ef4444', opacity: 0.35 }} aria-hidden>
+      <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: 'var(--price-down)', opacity: 0.35 }} aria-hidden>
         <polyline points="1,5 5,9 8,7 11,10 15,6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       <p className="font-mono text-[11px] text-[var(--text-muted)] opacity-50 text-center">None today</p>
@@ -77,12 +77,12 @@ function EmptyWinners() {
 function EmptyLosers() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-1 px-3 py-4">
-      <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4" style={{ color: '#22c55e' }} aria-hidden>
+      <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4" style={{ color: 'var(--price-up)' }} aria-hidden>
         <path d="M3 8l3.5 3.5L13 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       <p
         className="font-mono text-[9px] font-semibold text-center"
-        style={{ color: '#22c55e', textShadow: '0 0 10px #22c55e40' }}
+        style={{ color: 'var(--price-up)', textShadow: '0 0 10px rgba(var(--price-up-rgb), 0.25)' }}
       >
         Clean sweep!
       </p>
@@ -107,7 +107,7 @@ function MoverCard({
   delay:         number
   rank:          number
 }) {
-  const colorHex = isWinner ? '#22c55e' : '#ef4444'
+  const colorHex = isWinner ? 'var(--price-up)' : 'var(--price-down)'
   const barPct   = Math.min(Math.abs(changePercent) / 5, 1) * 100
 
   // P&L dollar if cost basis is available
@@ -145,7 +145,7 @@ function MoverCard({
 
         {/* Direction pill */}
         <span className={`shrink-0 rounded px-1 py-px font-mono text-[8px] font-bold ${
-          direction === 'long' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+          direction === 'long' ? 'bg-[rgba(var(--price-up-rgb),0.1)] text-[var(--price-up)]' : 'bg-[rgba(var(--price-down-rgb),0.1)] text-[var(--price-down)]'
         }`}>
           {direction === 'long' ? '▲ L' : '▼ S'}
         </span>

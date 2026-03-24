@@ -23,7 +23,7 @@ function hasAnyIndicator(d: TwelveDataIndicators): boolean {
 function rsiColor(rsi: number): string {
   if (rsi < 30) return 'var(--price-up)'     // oversold = bullish
   if (rsi > 70) return 'var(--price-down)'    // overbought = bearish
-  return '#f59e0b'                            // neutral
+  return 'var(--warning)'                      // neutral
 }
 
 function rsiLabel(rsi: number): string {

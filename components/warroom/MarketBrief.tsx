@@ -118,7 +118,7 @@ export default function MarketBrief() {
           {riskLabel}
         </span>
         {brief.confidence && (
-          <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-50">
+          <span className="font-mono text-[9px] font-bold uppercase text-[var(--text-muted)] opacity-50">
             {CONF_LABEL[brief.confidence]} CONF
           </span>
         )}
@@ -246,7 +246,7 @@ export default function MarketBrief() {
       {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
       {(brief.headlineCount || brief.sourceCount) && (
         <div className="border-t border-[var(--border)] px-3 py-1">
-          <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">
+          <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">
             Generated from {brief.headlineCount} headlines across {brief.sourceCount} sources
           </span>
         </div>

@@ -94,7 +94,7 @@ function TwelveDataSection({ symbol }: { symbol: string }) {
               style={{ left: `${Math.min(Math.max(data.rsi, 0), 100)}%`, background: rsiColor(data.rsi) }}
             />
           </div>
-          <div className="mt-0.5 flex justify-between font-mono text-[7px] text-[var(--text-muted)] opacity-50">
+          <div className="mt-0.5 flex justify-between font-mono text-[9px] text-[var(--text-muted)] opacity-50">
             <span>0</span>
             <span>30</span>
             <span>70</span>

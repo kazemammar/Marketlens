@@ -25,8 +25,8 @@ export default function NewsSentimentMap() {
           <div className="skeleton h-3 w-40 rounded" />
         </div>
         <div className="px-3 py-3 space-y-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="skeleton h-5 rounded" style={{ width: `${60 + Math.random() * 40}%` }} />
+          {[75, 90, 65, 80, 70, 85].map((w, i) => (
+            <div key={i} className="skeleton h-5 rounded" style={{ width: `${w}%` }} />
           ))}
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function NewsSentimentMap() {
           News Sentiment by Sector
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">
+        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">
           {data.sectors.reduce((s, x) => s + x.articleCount, 0)} articles analyzed
         </span>
       </div>
@@ -88,7 +88,7 @@ export default function NewsSentimentMap() {
                 </span>
               </div>
               {sector.topHeadline && (
-                <p className="ml-[90px] pl-2 truncate font-mono text-[7px] text-[var(--text-muted)] opacity-50">
+                <p className="ml-[90px] pl-2 truncate font-mono text-[9px] text-[var(--text-muted)] opacity-50">
                   {sector.topHeadline}
                 </p>
               )}

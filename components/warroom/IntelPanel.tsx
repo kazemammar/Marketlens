@@ -192,7 +192,7 @@ function ClusterRow({ cluster, index }: { cluster: NewsCluster; index: number })
           {/* State media badge */}
           {cluster.sourceMeta.stateMedia && (
             <span
-              className={`rounded border px-1 py-px font-mono text-[7px] font-bold uppercase ${
+              className={`rounded border px-1 py-px font-mono text-[9px] font-bold uppercase ${
                 cluster.sourceMeta.stateMedia.level === 'high'
                   ? 'border-red-500/30 bg-red-500/15 text-red-400'
                   : 'border-amber-500/25 bg-amber-500/10 text-amber-400'

@@ -104,7 +104,7 @@ export default function MarketHours() {
               {formatLocalTime(ex.tz)}
             </span>
             <span
-              className="font-mono text-[7px] font-semibold uppercase"
+              className="font-mono text-[9px] font-semibold uppercase"
               style={{ color: open ? '#10b981' : 'var(--text-muted)' }}
             >
               {open ? 'OPEN' : 'CLOSED'}

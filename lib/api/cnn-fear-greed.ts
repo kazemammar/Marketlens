@@ -35,13 +35,13 @@ export async function getFearGreedData(): Promise<FearGreedData | null> {
       const hist: Array<{ x: number; y: number }> = data.fear_and_greed_historical?.data ?? []
 
       const indicators = [
-        { name: 'Market Momentum', score: data.market_momentum_sp500?.score ?? 50, rating: data.market_momentum_sp500?.rating ?? 'neutral' },
-        { name: 'Stock Strength', score: data.stock_price_strength?.score ?? 50, rating: data.stock_price_strength?.rating ?? 'neutral' },
-        { name: 'Stock Breadth', score: data.stock_price_breadth?.score ?? 50, rating: data.stock_price_breadth?.rating ?? 'neutral' },
-        { name: 'Put/Call Options', score: data.put_call_options?.score ?? 50, rating: data.put_call_options?.rating ?? 'neutral' },
-        { name: 'Market Volatility', score: data.market_volatility_vix?.score ?? 50, rating: data.market_volatility_vix?.rating ?? 'neutral' },
-        { name: 'Junk Bond Demand', score: data.junk_bond_demand?.score ?? 50, rating: data.junk_bond_demand?.rating ?? 'neutral' },
-        { name: 'Safe Haven Demand', score: data.safe_haven_demand?.score ?? 50, rating: data.safe_haven_demand?.rating ?? 'neutral' },
+        { name: 'Market Momentum', score: Math.round(data.market_momentum_sp500?.score ?? 50), rating: data.market_momentum_sp500?.rating ?? 'neutral' },
+        { name: 'Stock Strength', score: Math.round(data.stock_price_strength?.score ?? 50), rating: data.stock_price_strength?.rating ?? 'neutral' },
+        { name: 'Stock Breadth', score: Math.round(data.stock_price_breadth?.score ?? 50), rating: data.stock_price_breadth?.rating ?? 'neutral' },
+        { name: 'Put/Call Options', score: Math.round(data.put_call_options?.score ?? 50), rating: data.put_call_options?.rating ?? 'neutral' },
+        { name: 'Market Volatility', score: Math.round(data.market_volatility_vix?.score ?? 50), rating: data.market_volatility_vix?.rating ?? 'neutral' },
+        { name: 'Junk Bond Demand', score: Math.round(data.junk_bond_demand?.score ?? 50), rating: data.junk_bond_demand?.rating ?? 'neutral' },
+        { name: 'Safe Haven Demand', score: Math.round(data.safe_haven_demand?.score ?? 50), rating: data.safe_haven_demand?.rating ?? 'neutral' },
       ]
 
       // Get last 30 days of history

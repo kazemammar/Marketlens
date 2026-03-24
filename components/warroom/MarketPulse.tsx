@@ -86,7 +86,7 @@ export default function MarketPulse() {
           AI BRIEF
         </span>
         <span
-          className="rounded border px-1.5 py-px font-mono text-[7px] font-bold uppercase tracking-[0.08em]"
+          className="rounded border px-1.5 py-px font-mono text-[9px] font-bold uppercase tracking-[0.08em]"
           style={{ color: sessionColor, borderColor: `${sessionColor}33`, background: `${sessionColor}12` }}
         >
           {sessionLabel}

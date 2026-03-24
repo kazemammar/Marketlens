@@ -137,7 +137,7 @@ export default function BtcEtfTracker() {
       </div>
       {/* Disclaimer */}
       <div className="border-t border-[var(--border)] px-3 py-1">
-        <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">
+        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">
           Based on ETF price momentum — not actual reported fund flows
         </span>
       </div>

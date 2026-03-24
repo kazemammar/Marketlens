@@ -73,7 +73,7 @@ export default function CommodityStrip({
         </span>
         {updatedAt > 0 && (
           <span
-            className="font-mono text-[7px] tabular-nums"
+            className="font-mono text-[9px] tabular-nums"
             style={{ color: stalenessColor(updatedAt) }}
             title={`Last updated: ${new Date(updatedAt).toLocaleTimeString()}`}
             suppressHydrationWarning

@@ -16,7 +16,7 @@ function HourBadge({ hour }: { hour: string }) {
     ? 'border-blue-500/40 bg-blue-500/10 text-blue-400'
     : 'border-orange-500/40 bg-orange-500/10 text-orange-400'
   return (
-    <span className={`rounded border px-1 py-px font-mono text-[7px] font-bold ${color}`}>
+    <span className={`rounded border px-1 py-px font-mono text-[9px] font-bold ${color}`}>
       {label}
     </span>
   )
@@ -26,7 +26,7 @@ function BeatMissBadge({ actual, estimate }: { actual: number; estimate: number 
   const beat = actual > estimate
   return (
     <span
-      className="rounded border px-1 py-px font-mono text-[7px] font-bold"
+      className="rounded border px-1 py-px font-mono text-[9px] font-bold"
       style={{
         borderColor: beat ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)',
         background:  beat ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',

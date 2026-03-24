@@ -3,14 +3,22 @@
 import type { FearGreedData } from '@/lib/api/cnn-fear-greed'
 import { useFetch } from '@/lib/hooks/useFetch'
 
-// ─── Color helpers ─────────────────────────────────────────────────────────
+// ─── Fear-Greed color scale (semantic, theme-independent) ─────────────────
+
+const FG_COLORS = {
+  extremeFear: '#ef4444',
+  fear:        '#f97316',
+  neutral:     '#f59e0b',
+  greed:       '#10b981',
+  extremeGreed:'#22c55e',
+} as const
 
 function scoreColor(score: number): string {
-  if (score <= 25) return '#ef4444'
-  if (score <= 45) return '#f97316'
-  if (score <= 55) return '#f59e0b'
-  if (score <= 75) return '#10b981'
-  return '#22c55e'
+  if (score <= 25) return FG_COLORS.extremeFear
+  if (score <= 45) return FG_COLORS.fear
+  if (score <= 55) return FG_COLORS.neutral
+  if (score <= 75) return FG_COLORS.greed
+  return FG_COLORS.extremeGreed
 }
 
 function ratingLabel(rating: string): string {
@@ -35,11 +43,11 @@ function SemiGauge({ score }: { score: number }) {
   // Colored arc zones: extreme fear, fear, neutral, greed, extreme greed
   type Zone = { from: number; to: number; color: string }
   const zones: Zone[] = [
-    { from: 0,   to: 25,  color: '#ef4444' },
-    { from: 25,  to: 45,  color: '#f97316' },
-    { from: 45,  to: 55,  color: '#f59e0b' },
-    { from: 55,  to: 75,  color: '#10b981' },
-    { from: 75,  to: 100, color: '#22c55e' },
+    { from: 0,   to: 25,  color: FG_COLORS.extremeFear },
+    { from: 25,  to: 45,  color: FG_COLORS.fear },
+    { from: 45,  to: 55,  color: FG_COLORS.neutral },
+    { from: 55,  to: 75,  color: FG_COLORS.greed },
+    { from: 75,  to: 100, color: FG_COLORS.extremeGreed },
   ]
 
   // Convert score 0–100 to angle (0=left=180°, 100=right=0°)
@@ -126,7 +134,7 @@ function HistCell({ label, past, current }: { label: string; past: number; curre
 
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="font-mono text-[8px] uppercase tracking-[0.1em] text-[var(--text-muted)]">{label}</span>
+      <span className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--text-muted)]">{label}</span>
       <span className="font-mono text-[13px] font-bold tabular-nums leading-none text-[var(--text)]">{past}</span>
       <span className="font-mono text-[9px] font-semibold tabular-nums" style={{ color }}>
         {arrow} {Math.abs(delta)}
@@ -154,7 +162,7 @@ function IndicatorCard({ name, score, rating }: { name: string; score: number; r
         {score}
       </span>
       <span
-        className="inline-block self-start rounded px-1 py-px font-mono text-[8px] font-bold uppercase"
+        className="inline-block self-start rounded px-1 py-px font-mono text-[9px] font-bold uppercase"
         style={{ color, background: `${color}18`, border: `1px solid ${color}30` }}
       >
         {ratingLabel(rating)}
@@ -202,13 +210,13 @@ export default function FearGreedIndex() {
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         {data && (
           <span
-            className="rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase"
+            className="rounded border px-1.5 py-px font-mono text-[9px] font-bold uppercase"
             style={{ color, borderColor: `${color}40`, background: `${color}15` }}
           >
             {rating}
           </span>
         )}
-        <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-40">CNN · 30MIN CACHE</span>
+        <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">CNN · 30MIN CACHE</span>
       </div>
 
       {/* Body */}

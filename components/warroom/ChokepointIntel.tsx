@@ -102,7 +102,7 @@ function ChokepointCard({ data }: { data: ChokepointIntelItem }) {
             <Link
               key={sym}
               href={assetHref(sym)}
-              className="font-mono text-[7px] rounded px-1 py-px bg-[var(--surface-2)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+              className="font-mono text-[9px] rounded px-1 py-px bg-[var(--surface-2)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
             >
               {sym}
             </Link>

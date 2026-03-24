@@ -394,7 +394,7 @@ export default function BenchmarkChart({
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                   Your Portfolio
                 </span>
-                <span className="rounded px-1.5 py-0.5 font-mono text-[7px] font-semibold uppercase" style={{ background: 'var(--surface-3)', color: 'var(--text-muted)' }}>
+                <span className="rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase" style={{ background: 'var(--surface-3)', color: 'var(--text-muted)' }}>
                   {rangeFull}
                 </span>
               </div>
@@ -426,7 +426,7 @@ export default function BenchmarkChart({
               <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em]" style={{ color: diffColor, opacity: 0.8 }}>
                 {diffAhead ? 'ahead' : 'behind'}
               </span>
-              <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">vs {benchmark === 'btc' ? 'BTC' : 'SPY'} {rangeFull}</span>
+              <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">vs {benchmark === 'btc' ? 'BTC' : 'SPY'} {rangeFull}</span>
             </div>
 
             {/* RIGHT — SPY */}
@@ -435,7 +435,7 @@ export default function BenchmarkChart({
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
                   {benchmark === 'btc' ? 'Bitcoin (BTC)' : 'S&P 500 (SPY)'}
                 </span>
-                <span className="rounded px-1.5 py-0.5 font-mono text-[7px] font-semibold uppercase" style={{ background: 'rgba(59,130,246,0.12)', color: spyColor }}>
+                <span className="rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase" style={{ background: 'rgba(59,130,246,0.12)', color: spyColor }}>
                   {rangeFull}
                 </span>
               </div>

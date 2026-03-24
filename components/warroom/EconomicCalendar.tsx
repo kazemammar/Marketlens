@@ -152,7 +152,7 @@ export default function EconomicCalendar() {
                           )}
                           {ev.actual !== null && ev.estimate !== null && (
                             <span
-                              className="rounded px-1 py-px text-[7px] font-bold uppercase"
+                              className="rounded px-1 py-px text-[9px] font-bold uppercase"
                               style={{
                                 background: ev.actual >= ev.estimate ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
                                 color: ev.actual >= ev.estimate ? 'var(--price-up)' : 'var(--price-down)',

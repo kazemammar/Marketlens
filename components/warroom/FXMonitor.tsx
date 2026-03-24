@@ -36,7 +36,7 @@ function RangeBar({ low, high, price, pair }: { low: number; high: number; price
     <div className="px-3 pb-1.5 pt-0.5" title="7-day trading range — current price position between weekly low and high">
       <div className="flex items-center gap-1.5">
         <div className="flex flex-col items-end w-10 gap-px">
-          <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-50 leading-none">7d L</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-[var(--text-muted)] opacity-50 leading-none">7d L</span>
           <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{formatForexRate(low, pair)}</span>
         </div>
         <div className="relative flex-1 h-1 rounded-full bg-[var(--surface-3)]">
@@ -50,7 +50,7 @@ function RangeBar({ low, high, price, pair }: { low: number; high: number; price
           />
         </div>
         <div className="flex flex-col items-start w-10 gap-px">
-          <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-50 leading-none">7d H</span>
+          <span className="font-mono text-[9px] font-bold uppercase text-[var(--text-muted)] opacity-50 leading-none">7d H</span>
           <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{formatForexRate(high, pair)}</span>
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function FXMonitor() {
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-60">
                   Currency Strength
                 </span>
-                <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-30">
+                <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-30">
                   7-day cross-rate
                 </span>
               </div>
@@ -247,7 +247,7 @@ export default function FXMonitor() {
                   const isPos = s.score >= 0
                   return (
                     <div key={s.currency} className="flex items-center gap-1.5">
-                      <span className="w-2.5 shrink-0 font-mono text-[7px] text-[var(--text-muted)]">{s.rank}</span>
+                      <span className="w-2.5 shrink-0 font-mono text-[9px] text-[var(--text-muted)]">{s.rank}</span>
                       <span className="w-10 shrink-0 font-mono text-[8px] font-bold text-[var(--text)]">
                         {FLAGS[s.currency]} {s.currency}
                       </span>

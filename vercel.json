@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/warm",
-      "schedule": "0 13,15,17,19,21 * * 1-5"
+      "schedule": "0 13 * * 1-5"
     }
   ]
 }

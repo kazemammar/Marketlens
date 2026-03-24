@@ -11,6 +11,7 @@ const CAT_CONFIG: Record<AssetContextFactor['category'], { label: string; color:
   sector:       { label: 'Sector',       color: '#c084fc', bg: 'rgba(192,132,252,0.12)' },
   environmental:{ label: 'Environment',  color: '#4ade80', bg: 'rgba(74,222,128,0.12)'  },
   sentiment:    { label: 'Sentiment',    color: '#22d3ee', bg: 'rgba(34,211,238,0.12)'  },
+  regulatory:   { label: 'Regulatory',   color: '#f59e0b', bg: 'rgba(245,158,11,0.12)'  },
 }
 
 function CatIcon({ category }: { category: AssetContextFactor['category'] }) {
@@ -43,6 +44,12 @@ function CatIcon({ category }: { category: AssetContextFactor['category'] }) {
     sentiment: (
       <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 shrink-0" style={{ color }} aria-hidden>
         <path d="M2 10L6 6l3 3 5-6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    regulatory: (
+      <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 shrink-0" style={{ color }} aria-hidden>
+        <path d="M8 2L2 5v4c0 3.3 2.6 6 6 7 3.4-1 6-3.7 6-7V5L8 2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+        <path d="M6 8l2 2 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
   }

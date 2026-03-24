@@ -202,10 +202,11 @@ function buildMarketRadar(quotes: Map<string, QuoteRaw>): MarketRadarPayload | n
 
   const vxx = quotes.get('VXX')
   if (vxx) {
-    const fearful = vxx.price > 20 || vxx.changePercent > 5
+    // Use % change instead of absolute price (which shifts with reverse splits/rebalancing)
+    const fearful = vxx.changePercent > 5 || (vxx.changePercent > 3 && vxx.price > 0)
     const v: SignalVerdict = fearful ? 'CASH' : 'BUY'
     fearful ? cashVotes += 2 : buyVotes++
-    signals.push({ name: 'Volatility (VXX)', verdict: v, value: `$${vxx.price.toFixed(2)}`, reason: fearful ? 'Elevated fear — reduce risk' : 'Low volatility — conducive to gains' })
+    signals.push({ name: 'Volatility (VXX)', verdict: v, value: `${vxx.changePercent > 0 ? '+' : ''}${vxx.changePercent.toFixed(2)}%`, reason: fearful ? 'Volatility spiking — elevated fear' : 'Low volatility — conducive to gains' })
   }
 
   const gld = quotes.get('GLD')

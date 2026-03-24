@@ -150,6 +150,17 @@ export default function EconomicCalendar() {
                           {ev.estimate !== null && (
                             <span className="text-[var(--text-muted)]">E: {formatNum(ev.estimate, ev.unit)}</span>
                           )}
+                          {ev.actual !== null && ev.estimate !== null && (
+                            <span
+                              className="rounded px-1 py-px text-[7px] font-bold uppercase"
+                              style={{
+                                background: ev.actual >= ev.estimate ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                                color: ev.actual >= ev.estimate ? 'var(--price-up)' : 'var(--price-down)',
+                              }}
+                            >
+                              {ev.actual >= ev.estimate ? 'BEAT' : 'MISS'}
+                            </span>
+                          )}
                         </>
                       ) : (
                         <>

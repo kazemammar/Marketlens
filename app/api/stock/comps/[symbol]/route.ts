@@ -4,6 +4,7 @@ import { withRateLimit } from '@/lib/utils/rate-limit'
 import { redis } from '@/lib/cache/redis'
 
 const CACHE_TTL = 3_600 // 1 hour
+const SYMBOL_RE = /^[A-Z0-9.=\-]{1,12}$/i
 
 export interface CompRow {
   symbol:         string
@@ -48,6 +49,9 @@ export async function GET(
 
   const { symbol: rawSymbol } = await params
   const symbol    = decodeURIComponent(rawSymbol).toUpperCase()
+  if (!SYMBOL_RE.test(symbol)) {
+    return NextResponse.json({ error: 'Invalid symbol format' }, { status: 400 })
+  }
   const cacheKeyStr = `comps:v4:${symbol}`
 
   // 1. Cache check

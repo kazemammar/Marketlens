@@ -57,6 +57,8 @@ export interface SentimentAnalysis {
   catalysts?:       Array<{ event: string; date: string; impact: 'bullish' | 'bearish' | 'uncertain' }>
   conviction?:      'high' | 'medium' | 'low'
   contrarian_risk?: string
+  time_horizon?:    'short' | 'medium' | 'long'
+  regulatory_risk?: string
   analyzedAt:  number // unix timestamp (ms)
 }
 

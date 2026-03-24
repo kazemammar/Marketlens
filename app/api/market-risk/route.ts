@@ -81,6 +81,15 @@ const CMD_KEYWORDS = [
 
 // ─── Score computation ─────────────────────────────────────────────────────
 
+// Word-boundary match to avoid false positives ("stock" matching "stockpile")
+function matchesKeyword(corpus: string, keyword: string): boolean {
+  // Multi-word keywords (e.g. "trade war") use simple includes — false positives unlikely
+  if (keyword.includes(' ')) return corpus.includes(keyword)
+  // Single-word: use word boundary regex
+  const re = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i')
+  return re.test(corpus)
+}
+
 function computeCategoryScores(brief: MarketBriefPayload): {
   breakdown:       BreakdownItem[]
   overallScore:    number
@@ -89,7 +98,7 @@ function computeCategoryScores(brief: MarketBriefPayload): {
   const corpus = (brief.brief + ' ' + brief.risks.join(' ')).toLowerCase()
 
   // ── Geopolitical ──
-  const geoMatched   = GEO_KEYWORDS.filter((w) => corpus.includes(w))
+  const geoMatched   = GEO_KEYWORDS.filter((w) => matchesKeyword(corpus, w))
   const geoAssetHits = brief.affectedAssets.filter((a) =>
     ['GLD', 'SLV', 'GC=F', 'USO', 'CL=F', 'USD/JPY'].includes(a.symbol)
   ).length
@@ -98,7 +107,7 @@ function computeCategoryScores(brief: MarketBriefPayload): {
   const geoDrivers    = (geoDriversRaw.length > 0 ? geoDriversRaw : brief.risks).slice(0, 2)
 
   // ── Market ──
-  const mktMatched    = MKT_KEYWORDS.filter((w) => corpus.includes(w))
+  const mktMatched    = MKT_KEYWORDS.filter((w) => matchesKeyword(corpus, w))
   const bearishEquity = brief.affectedAssets.filter((a) =>
     (a.type === 'stock' || a.type === 'etf') &&
     (a.direction === 'down' || a.direction === 'volatile')
@@ -109,7 +118,7 @@ function computeCategoryScores(brief: MarketBriefPayload): {
   const mktDrivers    = (mktDriversRaw.length > 0 ? mktDriversRaw : brief.risks).slice(0, 2)
 
   // ── Macro ──
-  const mcrMatched  = MCR_KEYWORDS.filter((w) => corpus.includes(w))
+  const mcrMatched  = MCR_KEYWORDS.filter((w) => matchesKeyword(corpus, w))
   const macroAssets = brief.affectedAssets.filter((a) =>
     a.type === 'forex' || ['TLT', 'VIX'].includes(a.symbol)
   ).length
@@ -118,7 +127,7 @@ function computeCategoryScores(brief: MarketBriefPayload): {
   const mcrDrivers    = (mcrDriversRaw.length > 0 ? mcrDriversRaw : brief.risks).slice(0, 2)
 
   // ── Commodity ──
-  const cmdMatched = CMD_KEYWORDS.filter((w) => corpus.includes(w))
+  const cmdMatched = CMD_KEYWORDS.filter((w) => matchesKeyword(corpus, w))
   const cmdSymbols = new Set<string>()
   brief.affectedAssets.forEach((a) => {
     if (a.type === 'commodity') cmdSymbols.add(a.symbol)

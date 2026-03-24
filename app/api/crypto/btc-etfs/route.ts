@@ -26,9 +26,10 @@ export interface BtcEtfData {
   price:         number
   change:        number
   changePercent: number
-  // Volume not available from YahooQuote — volumeRatio always 1
   volumeRatio:   number
   flowDirection: 'INFLOW' | 'OUTFLOW' | 'NEUTRAL'
+  // Note: flowDirection is inferred from price movement (not actual fund flows)
+  // "INFLOW" = positive price momentum, "OUTFLOW" = negative momentum
 }
 
 export interface BtcEtfPayload {
@@ -37,6 +38,7 @@ export interface BtcEtfPayload {
   inflowCount:  number
   outflowCount: number
   generatedAt:  number
+  // Note: directions are based on ETF price momentum, not actual reported fund flows
 }
 
 // ─── Route ────────────────────────────────────────────────────────────────

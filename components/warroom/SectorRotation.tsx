@@ -75,7 +75,7 @@ export default function SectorRotation() {
           ))
         ) : sectors.length === 0 ? (
           <p className="py-3 text-center font-mono text-[10px] text-[var(--text-muted)]">
-            No sector data available
+            No sector data available — check back when markets are open
           </p>
         ) : (
           sectors.map((s) => {

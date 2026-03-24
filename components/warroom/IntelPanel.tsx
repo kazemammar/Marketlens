@@ -399,13 +399,25 @@ export default function IntelPanel() {
               <ClusterRow key={c.id} cluster={c} index={i} />
             ))}
 
-            {/* Sentinel — triggers next page */}
+            {/* Sentinel — triggers next page via IntersectionObserver */}
             <div ref={sentinelRef} className="h-4" />
 
             {fetching && (
               <div className="flex items-center justify-center gap-2 py-3">
                 <span className="h-2 w-2 animate-spin rounded-full border border-[var(--text-muted)] border-t-transparent" />
                 <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">Loading more…</span>
+              </div>
+            )}
+
+            {/* Manual load-more fallback for cases where IntersectionObserver doesn't fire */}
+            {hasMore && !fetching && (
+              <div className="py-2 text-center">
+                <button
+                  onClick={() => fetchPage(page + 1, false)}
+                  className="rounded border border-[var(--border)] px-3 py-1 font-mono text-[9px] text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                >
+                  Load more stories
+                </button>
               </div>
             )}
 

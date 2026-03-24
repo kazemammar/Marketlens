@@ -60,7 +60,7 @@ export default function IpoCalendar({ limit }: { limit?: number }) {
           ))
         ) : display.length === 0 ? (
           <p className="px-3 py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">
-            No upcoming IPOs found
+            No upcoming IPOs in the next 30 days
           </p>
         ) : (
           display.map((ipo, i) => (

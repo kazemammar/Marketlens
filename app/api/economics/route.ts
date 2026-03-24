@@ -98,17 +98,53 @@ function buildIndicators(
     let changePct: number | null = null
 
     if (cfg.id === 'CPIAUCSL' && validObs.length >= 13) {
-      const yearAgo = parseFloat(validObs[12].value)
+      // Find the observation closest to 12 months ago by comparing dates
+      const latestDate = new Date(validObs[0].date)
+      const targetDate = new Date(latestDate)
+      targetDate.setMonth(targetDate.getMonth() - 12)
+
+      // Search for the closest observation to 12 months ago
+      let yearAgoIdx = 12 // default assumption: monthly data
+      let minDiff = Infinity
+      for (let i = 1; i < validObs.length; i++) {
+        const diff = Math.abs(new Date(validObs[i].date).getTime() - targetDate.getTime())
+        if (diff < minDiff) {
+          minDiff = diff
+          yearAgoIdx = i
+        }
+      }
+
+      const yearAgo = parseFloat(validObs[yearAgoIdx].value)
       if (yearAgo > 0) {
         changePct = ((latest - yearAgo) / yearAgo) * 100
         change    = changePct
-        // Display as YoY % rather than raw index
         displayValue = changePct
-        displayPrev  = displayPrev !== null
-          ? validObs.length >= 14
-            ? ((parseFloat(validObs[1].value) - parseFloat(validObs[13].value)) / parseFloat(validObs[13].value)) * 100
-            : null
-          : null
+
+        // Previous month YoY: find observation ~12 months before validObs[1]
+        if (validObs.length > 1) {
+          const prevDate = new Date(validObs[1].date)
+          const prevTargetDate = new Date(prevDate)
+          prevTargetDate.setMonth(prevTargetDate.getMonth() - 12)
+          let prevYearAgoIdx = -1
+          let prevMinDiff = Infinity
+          for (let i = 2; i < validObs.length; i++) {
+            const diff = Math.abs(new Date(validObs[i].date).getTime() - prevTargetDate.getTime())
+            if (diff < prevMinDiff) {
+              prevMinDiff = diff
+              prevYearAgoIdx = i
+            }
+          }
+          if (prevYearAgoIdx >= 0) {
+            const prevYearAgo = parseFloat(validObs[prevYearAgoIdx].value)
+            if (prevYearAgo > 0) {
+              displayPrev = ((parseFloat(validObs[1].value) - prevYearAgo) / prevYearAgo) * 100
+            }
+          } else {
+            displayPrev = null
+          }
+        } else {
+          displayPrev = null
+        }
       }
     } else if (previous !== null) {
       change    = displayValue - (displayPrev ?? 0)

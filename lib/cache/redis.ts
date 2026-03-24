@@ -5,6 +5,7 @@ import { Redis } from '@upstash/redis'
 // missing env vars, service outage).  Capped at 500 entries to bound memory.
 
 const memCache = new Map<string, { value: unknown; expires: number }>()
+const MEM_CACHE_CAP = 500
 
 function memGet<T>(key: string): T | null {
   const entry = memCache.get(key)
@@ -14,11 +15,21 @@ function memGet<T>(key: string): T | null {
 }
 
 function memSet(key: string, value: unknown, ttlSecs: number): void {
-  if (memCache.size >= 500) {
+  if (memCache.size >= MEM_CACHE_CAP) {
     const first = memCache.keys().next().value
     if (first !== undefined) memCache.delete(first)
   }
   memCache.set(key, { value, expires: Date.now() + ttlSecs * 1_000 })
+}
+
+// Periodically purge expired entries so they don't count against the cap
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [key, entry] of memCache) {
+      if (now > entry.expires) memCache.delete(key)
+    }
+  }, 60_000) // every 60 seconds
 }
 
 const DEBUG = process.env.NODE_ENV === 'development'

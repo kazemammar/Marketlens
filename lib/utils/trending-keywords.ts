@@ -45,6 +45,28 @@ const ALWAYS_COMMON = new Set([
   'government', 'official', 'officials',
 ])
 
+// ─── Ticker ↔ Company Name Normalization ─────────────────────────────────
+
+const TICKER_ALIASES: Record<string, string> = {
+  aapl: 'apple', apple: 'apple',
+  msft: 'microsoft', microsoft: 'microsoft',
+  googl: 'alphabet', goog: 'alphabet', alphabet: 'alphabet', google: 'alphabet',
+  amzn: 'amazon', amazon: 'amazon',
+  nvda: 'nvidia', nvidia: 'nvidia',
+  meta: 'meta', facebook: 'meta',
+  tsla: 'tesla', tesla: 'tesla',
+  jpm: 'jpmorgan', jpmorgan: 'jpmorgan',
+  unh: 'unitedhealth', unitedhealth: 'unitedhealth',
+  xom: 'exxon', exxon: 'exxon',
+  btc: 'bitcoin', bitcoin: 'bitcoin',
+  eth: 'ethereum', ethereum: 'ethereum',
+  sol: 'solana', solana: 'solana',
+}
+
+function normalizeTerm(term: string): string {
+  return TICKER_ALIASES[term] ?? term
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 // Extract unigrams + meaningful bigrams from a single headline
@@ -63,7 +85,9 @@ function extractTerms(headline: string): string[] {
     bigrams.push(`${words[i]} ${words[i + 1]}`)
   }
 
-  return [...unigrams, ...bigrams]
+  // Normalize ticker/company variants to canonical names
+  const normalized = [...unigrams, ...bigrams].map(normalizeTerm)
+  return normalized
 }
 
 // Jaccard similarity between two word sets

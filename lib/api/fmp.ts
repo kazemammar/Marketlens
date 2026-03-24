@@ -30,7 +30,14 @@ async function fmpGet<T>(path: string, base = FMP_BASE_URL): Promise<T> {
     throw new Error(`FMP ${path} → HTTP ${res.status}`)
   }
 
-  return res.json() as Promise<T>
+  // FMP returns 200 OK with error JSON body when daily limit is reached
+  const data = await res.json()
+  if (data && typeof data === 'object' && 'Error Message' in data) {
+    console.warn(`[FMP] API error for ${path}: ${(data as Record<string, string>)['Error Message']}`)
+    return [] as unknown as T
+  }
+
+  return data as T
 }
 
 // ─── Raw FMP response shapes ──────────────────────────────────────────────

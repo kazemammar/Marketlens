@@ -7,6 +7,8 @@ import { analyzeAssetContext } from '@/lib/api/groq'
 import type { AssetType }      from '@/lib/utils/types'
 import { withRateLimit }       from '@/lib/utils/rate-limit'
 
+const SYMBOL_RE = /^[A-Z0-9.=\-/]{1,20}$/i
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ symbol: string }> },
@@ -15,6 +17,9 @@ export async function GET(
   if (limited) return limited
 
   const { symbol } = await params
+  if (!symbol || !SYMBOL_RE.test(symbol)) {
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+  }
   const url  = new URL(req.url)
   const type = (url.searchParams.get('type') ?? 'stock') as AssetType
 

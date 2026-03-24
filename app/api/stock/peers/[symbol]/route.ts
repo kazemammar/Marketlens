@@ -11,12 +11,16 @@ export interface PeerInfo {
 }
 
 const CACHE_TTL = 86_400  // 24 hours — peer lists are stable
+const SYMBOL_RE = /^[A-Z0-9.=\-]{1,12}$/i
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
   const { symbol } = await params
+  if (!symbol || !SYMBOL_RE.test(symbol)) {
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+  }
   const cacheKey = `peers:v1:${symbol.toUpperCase()}`
 
   try {

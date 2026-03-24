@@ -30,23 +30,30 @@ Respond with valid JSON only — no markdown fences, no explanation:
     { "event": "<upcoming event that could move the stock>", "date": "<approximate date or timeframe>", "impact": "bullish" | "bearish" | "uncertain" }
   ],
   "conviction": "high" | "medium" | "low",
-  "contrarian_risk": "<1 sentence: what could flip this thesis? What is the market missing?>"
+  "contrarian_risk": "<1 sentence: what could flip this thesis? What is the market missing?>",
+  "time_horizon": "short" | "medium" | "long",
+  "regulatory_risk": "<1 sentence: any regulatory headwinds or tailwinds for this asset? Say 'None identified' if not applicable.>"
 }
 
 Rules:
 - catalysts should list 1-3 upcoming events (earnings, FDA decisions, product launches, macro data) with estimated timing
-- conviction reflects how confident the signal is — "low" if headlines are mixed or thin
+- conviction reflects how confident the signal is — "low" if headlines are mixed or thin (fewer than 5 headlines = always "low")
 - contrarian_risk should identify the non-consensus risk — what bears say if sentiment is bullish, what bulls say if bearish
+- time_horizon: "short" (days-weeks), "medium" (1-3 months), "long" (3+ months) — pick the horizon most relevant to current headlines
+- regulatory_risk: mention any pending regulation, antitrust, FDA, SEC, or policy changes affecting this asset
+- Weight recent headlines (first 5) more heavily than older ones — they reflect current momentum
 - Be specific to THIS asset, not generic market commentary`
 
 interface GroqSentimentResponse {
-  label:           SentimentLabel
-  score:           number
-  summary:         string
-  keySignals:      string[]
-  catalysts?:      Array<{ event: string; date: string; impact: 'bullish' | 'bearish' | 'uncertain' }>
-  conviction?:     'high' | 'medium' | 'low'
+  label:            SentimentLabel
+  score:            number
+  summary:          string
+  keySignals:       string[]
+  catalysts?:       Array<{ event: string; date: string; impact: 'bullish' | 'bearish' | 'uncertain' }>
+  conviction?:      'high' | 'medium' | 'low'
   contrarian_risk?: string
+  time_horizon?:    'short' | 'medium' | 'long'
+  regulatory_risk?: string
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────
@@ -61,6 +68,19 @@ export async function analyzeSentiment(
   symbol: string,
   headlines: string[],
 ): Promise<SentimentAnalysis> {
+  // Guard: skip Groq call when no headlines — return a neutral placeholder
+  if (!headlines || headlines.length === 0) {
+    return {
+      symbol,
+      label:      'Neutral',
+      score:      50,
+      summary:    'No recent headlines available for analysis.',
+      keySignals: [],
+      conviction: 'low',
+      analyzedAt: Date.now(),
+    }
+  }
+
   return cachedFetch(
     cacheKey.sentiment(symbol),
     TTL.SENTIMENT,
@@ -80,7 +100,7 @@ export async function analyzeSentiment(
           { role: 'user',   content: userMessage },
         ],
         temperature:  0.2,
-        max_tokens:   700,
+        max_tokens:   800,
         response_format: { type: 'json_object' },
       })
 
@@ -96,6 +116,8 @@ export async function analyzeSentiment(
         catalysts:       Array.isArray(parsed.catalysts) ? parsed.catalysts.slice(0, 3) : undefined,
         conviction:      (['high', 'medium', 'low'] as const).includes(parsed.conviction as 'high' | 'medium' | 'low') ? parsed.conviction : undefined,
         contrarian_risk: typeof parsed.contrarian_risk === 'string' ? parsed.contrarian_risk : undefined,
+        time_horizon:    (['short', 'medium', 'long'] as const).includes(parsed.time_horizon as 'short' | 'medium' | 'long') ? parsed.time_horizon : undefined,
+        regulatory_risk: typeof parsed.regulatory_risk === 'string' ? parsed.regulatory_risk : undefined,
         analyzedAt:      Date.now(),
       } satisfies SentimentAnalysis
     },
@@ -120,7 +142,7 @@ Respond with valid JSON only — no markdown fences:
 {
   "factors": [
     {
-      "category": "geopolitical" | "macro" | "sector" | "environmental" | "sentiment",
+      "category": "geopolitical" | "macro" | "sector" | "environmental" | "sentiment" | "regulatory",
       "title": "<short 3-6 word title>",
       "description": "<1 sentence — connect the event to a SPECIFIC impact on this asset's price, revenue, or demand>",
       "impact": "bullish" | "bearish" | "neutral",
@@ -132,19 +154,23 @@ Respond with valid JSON only — no markdown fences:
   "competitive_position": "<1-2 sentences on how this company/asset is positioned vs competitors. What is its moat or vulnerability?>",
   "catalyst_calendar": [
     { "event": "<specific upcoming event>", "date": "<approximate date>", "significance": "HIGH" | "MED" | "LOW" }
-  ]
+  ],
+  "confidence": "high" | "medium" | "low"
 }
 
 Rules:
 - Return 4-8 factors, ordered by severity (HIGH first)
+- Include "regulatory" category for any pending regulation, antitrust, sanctions, or policy changes
 - Be specific to THIS asset — connect world events to concrete business impacts
 - thesis should be opinionated: "Long on strength of..." or "Avoid due to..."
 - competitive_position: name specific competitors when relevant
 - catalyst_calendar: 2-4 upcoming dates that matter for this asset (earnings, regulatory, product launches)
+- confidence: "low" if fewer than 5 headlines, "medium" for 5-15, "high" for 15+
+- Weight the first 5 headlines more heavily — they are the most recent
 - Don't give generic market commentary — every sentence should be about THIS specific asset`
 
 export interface AssetContextFactor {
-  category:    'geopolitical' | 'macro' | 'sector' | 'environmental' | 'sentiment'
+  category:    'geopolitical' | 'macro' | 'sector' | 'environmental' | 'sentiment' | 'regulatory'
   title:       string
   description: string
   impact:      'bullish' | 'bearish' | 'neutral'
@@ -168,6 +194,16 @@ export async function analyzeAssetContext(
   headlines: string[],
   metadata?: { industry?: string; name?: string },
 ): Promise<AssetContext> {
+  // Guard: skip Groq call when no headlines
+  if (!headlines || headlines.length === 0) {
+    return {
+      symbol,
+      factors:    [],
+      summary:    'No recent headlines available for context analysis.',
+      analyzedAt: Date.now(),
+    }
+  }
+
   return cachedFetch(
     `context:${symbol.toUpperCase()}`,
     TTL.SENTIMENT,

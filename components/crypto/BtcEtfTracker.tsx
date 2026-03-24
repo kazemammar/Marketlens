@@ -90,7 +90,7 @@ export default function BtcEtfTracker() {
           ₿
         </span>
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-          BTC ETF Flows
+          BTC ETF Momentum
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
         {/* Net direction badge */}
@@ -134,6 +134,12 @@ export default function BtcEtfTracker() {
               )
             : etfs.map(etf => <EtfCard key={etf.symbol} etf={etf} />)
         }
+      </div>
+      {/* Disclaimer */}
+      <div className="border-t border-[var(--border)] px-3 py-1">
+        <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">
+          Based on ETF price momentum — not actual reported fund flows
+        </span>
       </div>
     </div>
   )

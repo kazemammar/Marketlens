@@ -33,8 +33,13 @@ const DARK_VARS: Record<string, string> = {
   '--warning':     '#f59e0b',
   '--warning-dim': 'rgba(245,158,11,0.12)',
   '--price-up':    '#00ff88',
+  '--price-up-rgb':  '0,255,136',
   '--price-down':  '#ff4444',
+  '--price-down-rgb':'255,68,68',
   '--price-flat':  '#888888',
+  '--accent-rgb':  '16,185,129',
+  '--danger-rgb':  '239,68,68',
+  '--warning-rgb': '245,158,11',
 }
 
 const LIGHT_VARS: Record<string, string> = {
@@ -54,8 +59,13 @@ const LIGHT_VARS: Record<string, string> = {
   '--warning':     '#d97706',
   '--warning-dim': 'rgba(217,119,6,0.10)',
   '--price-up':    '#059669',
+  '--price-up-rgb':  '5,150,105',
   '--price-down':  '#dc2626',
+  '--price-down-rgb':'220,38,38',
   '--price-flat':  '#6b7280',
+  '--accent-rgb':  '5,150,105',
+  '--danger-rgb':  '220,38,38',
+  '--warning-rgb': '217,119,6',
 }
 
 function applyTheme(theme: Theme) {

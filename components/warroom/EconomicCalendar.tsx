@@ -64,7 +64,7 @@ function SkeletonRows() {
 }
 
 export default function EconomicCalendar() {
-  const { data, loading } = useFetch<EconomicCalendarPayload>('/api/economic-calendar', {
+  const { data, loading, error } = useFetch<EconomicCalendarPayload>('/api/economic-calendar', {
     refreshInterval: 60 * 60_000,
   })
 
@@ -94,6 +94,10 @@ export default function EconomicCalendar() {
 
       {loading ? (
         <SkeletonRows />
+      ) : error && !data ? (
+        <p className="px-3 py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
+          Failed to load calendar data
+        </p>
       ) : events.length === 0 ? (
         <p className="px-3 py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
           No high-impact events this week
@@ -154,7 +158,7 @@ export default function EconomicCalendar() {
                             <span
                               className="rounded px-1 py-px text-[9px] font-bold uppercase"
                               style={{
-                                background: ev.actual >= ev.estimate ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                                background: ev.actual >= ev.estimate ? 'rgba(var(--price-up-rgb),0.15)' : 'rgba(var(--price-down-rgb),0.15)',
                                 color: ev.actual >= ev.estimate ? 'var(--price-up)' : 'var(--price-down)',
                               }}
                             >

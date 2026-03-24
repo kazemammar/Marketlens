@@ -28,8 +28,8 @@ function BeatMissBadge({ actual, estimate }: { actual: number; estimate: number 
     <span
       className="rounded border px-1 py-px font-mono text-[9px] font-bold"
       style={{
-        borderColor: beat ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)',
-        background:  beat ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+        borderColor: beat ? 'rgba(var(--price-up-rgb),0.4)' : 'rgba(var(--price-down-rgb),0.4)',
+        background:  beat ? 'rgba(var(--price-up-rgb),0.1)' : 'rgba(var(--price-down-rgb),0.1)',
         color:       beat ? 'var(--price-up)'     : 'var(--price-down)',
       }}
     >

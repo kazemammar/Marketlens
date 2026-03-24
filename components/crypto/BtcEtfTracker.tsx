@@ -6,8 +6,8 @@ import type { BtcEtfPayload, BtcEtfData } from '@/app/api/crypto/btc-etfs/route'
 // ─── Direction colours ────────────────────────────────────────────────────
 
 const DIR_COLOR  = { INFLOW: 'var(--price-up)', OUTFLOW: 'var(--price-down)', NEUTRAL: 'var(--text-muted)' }
-const DIR_BG     = { INFLOW: 'rgba(16,185,129,0.10)', OUTFLOW: 'rgba(239,68,68,0.10)', NEUTRAL: 'var(--surface-2)' }
-const DIR_BORDER = { INFLOW: 'rgba(16,185,129,0.20)', OUTFLOW: 'rgba(239,68,68,0.20)', NEUTRAL: 'var(--border)' }
+const DIR_BG     = { INFLOW: 'rgba(var(--accent-rgb),0.10)', OUTFLOW: 'rgba(var(--danger-rgb),0.10)', NEUTRAL: 'var(--surface-2)' }
+const DIR_BORDER = { INFLOW: 'rgba(var(--accent-rgb),0.20)', OUTFLOW: 'rgba(var(--danger-rgb),0.20)', NEUTRAL: 'var(--border)' }
 const DIR_LABEL  = { INFLOW: '▲ INFLOW', OUTFLOW: '▼ OUTFLOW', NEUTRAL: '► NEUTRAL' }
 
 // ─── Single ETF card ──────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ function SkeletonCard() {
 // ─── Panel ────────────────────────────────────────────────────────────────
 
 export default function BtcEtfTracker() {
-  const { data, loading } = useFetch<BtcEtfPayload>('/api/crypto/btc-etfs', {
+  const { data, loading, error } = useFetch<BtcEtfPayload>('/api/crypto/btc-etfs', {
     refreshInterval: 5 * 60_000,
   })
 
@@ -126,13 +126,19 @@ export default function BtcEtfTracker() {
       <div className="grid grid-cols-2 gap-1.5 p-3 sm:grid-cols-3 lg:grid-cols-5">
         {loading
           ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)
-          : etfs.length === 0
+          : error && !data
             ? (
                 <p className="col-span-full py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
-                  ETF data unavailable
+                  Failed to load ETF data
                 </p>
               )
-            : etfs.map(etf => <EtfCard key={etf.symbol} etf={etf} />)
+            : etfs.length === 0
+              ? (
+                  <p className="col-span-full py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
+                    ETF data unavailable
+                  </p>
+                )
+              : etfs.map(etf => <EtfCard key={etf.symbol} etf={etf} />)
         }
       </div>
       {/* Disclaimer */}

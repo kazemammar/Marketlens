@@ -42,7 +42,7 @@ function SemicircleGauge({ score, color }: { score: number; color: string }) {
       <circle
         cx={CX} cy={CY} r={R}
         fill="none"
-        stroke="rgba(255,255,255,0.07)"
+        stroke="var(--border)"
         strokeWidth="10"
         strokeDasharray={`${circ} ${circ}`}
         strokeDashoffset={0}
@@ -70,7 +70,7 @@ function SemicircleGauge({ score, color }: { score: number; color: string }) {
         const y1 = CY - (R - 6) * Math.sin(angle)
         const x2 = CX - (R + 6) * Math.cos(angle)
         const y2 = CY - (R + 6) * Math.sin(angle)
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--border)" strokeWidth="1"/>
       })}
     </svg>
   )
@@ -102,7 +102,7 @@ function Sparkline({ history }: { history: FngDataPoint[] }) {
 }
 
 export default function FearGreedGauge() {
-  const { data, loading } = useFetch<FngResponse>('/api/crypto/fear-greed', { refreshInterval: 15 * 60_000 })
+  const { data, loading, error } = useFetch<FngResponse>('/api/crypto/fear-greed', { refreshInterval: 15 * 60_000 })
 
   const score = data?.current ? parseInt(data.current.value) : 0
   const color = getColor(score)
@@ -129,6 +129,8 @@ export default function FearGreedGauge() {
             <div className="skeleton h-4 w-16 rounded" />
             <div className="skeleton h-3 w-24 rounded" />
           </div>
+        ) : error && !data ? (
+          <p className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">Failed to load data</p>
         ) : !data?.current ? (
           <p className="py-4 text-center font-mono text-[10px] text-[var(--text-muted)]">Unavailable</p>
         ) : (

@@ -10,19 +10,19 @@ import { timeAgo }                      from '@/lib/utils/timeago'
 const SENTIMENT_STYLE = {
   bullish: {
     border:     'var(--price-up)',
-    background: 'linear-gradient(to right, rgba(16,185,129,0.07), rgba(16,185,129,0.025) 50%, transparent)',
+    background: 'linear-gradient(to right, rgba(var(--accent-rgb),0.07), rgba(var(--accent-rgb),0.025) 50%, transparent)',
     pill:       'bg-emerald-500/10 border-emerald-500/35 text-emerald-400',
     dot:        'var(--price-up)',
   },
   bearish: {
     border:     'var(--price-down)',
-    background: 'linear-gradient(to right, rgba(239,68,68,0.07), rgba(239,68,68,0.025) 50%, transparent)',
+    background: 'linear-gradient(to right, rgba(var(--danger-rgb),0.07), rgba(var(--danger-rgb),0.025) 50%, transparent)',
     pill:       'bg-red-500/10 border-red-500/35 text-red-400',
     dot:        'var(--price-down)',
   },
   mixed: {
     border:     'var(--warning)',
-    background: 'linear-gradient(to right, rgba(245,158,11,0.07), rgba(245,158,11,0.025) 50%, transparent)',
+    background: 'linear-gradient(to right, rgba(var(--warning-rgb),0.07), rgba(var(--warning-rgb),0.025) 50%, transparent)',
     pill:       'bg-amber-500/10 border-amber-500/35 text-amber-400',
     dot:        'var(--warning)',
   },
@@ -97,8 +97,8 @@ export default function PortfolioBrief({
       <div
         style={{
           borderBottom: '1px solid var(--border)',
-          borderLeft:   '3px solid rgba(16,185,129,0.3)',
-          background:   'linear-gradient(to right, rgba(16,185,129,0.06), rgba(16,185,129,0.02) 60%, transparent)',
+          borderLeft:   '3px solid rgba(var(--accent-rgb),0.3)',
+          background:   'linear-gradient(to right, rgba(var(--accent-rgb),0.06), rgba(var(--accent-rgb),0.02) 60%, transparent)',
         }}
       >
         <div className="flex items-center gap-3 px-4 py-3">

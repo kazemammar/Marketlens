@@ -186,7 +186,7 @@ function SkeletonCard() {
 // ─── Main component ────────────────────────────────────────────────────────
 
 export default function FearGreedIndex() {
-  const { data, loading } = useFetch<FearGreedData>('/api/fear-greed', {
+  const { data, loading, error } = useFetch<FearGreedData>('/api/fear-greed', {
     refreshInterval: 30 * 60_000,
   })
 
@@ -281,6 +281,10 @@ export default function FearGreedIndex() {
               ))}
             </div>
           </>
+        ) : error ? (
+          <p className="py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
+            Failed to load Fear &amp; Greed data
+          </p>
         ) : (
           <p className="py-6 text-center font-mono text-[10px] text-[var(--text-muted)]">
             Fear &amp; Greed data unavailable

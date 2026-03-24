@@ -37,7 +37,7 @@ function NoCostBar({
       style={{
         borderBottom: '1px solid var(--border)',
         borderLeft:   '3px solid var(--accent)',
-        background:   'linear-gradient(135deg, rgba(16,185,129,0.05), rgba(16,185,129,0.01) 60%, transparent)',
+        background:   'linear-gradient(135deg, rgba(var(--accent-rgb),0.05), rgba(var(--accent-rgb),0.01) 60%, transparent)',
       }}
     >
       <span className="shrink-0 font-mono text-[10px] text-[var(--text-muted)]">
@@ -158,8 +158,8 @@ export default function PortfolioSummary({
         borderBottom: '1px solid var(--border)',
         borderLeft:   `3px solid ${todayColor}`,
         background:   todayPnl >= 0
-          ? 'linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.02) 60%, transparent)'
-          : 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.02) 60%, transparent)',
+          ? 'linear-gradient(135deg, rgba(var(--price-up-rgb),0.08), rgba(var(--price-up-rgb),0.02) 60%, transparent)'
+          : 'linear-gradient(135deg, rgba(var(--price-down-rgb),0.08), rgba(var(--price-down-rgb),0.02) 60%, transparent)',
       }}
     >
       <div className="px-3 sm:px-4 py-2.5">

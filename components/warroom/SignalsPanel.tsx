@@ -177,6 +177,8 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
                 <button
                   key={cat}
                   onClick={() => setFilter(cat)}
+                  aria-label={`Filter signals: ${cat}`}
+                  aria-pressed={filter === cat}
                   className={`relative rounded px-2 py-px font-mono text-[8px] font-bold uppercase transition-colors ${
                     filter === cat
                       ? 'bg-[var(--accent)] text-[var(--bg)]'

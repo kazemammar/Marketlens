@@ -57,7 +57,15 @@ export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): 
         setError(false)
         setLastUpdated(Date.now())
         // Update module-level cache
-        cache.set(url, { data: json, timestamp: Date.now() })
+        const now = Date.now()
+        cache.set(url, { data: json, timestamp: now })
+        // Evict oldest entries when cache exceeds 200 entries
+        if (cache.size > 200) {
+          const entries = [...cache.entries()]
+          entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
+          const toDelete = entries.slice(0, entries.length - 150)
+          for (const [key] of toDelete) cache.delete(key)
+        }
       }
     } catch {
       if (mountedRef.current) setError(true)

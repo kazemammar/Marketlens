@@ -171,7 +171,7 @@ export default function PeersTable({ symbol }: { symbol: string }) {
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={row.logo}
-                                alt=""
+                                alt={`${row.symbol} logo`}
                                 className="h-4 w-4 shrink-0 rounded-sm object-contain"
                                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                               />

@@ -64,6 +64,11 @@ function IndicatorCard({ ind }: { ind: EconomicIndicator }) {
             INVERTED
           </span>
         )}
+        {ind.isMock && (
+          <span className="shrink-0 rounded border border-[var(--border)] px-1 py-px font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+            MOCK
+          </span>
+        )}
       </div>
 
       {/* Value */}

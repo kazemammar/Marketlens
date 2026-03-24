@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { AssetCardData } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
+import { formatForexRate } from '@/lib/utils/formatters'
 import type { CurrencyStrength } from '@/app/api/forex/strength/route'
 
 const FLAGS: Record<string, string> = {
@@ -26,12 +27,7 @@ function ecbDateLabel(dateStr: string | undefined): { label: string; color: stri
   return { label: `${formatted} rates`, color: 'var(--price-down)' }
 }
 
-function fmt(price: number, sym: string): string {
-  if (sym.includes('JPY') || sym.includes('CNY')) return price.toFixed(2)
-  return price.toFixed(4)
-}
-
-function RangeBar({ low, high, price }: { low: number; high: number; price: number }) {
+function RangeBar({ low, high, price, pair }: { low: number; high: number; price: number; pair?: string }) {
   const range = high - low
   if (range <= 0) return null
   const pct = Math.min(Math.max(((price - low) / range) * 100, 0), 100)
@@ -41,7 +37,7 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
       <div className="flex items-center gap-1.5">
         <div className="flex flex-col items-end w-10 gap-px">
           <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-50 leading-none">7d L</span>
-          <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{fmt(low, '')}</span>
+          <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{formatForexRate(low, pair)}</span>
         </div>
         <div className="relative flex-1 h-1 rounded-full bg-[var(--surface-3)]">
           <div
@@ -55,7 +51,7 @@ function RangeBar({ low, high, price }: { low: number; high: number; price: numb
         </div>
         <div className="flex flex-col items-start w-10 gap-px">
           <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-50 leading-none">7d H</span>
-          <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{fmt(high, '')}</span>
+          <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)] opacity-50 leading-none">{formatForexRate(high, pair)}</span>
         </div>
       </div>
     </div>
@@ -203,7 +199,7 @@ export default function FXMonitor() {
                         className="font-mono text-[11px] tabular-nums text-[var(--text)]"
                         title={`${p.symbol} ECB reference rate`}
                       >
-                        {fmt(p.price, p.symbol)}
+                        {formatForexRate(p.price, p.symbol)}
                       </span>
                       <span
                         className="w-14 text-right font-mono text-[10px] font-semibold tabular-nums"
@@ -225,7 +221,7 @@ export default function FXMonitor() {
                     </div>
                   </div>
                   {p.high > 0 && p.low > 0 && p.high !== p.low && (
-                    <RangeBar low={p.low} high={p.high} price={p.price} />
+                    <RangeBar low={p.low} high={p.high} price={p.price} pair={p.symbol} />
                   )}
                 </Link>
               )

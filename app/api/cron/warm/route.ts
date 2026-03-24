@@ -2,6 +2,13 @@
 // Cache-warming cron — runs every hour on weekdays during US market hours.
 // Warms the most-frequently-read endpoints so the first real user request
 // always hits a warm cache (no cold-start latency spikes).
+//
+// Vercel Hobby plan runs crons at most once/day.
+// For frequent warming during market hours, set up an external cron:
+//   Service: https://cron-job.org (free)
+//   URL: https://marketlens.live/api/cron/warm
+//   Schedule: Every 15 minutes, Mon-Fri 13:00-21:00 UTC
+//   Auth header: Authorization: Bearer <CRON_SECRET>
 
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -37,9 +44,19 @@ export async function GET(req: NextRequest) {
     warm('market_brief',  '/api/market-brief'),
     warm('signals',       '/api/signals'),
     warm('movers',        '/api/movers'),
-    warm('news',          '/api/news?page=1&limit=50'),
-    warm('economics',     '/api/economics'),
-    warm('market_risk',   '/api/market-risk'),
+    warm('news',               '/api/news?page=1&limit=50'),
+    warm('economics',          '/api/economics'),
+    warm('market_risk',        '/api/market-risk'),
+    warm('economic_calendar',  '/api/economic-calendar'),
+    warm('earnings_calendar',  '/api/earnings-calendar'),
+    warm('trending',           '/api/trending'),
+    warm('chokepoints',        '/api/chokepoints'),
+    warm('energy',             '/api/energy'),
+    warm('central_banks',      '/api/central-banks'),
+    warm('forex_strength',     '/api/forex/strength'),
+    warm('predictions',        '/api/predictions'),
+    warm('fear_greed',         '/api/fear-greed'),
+    warm('commodities_strip',  '/api/commodities-strip'),
   ])
 
   return NextResponse.json({ ok: true, ran: new Date().toISOString(), results })

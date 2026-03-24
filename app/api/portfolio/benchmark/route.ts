@@ -58,7 +58,7 @@ export async function GET(req: Request) {
 
   // Fetch user positions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: positions } = await (supabase.from('portfolio_positions') as any)
+  const { data: positions } = await supabase.from('portfolio_positions')
     .select('symbol, asset_type, direction, quantity, avg_cost')
     .eq('user_id', user.id)
 

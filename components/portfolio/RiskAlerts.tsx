@@ -2,17 +2,7 @@
 
 import type { PortfolioPosition } from '@/lib/hooks/usePortfolio'
 import type { QuoteData }         from './PositionsTable'
-
-// ─── Sector mapping ───────────────────────────────────────────────────────
-
-const SECTOR: Record<string, string> = {
-  AAPL: 'Technology', MSFT: 'Technology', GOOGL: 'Technology', AMZN: 'Technology',
-  NVDA: 'Technology', META: 'Technology', TSLA: 'Consumer',    NFLX: 'Technology',
-  JPM:  'Finance',    BAC:  'Finance',    GS:   'Finance',     V:    'Finance',    MA: 'Finance',
-  XOM:  'Energy',     CVX:  'Energy',     COP:  'Energy',
-  JNJ:  'Healthcare', PFE:  'Healthcare', UNH:  'Healthcare',  ABBV: 'Healthcare',
-  PG:   'Consumer',   KO:   'Consumer',   WMT:  'Consumer',    NKE:  'Consumer',   DIS: 'Consumer',
-}
+import { TICKER_SECTOR } from '@/lib/utils/sectors'
 
 // ─── Alert types ──────────────────────────────────────────────────────────
 
@@ -213,7 +203,7 @@ function computeAlerts(
   const sectorCounts: Record<string, number> = {}
   for (const p of positions) {
     if (p.asset_type !== 'stock') continue
-    const sector = SECTOR[p.symbol] ?? 'Other'
+    const sector = TICKER_SECTOR[p.symbol] ?? 'Other'
     sectorCounts[sector] = (sectorCounts[sector] ?? 0) + 1
   }
   for (const [sector, count] of Object.entries(sectorCounts)) {

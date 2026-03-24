@@ -52,7 +52,7 @@ function ClusterCard({ cluster }: { cluster: NewsCluster }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={cluster.imageUrl}
-            alt=""
+            alt={cluster.headline ?? 'News thumbnail'}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             loading="lazy"
           />

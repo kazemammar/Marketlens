@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getFinanceNews } from '@/lib/api/rss'
 import { redis } from '@/lib/cache/redis'
-import Groq from 'groq-sdk'
+import { getClient } from '@/lib/api/groq'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import type { HomepageData } from '@/lib/api/homepage'
+import { HOMEPAGE_CACHE_KEY } from '@/lib/api/homepage'
 
 const CACHE_KEY = 'market-brief:daily'
 const CACHE_TTL = 3600 // 60 minutes — hourly brief
@@ -87,16 +89,40 @@ export async function GET(req: Request) {
     return NextResponse.json(fallback)
   }
 
+  // Fetch cached price snapshot (non-fatal)
+  let priceContext = ''
+  try {
+    const homepage = await redis.get<HomepageData>(HOMEPAGE_CACHE_KEY)
+    if (homepage?.tickerQuotes) {
+      const snaps: string[] = []
+      const LABELS: Record<string, string> = {
+        SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones', IWM: 'Russell 2000',
+        'BINANCE:BTCUSDT': 'Bitcoin', 'BINANCE:ETHUSDT': 'Ethereum',
+      }
+      for (const [sym, q] of Object.entries(homepage.tickerQuotes)) {
+        const label = LABELS[sym] ?? sym
+        if (q.price > 0) {
+          const sign = q.changePercent >= 0 ? '+' : ''
+          snaps.push(`${label}: ${q.price.toFixed(2)} (${sign}${q.changePercent.toFixed(2)}%)`)
+        }
+      }
+      if (homepage.commodityStrip) {
+        for (const c of homepage.commodityStrip.slice(0, 4)) {
+          const sign = c.changePercent >= 0 ? '+' : ''
+          snaps.push(`${c.name}: ${c.price.toFixed(2)} (${sign}${c.changePercent.toFixed(2)}%)`)
+        }
+      }
+      if (snaps.length > 0) priceContext = `\n\nCurrent Market Snapshot:\n${snaps.join('\n')}`
+    }
+  } catch { /* non-fatal — proceed without price context */ }
+
   // Call Groq
   try {
-    const apiKey = process.env.GROQ_API_KEY
-    if (!apiKey) throw new Error('GROQ_API_KEY not set')
-
-    const client = new Groq({ apiKey })
-    const userMessage = `Today's headlines (${new Date().toUTCString()}):\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+    const client = getClient()
+    const userMessage = `Today's headlines (${new Date().toUTCString()}):\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}${priceContext}`
 
     const completion = await client.chat.completions.create({
-      model:           'llama-3.1-8b-instant',
+      model:           'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userMessage },

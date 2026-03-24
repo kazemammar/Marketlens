@@ -1,4 +1,4 @@
-const CACHE_NAME = 'marketlens-v1'
+const CACHE_NAME = 'marketlens-v2'
 
 // Assets to pre-cache on install
 const PRE_CACHE = [

@@ -81,7 +81,8 @@ async function fromFred(cfg: BankConfig): Promise<CentralBankRate | null> {
   let obs: FredObservation[]
   try {
     obs = await getSeriesObservations(cfg.fredSeries, 2)
-  } catch {
+  } catch (err) {
+    console.warn('[central-banks] fetchBankRate failed:', (err as Error).message)
     return null
   }
   if (!obs.length) return null
@@ -235,7 +236,8 @@ async function fetchBankRate(cfg: BankConfig): Promise<CentralBankRate | null> {
       case 'boc':  return await fromBoC(cfg)
       default:     return await fromFred(cfg)
     }
-  } catch {
+  } catch (err) {
+    console.warn(`[central-banks] fetchBankRate(${cfg.bank}) failed:`, (err as Error).message)
     return null
   }
 }

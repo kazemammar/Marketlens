@@ -124,3 +124,13 @@ export function formatChange(value: number | null | undefined, decimals = 2): st
   const sign = value >= 0 ? '+' : ''
   return `${sign}${value.toFixed(decimals)}`
 }
+
+/**
+ * Format a forex rate without currency symbol.
+ * Shows 4 decimal places for most pairs, 2 for JPY pairs.
+ */
+export function formatForexRate(value: number | null | undefined, pair?: string): string {
+  if (value == null || isNaN(value)) return '0.0000'
+  const isJpy = pair?.includes('JPY')
+  return value.toFixed(isJpy ? 2 : 4)
+}

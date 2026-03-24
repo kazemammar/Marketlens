@@ -100,8 +100,9 @@ async function fetchFeed(feedUrl: string, feedName: string): Promise<NewsArticle
         publishedAt,
       }
     })
-  } catch {
+  } catch (err) {
     // Non-fatal: one bad feed shouldn't block the rest
+    console.warn('[rss] fetchFeed failed:', (err as Error).message)
     return []
   }
 }

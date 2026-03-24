@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getQuote, getFinancialMetrics, getPriceTarget } from '@/lib/api/finnhub'
+import { getQuote, getFinancialMetrics, getPriceTarget, getAggregateIndicator } from '@/lib/api/finnhub'
 import { redis } from '@/lib/cache/redis'
 
 interface TechSignal {
@@ -17,13 +17,20 @@ interface PriceContext {
   targetMedian: number | null
 }
 
+interface AggregateCounts {
+  buy:     number
+  neutral: number
+  sell:    number
+}
+
 interface TechResponse {
-  signals:       TechSignal[]
-  priceContext:  PriceContext | null
-  overallSignal: 'bullish' | 'bearish' | 'neutral'
-  bullCount:     number
-  bearCount:     number
-  neutralCount:  number
+  signals:         TechSignal[]
+  priceContext:    PriceContext | null
+  overallSignal:   'bullish' | 'bearish' | 'neutral'
+  bullCount:       number
+  bearCount:       number
+  neutralCount:    number
+  aggregateCounts: AggregateCounts | null
 }
 
 const CACHE_TTL = 300  // 5 min — technical signals are price-based
@@ -43,18 +50,21 @@ export async function GET(
   const empty: TechResponse = {
     signals: [], priceContext: null,
     overallSignal: 'neutral', bullCount: 0, bearCount: 0, neutralCount: 0,
+    aggregateCounts: null,
   }
 
   try {
-    const [quoteRes, metricsRes, targetRes] = await Promise.allSettled([
+    const [quoteRes, metricsRes, targetRes, aggregateRes] = await Promise.allSettled([
       getQuote(symbol),
       getFinancialMetrics(symbol),
       getPriceTarget(symbol),
+      getAggregateIndicator(symbol),
     ])
 
-    const quote   = quoteRes.status   === 'fulfilled' ? quoteRes.value   : null
-    const metrics = metricsRes.status === 'fulfilled' ? metricsRes.value : null
-    const target  = targetRes.status  === 'fulfilled' ? targetRes.value  : null
+    const quote     = quoteRes.status     === 'fulfilled' ? quoteRes.value     : null
+    const metrics   = metricsRes.status   === 'fulfilled' ? metricsRes.value   : null
+    const target    = targetRes.status    === 'fulfilled' ? targetRes.value    : null
+    const aggregate = aggregateRes.status === 'fulfilled' ? aggregateRes.value : null
 
     if (!quote || quote.price <= 0) {
       redis.set(cacheKey, empty, { ex: CACHE_TTL }).catch(() => {})
@@ -149,6 +159,27 @@ export async function GET(
       })
     }
 
+    // Finnhub aggregate indicator signals
+    if (aggregate?.technicalAnalysis) {
+      const { count, signal } = aggregate.technicalAnalysis
+      const aggSignal = signal?.toUpperCase()
+      signals.push({
+        name:   'FH Aggregate',
+        value:  aggSignal ?? 'NEUTRAL',
+        signal: count.buy > count.sell ? 'bullish' : count.sell > count.buy ? 'bearish' : 'neutral',
+      })
+    }
+
+    // ADX trend strength
+    if (aggregate?.trend?.adx !== undefined) {
+      const adx = aggregate.trend.adx
+      signals.push({
+        name:   'ADX Trend',
+        value:  adx.toFixed(1),
+        signal: adx > 25 ? 'bullish' : adx < 20 ? 'bearish' : 'neutral',
+      })
+    }
+
     const bullCount    = signals.filter(s => s.signal === 'bullish').length
     const bearCount    = signals.filter(s => s.signal === 'bearish').length
     const neutralCount = signals.length - bullCount - bearCount
@@ -165,9 +196,18 @@ export async function GET(
       targetMedian: target?.median        ?? null,
     }
 
+    const aggregateCounts: AggregateCounts | null = aggregate?.technicalAnalysis
+      ? {
+          buy:     aggregate.technicalAnalysis.count.buy,
+          neutral: aggregate.technicalAnalysis.count.neutral,
+          sell:    aggregate.technicalAnalysis.count.sell,
+        }
+      : null
+
     const result: TechResponse = {
       signals, priceContext, overallSignal,
       bullCount, bearCount, neutralCount,
+      aggregateCounts,
     }
 
     redis.set(cacheKey, result, { ex: CACHE_TTL }).catch(() => {})

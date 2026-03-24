@@ -7,7 +7,7 @@ import { TTL } from '@/lib/utils/constants'
 
 let _client: Groq | null = null
 
-function getClient(): Groq {
+export function getClient(): Groq {
   if (!_client) {
     const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) throw new Error('GROQ_API_KEY is not set')
@@ -74,7 +74,7 @@ export async function analyzeSentiment(
       ].join('\n')
 
       const completion = await client.chat.completions.create({
-        model:       'llama-3.1-8b-instant',
+        model:       'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user',   content: userMessage },
@@ -183,7 +183,7 @@ export async function analyzeAssetContext(
       ].filter(Boolean).join('\n')
 
       const completion = await client.chat.completions.create({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: CONTEXT_SYSTEM_PROMPT },
           { role: 'user',   content: userMessage },

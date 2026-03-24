@@ -128,7 +128,7 @@ export async function analyzeChokepointIntel(): Promise<ChokepointIntelPayload> 
     headlines = articles
       .filter(a => a.publishedAt > cutoff)
       .map(a => ({ headline: a.headline, publishedAt: a.publishedAt }))
-  } catch { /* proceed with empty — all chokepoints will be NORMAL */ }
+  } catch (err) { console.warn('[chokepoints] Failed to fetch headlines:', (err as Error).message) }
 
   const chokepoints: ChokepointIntelItem[] = CHOKEPOINT_DEFS.map(def => {
     const headlineTexts = headlines.map(h => h.headline.toLowerCase())

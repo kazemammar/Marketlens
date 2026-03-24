@@ -18,13 +18,20 @@ interface PriceContext {
   targetMedian: number | null
 }
 
+interface AggregateCounts {
+  buy:     number
+  neutral: number
+  sell:    number
+}
+
 interface TechData {
-  signals:       TechSignal[]
-  priceContext:  PriceContext | null
-  overallSignal: 'bullish' | 'bearish' | 'neutral'
-  bullCount:     number
-  bearCount:     number
-  neutralCount:  number
+  signals:         TechSignal[]
+  priceContext:    PriceContext | null
+  overallSignal:   'bullish' | 'bearish' | 'neutral'
+  bullCount:       number
+  bearCount:       number
+  neutralCount:    number
+  aggregateCounts: AggregateCounts | null
 }
 
 const SIGNAL_COLOR = {
@@ -65,9 +72,18 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
           <polyline points="1,12 4,8 7,10 10,5 13,3 15,3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-          Technical Analysis
+          Technical &amp; Fundamental Analysis
         </span>
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+        {data?.aggregateCounts && (
+          <div className="flex items-center gap-1.5 font-mono text-[9px]">
+            <span style={{ color: 'var(--price-up)' }}>{data.aggregateCounts.buy} BUY</span>
+            <span className="text-[var(--text-muted)] opacity-40">|</span>
+            <span className="text-[var(--text-muted)]">{data.aggregateCounts.neutral} NEUTRAL</span>
+            <span className="text-[var(--text-muted)] opacity-40">|</span>
+            <span style={{ color: 'var(--price-down)' }}>{data.aggregateCounts.sell} SELL</span>
+          </div>
+        )}
       </div>
 
       {loading ? (

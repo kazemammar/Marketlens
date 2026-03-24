@@ -19,6 +19,7 @@ export interface EconomicIndicator {
   unit:           string
   interpretation: string
   history:        Array<{ date: string; value: number }> // last 12 readings
+  isMock?:        boolean
 }
 
 const INDICATORS = [
@@ -35,14 +36,14 @@ const INDICATORS = [
 // ─── Mock fallback data (when FRED_API_KEY is missing) ────────────────────
 
 const MOCK_INDICATORS: EconomicIndicator[] = [
-  { id: 'GDP',      name: 'GDP',               value: 28.2,  previousValue: 27.7,  change: 0.5,  changePct: 1.8,   date: '2025-10-01', unit: '$T',  interpretation: 'Economy expanding at steady pace',          history: [] },
-  { id: 'CPIAUCSL', name: 'CPI Inflation',      value: 2.9,   previousValue: 3.2,   change: -0.3, changePct: -9.4,  date: '2026-01-01', unit: '%',   interpretation: 'Inflation declining toward Fed target',      history: [] },
-  { id: 'FEDFUNDS', name: 'Fed Funds Rate',     value: 4.33,  previousValue: 4.58,  change: -0.25,changePct: -5.5,  date: '2026-02-01', unit: '%',   interpretation: 'Rate cut cycle in progress',                  history: [] },
-  { id: 'UNRATE',   name: 'Unemployment',       value: 4.1,   previousValue: 4.0,   change: 0.1,  changePct: 2.5,   date: '2026-02-01', unit: '%',   interpretation: 'Labor market slightly loosening',             history: [] },
-  { id: 'DGS10',    name: '10Y Treasury',       value: 4.28,  previousValue: 4.55,  change: -0.27,changePct: -5.9,  date: '2026-03-14', unit: '%',   interpretation: 'Long yields declining on growth fears',       history: [] },
-  { id: 'DGS2',     name: '2Y Treasury',        value: 3.98,  previousValue: 4.22,  change: -0.24,changePct: -5.7,  date: '2026-03-14', unit: '%',   interpretation: 'Short rates pricing in Fed cuts',             history: [] },
-  { id: 'M2SL',     name: 'M2 Money Supply',    value: 21.4,  previousValue: 21.1,  change: 0.3,  changePct: 1.4,   date: '2026-01-01', unit: '$T',  interpretation: 'Money supply growing moderately',            history: [] },
-  { id: 'UMCSENT',  name: 'Consumer Confidence',value: 64.7,  previousValue: 71.1,  change: -6.4, changePct: -9.0,  date: '2026-02-01', unit: 'idx', interpretation: 'Sentiment declining on tariff uncertainty',  history: [] },
+  { id: 'GDP',      name: 'GDP',               value: 28.2,  previousValue: 27.7,  change: 0.5,  changePct: 1.8,   date: '2025-10-01', unit: '$T',  interpretation: 'Economy expanding at steady pace',          history: [], isMock: true },
+  { id: 'CPIAUCSL', name: 'CPI Inflation',      value: 2.9,   previousValue: 3.2,   change: -0.3, changePct: -9.4,  date: '2026-01-01', unit: '%',   interpretation: 'Inflation declining toward Fed target',      history: [], isMock: true },
+  { id: 'FEDFUNDS', name: 'Fed Funds Rate',     value: 4.33,  previousValue: 4.58,  change: -0.25,changePct: -5.5,  date: '2026-02-01', unit: '%',   interpretation: 'Rate cut cycle in progress',                  history: [], isMock: true },
+  { id: 'UNRATE',   name: 'Unemployment',       value: 4.1,   previousValue: 4.0,   change: 0.1,  changePct: 2.5,   date: '2026-02-01', unit: '%',   interpretation: 'Labor market slightly loosening',             history: [], isMock: true },
+  { id: 'DGS10',    name: '10Y Treasury',       value: 4.28,  previousValue: 4.55,  change: -0.27,changePct: -5.9,  date: '2026-03-14', unit: '%',   interpretation: 'Long yields declining on growth fears',       history: [], isMock: true },
+  { id: 'DGS2',     name: '2Y Treasury',        value: 3.98,  previousValue: 4.22,  change: -0.24,changePct: -5.7,  date: '2026-03-14', unit: '%',   interpretation: 'Short rates pricing in Fed cuts',             history: [], isMock: true },
+  { id: 'M2SL',     name: 'M2 Money Supply',    value: 21.4,  previousValue: 21.1,  change: 0.3,  changePct: 1.4,   date: '2026-01-01', unit: '$T',  interpretation: 'Money supply growing moderately',            history: [], isMock: true },
+  { id: 'UMCSENT',  name: 'Consumer Confidence',value: 64.7,  previousValue: 71.1,  change: -6.4, changePct: -9.0,  date: '2026-02-01', unit: 'idx', interpretation: 'Sentiment declining on tariff uncertainty',  history: [], isMock: true },
 ]
 
 // ─── Interpretation logic ─────────────────────────────────────────────────
@@ -142,6 +143,17 @@ function buildIndicators(
       ? (t10.previousValue ?? 0) - (t2.previousValue ?? 0)
       : null
     const spreadChange = prevSpread !== null ? spread - prevSpread : null
+    // Build aligned spread history from 10Y and 2Y history arrays
+    const spreadHistory: Array<{ date: string; value: number }> = []
+    if (t10.history.length > 0 && t2.history.length > 0) {
+      const t2Map = new Map(t2.history.map(h => [h.date, h.value]))
+      for (const h10 of t10.history) {
+        const val2 = t2Map.get(h10.date)
+        if (val2 !== undefined) {
+          spreadHistory.push({ date: h10.date, value: Math.round((h10.value - val2) * 100) / 100 })
+        }
+      }
+    }
     result.push({
       id:             'YIELD_SPREAD',
       name:           'Yield Spread 10Y-2Y',
@@ -156,7 +168,7 @@ function buildIndicators(
         : spread < 0.5
           ? 'Flat curve — growth slowdown risk'
           : 'Normal curve — expansion signal',
-      history: [],
+      history: spreadHistory,
     })
   }
 

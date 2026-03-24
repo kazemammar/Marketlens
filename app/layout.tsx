@@ -104,7 +104,6 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} ${dmSans.variable} antialiased bg-[var(--bg)]`}
-        suppressHydrationWarning
       >
         <ThemeProvider>
           <AuthProvider>

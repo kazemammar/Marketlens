@@ -2,11 +2,12 @@
 
 import type { PortfolioPosition } from '@/lib/hooks/usePortfolio'
 import type { QuoteData }         from './PositionsTable'
+import { TICKER_SECTOR, SECTOR_ORDER } from '@/lib/utils/sectors'
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
 const TYPE_ORDER    = ['stock', 'crypto', 'forex', 'commodity', 'etf']
-const SECTOR_ORDER  = ['Technology', 'Finance', 'Healthcare', 'Consumer', 'Industrial', 'Communication', 'Energy', 'Real Estate', 'Materials', 'Utilities', 'Other']
+const SECTOR_ORDER_WITH_OTHER = [...SECTOR_ORDER, 'Other']
 
 const TYPE_COLORS: Record<string, string> = {
   stock:     '#10b981',
@@ -20,81 +21,6 @@ const TYPE_LABEL: Record<string, string> = {
   stock: 'Stock', crypto: 'Crypto', forex: 'Forex', commodity: 'Commodity', etf: 'ETF',
 }
 
-const SECTOR: Record<string, string> = {
-  // Technology
-  AAPL: 'Technology', MSFT: 'Technology', NVDA: 'Technology', AVGO: 'Technology', ORCL: 'Technology',
-  CRM: 'Technology', ADBE: 'Technology', AMD: 'Technology', CSCO: 'Technology', QCOM: 'Technology',
-  INTC: 'Technology', NOW: 'Technology', PLTR: 'Technology', PANW: 'Technology', SNPS: 'Technology',
-  CDNS: 'Technology', MRVL: 'Technology', KLAC: 'Technology', LRCX: 'Technology', AMAT: 'Technology',
-  MU: 'Technology', ADI: 'Technology', FTNT: 'Technology', WDAY: 'Technology', TEAM: 'Technology',
-  CRWD: 'Technology', DDOG: 'Technology', ZS: 'Technology', HUBS: 'Technology', ANSS: 'Technology',
-  // Finance
-  JPM: 'Finance', V: 'Finance', MA: 'Finance', BAC: 'Finance', GS: 'Finance',
-  MS: 'Finance', BLK: 'Finance', SCHW: 'Finance', C: 'Finance', AXP: 'Finance',
-  'BRK.B': 'Finance', WFC: 'Finance', SPGI: 'Finance', ICE: 'Finance', CME: 'Finance',
-  PGR: 'Finance', USB: 'Finance', MMC: 'Finance', CB: 'Finance', AON: 'Finance',
-  MET: 'Finance', AIG: 'Finance', PRU: 'Finance', TRV: 'Finance', PNC: 'Finance',
-  COF: 'Finance', PYPL: 'Finance', AJG: 'Finance', FITB: 'Finance', FIS: 'Finance',
-  // Healthcare
-  UNH: 'Healthcare', LLY: 'Healthcare', JNJ: 'Healthcare', ABBV: 'Healthcare', MRK: 'Healthcare',
-  TMO: 'Healthcare', ABT: 'Healthcare', PFE: 'Healthcare', AMGN: 'Healthcare', MDT: 'Healthcare',
-  ISRG: 'Healthcare', DHR: 'Healthcare', BMY: 'Healthcare', GILD: 'Healthcare',
-  CVS: 'Healthcare', CI: 'Healthcare', ELV: 'Healthcare', VRTX: 'Healthcare', REGN: 'Healthcare',
-  ZTS: 'Healthcare', BDX: 'Healthcare', BSX: 'Healthcare', SYK: 'Healthcare', HCA: 'Healthcare',
-  MCK: 'Healthcare', A: 'Healthcare', DXCM: 'Healthcare', IQV: 'Healthcare', IDXX: 'Healthcare', EW: 'Healthcare',
-  // Consumer (Disc. + Staples combined)
-  AMZN: 'Consumer', TSLA: 'Consumer', HD: 'Consumer', NKE: 'Consumer', MCD: 'Consumer',
-  LOW: 'Consumer', SBUX: 'Consumer', TJX: 'Consumer', BKNG: 'Consumer', CMG: 'Consumer',
-  ABNB: 'Consumer', MAR: 'Consumer', RCL: 'Consumer', ORLY: 'Consumer', AZO: 'Consumer',
-  ROST: 'Consumer', DHI: 'Consumer', LEN: 'Consumer', YUM: 'Consumer', DPZ: 'Consumer',
-  LULU: 'Consumer', ULTA: 'Consumer', DECK: 'Consumer', GM: 'Consumer', F: 'Consumer',
-  EBAY: 'Consumer', ETSY: 'Consumer', CPRT: 'Consumer', BBY: 'Consumer', GRMN: 'Consumer',
-  PG: 'Consumer', KO: 'Consumer', PEP: 'Consumer', COST: 'Consumer', WMT: 'Consumer',
-  PM: 'Consumer', MO: 'Consumer', CL: 'Consumer', MDLZ: 'Consumer', KHC: 'Consumer',
-  GIS: 'Consumer', STZ: 'Consumer', MNST: 'Consumer', KR: 'Consumer', SYY: 'Consumer',
-  HSY: 'Consumer', ADM: 'Consumer', TAP: 'Consumer', CAG: 'Consumer', SJM: 'Consumer',
-  CLX: 'Consumer', CHD: 'Consumer', K: 'Consumer', TSN: 'Consumer', HRL: 'Consumer',
-  MKC: 'Consumer', BG: 'Consumer', LAMB: 'Consumer', CPB: 'Consumer', WBA: 'Consumer',
-  // Industrial
-  CAT: 'Industrial', GE: 'Industrial', HON: 'Industrial', UPS: 'Industrial', BA: 'Industrial',
-  RTX: 'Industrial', LMT: 'Industrial', DE: 'Industrial', UNP: 'Industrial', FDX: 'Industrial',
-  WM: 'Industrial', ETN: 'Industrial', ITW: 'Industrial', EMR: 'Industrial',
-  GD: 'Industrial', NOC: 'Industrial', TDG: 'Industrial', CSX: 'Industrial', NSC: 'Industrial',
-  CARR: 'Industrial', JCI: 'Industrial', IR: 'Industrial', PH: 'Industrial', PCAR: 'Industrial',
-  CTAS: 'Industrial', FAST: 'Industrial', GWW: 'Industrial', VRSK: 'Industrial', ROK: 'Industrial', SWK: 'Industrial',
-  // Communication
-  GOOGL: 'Communication', META: 'Communication', NFLX: 'Communication', DIS: 'Communication',
-  CMCSA: 'Communication', T: 'Communication', VZ: 'Communication', TMUS: 'Communication',
-  CHTR: 'Communication', SPOT: 'Communication', RBLX: 'Communication', EA: 'Communication',
-  TTWO: 'Communication', WBD: 'Communication', PARA: 'Communication', LYV: 'Communication',
-  MTCH: 'Communication', PINS: 'Communication', ZM: 'Communication', SNAP: 'Communication',
-  ROKU: 'Communication', OMC: 'Communication', IPG: 'Communication', FOXA: 'Communication', NWSA: 'Communication',
-  // Energy
-  XOM: 'Energy', CVX: 'Energy', COP: 'Energy', SLB: 'Energy', EOG: 'Energy',
-  MPC: 'Energy', PSX: 'Energy', VLO: 'Energy', OXY: 'Energy', HAL: 'Energy',
-  DVN: 'Energy', FANG: 'Energy', HES: 'Energy', BKR: 'Energy', KMI: 'Energy',
-  WMB: 'Energy', OKE: 'Energy', TRGP: 'Energy', LNG: 'Energy', MRO: 'Energy',
-  CTRA: 'Energy', EQT: 'Energy', APA: 'Energy', WFRD: 'Energy', FTI: 'Energy',
-  // Real Estate
-  AMT: 'Real Estate', PLD: 'Real Estate', CCI: 'Real Estate', EQIX: 'Real Estate',
-  PSA: 'Real Estate', SPG: 'Real Estate', O: 'Real Estate', WELL: 'Real Estate',
-  DLR: 'Real Estate', AVB: 'Real Estate', EQR: 'Real Estate', VICI: 'Real Estate',
-  IRM: 'Real Estate', ARE: 'Real Estate', KIM: 'Real Estate', ESS: 'Real Estate',
-  MAA: 'Real Estate', REG: 'Real Estate', UDR: 'Real Estate', HST: 'Real Estate',
-  CPT: 'Real Estate', BXP: 'Real Estate', PEAK: 'Real Estate', SUI: 'Real Estate', EXR: 'Real Estate',
-  // Materials
-  LIN: 'Materials', APD: 'Materials', SHW: 'Materials', ECL: 'Materials', FCX: 'Materials',
-  NEM: 'Materials', NUE: 'Materials', DOW: 'Materials', DD: 'Materials', VMC: 'Materials',
-  MLM: 'Materials', PPG: 'Materials', IFF: 'Materials', CE: 'Materials', ALB: 'Materials',
-  EMN: 'Materials', FMC: 'Materials', IP: 'Materials', PKG: 'Materials', AVY: 'Materials',
-  SEE: 'Materials', CF: 'Materials', MOS: 'Materials', BALL: 'Materials', AMCR: 'Materials',
-  // Utilities
-  NEE: 'Utilities', DUK: 'Utilities', SO: 'Utilities', D: 'Utilities', AEP: 'Utilities',
-  SRE: 'Utilities', EXC: 'Utilities', XEL: 'Utilities', ED: 'Utilities', WEC: 'Utilities',
-  ES: 'Utilities', AWK: 'Utilities', ATO: 'Utilities', CMS: 'Utilities', DTE: 'Utilities',
-  PEG: 'Utilities', FE: 'Utilities', PPL: 'Utilities', EIX: 'Utilities', ETR: 'Utilities',
-  CEG: 'Utilities', EVRG: 'Utilities', NI: 'Utilities', LNT: 'Utilities', AES: 'Utilities',
-}
 
 const SECTOR_COLORS: Record<string, string> = {
   Technology:    '#60a5fa',
@@ -283,11 +209,11 @@ export default function AllocationPanel({
   const sectorCounts: Record<string, number> = {}
   for (const p of positions) {
     if (p.asset_type !== 'stock') continue
-    const sector = SECTOR[p.symbol] ?? 'Other'
+    const sector = TICKER_SECTOR[p.symbol] ?? 'Other'
     sectorCounts[sector] = (sectorCounts[sector] ?? 0) + 1
   }
   const sectorEntries = Object.entries(sectorCounts).sort(([a], [b]) => {
-    const ai = SECTOR_ORDER.indexOf(a), bi = SECTOR_ORDER.indexOf(b)
+    const ai = SECTOR_ORDER_WITH_OTHER.indexOf(a), bi = SECTOR_ORDER_WITH_OTHER.indexOf(b)
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
   })
   const totalStocks   = sectorEntries.reduce((acc, [, c]) => acc + c, 0)

@@ -3,7 +3,7 @@ import { createServerSupabase }   from '@/lib/supabase/server'
 import { withRateLimit }          from '@/lib/utils/rate-limit'
 import { getRelatedNewsForAsset } from '@/lib/api/rss'
 import { redis }                  from '@/lib/cache/redis'
-import Groq                       from 'groq-sdk'
+import { getClient }              from '@/lib/api/groq'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -123,12 +123,9 @@ export async function GET(req: Request) {
 
   // Call Groq
   try {
-    const apiKey = process.env.GROQ_API_KEY
-    if (!apiKey) throw new Error('GROQ_API_KEY not set')
-
-    const client     = new Groq({ apiKey })
+    const client     = getClient()
     const completion = await client.chat.completions.create({
-      model:           'llama-3.1-8b-instant',
+      model:           'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userMessage },

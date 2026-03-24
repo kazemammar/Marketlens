@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server'
+
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 
 /**
@@ -39,7 +41,6 @@ export function withRateLimit(req: Request, limit = 60) {
   const ip        = forwarded?.split(',')[0]?.trim() ?? 'unknown'
 
   if (!rateLimit(ip, limit)) {
-    const { NextResponse } = require('next/server') as typeof import('next/server')
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
   return null

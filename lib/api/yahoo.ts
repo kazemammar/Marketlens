@@ -54,7 +54,8 @@ export async function getYahooQuote(symbol: string): Promise<YahooQuote | null> 
       marketState,
       exchangeTimezoneName: meta.exchangeTimezoneName ?? 'America/New_York',
     }
-  } catch {
+  } catch (err) {
+    console.warn('[yahoo] getYahooQuote failed:', (err as Error).message)
     return null
   }
 }
@@ -73,7 +74,8 @@ export async function getYahooSparkline(symbol: string): Promise<number[]> {
     const closes: (number | null)[] =
       data.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? []
     return closes.filter((c): c is number => c !== null).slice(-40)
-  } catch {
+  } catch (err) {
+    console.warn('[yahoo] getYahooSparkline failed:', (err as Error).message)
     return []
   }
 }
@@ -109,7 +111,8 @@ export async function getYahooHistory(
         close: closes[i] ?? 0,
       }))
       .filter((d) => d.close > 0)
-  } catch {
+  } catch (err) {
+    console.warn('[yahoo] getYahooHistory failed:', (err as Error).message)
     return []
   }
 }

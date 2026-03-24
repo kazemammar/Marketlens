@@ -569,6 +569,116 @@ export async function getInsiderTransactions(symbol: string): Promise<InsiderTra
 }
 
 
+// ─── Aggregate Technical Indicator ───────────────────────────────────────
+
+export interface AggregateIndicatorResult {
+  technicalAnalysis: {
+    count: { buy: number; neutral: number; sell: number }
+    signal: string
+  }
+  trend: {
+    adx: number
+    trending: boolean
+  }
+}
+
+export async function getAggregateIndicator(symbol: string): Promise<AggregateIndicatorResult | null> {
+  try {
+    const res = await fetch(
+      `${FINNHUB_BASE_URL}/scan/technical-indicator?symbol=${symbol}&resolution=D`,
+      {
+        headers: { 'X-Finnhub-Token': process.env.FINNHUB_API_KEY ?? '' },
+        next: { revalidate: 300 },
+      }
+    )
+    if (!res.ok) return null
+    return await res.json() as AggregateIndicatorResult
+  } catch {
+    return null
+  }
+}
+
+// ─── Economic Calendar ────────────────────────────────────────────────────
+
+export interface EconomicEvent {
+  country: string
+  event: string
+  actual: number | null
+  estimate: number | null
+  prev: number | null
+  impact: 'high' | 'medium' | 'low'
+  time: string
+  date: string
+  unit: string
+}
+
+export async function getEconomicCalendar(from: string, to: string): Promise<EconomicEvent[]> {
+  try {
+    const res = await fetch(
+      `${FINNHUB_BASE_URL}/calendar/economic?from=${from}&to=${to}`,
+      {
+        headers: { 'X-Finnhub-Token': process.env.FINNHUB_API_KEY ?? '' },
+        next: { revalidate: 3600 },
+      }
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    const events: EconomicEvent[] = (data.economicCalendar ?? [])
+    return events
+      .filter((e: EconomicEvent) => e.country === 'United States' && (e.impact === 'high' || e.impact === 'medium'))
+      .sort((a: EconomicEvent, b: EconomicEvent) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+  } catch {
+    return []
+  }
+}
+
+// ─── Earnings Calendar ────────────────────────────────────────────────────
+
+export interface EarningsEvent {
+  symbol: string
+  date: string
+  hour: string
+  epsEstimate: number | null
+  epsActual: number | null
+  revenueEstimate: number | null
+  revenueActual: number | null
+  quarter: number
+  year: number
+}
+
+export async function getEarningsCalendar(from: string, to: string): Promise<EarningsEvent[]> {
+  try {
+    const res = await fetch(
+      `${FINNHUB_BASE_URL}/calendar/earnings?from=${from}&to=${to}`,
+      {
+        headers: { 'X-Finnhub-Token': process.env.FINNHUB_API_KEY ?? '' },
+        next: { revalidate: 3600 },
+      }
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    const events: EarningsEvent[] = (data.earningsCalendar ?? []).map((e: {
+      symbol: string; date: string; hour: string
+      epsEstimate?: number | null; epsActual?: number | null
+      revenueEstimate?: number | null; revenueActual?: number | null
+      quarter: number; year: number
+    }) => ({
+      symbol: e.symbol,
+      date: e.date,
+      hour: e.hour,
+      epsEstimate: e.epsEstimate ?? null,
+      epsActual: e.epsActual ?? null,
+      revenueEstimate: e.revenueEstimate ?? null,
+      revenueActual: e.revenueActual ?? null,
+      quarter: e.quarter,
+      year: e.year,
+    }))
+    return events.sort((a: EarningsEvent, b: EarningsEvent) => a.date.localeCompare(b.date))
+  } catch {
+    return []
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function mapFinnhubType(finnhubType: string): AssetType {

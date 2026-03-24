@@ -15,6 +15,9 @@ import SignalsPanel      from '@/components/warroom/SignalsPanel'
 import TrendingKeywords from '@/components/warroom/TrendingKeywords'
 import HeatmapPanel      from '@/components/warroom/HeatmapPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
+import EconomicCalendar     from '@/components/warroom/EconomicCalendar'
+import EarningsCalendar     from '@/components/warroom/EarningsCalendar'
+import FearGreedIndex        from '@/components/warroom/FearGreedIndex'
 import OilEnergyPanel      from '@/components/warroom/OilEnergyPanel'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import MoversStrip         from '@/components/warroom/MoversStrip'
@@ -26,6 +29,7 @@ import SectionReveal        from '@/components/layout/SectionReveal'
 import { AssetType }           from '@/lib/utils/types'
 import { getHomepageData }     from '@/lib/api/homepage'
 import PortfolioIntroModal     from '@/components/ui/PortfolioIntroModal'
+import PanelErrorBoundary      from '@/components/ui/PanelErrorBoundary'
 
 const VALID_TABS: AssetType[] = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
@@ -45,20 +49,26 @@ export default async function HomePage({
     <div className="min-h-screen">
 
       {/* ══ LIVE PULSE — news-driven, refreshes every 5 min ════════════ */}
-      <MarketPulse />
+      <PanelErrorBoundary fallbackTitle="Market Pulse">
+        <MarketPulse />
+      </PanelErrorBoundary>
 
       {/* ══ HOURLY BRIEF — structured AI analysis, refreshes every hour ═ */}
-      <Suspense fallback={
-        <div className="ai-brief-bar flex h-10 items-center gap-3 border-b border-[var(--border)] px-4">
-          <div className="skeleton h-2 w-2 rounded-full" />
-          <div className="skeleton h-2.5 flex-1 max-w-2xl rounded" />
-        </div>
-      }>
-        <MarketBrief />
-      </Suspense>
+      <PanelErrorBoundary fallbackTitle="Market Brief">
+        <Suspense fallback={
+          <div className="ai-brief-bar flex h-10 items-center gap-3 border-b border-[var(--border)] px-4">
+            <div className="skeleton h-2 w-2 rounded-full" />
+            <div className="skeleton h-2.5 flex-1 max-w-2xl rounded" />
+          </div>
+        }>
+          <MarketBrief />
+        </Suspense>
+      </PanelErrorBoundary>
 
       {/* ══ TICKER TAPE — scrolling prices ══════════════════════════════ */}
-      <TickerTape initialData={homepage?.tickerQuotes} />
+      <PanelErrorBoundary fallbackTitle="Ticker Tape">
+        <TickerTape initialData={homepage?.tickerQuotes} />
+      </PanelErrorBoundary>
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:px-4 py-2 lg:grid-cols-[65fr_35fr]">
@@ -71,7 +81,9 @@ export default async function HomePage({
             </span>
           </div>
           <div className="h-[240px] sm:h-[320px] lg:h-[500px] xl:h-[600px]" style={{ isolation: 'isolate' }}>
-            <GeoMap />
+            <PanelErrorBoundary fallbackTitle="Geo Map">
+              <GeoMap />
+            </PanelErrorBoundary>
           </div>
         </div>
 
@@ -84,7 +96,9 @@ export default async function HomePage({
             </span>
           </div>
           <div className="flex-1 overflow-hidden">
-            <IntelPanel />
+            <PanelErrorBoundary fallbackTitle="Intelligence Feed">
+              <IntelPanel />
+            </PanelErrorBoundary>
           </div>
         </div>
       </div>
@@ -112,61 +126,106 @@ export default async function HomePage({
       {/* ══ DATA PANELS — Row 1: Market Radar | Risk Gauge ══════════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
         <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
-          <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={[]} showHeatmap={false} />
+          <PanelErrorBoundary fallbackTitle="Market Radar">
+            <MarketRadar initialData={homepage?.marketRadar ?? null} stocks={[]} showHeatmap={false} />
+          </PanelErrorBoundary>
         </div>
         <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
-          <RiskGauge />
+          <PanelErrorBoundary fallbackTitle="Risk Gauge">
+            <RiskGauge />
+          </PanelErrorBoundary>
         </div>
+      </div>
+
+      {/* ══ DATA PANELS — Fear & Greed Index ════════════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Fear & Greed Index">
+          <FearGreedIndex />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ DATA PANELS — Row 2: FX Monitor | S&P Heatmap ═══════════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
         <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
-          <FXMonitor />
+          <PanelErrorBoundary fallbackTitle="FX Monitor">
+            <FXMonitor />
+          </PanelErrorBoundary>
         </div>
         <div className="min-w-0 overflow-hidden flex flex-col">
-          <HeatmapPanel initialStocks={homepage?.stocks ?? []} />
+          <PanelErrorBoundary fallbackTitle="S&P Heatmap">
+            <HeatmapPanel initialStocks={homepage?.stocks ?? []} />
+          </PanelErrorBoundary>
         </div>
       </div>
 
       {/* ══ DATA PANELS — Row 3: Live Signals horizontal strip ══════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <SignalsPanel layout="horizontal" />
+        <PanelErrorBoundary fallbackTitle="Signals">
+          <SignalsPanel layout="horizontal" />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ DATA PANELS — Row 4: Trending Keywords ════════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <TrendingKeywords />
+        <PanelErrorBoundary fallbackTitle="Trending Keywords">
+          <TrendingKeywords />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ DATA PANELS — Row 5: Economic Indicators ═════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <EconomicIndicators />
+        <PanelErrorBoundary fallbackTitle="Economic Indicators">
+          <EconomicIndicators />
+        </PanelErrorBoundary>
+      </div>
+
+      {/* Economic Calendar */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Economic Calendar">
+          <EconomicCalendar />
+        </PanelErrorBoundary>
+      </div>
+
+      {/* Earnings Calendar */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Earnings Calendar">
+          <EarningsCalendar />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ OIL & ENERGY ANALYTICS — EIA weekly data ══════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <OilEnergyPanel />
+        <PanelErrorBoundary fallbackTitle="Oil & Energy">
+          <OilEnergyPanel />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ DATA PANELS — Row 6: Chokepoint Intelligence ════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <ChokepointIntel />
+        <PanelErrorBoundary fallbackTitle="Chokepoint Intelligence">
+          <ChokepointIntel />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ TOP MOVERS STRIP ══════════════════════════════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <MoversStrip />
+        <PanelErrorBoundary fallbackTitle="Top Movers">
+          <MoversStrip />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ PREDICTION MARKETS ════════════════════════════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>
+        <PanelErrorBoundary fallbackTitle="Prediction Markets">
+          <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ NEWS BRIEFING — top stories by category ═══════════════════════ */}
       <div className="px-3 sm:px-4 py-2">
-        <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
+        <PanelErrorBoundary fallbackTitle="News Briefing">
+          <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
@@ -198,7 +257,9 @@ export default async function HomePage({
           />
         </div>
 
-        <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />
+        <PanelErrorBoundary fallbackTitle="Market Overview">
+          <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />
+        </PanelErrorBoundary>
       </main>
 
       {/* ══ STATUS BAR — data freshness ══════════════════════════════════════ */}

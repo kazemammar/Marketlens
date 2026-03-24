@@ -1,8 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { SentimentAnalysis, SentimentLabel, AssetType } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
+
+interface SocialPulseData {
+  reddit:  { mention: number; positiveScore: number; negativeScore: number; score: number }[]
+  twitter: { mention: number; positiveScore: number; negativeScore: number; score: number }[]
+}
 
 const LABEL_CONFIG: Record<SentimentLabel, { colorVar: string; bgVar: string; icon: string }> = {
   Bullish: { colorVar: 'var(--price-up)',   bgVar: 'rgba(var(--price-up-rgb), 0.1)', icon: '📈' },
@@ -37,6 +42,77 @@ function ScoreBar({ score }: { score: number }) {
 interface SentimentCardProps {
   symbol: string
   type:   AssetType
+}
+
+function SocialPulse({ symbol, type }: { symbol: string; type: AssetType }) {
+  const [social, setSocial] = useState<SocialPulseData | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const fetchSocial = useCallback(() => {
+    if (type !== 'stock') return
+    setLoading(true)
+    fetch(`/api/stock/social-sentiment/${encodeURIComponent(symbol)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setSocial(d) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [symbol, type])
+
+  useEffect(() => { fetchSocial() }, [fetchSocial])
+
+  if (type !== 'stock') return null
+
+  const redditMentions  = social?.reddit?.reduce((s, d) => s + (d.mention ?? 0), 0) ?? 0
+  const twitterMentions = social?.twitter?.reduce((s, d) => s + (d.mention ?? 0), 0) ?? 0
+  const redditScore     = social?.reddit?.length
+    ? social.reddit.reduce((s, d) => s + (d.score ?? 0), 0) / social.reddit.length
+    : 0
+  const twitterScore    = social?.twitter?.length
+    ? social.twitter.reduce((s, d) => s + (d.score ?? 0), 0) / social.twitter.length
+    : 0
+
+  if (!loading && !social) return null
+  if (!loading && redditMentions === 0 && twitterMentions === 0) return null
+
+  return (
+    <div className="space-y-2">
+      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+        Social Pulse <span className="opacity-50">(7 days)</span>
+      </p>
+      {loading ? (
+        <div className="flex gap-2">
+          <div className="skeleton h-10 flex-1 rounded" />
+          <div className="skeleton h-10 flex-1 rounded" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { label: 'Reddit',  mentions: redditMentions,  score: redditScore },
+            { label: 'Twitter', mentions: twitterMentions, score: twitterScore },
+          ].map((platform) => (
+            <div
+              key={platform.label}
+              className="rounded border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-2"
+            >
+              <p className="font-mono text-[9px] font-semibold text-[var(--text-muted)]">{platform.label}</p>
+              <p className="font-mono text-[13px] font-bold tabular-nums text-[var(--text)]">
+                {platform.mentions.toLocaleString()}
+                <span className="ml-1 text-[9px] font-normal text-[var(--text-muted)]">mentions</span>
+              </p>
+              {platform.score !== 0 && (
+                <p
+                  className="font-mono text-[9px] font-semibold tabular-nums"
+                  style={{ color: platform.score > 0 ? 'var(--price-up)' : platform.score < 0 ? 'var(--price-down)' : 'var(--text-muted)' }}
+                >
+                  Sentiment: {platform.score > 0 ? '+' : ''}{platform.score.toFixed(2)}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function SentimentCard({ symbol, type }: SentimentCardProps) {
@@ -131,6 +207,9 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
                 </p>
               </div>
             )}
+
+            {/* Social Pulse */}
+            <SocialPulse symbol={symbol} type={type} />
           </>
         )}
       </div>

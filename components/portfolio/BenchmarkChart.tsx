@@ -9,7 +9,8 @@ import type { BenchmarkPayload } from '@/app/api/portfolio/benchmark/route'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Range = '1mo' | '3mo' | '6mo' | '1y'
+type Range     = '1mo' | '3mo' | '6mo' | '1y'
+type Benchmark = 'spy' | 'btc'
 
 const RANGES: { key: Range; label: string; full: string }[] = [
   { key: '1mo', label: '1M', full: '1 month'  },
@@ -138,17 +139,19 @@ export default function BenchmarkChart({
   positionsWithCost,
   totalPositions,
 }: BenchmarkChartProps) {
-  const [data,    setData]    = useState<BenchmarkPayload | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(false)
-  const [range,   setRange]   = useState<Range>('3mo')
-  const [fading,  setFading]  = useState(false)
-  const fetchData = useCallback(async (r: Range, silent = false, refresh = false) => {
+  const [data,      setData]      = useState<BenchmarkPayload | null>(null)
+  const [loading,   setLoading]   = useState(true)
+  const [error,     setError]     = useState(false)
+  const [range,     setRange]     = useState<Range>('3mo')
+  const [benchmark, setBenchmark] = useState<Benchmark>('spy')
+  const [fading,    setFading]    = useState(false)
+  const fetchData = useCallback(async (r: Range, silent = false, refresh = false, bm: Benchmark = 'spy') => {
     if (!silent) { setLoading(true); setError(false) }
     else         { setFading(true) }
     try {
-      const qs = refresh ? `?range=${r}&refresh=true` : `?range=${r}`
-      const res = await fetch(`/api/portfolio/benchmark${qs}`)
+      const params = new URLSearchParams({ range: r, benchmark: bm })
+      if (refresh) params.set('refresh', 'true')
+      const res = await fetch(`/api/portfolio/benchmark?${params}`)
       if (!res.ok) throw new Error('fetch failed')
       setData(await res.json() as BenchmarkPayload)
       setError(false)
@@ -160,11 +163,16 @@ export default function BenchmarkChart({
     }
   }, [])
 
-  useEffect(() => { fetchData(range) }, [fetchData, range])
+  useEffect(() => { fetchData(range, false, false, benchmark) }, [fetchData, range, benchmark])
 
   const handleRange = (r: Range) => {
     setRange(r)
-    fetchData(r, !!data)
+    fetchData(r, !!data, false, benchmark)
+  }
+
+  const handleBenchmark = (bm: Benchmark) => {
+    setBenchmark(bm)
+    fetchData(range, !!data, false, bm)
   }
 
   // ── Derived ──
@@ -209,8 +217,23 @@ export default function BenchmarkChart({
       <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
         Benchmark
       </span>
-      <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">vs S&amp;P 500</span>
+      <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-60">vs {benchmark === 'btc' ? 'Bitcoin' : 'S&P 500'}</span>
       <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+      <div className="mr-2 flex items-center gap-0.5 rounded bg-[var(--surface-2)] p-0.5">
+        {(['spy', 'btc'] as Benchmark[]).map((bm) => (
+          <button
+            key={bm}
+            onClick={() => handleBenchmark(bm)}
+            className="rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase transition-colors"
+            style={benchmark === bm
+              ? { background: bm === 'btc' ? '#f59e0b' : '#3b82f6', color: '#000' }
+              : { color: 'var(--text-muted)' }
+            }
+          >
+            {bm === 'btc' ? 'BTC' : 'SPY'}
+          </button>
+        ))}
+      </div>
       <div className="flex items-center gap-1">
         {RANGES.map((r) => (
           <button
@@ -349,7 +372,7 @@ export default function BenchmarkChart({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="h-0.5 w-4 rounded-full bg-[#3b82f6]" />
-                  <span className="font-mono text-[9px] text-[var(--text-muted)]">S&amp;P 500</span>
+                  <span className="font-mono text-[9px] text-[var(--text-muted)]">{benchmark === 'btc' ? 'Bitcoin' : 'S&P 500'}</span>
                 </div>
               </div>
             </>
@@ -403,14 +426,14 @@ export default function BenchmarkChart({
               <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em]" style={{ color: diffColor, opacity: 0.8 }}>
                 {diffAhead ? 'ahead' : 'behind'}
               </span>
-              <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">vs SPY {rangeFull}</span>
+              <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">vs {benchmark === 'btc' ? 'BTC' : 'SPY'} {rangeFull}</span>
             </div>
 
             {/* RIGHT — SPY */}
             <div className="flex flex-col gap-0.5 p-4" style={{ background: 'rgba(59,130,246,0.04)' }}>
               <div className="mb-1 flex items-center gap-1.5">
                 <span className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)]">
-                  S&amp;P 500 (SPY)
+                  {benchmark === 'btc' ? 'Bitcoin (BTC)' : 'S&P 500 (SPY)'}
                 </span>
                 <span className="rounded px-1.5 py-0.5 font-mono text-[7px] font-semibold uppercase" style={{ background: 'rgba(59,130,246,0.12)', color: spyColor }}>
                   {rangeFull}
@@ -424,7 +447,7 @@ export default function BenchmarkChart({
               </span>
               <span className="mt-0.5 font-mono text-[12px] tabular-nums text-transparent select-none">&nbsp;</span>
               <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50">
-                iShares S&amp;P 500 ETF · Yahoo Finance
+                {benchmark === 'btc' ? 'BTC-USD · Yahoo Finance' : 'iShares S&P 500 ETF · Yahoo Finance'}
               </span>
               <ReturnBar pct={spyReturn} color={spyColor} />
             </div>

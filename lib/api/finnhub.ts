@@ -663,6 +663,56 @@ export async function getEarningsCalendar(from: string, to: string): Promise<Ear
   }
 }
 
+// ─── IPO Calendar ────────────────────────────────────────────────────────
+
+export interface IpoEvent {
+  symbol:          string
+  name:            string
+  date:            string
+  numberOfShares:  number | null
+  totalSharesValue: number | null
+  price:           string
+  status:          string
+}
+
+export async function getIpoCalendar(from: string, to: string): Promise<IpoEvent[]> {
+  try {
+    if (await isRateLimited()) return []
+    if (!(await checkCallQuota())) return []
+    const data = await finnhubGet<{ ipoCalendar: IpoEvent[] }>(
+      `/calendar/ipo?from=${from}&to=${to}`,
+    )
+    return (data.ipoCalendar ?? []).sort((a, b) => a.date.localeCompare(b.date))
+  } catch {
+    return []
+  }
+}
+
+// ─── Social Sentiment ────────────────────────────────────────────────────
+
+export interface SocialSentimentData {
+  reddit:  { mention: number; positiveScore: number; negativeScore: number; score: number }[]
+  twitter: { mention: number; positiveScore: number; negativeScore: number; score: number }[]
+}
+
+export async function getSocialSentiment(symbol: string): Promise<SocialSentimentData> {
+  return cachedFetch(
+    `social-sentiment:${symbol.toUpperCase()}`,
+    TTL.NEWS,
+    async () => {
+      if (await isRateLimited()) return { reddit: [], twitter: [] }
+      if (!(await checkCallQuota())) return { reddit: [], twitter: [] }
+      const data = await finnhubGet<{ reddit: SocialSentimentData['reddit']; twitter: SocialSentimentData['twitter'] }>(
+        `/stock/social-sentiment?symbol=${encodeURIComponent(symbol)}&from=${new Date(Date.now() - 7 * 86400_000).toISOString().slice(0, 10)}&to=${new Date().toISOString().slice(0, 10)}`,
+      )
+      return {
+        reddit:  data.reddit  ?? [],
+        twitter: data.twitter ?? [],
+      }
+    },
+  )
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function mapFinnhubType(finnhubType: string): AssetType {

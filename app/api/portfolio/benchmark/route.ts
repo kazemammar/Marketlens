@@ -45,10 +45,14 @@ export async function GET(req: Request) {
   const range   = (VALID_RANGES.includes(url.searchParams.get('range') as Range)
     ? url.searchParams.get('range')
     : '3mo') as Range
+  const benchmark = url.searchParams.get('benchmark') === 'btc' ? 'btc' : 'spy'
   const refresh = url.searchParams.get('refresh') === 'true'
 
+  const benchmarkSymbol = benchmark === 'btc' ? 'BTC-USD' : 'SPY'
+  const benchmarkLabel  = benchmark === 'btc' ? 'BTC' : 'SPY'
+
   // Cache
-  const cacheKey = `portfolio:benchmark:v2:${user.id}:${range}`
+  const cacheKey = `portfolio:benchmark:v2:${user.id}:${range}:${benchmark}`
   if (!refresh) {
     try {
       const cached = await redis.get<BenchmarkPayload>(cacheKey)
@@ -88,7 +92,7 @@ export async function GET(req: Request) {
   }
 
   const fetchList: PositionEntry[] = [
-    { symbol: 'SPY', yahooSymbol: 'SPY', qty: 0, cost: 0, direction: 'long', isSpy: true },
+    { symbol: benchmarkLabel, yahooSymbol: benchmarkSymbol, qty: 0, cost: 0, direction: 'long', isSpy: true },
     ...costPositions.map((p) => ({
       symbol:      p.symbol,
       yahooSymbol: toYahooSymbol(p.symbol, p.asset_type),
@@ -114,7 +118,7 @@ export async function GET(req: Request) {
     priceByDate[s.symbol] = map
   })
 
-  // Use SPY dates as the canonical trading-day spine
+  // Use benchmark dates as the canonical trading-day spine
   const spyDates = historyResults[0].status === 'fulfilled'
     ? historyResults[0].value.map((d) => d.date)
     : []
@@ -129,8 +133,8 @@ export async function GET(req: Request) {
 
   // Build series
   const series = spyDates.map((date, idx) => {
-    // SPY cumulative return
-    const spyDayMap = priceByDate['SPY'] ?? {}
+    // Benchmark cumulative return
+    const spyDayMap = priceByDate[benchmarkLabel] ?? {}
     const spyFirst  = spyDayMap[spyDates[0]] ?? 1
     const spyClose  = spyDayMap[date] ?? 0
     const spyCumReturn = spyFirst > 0 ? ((spyClose - spyFirst) / spyFirst) * 100 : 0

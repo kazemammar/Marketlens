@@ -17,6 +17,9 @@ import HeatmapPanel      from '@/components/warroom/HeatmapPanel'
 import EconomicIndicators   from '@/components/warroom/EconomicIndicators'
 import EconomicCalendar     from '@/components/warroom/EconomicCalendar'
 import EarningsCalendar     from '@/components/warroom/EarningsCalendar'
+import IpoCalendar          from '@/components/warroom/IpoCalendar'
+import MarketHours          from '@/components/warroom/MarketHours'
+import SectorRotation       from '@/components/warroom/SectorRotation'
 import FearGreedIndex        from '@/components/warroom/FearGreedIndex'
 import OilEnergyPanel      from '@/components/warroom/OilEnergyPanel'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
@@ -68,6 +71,11 @@ export default async function HomePage({
       {/* ══ TICKER TAPE — scrolling prices ══════════════════════════════ */}
       <PanelErrorBoundary fallbackTitle="Ticker Tape">
         <TickerTape initialData={homepage?.tickerQuotes} />
+      </PanelErrorBoundary>
+
+      {/* ══ MARKET HOURS — global exchange status ═════════════════════ */}
+      <PanelErrorBoundary fallbackTitle="Market Hours">
+        <MarketHours />
       </PanelErrorBoundary>
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
@@ -158,6 +166,13 @@ export default async function HomePage({
         </div>
       </div>
 
+      {/* ══ SECTOR ROTATION — daily sector performance bars ══════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Sector Rotation">
+          <SectorRotation />
+        </PanelErrorBoundary>
+      </div>
+
       {/* ══ DATA PANELS — Row 3: Live Signals horizontal strip ══════════ */}
       <div className="px-3 sm:px-4 py-2">
         <PanelErrorBoundary fallbackTitle="Signals">
@@ -190,6 +205,13 @@ export default async function HomePage({
       <div className="px-3 sm:px-4 py-2">
         <PanelErrorBoundary fallbackTitle="Earnings Calendar">
           <EarningsCalendar limit={8} />
+        </PanelErrorBoundary>
+      </div>
+
+      {/* IPO Calendar — upcoming IPOs next 30 days */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="IPO Calendar">
+          <IpoCalendar limit={6} />
         </PanelErrorBoundary>
       </div>
 

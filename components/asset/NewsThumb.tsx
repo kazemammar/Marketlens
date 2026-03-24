@@ -54,7 +54,7 @@ interface NewsThumbProps {
   size?:     'sm' | 'md'   // sm=40px, md=48px
 }
 
-export default function NewsThumb({ src, headline: _headline = '', source = '', size = 'md' }: NewsThumbProps) {
+export default function NewsThumb({ src, headline = '', source = '', size = 'md' }: NewsThumbProps) {
   const [failed, setFailed] = useState(false)
 
   const sizeClass   = size === 'sm' ? 'h-10 w-10' : 'h-12 w-12'
@@ -85,7 +85,7 @@ export default function NewsThumb({ src, headline: _headline = '', source = '', 
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
-      alt=""
+      alt={headline || 'Article thumbnail'}
       className={`${sizeClass} shrink-0 rounded object-cover`}
       loading="lazy"
       onError={() => setFailed(true)}

@@ -5,7 +5,10 @@
 
 /* ─── Design Tokens ───────────────────────────────────────────────────────── */
 
-/* Light mode (default when .dark class is absent) */
+/* Light mode (default when .dark class is absent)
+   These tokens mirror the .dark set below but use contrast-safe
+   values for white/light backgrounds.  Both blocks MUST stay in sync
+   — if you add a new variable in .dark, add it here too. */
 :root {
   --bg:          #f4f4f5;
   --surface:     #ffffff;

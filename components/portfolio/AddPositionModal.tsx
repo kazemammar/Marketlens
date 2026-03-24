@@ -184,14 +184,14 @@ export default function AddPositionModal({
   // ── Search assets ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (dq.length < 1) { setResults([]); return }
-    let cancelled = false
+    const ac = new AbortController()
     setSearching(true)
-    fetch(`/api/search?q=${encodeURIComponent(dq)}&limit=8`)
+    fetch(`/api/search?q=${encodeURIComponent(dq)}&limit=8`, { signal: ac.signal })
       .then((r) => r.json() as Promise<Asset[]>)
-      .then((d) => { if (!cancelled) { setResults(d); setActiveIdx(-1) } })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setSearching(false) })
-    return () => { cancelled = true }
+      .then((d) => { setResults(d); setActiveIdx(-1) })
+      .catch((e) => { if (e.name !== 'AbortError') console.error(e) })
+      .finally(() => { if (!ac.signal.aborted) setSearching(false) })
+    return () => ac.abort()
   }, [dq])
 
   const selectAsset = useCallback((asset: Asset) => {

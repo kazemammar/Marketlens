@@ -126,11 +126,11 @@ function computeAlerts(
     if (totalValue > 0) {
       for (const [sym, val] of Object.entries(valueBySymbol)) {
         const pct = (val / totalValue) * 100
-        if (pct > 40) {
+        if (pct > 30) {
           alerts.push({
-            severity:  'HIGH',
+            severity:  pct > 40 ? 'HIGH' : 'MED',
             category:  'Concentration',
-            message:   `${sym} is ${pct.toFixed(0)}% of portfolio value — high concentration risk`,
+            message:   `${sym} is ${pct.toFixed(0)}% of portfolio value — ${pct > 40 ? 'high' : 'elevated'} concentration risk`,
             valuePct:  pct,
             indicator: 'bar',
           })
@@ -209,7 +209,7 @@ function computeAlerts(
   for (const [sector, count] of Object.entries(sectorCounts)) {
     if (count >= 3) {
       alerts.push({
-        severity:  'MED',
+        severity:  count >= 4 ? 'HIGH' : 'MED',
         category:  'Correlation',
         message:   `${count} positions in ${sector} — correlated exposure`,
         indicator: 'none',

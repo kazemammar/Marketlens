@@ -94,7 +94,7 @@ function ArticleThumb({ headline, imageUrl }: { headline: string; imageUrl?: str
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={imageUrl}
-        alt=""
+        alt={headline || 'News'}
         aria-hidden
         className="h-12 w-12 shrink-0 rounded object-cover"
         style={{ border: '1px solid var(--border)' }}

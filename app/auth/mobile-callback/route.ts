@@ -41,22 +41,11 @@ export async function GET(request: Request) {
     refresh_token: session.refresh_token,
   }, { ex: 60 })
 
+  // HTTP 302 redirect to the custom URL scheme.
+  // ASWebAuthenticationSession captures this automatically.
   const appUrl = `marketlens://auth/callback?code=${otp}`
-
-  // Safari blocks HTTP 302 redirects to custom URL schemes.
-  // Serve a small HTML page that does the redirect via JavaScript instead.
-  return new Response(
-    `<!DOCTYPE html>
-<html>
-<head><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="background:#09090b;color:#fafafa;font-family:ui-monospace,monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
-  <div style="text-align:center">
-    <p style="font-size:14px">Returning to MarketLens...</p>
-    <p style="font-size:11px;color:#71717a;margin-top:8px">If the app doesn't open, <a href="${appUrl}" style="color:#10b981">tap here</a>.</p>
-  </div>
-  <script>window.location.href=${JSON.stringify(appUrl)};</script>
-</body>
-</html>`,
-    { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
-  )
+  return new Response(null, {
+    status: 302,
+    headers: { Location: appUrl },
+  })
 }

@@ -22,7 +22,6 @@ export function useWatchlist() {
     if (!userId) { setItems([]); return }
     setLoading(true)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await createClient().from('watchlists')
         .select('*')
         .eq('user_id', userId)
@@ -39,7 +38,6 @@ export function useWatchlist() {
   const addToWatchlist = useCallback(async (symbol: string, assetType: string) => {
     if (!userId) return false
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('watchlists')
         .insert({ user_id: userId, symbol, asset_type: assetType })
       if (!error) {
@@ -56,7 +54,6 @@ export function useWatchlist() {
   const removeFromWatchlist = useCallback(async (symbol: string) => {
     if (!userId) return false
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('watchlists')
         .delete()
         .eq('user_id', userId)

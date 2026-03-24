@@ -60,7 +60,6 @@ export async function GET(req: Request) {
   })()
 
   // Query snapshots
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let query = supabase.from('portfolio_snapshots')
     .select('date, total_value, total_cost, positions')
     .eq('user_id', user.id)

@@ -35,7 +35,6 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   // Fetch user's positions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: positions } = await supabase.from('portfolio_positions')
     .select('symbol, asset_type, direction, quantity, avg_cost')
     .eq('user_id', user.id)
@@ -102,7 +101,6 @@ export async function POST(req: Request) {
     positions:   countWithData,
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await supabase.from('portfolio_snapshots')
     .upsert(snapshot, { onConflict: 'user_id,date' })
 

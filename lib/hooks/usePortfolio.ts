@@ -43,7 +43,6 @@ export function usePortfolio() {
     if (!userId) { setPositions([]); return }
     setLoading(true)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await createClient().from('portfolio_positions')
         .select('*')
         .eq('user_id', userId)
@@ -74,7 +73,6 @@ export function usePortfolio() {
   ): Promise<boolean> => {
     if (!userId) return false
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('portfolio_positions')
         .insert({
           user_id:       userId,
@@ -126,7 +124,6 @@ export function usePortfolio() {
   ): Promise<boolean> => {
     if (!userId) return false
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('portfolio_positions')
         .update(updates)
         .eq('id', id)
@@ -164,7 +161,6 @@ export function usePortfolio() {
         updated_at: new Date().toISOString(),
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('portfolio_positions')
         .update(patch)
         .eq('id', positionId)
@@ -204,7 +200,6 @@ export function usePortfolio() {
         updated_at: new Date().toISOString(),
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('portfolio_positions')
         .update(patch)
         .eq('id', positionId)
@@ -243,7 +238,6 @@ export function usePortfolio() {
         updated_at: new Date().toISOString(),
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('portfolio_positions')
         .update(patch)
         .eq('id', positionId)
@@ -264,7 +258,6 @@ export function usePortfolio() {
   const removePosition = useCallback(async (id: string): Promise<boolean> => {
     if (!userId) return false
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await createClient().from('portfolio_positions')
         .delete()
         .eq('id', id)

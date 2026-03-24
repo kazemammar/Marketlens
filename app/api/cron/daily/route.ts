@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function GET(req: NextRequest) {
   // Verify cron secret if set
   const authHeader = req.headers.get('authorization')

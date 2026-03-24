@@ -4,7 +4,6 @@ import { Suspense }      from 'react'
 import TickerTape        from '@/components/layout/TickerTape'
 import MarketTabs        from '@/components/dashboard/MarketTabs'
 import MarketBrief       from '@/components/warroom/MarketBrief'
-import MarketBriefBar    from '@/components/warroom/MarketBriefBar'
 import MarketPulse       from '@/components/warroom/MarketPulse'
 import CommodityStrip    from '@/components/warroom/CommodityStrip'
 import GeoMap            from '@/components/warroom/GeoMap'
@@ -55,11 +54,6 @@ export default async function HomePage({
       {/* ══ LIVE PULSE — news-driven, refreshes every 5 min ════════════ */}
       <PanelErrorBoundary fallbackTitle="Market Pulse">
         <MarketPulse />
-      </PanelErrorBoundary>
-
-      {/* ══ AI BRIEF BAR — slim narrative headline ═══════════════════════ */}
-      <PanelErrorBoundary fallbackTitle="AI Brief">
-        <MarketBriefBar />
       </PanelErrorBoundary>
 
       {/* ══ TICKER TAPE — scrolling prices ══════════════════════════════ */}

@@ -31,9 +31,6 @@ const SESSION_STYLE: Record<MarketSession, { label: string; color: string }> = {
 
 const CONF_LABEL: Record<string, string> = { high: 'HIGH', medium: 'MED', low: 'LOW' }
 
-const TEXT = 'font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text-2)]'
-const LABEL = 'font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)] w-[72px] shrink-0 pt-px'
-
 // ─── Main component ──────────────────────────────────────────────────────
 
 export default function MarketBrief() {
@@ -93,26 +90,18 @@ export default function MarketBrief() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
 
-      {/* ══ HEADER — matches standard card pattern ══════════════════════════ */}
+      {/* ══ HEADER ══════════════════════════════════════════════════════════ */}
       <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-        {/* Icon */}
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/>
           <path d="M5 6h6M5 8.5h4M5 11h5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>
         </svg>
-
-        {/* Title */}
         <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
           AI Market Brief
         </span>
-
-        {/* Live dot */}
         <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-
-        {/* Divider */}
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
 
-        {/* Session badge */}
         {ss && (
           <span
             className="rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase"
@@ -121,8 +110,6 @@ export default function MarketBrief() {
             {ss.label}
           </span>
         )}
-
-        {/* Risk badge */}
         <span
           className="inline-flex items-center gap-1 rounded border px-1.5 py-px font-mono text-[8px] font-bold uppercase"
           style={{ color: riskDot, borderColor: `${riskDot}40`, background: `${riskDot}12` }}
@@ -130,15 +117,11 @@ export default function MarketBrief() {
           <span className="h-1 w-1 rounded-full" style={{ background: riskDot }} />
           {riskLabel}
         </span>
-
-        {/* Confidence */}
         {brief.confidence && (
           <span className="font-mono text-[7px] font-bold uppercase text-[var(--text-muted)] opacity-50">
             {CONF_LABEL[brief.confidence]} CONF
           </span>
         )}
-
-        {/* Timestamp */}
         <span
           className="font-mono text-[8px] tabular-nums"
           style={{ color: stalenessColor(brief.generatedAt) }}
@@ -160,7 +143,7 @@ export default function MarketBrief() {
 
         {/* ── Session context ─────────────────────────────────────────── */}
         {brief.session_context && (
-          <p className={TEXT}>
+          <p className="font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text)]" style={{ opacity: 0.7 }}>
             {brief.session_context}
           </p>
         )}
@@ -175,31 +158,52 @@ export default function MarketBrief() {
               What Changed
             </span>
             {(brief.delta ?? []).map((d, i) => (
-              <p key={i} className="font-mono text-[10px] leading-relaxed text-[var(--text-2)]">
-                <span style={{ color: '#60a5fa', opacity: 0.5 }}>{'>'}</span> {d}
+              <p key={i} className="font-mono text-[10px] leading-relaxed text-[var(--text)]">
+                <span style={{ color: '#60a5fa', opacity: 0.6 }}>›</span> {d}
               </p>
             ))}
           </div>
         )}
 
-        {/* ── STRUCTURED SECTIONS — all expanded ─────────────────────────── */}
+        {/* ── STRUCTURED SECTIONS — colored left-border cards ─────────── */}
         <div className="space-y-2">
           {brief.overnight && (
-            <div className="flex gap-2.5">
-              <span className={LABEL}>Overnight</span>
-              <p className={`min-w-0 flex-1 ${TEXT}`}>{brief.overnight}</p>
+            <div
+              className="rounded-r border-l-2 py-2 pl-3 pr-2.5"
+              style={{ borderLeftColor: '#22d3ee', background: 'rgba(34,211,238,0.04)' }}
+            >
+              <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: '#22d3ee' }}>
+                Overnight
+              </span>
+              <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text)]">
+                {brief.overnight}
+              </p>
             </div>
           )}
           {brief.macro && (
-            <div className="flex gap-2.5">
-              <span className={LABEL}>Macro</span>
-              <p className={`min-w-0 flex-1 ${TEXT}`}>{brief.macro}</p>
+            <div
+              className="rounded-r border-l-2 py-2 pl-3 pr-2.5"
+              style={{ borderLeftColor: '#f59e0b', background: 'rgba(245,158,11,0.04)' }}
+            >
+              <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: '#f59e0b' }}>
+                Macro
+              </span>
+              <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text)]">
+                {brief.macro}
+              </p>
             </div>
           )}
           {brief.sectors && (
-            <div className="flex gap-2.5">
-              <span className={LABEL}>Sectors</span>
-              <p className={`min-w-0 flex-1 ${TEXT}`}>{brief.sectors}</p>
+            <div
+              className="rounded-r border-l-2 py-2 pl-3 pr-2.5"
+              style={{ borderLeftColor: '#a78bfa', background: 'rgba(167,139,250,0.04)' }}
+            >
+              <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: '#a78bfa' }}>
+                Sectors
+              </span>
+              <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text)]">
+                {brief.sectors}
+              </p>
             </div>
           )}
         </div>
@@ -223,53 +227,23 @@ export default function MarketBrief() {
           </div>
         )}
 
-        {/* ── RISKS & OPPORTUNITIES — side by side on desktop ─────────── */}
-        {((brief.risks?.length ?? 0) > 0 || (brief.opportunities?.length ?? 0) > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            {brief.risks && brief.risks.length > 0 && (
-              <div className="space-y-1">
-                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-red-400/70">
-                  Risks
-                </span>
-                {brief.risks.map((r, i) => (
-                  <p key={i} className="font-mono text-[9px] leading-snug text-[var(--text-muted)]">
-                    <span className="text-red-400/40 mr-1">{i + 1}.</span>{r}
-                  </p>
-                ))}
-              </div>
-            )}
-            {brief.opportunities && brief.opportunities.length > 0 && (
-              <div className="space-y-1">
-                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-emerald-400/70">
-                  Opportunities
-                </span>
-                {brief.opportunities.map((o, i) => (
-                  <p key={i} className="font-mono text-[9px] leading-snug text-[var(--text-muted)]">
-                    <span className="text-emerald-400/40 mr-1">{i + 1}.</span>{o}
-                  </p>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* ── LOOKING AHEAD ──────────────────────────────────────────────── */}
         {brief.looking_ahead && (
           <div
             className="rounded border px-2.5 py-2"
-            style={{ borderColor: 'rgba(16,185,129,0.15)', background: 'rgba(16,185,129,0.03)' }}
+            style={{ borderColor: 'rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.04)' }}
           >
             <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: '#10b981' }}>
               Looking Ahead
             </span>
-            <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-[var(--text-2)]">
+            <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text)]">
               {brief.looking_ahead}
             </p>
           </div>
         )}
       </div>
 
-      {/* ── FOOTER — source info ─────────────────────────────────────────── */}
+      {/* ── FOOTER ─────────────────────────────────────────────────────────── */}
       {(brief.headlineCount || brief.sourceCount) && (
         <div className="border-t border-[var(--border)] px-3 py-1">
           <span className="font-mono text-[7px] text-[var(--text-muted)] opacity-40">

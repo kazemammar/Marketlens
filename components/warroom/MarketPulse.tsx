@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { MarketPulsePayload } from '@/app/api/market-pulse/route'
+import type { MarketSession } from '@/app/api/market-brief/route'
 
 const DIR_COLOR: Record<string, string> = {
   up:       'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
@@ -10,6 +11,26 @@ const DIR_COLOR: Record<string, string> = {
   volatile: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
 }
 const DIR_ARROW: Record<string, string> = { up: '▲', down: '▼', volatile: '↕' }
+
+const SESSION_STYLE: Record<MarketSession, { label: string; color: string }> = {
+  pre_market:  { label: 'PRE-MKT',   color: '#60a5fa' },
+  morning:     { label: 'MORNING',   color: '#10b981' },
+  afternoon:   { label: 'AFTERNOON', color: '#f59e0b' },
+  after_hours: { label: 'AFTER HRS', color: '#a78bfa' },
+}
+
+function getSession(): { label: string; color: string } {
+  const now = new Date()
+  const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York', hour12: false, hour: '2-digit', minute: '2-digit' })
+  const [h, m] = etStr.split(':').map(Number)
+  const decimal = h + m / 60
+  let session: MarketSession
+  if (decimal < 9.5)       session = 'pre_market'
+  else if (decimal < 12)   session = 'morning'
+  else if (decimal < 16)   session = 'afternoon'
+  else                     session = 'after_hours'
+  return SESSION_STYLE[session]
+}
 
 function ts(ms: number) {
   return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
@@ -50,10 +71,12 @@ export default function MarketPulse() {
 
   if (!data) return null
 
+  const { label: sessionLabel, color: sessionColor } = getSession()
+
   return (
     <div className="flex flex-col gap-1.5 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2 sm:flex-row sm:min-h-10 sm:items-center sm:gap-3 sm:py-1.5 sm:px-4">
 
-      {/* LIVE badge + label + timestamp */}
+      {/* LIVE badge + label + session + timestamp */}
       <div className="flex shrink-0 items-center gap-1.5">
         <div className="flex items-center gap-1 rounded px-1 py-0.5" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
           <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -61,6 +84,12 @@ export default function MarketPulse() {
         </div>
         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
           AI BRIEF
+        </span>
+        <span
+          className="rounded border px-1.5 py-px font-mono text-[7px] font-bold uppercase tracking-[0.08em]"
+          style={{ color: sessionColor, borderColor: `${sessionColor}33`, background: `${sessionColor}12` }}
+        >
+          {sessionLabel}
         </span>
         <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-50" suppressHydrationWarning>
           {ts(data.generatedAt)}

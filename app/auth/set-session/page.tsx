@@ -10,24 +10,46 @@ function SetSessionInner() {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    const accessToken  = searchParams.get('access_token')
-    const refreshToken = searchParams.get('refresh_token')
+    async function establish() {
+      let accessToken  = searchParams.get('access_token')
+      let refreshToken = searchParams.get('refresh_token')
 
-    if (!accessToken || !refreshToken) {
-      setError(true)
-      return
+      // Support one-time code exchange (from mobile-callback flow)
+      const code = searchParams.get('code')
+      if (!accessToken && code) {
+        try {
+          const res = await fetch('/api/auth/exchange-code', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            accessToken = data.access_token
+            refreshToken = data.refresh_token
+          }
+        } catch { /* fall through to error */ }
+      }
+
+      if (!accessToken || !refreshToken) {
+        setError(true)
+        return
+      }
+
+      const supabase = createClient()
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      })
+
+      if (sessionError) {
+        setError(true)
+      } else {
+        router.replace('/')
+      }
     }
 
-    const supabase = createClient()
-    supabase.auth
-      .setSession({ access_token: accessToken, refresh_token: refreshToken })
-      .then(({ error: sessionError }) => {
-        if (sessionError) {
-          setError(true)
-        } else {
-          router.replace('/')
-        }
-      })
+    establish()
   }, [searchParams, router])
 
   if (error) {

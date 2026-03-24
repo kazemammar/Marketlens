@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { redis } from '@/lib/cache/redis'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -23,24 +24,27 @@ export async function GET(request: Request) {
     },
   )
 
-  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-  if (exchangeError) {
+  // Use the session returned directly from exchangeCodeForSession —
+  // calling getSession() separately can return null in this context.
+  const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+  if (exchangeError || !data.session) {
     return NextResponse.redirect(new URL('/?auth_error=1', origin))
   }
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return NextResponse.redirect(new URL('/?auth_error=1', origin))
-  }
+  const { session } = data
 
-  // Safari blocks HTTP redirects to custom URL schemes.
-  // Serve a small HTML page that does the redirect via JavaScript instead.
-  const params = new URLSearchParams({
+  // Store tokens in Redis under a short-lived one-time code.
+  // This keeps long JWTs out of the URL (avoids length limits and leaks).
+  const otp = crypto.randomUUID()
+  await redis.set(`auth:otp:${otp}`, {
     access_token: session.access_token,
     refresh_token: session.refresh_token,
-  })
-  const appUrl = `marketlens://auth/callback?${params.toString()}`
+  }, { ex: 60 })
 
+  const appUrl = `marketlens://auth/callback?code=${otp}`
+
+  // Safari blocks HTTP 302 redirects to custom URL schemes.
+  // Serve a small HTML page that does the redirect via JavaScript instead.
   return new Response(
     `<!DOCTYPE html>
 <html>

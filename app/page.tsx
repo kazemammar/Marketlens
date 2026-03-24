@@ -4,6 +4,7 @@ import { Suspense }      from 'react'
 import TickerTape        from '@/components/layout/TickerTape'
 import MarketTabs        from '@/components/dashboard/MarketTabs'
 import MarketBrief       from '@/components/warroom/MarketBrief'
+import MarketBriefBar    from '@/components/warroom/MarketBriefBar'
 import MarketPulse       from '@/components/warroom/MarketPulse'
 import CommodityStrip    from '@/components/warroom/CommodityStrip'
 import GeoMap            from '@/components/warroom/GeoMap'
@@ -56,16 +57,9 @@ export default async function HomePage({
         <MarketPulse />
       </PanelErrorBoundary>
 
-      {/* ══ HOURLY BRIEF — structured AI analysis, refreshes every hour ═ */}
-      <PanelErrorBoundary fallbackTitle="Market Brief">
-        <Suspense fallback={
-          <div className="ai-brief-bar flex h-10 items-center gap-3 border-b border-[var(--border)] px-4">
-            <div className="skeleton h-2 w-2 rounded-full" />
-            <div className="skeleton h-2.5 flex-1 max-w-2xl rounded" />
-          </div>
-        }>
-          <MarketBrief />
-        </Suspense>
+      {/* ══ AI BRIEF BAR — slim narrative headline ═══════════════════════ */}
+      <PanelErrorBoundary fallbackTitle="AI Brief">
+        <MarketBriefBar />
       </PanelErrorBoundary>
 
       {/* ══ TICKER TAPE — scrolling prices ══════════════════════════════ */}
@@ -77,6 +71,13 @@ export default async function HomePage({
       <PanelErrorBoundary fallbackTitle="Market Hours">
         <MarketHours />
       </PanelErrorBoundary>
+
+      {/* ══ AI MARKET BRIEF — full structured panel ═══════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="AI Market Brief">
+          <MarketBrief />
+        </PanelErrorBoundary>
+      </div>
 
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:px-4 py-2 lg:grid-cols-[65fr_35fr]">

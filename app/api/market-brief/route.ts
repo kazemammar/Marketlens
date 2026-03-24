@@ -130,13 +130,18 @@ export async function GET(req: Request) {
   const limited = withRateLimit(req, 10)
   if (limited) return limited
 
-  // Check cache
-  try {
-    const cached = await redis.get<MarketBriefPayload>(CACHE_KEY)
-    if (cached) {
-      return NextResponse.json(cached)
-    }
-  } catch { /* fall through */ }
+  const url = new URL(req.url)
+  const forceRefresh = url.searchParams.get('refresh') === 'true'
+
+  // Check cache (skip if force refresh)
+  if (!forceRefresh) {
+    try {
+      const cached = await redis.get<MarketBriefPayload>(CACHE_KEY)
+      if (cached) {
+        return NextResponse.json(cached)
+      }
+    } catch { /* fall through */ }
+  }
 
   // Fetch recent headlines (non-fatal)
   let headlines: string[] = []

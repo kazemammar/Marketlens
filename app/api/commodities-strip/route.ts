@@ -27,7 +27,7 @@ const STRIP = [
   { symbol: 'HG=F',  name: 'Copper',         shortName: 'Copper'  },
   { symbol: 'ZW=F',  name: 'Wheat',          shortName: 'Wheat'   },
   { symbol: 'ZC=F',  name: 'Corn',           shortName: 'Corn'    },
-  { symbol: 'UX1!',  name: 'Uranium',        shortName: 'Uranium' },
+  { symbol: 'URA',   name: 'Uranium ETF',    shortName: 'Uranium' },
 ]
 
 export async function GET() {

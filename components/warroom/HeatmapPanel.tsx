@@ -2,6 +2,19 @@
 
 import { useFetch } from '@/lib/hooks/useFetch'
 import type { AssetCardData } from '@/lib/utils/types'
+import { STOCK_SECTORS } from '@/lib/utils/sectors'
+
+interface SectorNarratives {
+  narratives: Record<string, string>
+  generatedAt: number
+}
+
+// Direct ticker-to-raw-sector map (not normalized) so narrative keys match exactly
+const TICKER_RAW_SECTOR: Record<string, string> = Object.fromEntries(
+  Object.entries(STOCK_SECTORS).flatMap(([sector, tickers]) =>
+    tickers.map((ticker) => [ticker, sector])
+  )
+)
 
 const MCAP_WEIGHT: Record<string, number> = {
   AAPL: 350, MSFT: 320, NVDA: 295, GOOGL: 220, AMZN: 215,
@@ -41,7 +54,7 @@ function buildTreemapRows(stocks: AssetCardData[]): Array<Array<{ symbol: string
 // Row flex weights — top rows are taller (higher market cap stocks)
 const ROW_FLEX = [35, 35, 30]
 
-function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
+function HeatCell({ symbol, pct, narrative }: { symbol: string; pct: number; narrative?: string }) {
   const abs   = Math.abs(pct)
   const isPos = pct >= 0
 
@@ -65,7 +78,7 @@ function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
   return (
     <a
       href={`/asset/stock/${symbol}`}
-      title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`}
+      title={`${symbol}: ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%${narrative ? `\n${narrative}` : ''}`}
       className="flex h-full flex-col items-center justify-center overflow-hidden transition-opacity hover:opacity-80"
       style={{ background: bg, border: '1px solid var(--border)' }}
     >
@@ -87,8 +100,10 @@ function HeatCell({ symbol, pct }: { symbol: string; pct: number }) {
 
 export default function HeatmapPanel({ initialStocks = [] }: { initialStocks?: AssetCardData[] }) {
   const { data } = useFetch<AssetCardData[]>('/api/market?tab=stock', { refreshInterval: 30 * 60_000 })
+  const { data: narrativeData } = useFetch<SectorNarratives>('/api/sector-narratives', { refreshInterval: 30 * 60_000 })
   const stocks = data ?? initialStocks
   const rows = buildTreemapRows(stocks)
+  const narratives = narrativeData?.narratives ?? {}
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] flex flex-col h-full min-h-[220px] sm:min-h-0">
@@ -115,11 +130,15 @@ export default function HeatmapPanel({ initialStocks = [] }: { initialStocks?: A
         <div className="flex flex-1 flex-col gap-px overflow-hidden p-1" style={{ minWidth: 0 }}>
           {rows.map((row, ri) => (
             <div key={ri} className="flex min-h-0 min-w-0 gap-px overflow-hidden" style={{ flex: `${ROW_FLEX[ri] ?? 30} 0 0` }}>
-              {row.map(({ symbol, pct, flex }) => (
-                <div key={symbol} className="min-w-0 overflow-hidden" style={{ flex: `${flex} 0 0` }}>
-                  <HeatCell symbol={symbol} pct={pct} />
-                </div>
-              ))}
+              {row.map(({ symbol, pct, flex }) => {
+                const sector = TICKER_RAW_SECTOR[symbol]
+                const narrative = sector ? narratives[sector] : undefined
+                return (
+                  <div key={symbol} className="min-w-0 overflow-hidden" style={{ flex: `${flex} 0 0` }}>
+                    <HeatCell symbol={symbol} pct={pct} narrative={narrative} />
+                  </div>
+                )
+              })}
             </div>
           ))}
         </div>

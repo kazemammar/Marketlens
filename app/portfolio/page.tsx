@@ -18,6 +18,9 @@ import ExposurePanel    from '@/components/portfolio/ExposurePanel'
 import EarningsCalendar  from '@/components/portfolio/EarningsCalendar'
 import BenchmarkChart   from '@/components/portfolio/BenchmarkChart'
 import PerformanceChart from '@/components/portfolio/PerformanceChart'
+import CorrelationMatrix from '@/components/portfolio/CorrelationMatrix'
+import WhatIfPanel      from '@/components/portfolio/WhatIfPanel'
+import PanelErrorBoundary from '@/components/ui/PanelErrorBoundary'
 
 // ─── Crypto symbol mapping ─────────────────────────────────────────────────
 
@@ -323,6 +326,13 @@ export default function PortfolioPage() {
             }
           />
 
+          {/* ══ WHAT-IF SCENARIO ENGINE ════════════════════════════════════ */}
+          <div className="px-3 sm:px-4 py-2">
+            <PanelErrorBoundary fallbackTitle="What-If Analysis">
+              <WhatIfPanel />
+            </PanelErrorBoundary>
+          </div>
+
           {/* ── Row 1: Day Movers | Allocation ──────────────────────────── */}
           <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
             <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
@@ -341,6 +351,11 @@ export default function PortfolioPage() {
             <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <ExposurePanel positions={activePositions} quotes={activeQuotes} />
             </div>
+          </div>
+
+          {/* ── Correlation Matrix ──────────────────────────────────── */}
+          <div className="px-3 sm:px-4 py-2">
+            <CorrelationMatrix />
           </div>
 
           {/* ── Benchmark Comparison ─────────────────────────────────────── */}

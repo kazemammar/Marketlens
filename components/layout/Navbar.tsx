@@ -168,25 +168,58 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         </Link>
       </div>
 
-      {/* Regular nav grid */}
-      <nav className="grid grid-cols-2 gap-1 p-3 sm:grid-cols-4">
-        {NAV_LINKS.map(({ label, href }) => {
-          const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className={`flex min-h-[44px] items-center justify-center rounded py-3 text-[11px] font-medium tracking-wide transition-colors ${
-                isActive
-                  ? 'bg-[var(--accent-dim)] text-[var(--accent)]'
-                  : 'text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text-2)]'
-              }`}
-            >
-              {label}
-            </Link>
-          )
-        })}
+      {/* Grouped nav */}
+      <nav className="p-3 space-y-2">
+        {/* Markets */}
+        <div>
+          <span className="block px-1 pb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-50">
+            Markets
+          </span>
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+            {NAV_LINKS.filter(l => ['Dashboard','Stocks','Crypto','Forex','Commodities','ETFs','Movers'].includes(l.label)).map(({ label, href }) => {
+              const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onClose}
+                  className={`flex min-h-[44px] items-center justify-center rounded py-3 text-[11px] font-medium tracking-wide transition-colors ${
+                    isActive
+                      ? 'bg-[var(--accent-dim)] text-[var(--accent)]'
+                      : 'text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text-2)]'
+                  }`}
+                >
+                  {label}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+        {/* Intelligence */}
+        <div>
+          <span className="block px-1 pb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)] opacity-50">
+            Intelligence
+          </span>
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+            {NAV_LINKS.filter(l => ['News','Econ'].includes(l.label)).map(({ label, href }) => {
+              const isActive = pathname === href || (href !== '/' && pathname.startsWith(href))
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onClose}
+                  className={`flex min-h-[44px] items-center justify-center rounded py-3 text-[11px] font-medium tracking-wide transition-colors ${
+                    isActive
+                      ? 'bg-[var(--accent-dim)] text-[var(--accent)]'
+                      : 'text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--text-2)]'
+                  }`}
+                >
+                  {label}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
       </nav>
 
       <div className="px-3 pb-3 pt-1">

@@ -41,6 +41,8 @@ export interface ChokepointIntelPayload {
 }
 
 // ─── Baseline definitions ─────────────────────────────────────────────────
+// Flow volumes sourced from EIA (2024) and UNCTAD Review of Maritime Transport.
+// Last updated: 2025-03. Refresh annually or after major supply disruptions.
 
 const CHOKEPOINT_DEFS: ChokepointData[] = [
   {

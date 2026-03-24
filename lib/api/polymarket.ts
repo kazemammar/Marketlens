@@ -24,11 +24,26 @@ export interface PolymarketMarket {
 // ─── Keywords to filter relevant geopolitical/macro markets ───────────────
 
 const RELEVANT_KEYWORDS = [
+  // Geopolitics & conflict
   'oil', 'war', 'iran', 'china', 'trump', 'tariff', 'sanction',
-  'fed', 'rate', 'election', 'nato', 'russia', 'ukraine', 'opec',
-  'israel', 'recession', 'inflation', 'nuclear', 'taiwan', 'missile',
-  'houthi', 'middle east', 'g7', 'g20', 'dollar', 'bitcoin', 'btc',
-  'cease', 'attack', 'conflict', 'military', 'debt', 'default',
+  'nato', 'russia', 'ukraine', 'opec', 'israel', 'nuclear', 'taiwan',
+  'missile', 'houthi', 'middle east', 'cease', 'attack', 'conflict',
+  'military', 'invasion', 'coup', 'assassination', 'north korea',
+  'hezbollah', 'gaza', 'syria', 'yemen', 'south china sea',
+  'india', 'pakistan', 'sudan', 'niger', 'wagner',
+  // Macro & economics
+  'fed', 'rate', 'election', 'recession', 'inflation', 'debt', 'default',
+  'g7', 'g20', 'dollar', 'treasury', 'yield', 'gdp', 'unemployment',
+  'cpi', 'pce', 'ecb', 'boj', 'pboc', 'imf', 'world bank',
+  'stimulus', 'shutdown', 'debt ceiling', 'fiscal',
+  // Markets & crypto
+  'bitcoin', 'btc', 'ethereum', 'crypto', 'etf', 's&p', 'nasdaq',
+  'stock market', 'bear market', 'bull market', 'crash',
+  // Energy & commodities
+  'opec+', 'natural gas', 'lng', 'pipeline', 'embargo', 'energy crisis',
+  'grain', 'food crisis', 'lithium', 'rare earth', 'uranium',
+  // Tech & AI
+  'ai regulation', 'openai', 'antitrust', 'tiktok', 'semiconductor',
 ]
 
 function isRelevant(question: string): boolean {

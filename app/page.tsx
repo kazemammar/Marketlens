@@ -25,12 +25,15 @@ import OilEnergyPanel      from '@/components/warroom/OilEnergyPanel'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import MoversStrip         from '@/components/warroom/MoversStrip'
 import NewsBriefing         from '@/components/warroom/NewsBriefing'
+import NewsSentimentMap     from '@/components/warroom/NewsSentimentMap'
+import NewsSentimentHeatmap from '@/components/warroom/NewsSentimentHeatmap'
 import ChokepointIntel      from '@/components/warroom/ChokepointIntel'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
 import SectionReveal        from '@/components/layout/SectionReveal'
 import { AssetType }           from '@/lib/utils/types'
 import { getHomepageData }     from '@/lib/api/homepage'
+import { HOMEPAGE_FALLBACK }  from '@/lib/api/homepage-fallback'
 import PortfolioIntroModal     from '@/components/ui/PortfolioIntroModal'
 import PanelErrorBoundary      from '@/components/ui/PanelErrorBoundary'
 
@@ -46,7 +49,7 @@ export default async function HomePage({
     ? (tabParam as AssetType)
     : 'stock'
 
-  let homepage = await getHomepageData().catch(() => null)
+  let homepage = await getHomepageData().catch(() => HOMEPAGE_FALLBACK)
 
   return (
     <div className="min-h-screen">
@@ -243,6 +246,20 @@ export default async function HomePage({
         <PanelErrorBoundary fallbackTitle="News Briefing">
           <SectionReveal delay={50}><NewsBriefing /></SectionReveal>
         </PanelErrorBoundary>
+      </div>
+
+      {/* ══ NEWS SENTIMENT BY SECTOR ════════════════════════════════════ */}
+      <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
+        <div className="min-w-0 overflow-hidden flex flex-col">
+          <PanelErrorBoundary fallbackTitle="News Sentiment">
+            <NewsSentimentMap />
+          </PanelErrorBoundary>
+        </div>
+        <div className="min-w-0 overflow-hidden flex flex-col">
+          <PanelErrorBoundary fallbackTitle="Sentiment Heatmap">
+            <NewsSentimentHeatmap />
+          </PanelErrorBoundary>
+        </div>
       </div>
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}

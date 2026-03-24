@@ -3,6 +3,196 @@
 import { formatPrice } from '@/lib/utils/formatters'
 import { useFetch } from '@/lib/hooks/useFetch'
 
+// ─── Twelve Data indicator types ─────────────────────────────────────────────
+
+interface TwelveDataIndicators {
+  rsi: number | null
+  macd: { macd: number; signal: number; histogram: number } | null
+  bbands: { upper: number; middle: number; lower: number } | null
+  atr: number | null
+  stochastic: { k: number; d: number } | null
+  ema20: number | null
+  ema50: number | null
+  sma200: number | null
+}
+
+function hasAnyIndicator(d: TwelveDataIndicators): boolean {
+  return d.rsi !== null || d.macd !== null || d.bbands !== null || d.atr !== null || d.stochastic !== null
+}
+
+function rsiColor(rsi: number): string {
+  if (rsi < 30) return 'var(--price-up)'     // oversold = bullish
+  if (rsi > 70) return 'var(--price-down)'    // overbought = bearish
+  return '#f59e0b'                            // neutral
+}
+
+function rsiLabel(rsi: number): string {
+  if (rsi < 30) return 'OVERSOLD'
+  if (rsi > 70) return 'OVERBOUGHT'
+  return 'NEUTRAL'
+}
+
+function TwelveDataSection({ symbol }: { symbol: string }) {
+  const { data, loading } = useFetch<TwelveDataIndicators>(
+    `/api/stock/indicators/${symbol}`,
+    { refreshInterval: 10 * 60_000 },
+  )
+
+  if (loading) {
+    return (
+      <div className="border-t border-[var(--border)] px-4 py-3">
+        <div className="mb-2 flex items-center gap-2">
+          <div className="skeleton h-2.5 w-32 rounded" />
+          <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+        </div>
+        <div className="grid grid-cols-2 gap-px bg-[var(--border)] sm:grid-cols-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between bg-[var(--surface)] px-3 py-2">
+              <div className="skeleton h-2 w-16 rounded" />
+              <div className="skeleton h-2.5 w-12 rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!data || !hasAnyIndicator(data)) return null
+
+  return (
+    <div className="border-t border-[var(--border)]">
+      {/* Subheader */}
+      <div className="flex items-center gap-2 px-4 py-2">
+        <span className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+          Real-Time Indicators
+        </span>
+        <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+      </div>
+
+      {/* RSI bar */}
+      {data.rsi !== null && (
+        <div className="px-4 pb-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="font-mono text-[9px] text-[var(--text-muted)]">RSI (14)</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color: rsiColor(data.rsi) }}>
+                {data.rsi.toFixed(1)}
+              </span>
+              <span className="font-mono text-[8px] font-bold" style={{ color: rsiColor(data.rsi) }}>
+                {rsiLabel(data.rsi)}
+              </span>
+            </div>
+          </div>
+          <div className="relative h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]">
+            {/* Zones: 0-30 green, 30-70 amber, 70-100 red */}
+            <div className="absolute top-0 left-0 h-full w-[30%] opacity-10" style={{ background: 'var(--price-up)' }} />
+            <div className="absolute top-0 left-[30%] h-full w-[40%] opacity-10" style={{ background: '#f59e0b' }} />
+            <div className="absolute top-0 left-[70%] h-full w-[30%] opacity-10" style={{ background: 'var(--price-down)' }} />
+            {/* RSI marker */}
+            <div
+              className="absolute top-1/2 h-2.5 w-0.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ left: `${Math.min(Math.max(data.rsi, 0), 100)}%`, background: rsiColor(data.rsi) }}
+            />
+          </div>
+          <div className="mt-0.5 flex justify-between font-mono text-[7px] text-[var(--text-muted)] opacity-50">
+            <span>0</span>
+            <span>30</span>
+            <span>70</span>
+            <span>100</span>
+          </div>
+        </div>
+      )}
+
+      {/* Indicator grid */}
+      <div className="grid grid-cols-2 gap-px bg-[var(--border)] sm:grid-cols-3">
+        {/* MACD */}
+        {data.macd && (
+          <>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">MACD Line</span>
+              <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color: data.macd.macd >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}>
+                {data.macd.macd.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">Signal</span>
+              <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color: data.macd.signal >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}>
+                {data.macd.signal.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">Histogram</span>
+              <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ color: data.macd.histogram >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}>
+                {data.macd.histogram >= 0 ? '+' : ''}{data.macd.histogram.toFixed(2)}
+              </span>
+            </div>
+          </>
+        )}
+
+        {/* Bollinger Bands */}
+        {data.bbands && (
+          <>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">BB Upper</span>
+              <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
+                {formatPrice(data.bbands.upper)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">BB Middle</span>
+              <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
+                {formatPrice(data.bbands.middle)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">BB Lower</span>
+              <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
+                {formatPrice(data.bbands.lower)}
+              </span>
+            </div>
+          </>
+        )}
+
+        {/* ATR */}
+        {data.atr !== null && (
+          <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+            <span className="font-mono text-[9px] text-[var(--text-muted)]">ATR (14)</span>
+            <span className="font-mono text-[10px] font-semibold tabular-nums text-[var(--text)]">
+              {data.atr.toFixed(2)}
+            </span>
+          </div>
+        )}
+
+        {/* Stochastic */}
+        {data.stochastic && (
+          <>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">Stoch %K</span>
+              <span
+                className="font-mono text-[10px] font-semibold tabular-nums"
+                style={{ color: data.stochastic.k < 20 ? 'var(--price-up)' : data.stochastic.k > 80 ? 'var(--price-down)' : 'var(--text)' }}
+              >
+                {data.stochastic.k.toFixed(1)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 bg-[var(--surface)] px-3 py-2 hover:bg-[var(--surface-2)]">
+              <span className="font-mono text-[9px] text-[var(--text-muted)]">Stoch %D</span>
+              <span
+                className="font-mono text-[10px] font-semibold tabular-nums"
+                style={{ color: data.stochastic.d < 20 ? 'var(--price-up)' : data.stochastic.d > 80 ? 'var(--price-down)' : 'var(--text)' }}
+              >
+                {data.stochastic.d.toFixed(1)}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main component types ────────────────────────────────────────────────────
+
 interface TechSignal {
   name:   string
   value:  string
@@ -219,6 +409,9 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
               </div>
             </div>
           )}
+
+          {/* Twelve Data Real-Time Indicators */}
+          <TwelveDataSection symbol={symbol} />
         </div>
       )}
     </div>

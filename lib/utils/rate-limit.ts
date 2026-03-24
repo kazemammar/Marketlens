@@ -15,7 +15,7 @@ export function rateLimit(
   const entry = rateLimitMap.get(key)
 
   // Periodic GC — purge expired entries when the map grows large
-  if (rateLimitMap.size > 10_000) {
+  if (rateLimitMap.size > 1_000) {
     for (const [k, v] of rateLimitMap) {
       if (v.resetAt < now) rateLimitMap.delete(k)
     }

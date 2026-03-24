@@ -170,12 +170,22 @@ interface CachedMovers {
 
 // ─── Data fetcher ─────────────────────────────────────────────────────────────
 
+// Wrap with a 25-second overall timeout to prevent Vercel function timeouts (30s limit)
 async function fetchMoversData(): Promise<MoversPayload | null> {
-  const [stocksResult, cryptoResult, commoditiesResult] = await Promise.allSettled([
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('movers fetch timeout')), 25_000)
+  )
+
+  const fetches = Promise.allSettled([
     getQuotesBatched(STOCK_SYMBOLS, 3, 1000),
     getCryptoMarkets(1, 'usd', 30),
     getYahooQuotesBatch(COMMODITY_SYMBOLS),
   ])
+
+  const [stocksResult, cryptoResult, commoditiesResult] = await Promise.race([fetches, timeout]) as
+    [PromiseSettledResult<Map<string, import('@/lib/api/finnhub').QuoteRaw>>,
+     PromiseSettledResult<Awaited<ReturnType<typeof getCryptoMarkets>>>,
+     PromiseSettledResult<Awaited<ReturnType<typeof getYahooQuotesBatch>>>]
 
   // Map stocks
   const stockItems: MoverItem[] = []

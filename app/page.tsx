@@ -25,8 +25,7 @@ import OilEnergyPanel      from '@/components/warroom/OilEnergyPanel'
 import PredictionMarkets    from '@/components/warroom/PredictionMarkets'
 import MoversStrip         from '@/components/warroom/MoversStrip'
 import NewsBriefing         from '@/components/warroom/NewsBriefing'
-import NewsSentimentMap     from '@/components/warroom/NewsSentimentMap'
-import NewsSentimentHeatmap from '@/components/warroom/NewsSentimentHeatmap'
+import SectorSentimentPulse from '@/components/warroom/SectorSentimentPulse'
 import ChokepointIntel      from '@/components/warroom/ChokepointIntel'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
@@ -248,18 +247,11 @@ export default async function HomePage({
         </PanelErrorBoundary>
       </div>
 
-      {/* ══ NEWS SENTIMENT BY SECTOR ════════════════════════════════════ */}
-      <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
-        <div className="min-w-0 overflow-hidden flex flex-col">
-          <PanelErrorBoundary fallbackTitle="News Sentiment">
-            <NewsSentimentMap />
-          </PanelErrorBoundary>
-        </div>
-        <div className="min-w-0 overflow-hidden flex flex-col">
-          <PanelErrorBoundary fallbackTitle="Sentiment Heatmap">
-            <NewsSentimentHeatmap />
-          </PanelErrorBoundary>
-        </div>
+      {/* ══ SECTOR SENTIMENT PULSE ═══════════════════════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Sector Sentiment">
+          <SectionReveal delay={50}><SectorSentimentPulse /></SectionReveal>
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}

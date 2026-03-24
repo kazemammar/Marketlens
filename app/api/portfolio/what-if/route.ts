@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { getClient } from '@/lib/api/groq'
 import { redis } from '@/lib/cache/redis'
-import { withRateLimit } from '@/lib/utils/rate-limit'
+import { rateLimit } from '@/lib/utils/rate-limit'
 
 export interface WhatIfResult {
   impact: 'positive' | 'negative' | 'mixed'
@@ -14,9 +14,7 @@ export interface WhatIfResult {
 }
 
 export async function POST(req: Request) {
-  const limited = withRateLimit(req, 5)
-  if (limited) return limited
-
+  // Auth first — rate limit only applies to actual Groq calls (after cache check)
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
@@ -33,12 +31,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Scenario required (max 500 chars)' }, { status: 400 })
   }
 
-  // Check cache
+  // Check cache — cached hits don't consume rate limit
   const cacheKey = `whatif:${user.id}:${scenario.toLowerCase().replace(/\s+/g, '-').slice(0, 80)}`
   try {
     const cached = await redis.get<WhatIfResult>(cacheKey)
     if (cached) return NextResponse.json(cached)
   } catch { /* fall through */ }
+
+  // Rate limit only actual Groq calls, keyed by user ID (10/min)
+  if (!rateLimit(`whatif:${user.id}`, 10)) {
+    return NextResponse.json({ error: 'Too many requests — try again in a minute' }, { status: 429 })
+  }
 
   // Fetch portfolio positions
   const { data: positions } = await supabase

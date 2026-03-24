@@ -51,9 +51,10 @@ const HISTORY_MAX = 12     // ~6 hours at 30-min intervals
 const GEO_KEYWORDS = [
   'war', 'conflict', 'military', 'troops', 'missile', 'nuclear', 'invasion',
   'sanction', 'sanctions', 'embargo', 'tariff', 'tariffs', 'trade war', 'trade dispute',
-  'geopolit', 'escalat', 'tension', 'tensions',
+  'geopolit', 'escalat', 'tension', 'tensions', 'retaliat',
   'nato', 'ukraine', 'russia', 'china', 'taiwan', 'iran', 'north korea', 'middle east',
-  'terrorism', 'coup', 'election',
+  'terrorism', 'coup', 'election', 'protest', 'unrest', 'assassination', 'blockade',
+  'airstrike', 'drone strike', 'ceasefire', 'houthi', 'gaza', 'annexation',
 ]
 
 const MKT_KEYWORDS = [
@@ -61,6 +62,8 @@ const MKT_KEYWORDS = [
   'vix', 'volatil', 'earnings', 'bear', 'bull', 'rally', 'selloff', 'sell-off', 'correction',
   's&p', 'dow', 'russell', 'liquidity', 'hedge', 'fund', 'investor', 'investors',
   'tech sector', 'financial sector', 'bank sector', 'valuation',
+  'crash', 'plunge', 'tumble', 'rout', 'panic', 'capitulation', 'margin call',
+  'circuit breaker', 'flash crash', 'risk-off', 'risk off', 'outflow',
 ]
 
 const MCR_KEYWORDS = [
@@ -70,6 +73,8 @@ const MCR_KEYWORDS = [
   'recession', 'debt', 'deficit', 'yield', 'yields', 'bond', 'treasury',
   'central bank', 'monetary', 'fiscal', 'tightening', 'easing', 'dovish', 'hawkish',
   'dollar', 'currency', 'macro',
+  'stagflation', 'bank run', 'credit crisis', 'sovereign debt', 'default risk',
+  'quantitative', 'balance sheet', 'downgrade', 'shutdown',
 ]
 
 const CMD_KEYWORDS = [
@@ -77,6 +82,8 @@ const CMD_KEYWORDS = [
   'wheat', 'corn', 'soybean', 'gas', 'natural gas', 'lng',
   'commodity', 'commodities', 'opec', 'energy', 'mining',
   'supply chain', 'food', 'metal',
+  'shortage', 'stockpile', 'inventory', 'export ban', 'import ban', 'refinery',
+  'disruption', 'supply shock',
 ]
 
 // ─── Score computation ─────────────────────────────────────────────────────
@@ -90,19 +97,49 @@ function matchesKeyword(corpus: string, keyword: string): boolean {
   return re.test(corpus)
 }
 
+// Build a richer corpus from ALL brief fields, not just `brief` + `risks`
+function buildCorpus(brief: MarketBriefPayload): string {
+  const parts = [
+    brief.brief,
+    brief.narrative,
+    ...(brief.delta ?? []),
+    brief.overnight,
+    brief.macro,
+    brief.sectors,
+    brief.looking_ahead,
+    brief.session_context,
+    ...brief.risks,
+    ...(brief.opportunities ?? []),
+    ...(brief.watchlist ?? []).map(w => `${w.symbol} ${w.direction} ${w.reason}`),
+  ]
+  return parts.filter(Boolean).join(' ').toLowerCase()
+}
+
+// Keyword scaling: pow(n, 0.7) — less aggressive than sqrt (pow 0.5), but still diminishing
+// 2 matches → 1.6,  5 → 3.1,  8 → 4.4,  12 → 5.8,  20 → 8.2
+function keywordScale(count: number): number {
+  return Math.pow(count, 0.7)
+}
+
 function computeCategoryScores(brief: MarketBriefPayload): {
   breakdown:       BreakdownItem[]
   overallScore:    number
   categoryDetails: Record<string, CategoryDetail>
 } {
-  const corpus = (brief.brief + ' ' + brief.risks.join(' ')).toLowerCase()
+  const corpus = buildCorpus(brief)
+
+  // Count bearish vs bullish direction across all affected assets
+  const bearishTotal = brief.affectedAssets.filter(a => a.direction === 'down').length
+  const volatileTotal = brief.affectedAssets.filter(a => a.direction === 'volatile').length
+  // Bearish sentiment multiplier: more "down" assets → higher risk across all categories
+  const directionBonus = Math.min(12, bearishTotal * 3 + volatileTotal * 1.5)
 
   // ── Geopolitical ──
   const geoMatched   = GEO_KEYWORDS.filter((w) => matchesKeyword(corpus, w))
   const geoAssetHits = brief.affectedAssets.filter((a) =>
     ['GLD', 'SLV', 'GC=F', 'USO', 'CL=F', 'USD/JPY'].includes(a.symbol)
   ).length
-  const geoScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(geoMatched.length) * 12 + geoAssetHits * 5)))
+  const geoScore      = Math.round(Math.max(10, Math.min(95, 10 + keywordScale(geoMatched.length) * 14 + geoAssetHits * 5 + directionBonus * 0.5)))
   const geoDriversRaw = brief.risks.filter((r) => geoMatched.some((kw) => r.toLowerCase().includes(kw)))
   const geoDrivers    = (geoDriversRaw.length > 0 ? geoDriversRaw : brief.risks).slice(0, 2)
 
@@ -112,8 +149,8 @@ function computeCategoryScores(brief: MarketBriefPayload): {
     (a.type === 'stock' || a.type === 'etf') &&
     (a.direction === 'down' || a.direction === 'volatile')
   ).length
-  const vixBonus   = brief.affectedAssets.some((a) => a.symbol === 'VIX') ? 8 : 0
-  const mktScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mktMatched.length) * 10 + bearishEquity * 6 + vixBonus)))
+  const vixBonus   = brief.affectedAssets.some((a) => a.symbol === 'VIX') ? 10 : 0
+  const mktScore      = Math.round(Math.max(10, Math.min(95, 10 + keywordScale(mktMatched.length) * 12 + bearishEquity * 7 + vixBonus + directionBonus)))
   const mktDriversRaw = brief.risks.filter((r) => mktMatched.some((kw) => r.toLowerCase().includes(kw)))
   const mktDrivers    = (mktDriversRaw.length > 0 ? mktDriversRaw : brief.risks).slice(0, 2)
 
@@ -122,7 +159,7 @@ function computeCategoryScores(brief: MarketBriefPayload): {
   const macroAssets = brief.affectedAssets.filter((a) =>
     a.type === 'forex' || ['TLT', 'VIX'].includes(a.symbol)
   ).length
-  const mcrScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(mcrMatched.length) * 9 + macroAssets * 5)))
+  const mcrScore      = Math.round(Math.max(10, Math.min(95, 10 + keywordScale(mcrMatched.length) * 11 + macroAssets * 5 + directionBonus * 0.5)))
   const mcrDriversRaw = brief.risks.filter((r) => mcrMatched.some((kw) => r.toLowerCase().includes(kw)))
   const mcrDrivers    = (mcrDriversRaw.length > 0 ? mcrDriversRaw : brief.risks).slice(0, 2)
 
@@ -133,7 +170,7 @@ function computeCategoryScores(brief: MarketBriefPayload): {
     if (a.type === 'commodity') cmdSymbols.add(a.symbol)
     if (['USO', 'GLD', 'SLV', 'GC=F', 'CL=F'].includes(a.symbol)) cmdSymbols.add(a.symbol)
   })
-  const cmdScore      = Math.round(Math.max(15, Math.min(95, 15 + Math.sqrt(cmdMatched.length) * 11 + cmdSymbols.size * 6)))
+  const cmdScore      = Math.round(Math.max(10, Math.min(95, 10 + keywordScale(cmdMatched.length) * 13 + cmdSymbols.size * 6)))
   const cmdDriversRaw = brief.risks.filter((r) => cmdMatched.some((kw) => r.toLowerCase().includes(kw)))
   const cmdDrivers    = (cmdDriversRaw.length > 0 ? cmdDriversRaw : brief.risks).slice(0, 2)
 
@@ -145,8 +182,14 @@ function computeCategoryScores(brief: MarketBriefPayload): {
     cmdScore * 0.15
   )
   const maxCatScore  = Math.max(geoScore, mktScore, mcrScore, cmdScore)
-  const amplified    = Math.round(maxCatScore * 0.85)
-  const overallScore = Math.max(10, Math.min(95, Math.max(weightedAvg, amplified)))
+  const amplified    = Math.round(maxCatScore * 0.92)
+
+  // Compound risk: when multiple categories are elevated, risk compounds
+  const scores = [geoScore, mktScore, mcrScore, cmdScore]
+  const elevatedCount = scores.filter(s => s >= 45).length
+  const compoundBonus = elevatedCount >= 3 ? 10 : elevatedCount >= 2 ? 5 : 0
+
+  const overallScore = Math.max(10, Math.min(95, Math.max(weightedAvg, amplified) + compoundBonus))
 
   return {
     breakdown: [

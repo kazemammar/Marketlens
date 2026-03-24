@@ -97,10 +97,19 @@ function priceIcon(symbol: string, positive: boolean): string {
   return positive ? '📈' : '📉'
 }
 
-function severity(pct: number): Signal['severity'] {
+// Asset-specific severity thresholds — VIX moves 5-10% on normal days,
+// crypto swings wider than equities. Using flat 3%/1.5% for everything
+// incorrectly flags routine VIX noise as HIGH severity.
+const SEVERITY_THRESHOLDS: Record<string, { high: number; med: number }> = {
+  VXX:  { high: 8, med: 4 },
+  UNG:  { high: 5, med: 2.5 },  // natgas is inherently volatile
+}
+
+function severity(pct: number, symbol?: string): Signal['severity'] {
   const abs = Math.abs(pct)
-  if (abs >= 3)   return 'HIGH'
-  if (abs >= 1.5) return 'MED'
+  const t = (symbol ? SEVERITY_THRESHOLDS[symbol] : undefined) ?? { high: 3, med: 1.5 }
+  if (abs >= t.high) return 'HIGH'
+  if (abs >= t.med)  return 'MED'
   return 'LOW'
 }
 
@@ -162,7 +171,7 @@ export async function GET() {
         icon,
         text,
         category:  isSilent ? 'correlation' : 'price',
-        severity:  severity(pct),
+        severity:  severity(pct, sym),
         timestamp: now - Math.floor(Math.random() * 600_000),
         ...(absMove >= 1.5 && expl ? {
           explanation: {

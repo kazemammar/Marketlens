@@ -9,7 +9,7 @@ import type { QuoteData }         from './PositionsTable'
 const TYPE_ORDER = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
 const TYPE_COLORS: Record<string, string> = {
-  stock:     '#10b981',
+  stock:     'var(--accent)',
   crypto:    '#8b5cf6',
   forex:     '#38bdf8',
   commodity: '#f59e0b',
@@ -58,7 +58,7 @@ function PositionCard({
 }) {
   const changePercent = quote?.changePercent ?? 0
   const isUp          = changePercent >= 0
-  const changeColor   = isUp ? '#22c55e' : '#ef4444'
+  const changeColor   = isUp ? 'var(--price-up)' : 'var(--price-down)'
   const hasQuote      = quote != null
 
   return (
@@ -143,7 +143,7 @@ export default function ExposurePanel({
   const absNet        = Math.abs(netScore)
   const isLong        = netScore >= 0
   const fillPct       = absNet / 2   // each side is 50% of bar width
-  const fillColor     = isLong ? '#22c55e' : '#ef4444'
+  const fillColor     = isLong ? 'var(--price-up)' : 'var(--price-down)'
   const directionWord = isLong ? 'Long' : 'Short'
 
   // ── Group by asset type ───────────────────────────────────────────────
@@ -196,7 +196,7 @@ export default function ExposurePanel({
 
           {/* Labels */}
           <div className="mt-2 flex items-center justify-between">
-            <span className="font-mono text-[10px] font-medium" style={{ color: '#ef4444', opacity: 0.6 }}>
+            <span className="font-mono text-[10px] font-medium" style={{ color: 'var(--price-down)', opacity: 0.6 }}>
               SHORT
             </span>
 
@@ -213,7 +213,7 @@ export default function ExposurePanel({
               {absNet.toFixed(0)}% {directionWord}
             </span>
 
-            <span className="font-mono text-[10px] font-medium" style={{ color: '#22c55e', opacity: 0.6 }}>
+            <span className="font-mono text-[10px] font-medium" style={{ color: 'var(--price-up)', opacity: 0.6 }}>
               LONG
             </span>
           </div>

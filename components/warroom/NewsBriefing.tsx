@@ -22,15 +22,15 @@ const SEV_BADGE: Record<string, string> = {
 }
 
 const COL_ACCENT: Record<string, string> = {
-  GEOPOLITICAL: '#ef4444',
-  MARKETS:      '#10b981',
+  GEOPOLITICAL: 'var(--danger)',
+  MARKETS:      'var(--accent)',
   ENERGY:       '#f97316',
 }
 
 // ─── Source tier dot ──────────────────────────────────────────────────────
 
 function tierColor(meta: SourceMeta): string | null {
-  if (meta.tier === 1) return '#10b981'
+  if (meta.tier === 1) return 'var(--accent)'
   if (meta.tier === 2) return '#3b82f6'
   return null
 }

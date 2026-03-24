@@ -9,22 +9,22 @@ import { timeAgo }                      from '@/lib/utils/timeago'
 
 const SENTIMENT_STYLE = {
   bullish: {
-    border:     '#10b981',
+    border:     'var(--price-up)',
     background: 'linear-gradient(to right, rgba(16,185,129,0.07), rgba(16,185,129,0.025) 50%, transparent)',
     pill:       'bg-emerald-500/10 border-emerald-500/35 text-emerald-400',
-    dot:        '#10b981',
+    dot:        'var(--price-up)',
   },
   bearish: {
     border:     'var(--price-down)',
     background: 'linear-gradient(to right, rgba(239,68,68,0.07), rgba(239,68,68,0.025) 50%, transparent)',
     pill:       'bg-red-500/10 border-red-500/35 text-red-400',
-    dot:        '#ef4444',
+    dot:        'var(--price-down)',
   },
   mixed: {
     border:     'var(--warning)',
     background: 'linear-gradient(to right, rgba(245,158,11,0.07), rgba(245,158,11,0.025) 50%, transparent)',
     pill:       'bg-amber-500/10 border-amber-500/35 text-amber-400',
-    dot:        '#f59e0b',
+    dot:        'var(--warning)',
   },
 }
 
@@ -188,7 +188,7 @@ export default function PortfolioBrief({
             {/* ACTION */}
             {brief.action && (
               <div className="flex flex-col sm:flex-row sm:items-start gap-0.5 sm:gap-3">
-                <span className={LABEL_CLS} style={{ color: '#10b981' }}>Action</span>
+                <span className={LABEL_CLS} style={{ color: 'var(--accent)' }}>Action</span>
                 <span className={CONTENT_CLS} style={{ color: 'var(--text-2)' }}>{brief.action}</span>
               </div>
             )}

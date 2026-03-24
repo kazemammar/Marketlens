@@ -15,9 +15,9 @@ function formatCompact(n: number): string {
 // ─── Status colours ───────────────────────────────────────────────────────
 
 const STATUS_COLOR = {
-  'ON PEG':       '#10b981',
-  'SLIGHT DEPEG': '#f59e0b',
-  'DEPEGGED':     '#ef4444',
+  'ON PEG':       'var(--price-up)',
+  'SLIGHT DEPEG': 'var(--warning)',
+  'DEPEGGED':     'var(--price-down)',
 }
 const STATUS_BG = {
   'ON PEG':       'rgba(16,185,129,0.10)',
@@ -30,7 +30,7 @@ const STATUS_BORDER = {
   'DEPEGGED':     'rgba(239,68,68,0.35)',
 }
 
-const HEALTH_COLOR  = { HEALTHY: '#10b981', CAUTION: '#f59e0b', WARNING: '#ef4444' }
+const HEALTH_COLOR  = { HEALTHY: 'var(--price-up)', CAUTION: 'var(--warning)', WARNING: 'var(--price-down)' }
 const HEALTH_BG     = { HEALTHY: 'rgba(16,185,129,0.10)', CAUTION: 'rgba(245,158,11,0.10)', WARNING: 'rgba(239,68,68,0.10)' }
 const HEALTH_BORDER = { HEALTHY: 'rgba(16,185,129,0.25)', CAUTION: 'rgba(245,158,11,0.25)', WARNING: 'rgba(239,68,68,0.35)' }
 

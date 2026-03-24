@@ -5,7 +5,7 @@ import { RELATED_ASSETS, RelatedAsset } from '@/lib/utils/constants'
 import { AssetType } from '@/lib/utils/types'
 
 const TYPE_BADGE: Record<RelatedAsset['type'], { label: string; color: string }> = {
-  stock:     { label: 'Stock',     color: '#22c55e' },
+  stock:     { label: 'Stock',     color: 'var(--accent)' },
   crypto:    { label: 'Crypto',    color: '#f97316' },
   forex:     { label: 'Forex',     color: '#3b82f6' },
   commodity: { label: 'Commodity', color: '#eab308' },

@@ -98,7 +98,7 @@ function MoverCard({
   showType: boolean
   delay:    number
 }) {
-  const colorHex = isGainer ? '#22c55e' : '#ef4444'
+  const colorHex = isGainer ? 'var(--price-up)' : 'var(--price-down)'
   const barPct   = Math.min(Math.abs(item.changePercent) / 5, 1) * 100
 
   return (
@@ -183,7 +183,7 @@ function MoverColumn({
   showType: boolean
   loading:  boolean
 }) {
-  const colorHex = isGainer ? '#22c55e' : '#ef4444'
+  const colorHex = isGainer ? 'var(--price-up)' : 'var(--price-down)'
   const label    = isGainer ? 'Gainers' : 'Losers'
   const arrow    = isGainer ? '▲' : '▼'
 

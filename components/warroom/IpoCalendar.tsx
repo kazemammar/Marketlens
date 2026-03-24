@@ -91,7 +91,7 @@ export default function IpoCalendar({ limit }: { limit?: number }) {
                 className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase"
                 style={{
                   background: ipo.status === 'priced' ? 'rgba(16,185,129,0.1)' : 'var(--surface-2)',
-                  color:      ipo.status === 'priced' ? '#10b981' : 'var(--text-muted)',
+                  color:      ipo.status === 'priced' ? 'var(--accent)' : 'var(--text-muted)',
                 }}
               >
                 {ipo.status || 'expected'}

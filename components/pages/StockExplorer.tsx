@@ -17,7 +17,7 @@ function sectorUrl(sector: string, tick = 0) {
 }
 
 const SECTOR_COLORS: Record<string, string> = {
-  'All':              '#10b981',
+  'All':              'var(--accent)',
   'Technology':       '#60a5fa',
   'Finance':          '#818cf8',
   'Healthcare':       '#2dd4bf',
@@ -42,7 +42,7 @@ const INDEX_CONFIG = [
 
 function IndexCard({ symbol, name, href, data }: { symbol: string; name: string; href: string; data: AssetCardData | undefined }) {
   const positive = (data?.changePercent ?? 0) >= 0
-  const color    = !data ? '#64748b' : positive ? '#22c55e' : '#ef4444'
+  const color    = !data ? 'var(--text-muted)' : positive ? 'var(--price-up)' : 'var(--price-down)'
 
   return (
     <a

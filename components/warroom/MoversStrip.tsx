@@ -63,7 +63,7 @@ function MoverRow({ item, rank, isGainer, delay }: {
   isGainer: boolean
   delay:    number
 }) {
-  const colorHex = isGainer ? '#22c55e' : '#ef4444'
+  const colorHex = isGainer ? 'var(--price-up)' : 'var(--price-down)'
 
   return (
     <Link
@@ -125,7 +125,7 @@ function MoverPanel({ items, isGainer, loading }: {
   isGainer: boolean
   loading:  boolean
 }) {
-  const colorHex = isGainer ? '#22c55e' : '#ef4444'
+  const colorHex = isGainer ? 'var(--price-up)' : 'var(--price-down)'
   const label    = isGainer ? '▲ Top Gainers' : '▼ Top Losers'
 
   return (

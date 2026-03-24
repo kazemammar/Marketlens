@@ -14,7 +14,7 @@ const DIR_ARROW: Record<string, string> = { up: '▲', down: '▼', volatile: '�
 
 const SESSION_STYLE: Record<MarketSession, { label: string; color: string }> = {
   pre_market:  { label: 'PRE-MKT',   color: '#60a5fa' },
-  morning:     { label: 'MORNING',   color: '#10b981' },
+  morning:     { label: 'MORNING',   color: 'var(--accent)' },
   afternoon:   { label: 'AFTERNOON', color: '#f59e0b' },
   after_hours: { label: 'AFTER HRS', color: '#a78bfa' },
 }

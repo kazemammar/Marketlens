@@ -6,11 +6,11 @@ import { useFetch } from '@/lib/hooks/useFetch'
 // ─── Fear-Greed color scale (semantic, theme-independent) ─────────────────
 
 const FG_COLORS = {
-  extremeFear: '#ef4444',
+  extremeFear: 'var(--danger)',
   fear:        '#f97316',
-  neutral:     '#f59e0b',
-  greed:       '#10b981',
-  extremeGreed:'#22c55e',
+  neutral:     'var(--warning)',
+  greed:       'var(--accent)',
+  extremeGreed:'var(--price-up)',
 } as const
 
 function scoreColor(score: number): string {
@@ -129,7 +129,7 @@ function SemiGauge({ score }: { score: number }) {
 function HistCell({ label, past, current }: { label: string; past: number; current: number }) {
   const delta   = current - past
   const up      = delta > 0
-  const color   = up ? '#22c55e' : delta < 0 ? '#ef4444' : 'var(--text-muted)'
+  const color   = up ? 'var(--price-up)' : delta < 0 ? 'var(--price-down)' : 'var(--text-muted)'
   const arrow   = up ? '▲' : delta < 0 ? '▼' : '—'
 
   return (

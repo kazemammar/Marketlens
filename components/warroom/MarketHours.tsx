@@ -97,7 +97,7 @@ export default function MarketHours() {
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${open ? 'live-dot' : ''}`}
-              style={{ background: open ? '#10b981' : '#ef4444' }}
+              style={{ background: open ? 'var(--price-up)' : 'var(--price-down)' }}
             />
             <span className="font-mono text-[9px] font-bold text-[var(--text)]">{ex.abbr}</span>
             <span className="font-mono text-[8px] tabular-nums text-[var(--text-muted)]">
@@ -105,7 +105,7 @@ export default function MarketHours() {
             </span>
             <span
               className="font-mono text-[9px] font-semibold uppercase"
-              style={{ color: open ? '#10b981' : 'var(--text-muted)' }}
+              style={{ color: open ? 'var(--price-up)' : 'var(--text-muted)' }}
             >
               {open ? 'OPEN' : 'CLOSED'}
             </span>

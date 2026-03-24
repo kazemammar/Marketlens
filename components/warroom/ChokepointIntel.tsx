@@ -7,9 +7,9 @@ import type { ChokepointIntelItem, ChokepointIntelPayload, ChokepointStatus } fr
 // ─── Status colours ───────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<ChokepointStatus, string> = {
-  NORMAL:    '#10b981',
-  ELEVATED:  '#f59e0b',
-  DISRUPTED: '#ef4444',
+  NORMAL:    'var(--price-up)',
+  ELEVATED:  'var(--warning)',
+  DISRUPTED: 'var(--danger)',
   BLOCKED:   '#dc2626',
 }
 
@@ -22,8 +22,8 @@ const STATUS_BG: Record<ChokepointStatus, string> = {
 
 const INSURANCE_COLORS: Record<'NORMAL' | 'ELEVATED' | 'HIGH', string> = {
   NORMAL:   'var(--text-muted)',
-  ELEVATED: '#f59e0b',
-  HIGH:     '#ef4444',
+  ELEVATED: 'var(--warning)',
+  HIGH:     'var(--danger)',
 }
 
 const ASSET_TYPE: Record<string, string> = {

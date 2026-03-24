@@ -164,7 +164,7 @@ function UpcomingCard({ event, delay, lastActual }: { event: EarningsItem; delay
 function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
   const hasBoth   = event.actual != null && event.estimate != null
   const beat      = event.surprisePercent != null ? event.surprisePercent >= 0 : hasBoth ? (event.actual! >= event.estimate!) : null
-  const colorHex  = beat === true ? '#22c55e' : beat === false ? '#ef4444' : '#6b7280'
+  const colorHex  = beat === true ? 'var(--price-up)' : beat === false ? 'var(--price-down)' : 'var(--text-muted)'
   const beatBg    = beat === true ? 'rgba(34,197,94,0.12)' : beat === false ? 'rgba(239,68,68,0.12)' : 'var(--surface-2)'
 
   return (
@@ -218,7 +218,7 @@ function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
             className="ml-auto shrink-0 rounded px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums"
             style={{
               background: beat ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-              color:      beat ? '#22c55e' : '#ef4444',
+              color:      beat ? 'var(--price-up)' : 'var(--price-down)',
               border:     `1px solid ${beat ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
             }}
           >
@@ -237,7 +237,7 @@ function RecentCard({ event, delay }: { event: EarningsItem; delay: number }) {
             Act:{' '}
             <span
               className="tabular-nums"
-              style={{ color: beat ? '#22c55e' : '#ef4444' }}
+              style={{ color: beat ? 'var(--price-up)' : 'var(--price-down)' }}
             >
               ${event.actual.toFixed(2)}
             </span>

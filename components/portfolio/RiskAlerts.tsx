@@ -20,16 +20,16 @@ interface RiskAlert {
 
 const SEV_CONFIG: Record<Severity, { border: string; bg: string; pill: string; dot: string }> = {
   HIGH: {
-    border: '#ef4444',
+    border: 'var(--danger)',
     bg:     'linear-gradient(135deg, rgba(239,68,68,0.07), transparent 65%)',
     pill:   'bg-red-500/10 text-red-400 border-red-500/20',
-    dot:    '#ef4444',
+    dot:    'var(--danger)',
   },
   MED: {
-    border: '#f59e0b',
+    border: 'var(--warning)',
     bg:     'linear-gradient(135deg, rgba(245,158,11,0.06), transparent 65%)',
     pill:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    dot:    '#f59e0b',
+    dot:    'var(--warning)',
   },
   LOW: {
     border: '#60a5fa',
@@ -38,10 +38,10 @@ const SEV_CONFIG: Record<Severity, { border: string; bg: string; pill: string; d
     dot:    '#60a5fa',
   },
   INFO: {
-    border: '#6b7280',
+    border: 'var(--text-muted)',
     bg:     'linear-gradient(135deg, rgba(107,114,128,0.04), transparent 65%)',
     pill:   'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    dot:    '#6b7280',
+    dot:    'var(--text-muted)',
   },
 }
 
@@ -375,7 +375,7 @@ export default function RiskAlerts({
                       <span
                         className="rounded px-1.5 py-0.5 font-mono text-[8px] font-bold"
                         style={{
-                          color:      alert.dirLong ? '#22c55e' : '#ef4444',
+                          color:      alert.dirLong ? 'var(--price-up)' : 'var(--price-down)',
                           background: alert.dirLong ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
                         }}
                       >

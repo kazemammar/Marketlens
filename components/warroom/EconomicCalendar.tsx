@@ -9,8 +9,8 @@ interface EconomicCalendarPayload {
 }
 
 const IMPACT_COLOR: Record<string, string> = {
-  high:   '#ef4444',
-  medium: '#f59e0b',
+  high:   'var(--danger)',
+  medium: 'var(--warning)',
 }
 
 function formatDateLabel(dateStr: string): string {

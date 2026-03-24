@@ -113,7 +113,7 @@ export default function CurrencyStrengthMeter() {
                         style={{
                           left: '50%',
                           width: `${pct}%`,
-                          background: '#10b981',
+                          background: 'var(--price-up)',
                           opacity: 0.85,
                         }}
                       />
@@ -123,7 +123,7 @@ export default function CurrencyStrengthMeter() {
                         style={{
                           right: '50%',
                           width: `${pct}%`,
-                          background: '#ef4444',
+                          background: 'var(--price-down)',
                           opacity: 0.85,
                         }}
                       />
@@ -132,7 +132,7 @@ export default function CurrencyStrengthMeter() {
                   {/* Score */}
                   <span
                     className="w-16 shrink-0 text-right font-mono text-[9px] font-semibold tabular-nums"
-                    style={{ color: isPos ? '#10b981' : '#ef4444' }}
+                    style={{ color: isPos ? 'var(--price-up)' : 'var(--price-down)' }}
                   >
                     {fmt(s.score)}
                   </span>
@@ -221,7 +221,7 @@ function StrengthTooltip({
           <span style={{ color: colors[entry.name], fontWeight: 700, minWidth: 52 }}>
             {flags[entry.name] ?? ''} {entry.name}
           </span>
-          <span style={{ color: entry.value >= 0 ? '#10b981' : '#ef4444', fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: entry.value >= 0 ? 'var(--price-up)' : 'var(--price-down)', fontVariantNumeric: 'tabular-nums' }}>
             {(entry.value >= 0 ? '+' : '') + entry.value.toFixed(3) + '%'}
           </span>
         </div>

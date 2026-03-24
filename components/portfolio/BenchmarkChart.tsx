@@ -49,7 +49,7 @@ function CustomTooltip({ active, payload, label }: any) {
       {payload.map((p: any) => {
         const val   = p.value as number
         const color = p.dataKey === 'portfolioReturn'
-          ? (val >= 0 ? '#10b981' : '#ef4444')
+          ? (val >= 0 ? 'var(--price-up)' : 'var(--price-down)')
           : p.color
         return (
           <p key={p.name} className="font-mono text-[11px] font-bold tabular-nums" style={{ color }}>
@@ -191,9 +191,9 @@ export default function BenchmarkChart({
   const diffAhead           = diff >= 0
   const rangeFull           = RANGES.find((r) => r.key === range)?.full ?? ''
 
-  const portColor   = portRangeReturn >= 0 ? '#10b981' : 'var(--price-down)'
+  const portColor   = portRangeReturn >= 0 ? 'var(--price-up)' : 'var(--price-down)'
   const spyColor    = '#3b82f6'
-  const diffColor   = diffAhead ? '#10b981' : 'var(--price-down)'
+  const diffColor   = diffAhead ? 'var(--price-up)' : 'var(--price-down)'
   const diffRgb     = diffAhead ? '16,185,129' : 'var(--price-down-rgb)'
 
   // Zero-line gradient offset
@@ -337,7 +337,7 @@ export default function BenchmarkChart({
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         activeDot={(props: any) => {
                           const val = props.payload?.portfolioReturn ?? props.value ?? 0
-                          const color = val >= 0 ? '#10b981' : '#ef4444'
+                          const color = val >= 0 ? 'var(--price-up)' : 'var(--price-down)'
                           return <circle cx={props.cx} cy={props.cy} r={3} fill={color} stroke="none" />
                         }}
                         name="Portfolio"

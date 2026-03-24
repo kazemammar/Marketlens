@@ -55,7 +55,7 @@ function CustomTooltip({ active, payload, label }: any) {
   return (
     <div className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-black/50">
       <p className="mb-1 font-mono text-[9px] text-[var(--text-muted)]">{formatted}</p>
-      <p className="font-mono text-[11px] font-bold" style={{ color: snap.returnPct >= 0 ? '#10b981' : '#ef4444' }}>
+      <p className="font-mono text-[11px] font-bold" style={{ color: snap.returnPct >= 0 ? 'var(--price-up)' : 'var(--price-down)' }}>
         {fmtPct(snap.returnPct)}
       </p>
       <p className="font-mono text-[10px] text-[var(--text-muted)]">
@@ -107,9 +107,9 @@ function EmptyState() {
   if (snapSuccess) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
-        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#10b981]/15">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full" style={{ background: 'rgba(var(--price-up-rgb), 0.15)' }}>
           <svg viewBox="0 0 16 16" fill="none" className="h-4 w-4" aria-hidden>
-            <polyline points="2,8 6,12 14,4" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points="2,8 6,12 14,4" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
         <p className="font-mono text-[11px] font-semibold text-[var(--text)]">First snapshot saved!</p>
@@ -133,7 +133,7 @@ function EmptyState() {
         </p>
       </div>
       {snapError && (
-        <p className="font-mono text-[9px] text-[#ef4444]">{snapError}</p>
+        <p className="font-mono text-[9px] text-[var(--price-down)]">{snapError}</p>
       )}
       <button
         onClick={handleSnapshot}
@@ -184,7 +184,7 @@ export default function PerformanceChart() {
   const latest    = snapshots[snapshots.length - 1]
   const first     = snapshots[0]
   const isPositive = (latest?.returnPct ?? 0) >= 0
-  const lineColor  = isPositive ? '#10b981' : '#ef4444'
+  const lineColor  = isPositive ? 'var(--price-up)' : 'var(--price-down)'
 
   const tickStep = Math.max(1, Math.floor(snapshots.length / 6))
   const ticks    = snapshots.filter((_, i) => i % tickStep === 0).map((s) => s.date)
@@ -198,7 +198,7 @@ export default function PerformanceChart() {
   // ── Shared header ──
   const Header = (
     <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
-      <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#10b981' }} aria-hidden>
+      <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
         <polyline points="1,13 4,8 7,10 10,5 15,3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
       <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">

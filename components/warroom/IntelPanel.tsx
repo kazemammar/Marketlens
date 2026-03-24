@@ -52,7 +52,7 @@ const INACTIVE_PILL = 'border border-[var(--border)] bg-transparent text-[var(--
 // ─── Tier dot color ───────────────────────────────────────────────────────
 
 function tierColor(meta: SourceMeta): string | null {
-  if (meta.tier === 1) return '#10b981' // green — wire/gov
+  if (meta.tier === 1) return 'var(--accent)' // green — wire/gov
   if (meta.tier === 2) return '#3b82f6' // blue  — major outlets
   return null
 }
@@ -84,7 +84,7 @@ function getArticleIcon(headline: string): IconCategory {
   if (/gas|wheat|corn|commodity|agriculture|lumber|copper|natural gas/.test(h))
     return { icon: Fuel,           gradient: 'from-yellow-950 to-yellow-900', color: '#eab308' }
   if (/stock|shares|market|s&p|dow|nasdaq|equity|earnings|ipo/.test(h))
-    return { icon: TrendingUp,     gradient: 'from-emerald-950 to-emerald-900', color: '#10b981' }
+    return { icon: TrendingUp,     gradient: 'from-emerald-950 to-emerald-900', color: 'var(--accent)' }
   return   { icon: Globe,          gradient: 'from-zinc-900 to-zinc-800',     color: 'var(--text-muted)' }
 }
 

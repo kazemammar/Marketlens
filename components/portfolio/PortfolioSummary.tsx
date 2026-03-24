@@ -69,8 +69,8 @@ function SparkBars({
         const h    = Math.max(3, Math.min(24, Math.abs(m.impact) * 8))
         const win  = m.impact >= 0
         const color = !m.tracked
-          ? '#6b7280'
-          : win ? '#22c55e' : '#ef4444'
+          ? 'var(--text-muted)'
+          : win ? 'var(--price-up)' : 'var(--price-down)'
         return (
           <div
             key={i}
@@ -130,8 +130,8 @@ export default function PortfolioSummary({
   const allTimePnlPct = totalCost > 0 ? (allTimePnl / totalCost) * 100 : 0
   const todayPnlPct   = totalCost > 0 ? (todayPnl / totalCost) * 100 : 0
 
-  const todayColor   = todayPnl >= 0   ? '#22c55e' : '#ef4444'
-  const allTimeColor = allTimePnl >= 0 ? '#22c55e' : '#ef4444'
+  const todayColor   = todayPnl >= 0   ? 'var(--price-up)' : 'var(--price-down)'
+  const allTimeColor = allTimePnl >= 0 ? 'var(--price-up)' : 'var(--price-down)'
   const partial      = tracked.length < total
 
   // ── Best / worst performer ───────────────────────────────────────────
@@ -214,8 +214,8 @@ export default function PortfolioSummary({
               <div className="flex items-center gap-3">
                 {/* Best */}
                 <div className="group relative flex items-center gap-1.5 cursor-default">
-                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#22c55e', boxShadow: '0 0 4px #22c55e80' }} />
-                  <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: '#22c55e', textShadow: '0 0 10px #22c55e40' }}>
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'var(--price-up)', boxShadow: '0 0 4px rgba(var(--price-up-rgb), 0.5)' }} />
+                  <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: 'var(--price-up)', textShadow: '0 0 10px rgba(var(--price-up-rgb), 0.25)' }}>
                     ↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%
                   </span>
                   <div className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 z-50">
@@ -224,8 +224,8 @@ export default function PortfolioSummary({
                 </div>
                 {/* Worst */}
                 <div className="group relative flex items-center gap-1.5 cursor-default">
-                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: '#ef4444', boxShadow: '0 0 4px #ef444480' }} />
-                  <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: '#ef4444', textShadow: '0 0 10px #ef444430' }}>
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'var(--price-down)', boxShadow: '0 0 4px rgba(var(--price-down-rgb), 0.5)' }} />
+                  <span className="font-mono text-[12px] font-semibold tabular-nums" style={{ color: 'var(--price-down)', textShadow: '0 0 10px rgba(var(--price-down-rgb), 0.19)' }}>
                     ↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%
                   </span>
                   <div className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--surface-2)] border border-[var(--border)] px-2 py-0.5 font-mono text-[10px] text-[var(--text-muted)] opacity-0 transition-opacity duration-100 group-hover:opacity-100 z-50">
@@ -292,8 +292,8 @@ export default function PortfolioSummary({
             <div className="flex items-center gap-2 flex-wrap">
               {hasMov && (
                 <>
-                  <span className="font-mono text-[11px] font-semibold" style={{ color: '#22c55e' }}>↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%</span>
-                  <span className="font-mono text-[11px] font-semibold" style={{ color: '#ef4444' }}>↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%</span>
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: 'var(--price-up)' }}>↑&thinsp;{best.symbol}&thinsp;{best.impact >= 0 ? '+' : ''}{fmt(best.impact)}%</span>
+                  <span className="font-mono text-[11px] font-semibold" style={{ color: 'var(--price-down)' }}>↓&thinsp;{worst.symbol}&thinsp;{worst.impact >= 0 ? '+' : ''}{fmt(worst.impact)}%</span>
                 </>
               )}
               {partial && (

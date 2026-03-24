@@ -236,7 +236,7 @@ export default function AuthModal({
               </div>
               <span style={{ fontSize: 16, letterSpacing: '-0.02em', fontWeight: 600 }}>
                 <span style={{ color: 'var(--text)' }}>Market</span>
-                <span style={{ color: '#10b981', textShadow: '0 0 12px rgba(16,185,129,0.35)' }}>Lens</span>
+                <span style={{ color: 'var(--accent)', textShadow: '0 0 12px rgba(16,185,129,0.35)' }}>Lens</span>
               </span>
             </div>
             <p className="font-mono text-[11px] text-[var(--text-muted)]">

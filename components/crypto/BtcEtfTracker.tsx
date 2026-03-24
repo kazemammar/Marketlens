@@ -5,7 +5,7 @@ import type { BtcEtfPayload, BtcEtfData } from '@/app/api/crypto/btc-etfs/route'
 
 // ─── Direction colours ────────────────────────────────────────────────────
 
-const DIR_COLOR  = { INFLOW: '#10b981', OUTFLOW: '#ef4444', NEUTRAL: 'var(--text-muted)' }
+const DIR_COLOR  = { INFLOW: 'var(--price-up)', OUTFLOW: 'var(--price-down)', NEUTRAL: 'var(--text-muted)' }
 const DIR_BG     = { INFLOW: 'rgba(16,185,129,0.10)', OUTFLOW: 'rgba(239,68,68,0.10)', NEUTRAL: 'var(--surface-2)' }
 const DIR_BORDER = { INFLOW: 'rgba(16,185,129,0.20)', OUTFLOW: 'rgba(239,68,68,0.20)', NEUTRAL: 'var(--border)' }
 const DIR_LABEL  = { INFLOW: '▲ INFLOW', OUTFLOW: '▼ OUTFLOW', NEUTRAL: '► NEUTRAL' }

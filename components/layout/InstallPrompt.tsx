@@ -113,7 +113,7 @@ export default function InstallPrompt() {
               <button
                 onClick={handleInstall}
                 className="mt-3 w-full rounded py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90 active:opacity-75"
-                style={{ background: '#10b981' }}
+                style={{ background: 'var(--accent)' }}
               >
                 Install App
               </button>

@@ -10,7 +10,7 @@ const TYPE_ORDER    = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 const SECTOR_ORDER_WITH_OTHER = [...SECTOR_ORDER, 'Other']
 
 const TYPE_COLORS: Record<string, string> = {
-  stock:     '#10b981',
+  stock:     'var(--accent)',
   crypto:    '#8b5cf6',
   forex:     '#38bdf8',
   commodity: '#f59e0b',
@@ -228,7 +228,7 @@ export default function AllocationPanel({
 
   const centerLabel = hasRealVal ? fmtPortfolioValue(totalWeight) : `${positions.length}`
   const centerSub   = hasRealVal ? 'portfolio' : 'positions'
-  const dominantColor = donutSegments[0]?.color ?? '#10b981'
+  const dominantColor = donutSegments[0]?.color ?? 'var(--accent)'
 
   const longDominant = longPct >= 50
 
@@ -318,13 +318,13 @@ export default function AllocationPanel({
             />
           </div>
           <div className="mt-1 flex items-center justify-between">
-            <span className="font-mono text-[10px] font-semibold" style={{ color: '#22c55e' }}>
+            <span className="font-mono text-[10px] font-semibold" style={{ color: 'var(--price-up)' }}>
               {longPct.toFixed(0)}% Long
             </span>
             <span className="font-mono text-[9px] text-[var(--text-muted)] opacity-40">
               ({longCount}L / {shortCount}S)
             </span>
-            <span className="font-mono text-[10px] font-semibold" style={{ color: '#ef4444' }}>
+            <span className="font-mono text-[10px] font-semibold" style={{ color: 'var(--price-down)' }}>
               {(100 - longPct).toFixed(0)}% Short
             </span>
           </div>

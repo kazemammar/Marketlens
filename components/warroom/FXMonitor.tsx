@@ -254,12 +254,12 @@ export default function FXMonitor() {
                       <div className="relative flex h-2.5 flex-1 items-center">
                         <div className="absolute inset-y-0 left-1/2 w-px bg-[var(--border)]" />
                         {isPos ? (
-                          <div className="absolute inset-y-0.5 rounded-sm" style={{ left: '50%', width: `${pct}%`, background: '#10b981', opacity: 0.8 }} />
+                          <div className="absolute inset-y-0.5 rounded-sm" style={{ left: '50%', width: `${pct}%`, background: 'var(--price-up)', opacity: 0.8 }} />
                         ) : (
-                          <div className="absolute inset-y-0.5 rounded-sm" style={{ right: '50%', width: `${pct}%`, background: '#ef4444', opacity: 0.8 }} />
+                          <div className="absolute inset-y-0.5 rounded-sm" style={{ right: '50%', width: `${pct}%`, background: 'var(--price-down)', opacity: 0.8 }} />
                         )}
                       </div>
-                      <span className="w-12 shrink-0 text-right font-mono text-[8px] tabular-nums" style={{ color: isPos ? '#10b981' : '#ef4444' }}>
+                      <span className="w-12 shrink-0 text-right font-mono text-[8px] tabular-nums" style={{ color: isPos ? 'var(--price-up)' : 'var(--price-down)' }}>
                         {(s.score >= 0 ? '+' : '') + s.score.toFixed(3) + '%'}
                       </span>
                     </div>

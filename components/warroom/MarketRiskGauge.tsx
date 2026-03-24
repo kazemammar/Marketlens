@@ -35,10 +35,10 @@ function Gauge({ score }: { score: number }) {
 
   // Zone colors: green 0-35, amber 35-55, orange 55-75, red 75-100
   function scoreColor(s: number) {
-    if (s >= 75) return '#ef4444'
+    if (s >= 75) return 'var(--danger)'
     if (s >= 55) return '#f97316'
-    if (s >= 35) return '#f59e0b'
-    return '#22c55e'
+    if (s >= 35) return 'var(--warning)'
+    return 'var(--price-up)'
   }
 
   const color = scoreColor(score)
@@ -57,7 +57,7 @@ function Gauge({ score }: { score: number }) {
       {/* Zone gradient ticks */}
       {[0, 35, 55, 75, 100].map((tick, i, arr) => {
         if (i === arr.length - 1) return null
-        const zoneColors = ['#22c55e', '#f59e0b', '#f97316', '#ef4444']
+        const zoneColors = ['var(--price-up)', 'var(--warning)', '#f97316', 'var(--danger)']
         const a1 = startAngle + (tick / 100) * sweepAngle
         const a2 = startAngle + (arr[i + 1] / 100) * sweepAngle
         const p1 = polar(a1, r)

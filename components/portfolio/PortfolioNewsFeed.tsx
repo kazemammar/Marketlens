@@ -15,7 +15,7 @@ const SEV_BORDER: Record<string, string> = {
 // ─── Tier dot color ───────────────────────────────────────────────────────
 
 function tierColor(tier: number): string | null {
-  if (tier === 1) return '#10b981'
+  if (tier === 1) return 'var(--accent)'
   if (tier === 2) return '#3b82f6'
   return null
 }

@@ -16,7 +16,7 @@ const DIR_COLOR: Record<string, string> = {
 const DIR_ARROW: Record<string, string> = { up: '▲', down: '▼', volatile: '↕' }
 
 const RISK_DOT: Record<string, string> = {
-  LOW: '#10b981', MODERATE: '#f59e0b', HIGH: '#f97316', CRITICAL: '#ef4444',
+  LOW: 'var(--price-up)', MODERATE: 'var(--warning)', HIGH: '#f97316', CRITICAL: 'var(--danger)',
 }
 const RISK_LABEL: Record<string, string> = {
   LOW: 'LOW RISK', MODERATE: 'MOD RISK', HIGH: 'HIGH RISK', CRITICAL: 'CRITICAL',
@@ -24,7 +24,7 @@ const RISK_LABEL: Record<string, string> = {
 
 const SESSION_STYLE: Record<MarketSession, { label: string; color: string }> = {
   pre_market:  { label: 'PRE-MKT',   color: '#60a5fa' },
-  morning:     { label: 'MORNING',   color: '#10b981' },
+  morning:     { label: 'MORNING',   color: 'var(--accent)' },
   afternoon:   { label: 'AFTERNOON', color: '#f59e0b' },
   after_hours: { label: 'AFTER HRS', color: '#a78bfa' },
 }
@@ -233,7 +233,7 @@ export default function MarketBrief() {
             className="rounded border px-2.5 py-2"
             style={{ borderColor: 'rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.04)' }}
           >
-            <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: '#10b981' }}>
+            <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>
               Looking Ahead
             </span>
             <p className="mt-0.5 font-mono text-[10px] sm:text-[11px] leading-relaxed text-[var(--text)]">

@@ -79,7 +79,7 @@ export default function MarketHours() {
   }, [])
 
   return (
-    <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+    <div className="flex items-center gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5" suppressHydrationWarning>
       <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5 shrink-0" style={{ color: 'var(--text-muted)' }} aria-hidden>
         <circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/>
         <path d="M6 3v3l2 1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>

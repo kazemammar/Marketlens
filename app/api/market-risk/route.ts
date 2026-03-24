@@ -43,7 +43,7 @@ export interface MarketRiskPayload {
 const BRIEF_KEY   = 'market-brief:daily'
 const RISK_KEY    = 'market-risk:v6'
 const HISTORY_KEY = 'market-risk:history'
-const CACHE_TTL   = 1_800  // 30 minutes — brief only changes hourly, no value recomputing more often
+const CACHE_TTL   = 3_600  // 1 hour — matches spec, brief only changes hourly
 const HISTORY_MAX = 12     // ~6 hours at 30-min intervals
 
 // ─── Category keyword lists ────────────────────────────────────────────────
@@ -184,9 +184,11 @@ const LEVEL_META: Record<MarketRiskPayload['level'], { label: string; color: str
 async function readHistory(): Promise<HistoryPoint[]> {
   try {
     const raw = await redis.lrange(HISTORY_KEY, 0, -1)
-    return (raw as unknown[]).map((entry) => {
-      if (typeof entry === 'string') return JSON.parse(entry) as HistoryPoint
-      return entry as HistoryPoint
+    return (raw as unknown[]).flatMap((entry) => {
+      try {
+        if (typeof entry === 'string') return [JSON.parse(entry) as HistoryPoint]
+        return [entry as HistoryPoint]
+      } catch { return [] }
     })
   } catch {
     return []

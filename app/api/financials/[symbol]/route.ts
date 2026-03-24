@@ -3,7 +3,7 @@ import { getFinancials } from '@/lib/api/fmp'
 import { getFinancialMetrics, getEarnings } from '@/lib/api/finnhub'
 import { redis } from '@/lib/cache/redis'
 
-const CACHE_TTL = 3_600  // 1 hour — financials are quarterly, FMP has 250 calls/day free tier
+const CACHE_TTL = 86_400  // 24 hours — financials are quarterly, FMP has 250 calls/day free tier
 
 export async function GET(
   _req: Request,

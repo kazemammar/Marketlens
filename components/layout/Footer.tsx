@@ -39,7 +39,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-4 flex flex-col gap-2 border-t border-[var(--border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-mono text-[10px] text-[var(--text-muted)]">
+          <p className="font-mono text-[10px] text-[var(--text-muted)]" suppressHydrationWarning>
             © {year} MarketLens. Built by <span className="text-[var(--text-2)]">Kazem Julien Ammar</span>. All rights reserved.
           </p>
           <p className="max-w-md font-mono text-[10px] text-[var(--text-muted)] opacity-70">

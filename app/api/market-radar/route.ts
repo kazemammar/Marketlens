@@ -64,10 +64,14 @@ export async function GET() {
   // ── VIX proxy (VXX) ──────────────────────────────────────────────
   const vxx = quotes.get('VXX')
   if (vxx) {
-    const fearful = vxx.price > 20 || vxx.changePercent > 5
+    // Use percent change only — VXX absolute price decays over time due to contango,
+    // making any fixed price threshold unreliable.
+    const vxxPct  = vxx.changePercent
+    const fearful = vxxPct > 5
+    const calm    = vxxPct < -2
     const v: SignalVerdict = fearful ? 'CASH' : 'BUY'
     fearful ? cashVotes += 2 : buyVotes++
-    signals.push({ name: 'Volatility (VXX)', verdict: v, value: `$${vxx.price.toFixed(2)}`, reason: fearful ? 'Elevated fear — reduce risk' : 'Low volatility — conducive to gains' })
+    signals.push({ name: 'Volatility (VXX)', verdict: v, value: `${vxxPct > 0 ? '+' : ''}${vxxPct.toFixed(2)}%`, reason: fearful ? 'VXX spiking — fear elevated' : calm ? 'VXX falling — calm returning' : 'Volatility stable' })
   }
 
   // ── Gold safe-haven signal (GC=F via Yahoo — same source as commodities strip) ──
@@ -134,10 +138,11 @@ export async function GET() {
       const btcData = await btcRes.json() as { bitcoin: { usd: number; usd_24h_change: number } }
       const price  = btcData.bitcoin.usd
       const change = btcData.bitcoin.usd_24h_change
-      const riskOn = price > 55_000 && change > -3
+      // Use 24h change instead of absolute price — BTC's nominal price changes over time
+      const riskOn = change > -3
       const v: SignalVerdict = riskOn ? 'BUY' : 'CASH'
       riskOn ? buyVotes++ : cashVotes++
-      signals.push({ name: 'Bitcoin', verdict: v, value: `$${(price / 1000).toFixed(1)}K`, reason: riskOn ? 'BTC above $55K — risk appetite healthy' : 'BTC weak — crypto risk-off' })
+      signals.push({ name: 'Bitcoin', verdict: v, value: `$${(price / 1000).toFixed(1)}K (${change > 0 ? '+' : ''}${change.toFixed(1)}%)`, reason: riskOn ? 'BTC holding — risk appetite intact' : 'BTC dropping — crypto risk-off' })
     }
   } catch { /* non-fatal */ }
 

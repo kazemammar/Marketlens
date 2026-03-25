@@ -170,13 +170,16 @@ export async function GET(
       })
     }
 
-    // ADX trend strength
+    // ADX trend strength — ADX measures strength, NOT direction.
+    // Combine with price direction: strong trend + up = bullish, strong trend + down = bearish.
     if (aggregate?.trend?.adx !== undefined) {
       const adx = aggregate.trend.adx
+      const trending = adx > 25
+      const dirUp    = quote.changePercent > 0
       signals.push({
         name:   'ADX Trend',
         value:  adx.toFixed(1),
-        signal: adx > 25 ? 'bullish' : adx < 20 ? 'bearish' : 'neutral',
+        signal: trending ? (dirUp ? 'bullish' : 'bearish') : 'neutral',
       })
     }
 

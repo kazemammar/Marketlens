@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getFinanceNews } from '@/lib/api/rss'
-import { getClient } from '@/lib/api/groq'
+import { groqChat } from '@/lib/api/groq'
 import { redis } from '@/lib/cache/redis'
 import { STOCK_SECTORS } from '@/lib/utils/sectors'
 import { withRateLimit } from '@/lib/utils/rate-limit'
@@ -65,9 +65,7 @@ export async function GET(req: Request) {
       .map((sector) => `${sector}: ${sectorHeadlines[sector].join(' | ')}`)
       .join('\n')
 
-    const client = getClient()
-    const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+    const completion = await groqChat({
       messages: [
         {
           role: 'system',

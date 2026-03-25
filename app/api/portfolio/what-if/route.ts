@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
-import { getClient } from '@/lib/api/groq'
+import { groqChat } from '@/lib/api/groq'
 import { redis } from '@/lib/cache/redis'
 import { rateLimit } from '@/lib/utils/rate-limit'
 
@@ -58,9 +58,7 @@ export async function POST(req: Request) {
   ).join('\n')
 
   try {
-    const client = getClient()
-    const completion = await client.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
+    const completion = await groqChat({
       messages: [
         {
           role: 'system',

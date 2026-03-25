@@ -16,6 +16,38 @@ export function getClient(): Groq {
   return _client
 }
 
+// ─── Model constants ─────────────────────────────────────────────────────
+
+export const PRIMARY_MODEL   = 'llama-3.3-70b-versatile'
+export const FALLBACK_MODEL  = 'llama-3.1-8b-instant'
+
+/** True if the error is a Groq 429 rate-limit response. */
+function isRateLimited(err: unknown): boolean {
+  if (err instanceof Error && err.message.startsWith('429')) return true
+  if (typeof err === 'object' && err !== null && 'status' in err && (err as { status: number }).status === 429) return true
+  return false
+}
+
+type ChatParams = Omit<Parameters<Groq['chat']['completions']['create']>[0], 'model' | 'stream'>
+
+/**
+ * Call Groq with automatic fallback to a smaller model on 429.
+ * Callers omit `model` (we inject it) and `stream` (always non-streaming).
+ */
+export async function groqChat(params: ChatParams) {
+  const client = getClient()
+  const full = { ...params, model: PRIMARY_MODEL, stream: false as const }
+  try {
+    return await client.chat.completions.create(full)
+  } catch (err) {
+    if (isRateLimited(err)) {
+      console.warn(`[groq] ${PRIMARY_MODEL} rate-limited, falling back to ${FALLBACK_MODEL}`)
+      return await client.chat.completions.create({ ...full, model: FALLBACK_MODEL })
+    }
+    throw err
+  }
+}
+
 // ─── Internal ─────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are a senior equity research analyst. Given news headlines about an asset, provide a structured sentiment assessment following institutional research standards.
@@ -85,16 +117,13 @@ export async function analyzeSentiment(
     cacheKey.sentiment(symbol),
     TTL.SENTIMENT,
     async () => {
-      const client = getClient()
-
       const userMessage = [
         `Asset: ${symbol}`,
         `Headlines (${headlines.length}):`,
         headlines.slice(0, 20).map((h, i) => `${i + 1}. ${h}`).join('\n'),
       ].join('\n')
 
-      const completion = await client.chat.completions.create({
-        model:       'llama-3.3-70b-versatile',
+      const completion = await groqChat({
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user',   content: userMessage },
@@ -209,8 +238,6 @@ export async function analyzeAssetContext(
     `context:${symbol.toUpperCase()}`,
     TTL.SENTIMENT,
     async () => {
-      const client = getClient()
-
       const userMessage = [
         `Asset: ${symbol} (${type})`,
         metadata?.name     ? `Company: ${metadata.name}`       : '',
@@ -219,8 +246,7 @@ export async function analyzeAssetContext(
         headlines.slice(0, 25).map((h, i) => `${i + 1}. ${h}`).join('\n'),
       ].filter(Boolean).join('\n')
 
-      const completion = await client.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
+      const completion = await groqChat({
         messages: [
           { role: 'system', content: CONTEXT_SYSTEM_PROMPT },
           { role: 'user',   content: userMessage },

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getFinanceNews } from '@/lib/api/rss'
 import { redis } from '@/lib/cache/redis'
-import { getClient } from '@/lib/api/groq'
+import { groqChat } from '@/lib/api/groq'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 import type { HomepageData } from '@/lib/api/homepage'
 import { HOMEPAGE_CACHE_KEY } from '@/lib/api/homepage'
@@ -203,12 +203,10 @@ export async function GET(req: Request) {
 
   // Call Groq
   try {
-    const client = getClient()
     const systemPrompt = buildSystemPrompt(session, etTime, prevBrief)
     const userMessage = `Today's headlines (${new Date().toUTCString()}, ${headlines.length} from ${sourceSet.size} sources):\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}${priceContext}`
 
-    const completion = await client.chat.completions.create({
-      model:           'llama-3.3-70b-versatile',
+    const completion = await groqChat({
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user',   content: userMessage },
@@ -267,7 +265,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(payload)
   } catch (err) {
-    console.error('[api/market-brief]', err)
+    console.error('[api/market-brief]', err instanceof Error ? err.message : err)
     const fallback: MarketBriefPayload = {
       brief:          'AI analysis is temporarily unavailable. Markets are trading on continued macro themes — watch Federal Reserve communications, energy supply dynamics, and geopolitical risk factors for directional cues.',
       risks:          ['AI service temporarily unavailable', 'Monitor for macro surprises', 'Geopolitical risk remains elevated'],

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getFinanceNews } from '@/lib/api/rss'
 import { redis }          from '@/lib/cache/redis'
-import { getClient }      from '@/lib/api/groq'
+import { groqChat }       from '@/lib/api/groq'
 import { withRateLimit }  from '@/lib/utils/rate-limit'
 import type { HomepageData } from '@/lib/api/homepage'
 import { HOMEPAGE_CACHE_KEY } from '@/lib/api/homepage'
@@ -90,11 +90,9 @@ export async function GET(req: Request) {
   } catch { /* non-fatal — proceed without price context */ }
 
   try {
-    const client      = getClient()
     const userMessage = `Headlines (${new Date().toUTCString()}):\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}${priceContext}`
 
-    const completion = await client.chat.completions.create({
-      model:           'llama-3.3-70b-versatile',
+    const completion = await groqChat({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userMessage },

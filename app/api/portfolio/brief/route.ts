@@ -3,7 +3,7 @@ import { createServerSupabase }   from '@/lib/supabase/server'
 import { withRateLimit }          from '@/lib/utils/rate-limit'
 import { getRelatedNewsForAsset } from '@/lib/api/rss'
 import { redis }                  from '@/lib/cache/redis'
-import { getClient }              from '@/lib/api/groq'
+import { groqChat }               from '@/lib/api/groq'
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -123,9 +123,7 @@ export async function GET(req: Request) {
 
   // Call Groq
   try {
-    const client     = getClient()
-    const completion = await client.chat.completions.create({
-      model:           'llama-3.3-70b-versatile',
+    const completion = await groqChat({
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user',   content: userMessage },

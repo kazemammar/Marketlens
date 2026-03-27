@@ -33,31 +33,38 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  await Promise.allSettled([
+  // Batch warm calls (5 at a time with 500ms gap) to avoid burst pressure
+  // on Upstash free tier — 20 simultaneous Redis hits can trigger throttling.
+  const calls: Array<() => Promise<void>> = [
     // Market tabs — the homepage card grids
-    ...TABS.map((tab) => warm(`market_${tab}`, `/api/market?tab=${tab}`)),
+    ...TABS.map((tab) => () => warm(`market_${tab}`, `/api/market?tab=${tab}`)),
     // Warroom feeds
-    warm('market_pulse',  '/api/market-pulse'),
-    warm('market_brief',  '/api/market-brief'),
-    warm('signals',       '/api/signals'),
-    warm('movers',        '/api/movers'),
-    warm('news',               '/api/news?page=1&limit=50'),
-    warm('economics',          '/api/economics'),
-    warm('market_risk',        '/api/market-risk'),
-    warm('economic_calendar',  '/api/economic-calendar'),
-    warm('earnings_calendar',  '/api/earnings-calendar'),
-    warm('trending',           '/api/trending'),
-    warm('chokepoints',        '/api/chokepoints'),
-    warm('energy',             '/api/energy'),
-    warm('central_banks',      '/api/central-banks'),
-    warm('forex_strength',     '/api/forex/strength'),
-    warm('predictions',        '/api/predictions'),
-    warm('fear_greed',         '/api/fear-greed'),
-    warm('commodities_strip',  '/api/commodities-strip'),
-    warm('ipo_calendar',        '/api/ipo-calendar'),
+    () => warm('market_pulse',      '/api/market-pulse'),
+    () => warm('market_brief',      '/api/market-brief'),
+    () => warm('signals',           '/api/signals'),
+    () => warm('movers',            '/api/movers'),
+    () => warm('news',              '/api/news?page=1&limit=50'),
+    () => warm('economics',         '/api/economics'),
+    () => warm('market_risk',       '/api/market-risk'),
+    () => warm('economic_calendar', '/api/economic-calendar'),
+    () => warm('earnings_calendar', '/api/earnings-calendar'),
+    () => warm('trending',          '/api/trending'),
+    () => warm('chokepoints',       '/api/chokepoints'),
+    () => warm('energy',            '/api/energy'),
+    () => warm('central_banks',     '/api/central-banks'),
+    () => warm('forex_strength',    '/api/forex/strength'),
+    () => warm('predictions',       '/api/predictions'),
+    () => warm('fear_greed',        '/api/fear-greed'),
+    () => warm('commodities_strip', '/api/commodities-strip'),
+    () => warm('ipo_calendar',      '/api/ipo-calendar'),
     // Daily tasks (previously a separate cron — merged for Hobby plan 1-cron limit)
-    warm('portfolio_snapshots', '/api/cron/snapshot'),
-  ])
+    () => warm('portfolio_snapshots', '/api/cron/snapshot'),
+  ]
+
+  for (let i = 0; i < calls.length; i += 5) {
+    await Promise.allSettled(calls.slice(i, i + 5).map(fn => fn()))
+    if (i + 5 < calls.length) await new Promise(r => setTimeout(r, 500))
+  }
 
   return NextResponse.json({ ok: true, ran: new Date().toISOString(), results })
 }

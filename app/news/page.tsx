@@ -189,85 +189,94 @@ export default function NewsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
-
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">Market News</h1>
-          <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
-            Latest headlines across stocks, crypto, forex and commodities
-          </p>
-        </div>
-
-        {/* Category tabs */}
-        <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)]">
-          {CATEGORIES.map((cat) => {
-            const isActive = cat.id === category
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`
-                  flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-1
-                  font-mono text-[12px] font-medium transition-colors
-                  ${isActive
-                    ? 'border-[var(--accent)] text-[var(--accent)]'
-                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
-                  }
-                `}
-              >
-                <span aria-hidden>{cat.emoji}</span>
-                {cat.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Count */}
-        {!loading && total > 0 && (
-          <p className="mb-4 font-mono text-[10px] text-[var(--text-muted)]">
-            {total} cluster{total !== 1 ? 's' : ''} found
-          </p>
-        )}
-
-        {/* Clusters */}
-        <div className="space-y-2">
-          {loading
-            ? Array.from({ length: 8 }).map((_, i) => <ClusterSkeleton key={i} />)
-            : clusters.map((c) => <ClusterCard key={c.id} cluster={c} />)
-          }
-        </div>
-
-        {/* Empty state */}
-        {!loading && clusters.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <p className="text-4xl">📭</p>
-            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">No stories found</p>
-            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
-              Try a different category or check back later.
-            </p>
+      <main className="mx-auto max-w-screen-xl px-3 sm:px-4 py-4">
+        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+          {/* Card header */}
+          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+              <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+              <path d="M4 5h8M4 8h5M4 11h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+              Market News
+            </span>
+            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           </div>
-        )}
 
-        {/* Load more */}
-        {hasMore && !loading && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={loadMore}
-              disabled={loadingMore}
-              className="flex items-center gap-2 rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 font-mono text-[12px] font-medium text-[var(--text)] transition hover:bg-[var(--surface-2)] disabled:opacity-50"
-            >
-              {loadingMore ? (
-                <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Loading…
-                </>
-              ) : (
-                'Load more stories'
-              )}
-            </button>
+          {/* Card body */}
+          <div className="p-3">
+            {/* Category tabs */}
+            <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)]">
+              {CATEGORIES.map((cat) => {
+                const isActive = cat.id === category
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`
+                      flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-1
+                      font-mono text-[12px] font-medium transition-colors
+                      ${isActive
+                        ? 'border-[var(--accent)] text-[var(--accent)]'
+                        : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text)]'
+                      }
+                    `}
+                  >
+                    <span aria-hidden>{cat.emoji}</span>
+                    {cat.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Count */}
+            {!loading && total > 0 && (
+              <p className="mb-4 font-mono text-[10px] text-[var(--text-muted)]">
+                {total} cluster{total !== 1 ? 's' : ''} found
+              </p>
+            )}
+
+            {/* Clusters */}
+            <div className="space-y-2">
+              {loading
+                ? Array.from({ length: 8 }).map((_, i) => <ClusterSkeleton key={i} />)
+                : clusters.map((c) => <ClusterCard key={c.id} cluster={c} />)
+              }
+            </div>
+
+            {/* Empty state */}
+            {!loading && clusters.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <p className="text-4xl">📭</p>
+                <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">No stories found</p>
+                <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+                  Try a different category or check back later.
+                </p>
+              </div>
+            )}
+
+            {/* Load more */}
+            {hasMore && !loading && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="flex items-center gap-2 rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-2.5 font-mono text-[12px] font-medium text-[var(--text)] transition hover:bg-[var(--surface-2)] disabled:opacity-50"
+                >
+                  {loadingMore ? (
+                    <>
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Loading…
+                    </>
+                  ) : (
+                    'Load more stories'
+                  )}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </main>
     </div>
   )

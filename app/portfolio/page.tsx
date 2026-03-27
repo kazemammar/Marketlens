@@ -98,31 +98,6 @@ function LoadingSkeleton() {
   )
 }
 
-// ─── Section header ────────────────────────────────────────────────────────
-
-function SectionHeader({
-  icon, label, right,
-}: {
-  icon:  React.ReactNode
-  label: string
-  right?: React.ReactNode
-}) {
-  return (
-    <div className="flex items-center gap-2 px-3 py-3 sm:px-4">
-      <div className="flex items-center gap-2">
-        {icon}
-        <span
-          className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]"
-        >
-          {label}
-        </span>
-      </div>
-      <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
-      {right}
-    </div>
-  )
-}
-
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function PortfolioPage() {
@@ -264,23 +239,38 @@ export default function PortfolioPage() {
   if (!authLoading && !user) {
     return (
       <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-        <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">My Portfolio</h1>
-          <div className="mt-8 flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
-            <p className="text-3xl">🔒</p>
-            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
-              Sign in to see your portfolio
-            </p>
-            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
-              Create a free account to track positions and monitor live P&amp;L.
-            </p>
-            <button
-              onClick={() => setAuthOpen(true)}
-              className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90"
-              style={{ background: 'var(--accent)' }}
-            >
-              Sign In / Create Account
-            </button>
+        <div className="mx-auto max-w-screen-xl px-3 py-4 sm:px-4">
+          <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+            <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+              <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+                <rect x="1" y="3" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
+                <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.7"/>
+                <rect x="1" y="11" width="14" height="2" rx="0.5" fill="currentColor"/>
+              </svg>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+                Portfolio
+              </span>
+              <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+              <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+            </div>
+            <div className="p-3">
+              <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
+                <p className="text-3xl">🔒</p>
+                <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
+                  Sign in to see your portfolio
+                </p>
+                <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+                  Create a free account to track positions and monitor live P&amp;L.
+                </p>
+                <button
+                  onClick={() => setAuthOpen(true)}
+                  className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-white transition hover:opacity-90"
+                  style={{ background: 'var(--accent)' }}
+                >
+                  Sign In / Create Account
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
@@ -308,91 +298,84 @@ export default function PortfolioPage() {
       {/* ══ PORTFOLIO CONTENT ════════════════════════════════════════════ */}
       {!isLoading && activePositions.length > 0 && (
         <>
-          {/* ── Section header: PORTFOLIO INTELLIGENCE ──────────────────── */}
-          <SectionHeader
-            icon={
-              <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-                <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
-                <circle cx="8" cy="8" r="1" fill="currentColor"/>
-              </svg>
-            }
-            label="Portfolio Intelligence"
-            right={
-              <div className="hidden sm:flex items-center gap-1">
-                <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-                <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>LIVE</span>
+          {/* ── PORTFOLIO INTELLIGENCE card ──────────────────────────────── */}
+          <div className="px-3 sm:px-4 py-2">
+            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+                <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                  <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
+                  <circle cx="8" cy="8" r="1" fill="currentColor"/>
+                </svg>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+                  Portfolio Intelligence
+                </span>
+                <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+                <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
               </div>
-            }
-          />
+              <div className="p-3 space-y-3">
+                {/* ══ WHAT-IF SCENARIO ENGINE ════════════════════════════════════ */}
+                <PanelErrorBoundary fallbackTitle="What-If Analysis">
+                  <WhatIfPanel />
+                </PanelErrorBoundary>
 
-          {/* ══ WHAT-IF SCENARIO ENGINE ════════════════════════════════════ */}
-          <div className="px-3 sm:px-4 py-2">
-            <PanelErrorBoundary fallbackTitle="What-If Analysis">
-              <WhatIfPanel />
-            </PanelErrorBoundary>
-          </div>
+                {/* ── Row 1: Day Movers | Allocation ──────────────────────────── */}
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+                    <DayMovers positions={activePositions} quotes={activeQuotes} />
+                  </div>
+                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+                    <AllocationPanel positions={activePositions} quotes={activeQuotes} />
+                  </div>
+                </div>
 
-          {/* ── Row 1: Day Movers | Allocation ──────────────────────────── */}
-          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-              <DayMovers positions={activePositions} quotes={activeQuotes} />
-            </div>
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-              <AllocationPanel positions={activePositions} quotes={activeQuotes} />
-            </div>
-          </div>
+                {/* ── Row 2: Risk Alerts | Exposure ───────────────────────────── */}
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+                    <RiskAlerts positions={activePositions} quotes={activeQuotes} />
+                  </div>
+                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+                    <ExposurePanel positions={activePositions} quotes={activeQuotes} />
+                  </div>
+                </div>
 
-          {/* ── Row 2: Risk Alerts | Exposure ───────────────────────────── */}
-          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-              <RiskAlerts positions={activePositions} quotes={activeQuotes} />
-            </div>
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-              <ExposurePanel positions={activePositions} quotes={activeQuotes} />
-            </div>
-          </div>
+                {/* ── Correlation Matrix ──────────────────────────────────── */}
+                <CorrelationMatrix />
 
-          {/* ── Correlation Matrix ──────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-2">
-            <CorrelationMatrix />
-          </div>
+                {/* ── Benchmark Comparison ─────────────────────────────────────── */}
+                <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+                  <BenchmarkChart {...allTimeStats} />
+                </div>
 
-          {/* ── Benchmark Comparison ─────────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-2">
-            <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
-              <BenchmarkChart {...allTimeStats} />
-            </div>
-          </div>
+                {/* ── Performance History ──────────────────────────────────────── */}
+                <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+                  <PerformanceChart />
+                </div>
 
-          {/* ── Performance History ──────────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-2">
-            <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
-              <PerformanceChart />
-            </div>
-          </div>
-
-          {/* ── Earnings Calendar ────────────────────────────────────────── */}
-          {activePositions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
-            <div className="px-3 sm:px-4 py-2">
-              <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
-                <EarningsCalendar />
+                {/* ── Earnings Calendar ────────────────────────────────────────── */}
+                {activePositions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
+                  <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+                    <EarningsCalendar />
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* ── Section header: POSITIONS ────────────────────────────────── */}
-          <SectionHeader
-            icon={
-              <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-                <rect x="1" y="3" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
-                <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.7"/>
-                <rect x="1" y="11" width="14" height="2" rx="0.5" fill="currentColor"/>
-              </svg>
-            }
-            label="Positions"
-            right={
-              <div className="flex items-center gap-2">
+          {/* ── POSITIONS card ────────────────────────────────────────── */}
+          <div className="px-3 sm:px-4 py-2">
+            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+                <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+                  <rect x="1" y="3" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
+                  <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.7"/>
+                  <rect x="1" y="11" width="14" height="2" rx="0.5" fill="currentColor"/>
+                </svg>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+                  Positions
+                </span>
+                <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+                <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
                 <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
                   {activePositions.length} position{activePositions.length !== 1 ? 's' : ''}
                 </span>
@@ -408,56 +391,56 @@ export default function PortfolioPage() {
                   Add
                 </button>
               </div>
-            }
-          />
-
-          {/* ── Positions table ──────────────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-2">
-            <div className="rounded border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
-            <PositionsTable
-              positions={activePositions}
-              quotes={activeQuotes}
-              onUpdate={async (id, data) => {
-                const ok = await updatePosition(id, data)
-                if (ok) setBriefTrigger((n) => n + 1)
-                return ok
-              }}
-              onDelete={async (id) => {
-                const ok = await removePosition(id)
-                if (ok) setBriefTrigger((n) => n + 1)
-                return ok
-              }}
-              onDeleteLot={async (positionId, lotId) => {
-                const ok = await removeLot(positionId, lotId)
-                if (ok) setBriefTrigger((n) => n + 1)
-                return ok
-              }}
-              onEditLot={async (positionId, updatedLot) => {
-                const ok = await updateLot(positionId, updatedLot)
-                if (ok) setBriefTrigger((n) => n + 1)
-                return ok
-              }}
-              onAddMore={(position) => {
-                setPrefill({ symbol: position.symbol, type: position.asset_type })
-                setAddOpen(true)
-              }}
-            />
+              <PositionsTable
+                positions={activePositions}
+                quotes={activeQuotes}
+                onUpdate={async (id, data) => {
+                  const ok = await updatePosition(id, data)
+                  if (ok) setBriefTrigger((n) => n + 1)
+                  return ok
+                }}
+                onDelete={async (id) => {
+                  const ok = await removePosition(id)
+                  if (ok) setBriefTrigger((n) => n + 1)
+                  return ok
+                }}
+                onDeleteLot={async (positionId, lotId) => {
+                  const ok = await removeLot(positionId, lotId)
+                  if (ok) setBriefTrigger((n) => n + 1)
+                  return ok
+                }}
+                onEditLot={async (positionId, updatedLot) => {
+                  const ok = await updateLot(positionId, updatedLot)
+                  if (ok) setBriefTrigger((n) => n + 1)
+                  return ok
+                }}
+                onAddMore={(position) => {
+                  setPrefill({ symbol: position.symbol, type: position.asset_type })
+                  setAddOpen(true)
+                }}
+              />
             </div>
           </div>
 
-          {/* ── Section header: PORTFOLIO NEWS ───────────────────────────── */}
-          <SectionHeader
-            icon={
-              <span className="live-dot h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'var(--accent)' }} />
-            }
-            label="Portfolio News"
-            right={null}
-          />
-
-          {/* ── News feed ────────────────────────────────────────────────── */}
+          {/* ── PORTFOLIO NEWS card ───────────────────────────────────── */}
           <div className="px-3 sm:px-4 py-2">
-            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] max-h-[500px] overflow-y-auto">
-              <PortfolioNewsFeed positionCount={activePositions.length} refreshTrigger={briefTrigger} />
+            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+                <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+                  <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none"/>
+                  <line x1="5" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" strokeWidth="1"/>
+                  <line x1="5" y1="10.5" x2="9" y2="10.5" stroke="currentColor" strokeWidth="1"/>
+                </svg>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+                  Portfolio News
+                </span>
+                <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+                <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+              </div>
+              <div className="max-h-[500px] overflow-y-auto">
+                <PortfolioNewsFeed positionCount={activePositions.length} refreshTrigger={briefTrigger} />
+              </div>
             </div>
           </div>
         </>

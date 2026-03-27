@@ -121,26 +121,6 @@ export default async function HomePage({
         </div>
       </div>
 
-      {/* ══ MARKET INTELLIGENCE SECTION HEADER ════════════════════════════ */}
-      <div className="flex items-center gap-2 px-3 py-3 sm:px-4">
-        <div className="flex items-center gap-2">
-          {/* animated radar icon */}
-          <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
-            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-            <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
-            <circle cx="8" cy="8" r="1" fill="currentColor"/>
-          </svg>
-          <span className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-            Market Intelligence
-          </span>
-        </div>
-        <div className="flex-1 h-px bg-gradient-to-r from-[var(--border)] to-transparent" />
-        <div className="hidden sm:flex items-center gap-1">
-          <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--accent)' }}>LIVE</span>
-        </div>
-      </div>
-
       {/* ══ DATA PANELS — Row 1: Market Radar | Risk Gauge ══════════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
         <div className="min-w-0 overflow-hidden flex flex-col max-h-[350px] sm:max-h-none">
@@ -302,39 +282,35 @@ export default async function HomePage({
         </PanelErrorBoundary>
       </div>
 
-      {/* ══ DIVIDER — gradient ════════════════════════════════════════════ */}
-      <div className="mx-3 sm:mx-4 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/20 to-transparent" />
-
-      {/* ══ MARKET DASHBOARD ══════════════════════════════════════════════ */}
-      <div id="market-overview"></div>
-
-      <main className="px-3 py-2 sm:px-4">
-        {/* Dashboard header */}
-        <div className="mb-3 flex items-center gap-2">
-          <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5" style={{ color: 'var(--accent)' }} aria-hidden>
-            <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-            Market Overview
-          </span>
-          <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-          <span className="hidden sm:block font-mono text-[9px] text-[var(--text-muted)] opacity-50">
-            Stocks · Crypto · Forex · Commodities · ETFs
-          </span>
+      {/* ══ MARKET OVERVIEW ══════════════════════════════════════════════ */}
+      <div id="market-overview" className="px-3 sm:px-4 py-2">
+        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+              <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+              Market Overview
+            </span>
+            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+            <span className="hidden sm:block font-mono text-[9px] text-[var(--text-muted)] opacity-50">
+              Stocks · Crypto · Forex · Commodities · ETFs
+            </span>
+          </div>
+          <div className="p-3">
+            <div className="mb-4">
+              <GlobalSearch
+                placeholder="Search stocks, crypto, forex, commodities..."
+                className="w-full max-w-lg"
+              />
+            </div>
+            <PanelErrorBoundary fallbackTitle="Market Overview">
+              <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />
+            </PanelErrorBoundary>
+          </div>
         </div>
-
-        {/* Search bar */}
-        <div className="mb-4">
-          <GlobalSearch
-            placeholder="Search stocks, crypto, forex, commodities..."
-            className="w-full max-w-lg"
-          />
-        </div>
-
-        <PanelErrorBoundary fallbackTitle="Market Overview">
-          <MarketTabs initialStocks={homepage?.stocks ?? []} initialTab={initialTab} />
-        </PanelErrorBoundary>
-      </main>
+      </div>
 
       {/* ══ STATUS BAR — data freshness ══════════════════════════════════════ */}
       <StatusBar />

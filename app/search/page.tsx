@@ -225,56 +225,58 @@ export default async function SearchPage({
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <main className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6">
-
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
-            {query ? 'Search Results' : 'Search'}
-          </h1>
-          <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
-            {query
-              ? `Showing results for "${query}" across all asset classes`
-              : 'Search stocks, crypto, forex pairs, commodities, and ETFs'}
-          </p>
-        </div>
-
-        {/* Search bar */}
-        <div className="mb-8">
-          <GlobalSearch
-            placeholder="Refine your search..."
-            autoFocus={!query}
-            className="w-full max-w-xl"
-          />
-        </div>
-
-        {/* Results */}
-        {!query ? (
-          <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
-            <p className="text-3xl">🔍</p>
-            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
-              Search for any asset
-            </p>
-            <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
-              Enter a symbol, name, or keyword above
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((s) => (
-                <Link
-                  key={s}
-                  href={`/search?q=${encodeURIComponent(s)}`}
-                  className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
-                >
-                  {s}
-                </Link>
-              ))}
-            </div>
+      <main className="mx-auto max-w-screen-xl px-3 py-4 sm:px-4">
+        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+              <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="11" y1="11" x2="14" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+              Search
+            </span>
+            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           </div>
-        ) : (
-          <Suspense fallback={<SkeletonResults />}>
-            <SearchResults query={query} />
-          </Suspense>
-        )}
+          <div className="p-3">
+            {/* Search bar */}
+            <div className="mb-6">
+              <GlobalSearch
+                placeholder="Refine your search..."
+                autoFocus={!query}
+                className="w-full max-w-xl"
+              />
+            </div>
+
+            {/* Results */}
+            {!query ? (
+              <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
+                <p className="text-3xl">🔍</p>
+                <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
+                  Search for any asset
+                </p>
+                <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">
+                  Enter a symbol, name, or keyword above
+                </p>
+                <div className="mt-4 flex flex-wrap justify-center gap-2">
+                  {SUGGESTIONS.map((s) => (
+                    <Link
+                      key={s}
+                      href={`/search?q=${encodeURIComponent(s)}`}
+                      className="rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-1 font-mono text-[10px] text-[var(--text-muted)] transition hover:border-[var(--accent)]/30 hover:text-[var(--text)]"
+                    >
+                      {s}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Suspense fallback={<SkeletonResults />}>
+                <SearchResults query={query} />
+              </Suspense>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   )

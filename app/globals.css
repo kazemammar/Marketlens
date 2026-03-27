@@ -441,25 +441,3 @@ code, pre, kbd {
 .animate-palette-in {
   animation: paletteIn 0.18s cubic-bezier(0.16,1,0.3,1) both;
 }
-
-/* ─── Panel fullscreen (mobile) ─────────────────────────────────────────── */
-@keyframes fsIn {
-  from {
-    clip-path: inset(8% 8% 8% 8% round 16px);
-    opacity: 0;
-  }
-  to {
-    clip-path: inset(0% 0% 0% 0% round 0px);
-    opacity: 1;
-  }
-}
-@keyframes fsOut {
-  from {
-    clip-path: inset(0% 0% 0% 0% round 0px);
-    opacity: 1;
-  }
-  to {
-    clip-path: inset(8% 8% 8% 8% round 16px);
-    opacity: 0;
-  }
-}

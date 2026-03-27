@@ -1,7 +1,6 @@
 'use client'
 
 import { Component, type ReactNode } from 'react'
-import MobileFullscreen from './MobileFullscreen'
 
 interface Props {
   children: ReactNode
@@ -13,7 +12,7 @@ interface State {
   error: Error | null
 }
 
-class PanelErrorBoundaryInner extends Component<Props, State> {
+export default class PanelErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false, error: null }
 
   static getDerivedStateFromError(error: Error): State {
@@ -46,28 +45,4 @@ class PanelErrorBoundaryInner extends Component<Props, State> {
     }
     return this.props.children
   }
-}
-
-/**
- * Error boundary with mobile fullscreen toggle.
- * Wraps the error boundary in a MobileFullscreen shell so every panel
- * gets a free expand button on mobile — zero changes to page.tsx needed.
- */
-export default function PanelErrorBoundary({ children, fallbackTitle }: Props) {
-  // Skip fullscreen wrapper for panels with empty titles (e.g. WatchlistAlerts)
-  if (!fallbackTitle) {
-    return (
-      <PanelErrorBoundaryInner fallbackTitle={fallbackTitle}>
-        {children}
-      </PanelErrorBoundaryInner>
-    )
-  }
-
-  return (
-    <MobileFullscreen title={fallbackTitle}>
-      <PanelErrorBoundaryInner fallbackTitle={fallbackTitle}>
-        {children}
-      </PanelErrorBoundaryInner>
-    </MobileFullscreen>
-  )
 }

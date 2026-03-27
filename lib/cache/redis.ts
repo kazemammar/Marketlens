@@ -88,6 +88,7 @@ export async function cachedFetch<T>(
     const cached = await redis.get<T>(key)
     if (cached !== null && cached !== undefined) {
       if (DEBUG) console.log(`[cache] HIT  ${key}`)
+      memSet(key, cached, ttl) // Keep in-memory warm as backup
       return cached
     }
   } catch {

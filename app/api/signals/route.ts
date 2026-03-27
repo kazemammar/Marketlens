@@ -7,6 +7,9 @@ import { clusterArticles }     from '@/lib/utils/news-clustering'
 import type { NewsCluster }    from '@/lib/utils/news-clustering'
 import { explainMove }         from '@/lib/utils/news-correlation'
 import type { NewsArticle }    from '@/lib/utils/types'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(60)
 
 export const dynamic = 'force-dynamic'
 
@@ -116,7 +119,7 @@ function severity(pct: number, symbol?: string): Signal['severity'] {
 export async function GET() {
   try {
     const cached = await redis.get<Signal[]>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   const signals: Signal[] = []
@@ -226,5 +229,5 @@ export async function GET() {
     await redis.set(CACHE_KEY, result, { ex: CACHE_TTL })
   } catch { /* non-fatal */ }
 
-  return NextResponse.json(result)
+  return NextResponse.json(result, { headers: EDGE_HEADERS })
 }

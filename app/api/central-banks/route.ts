@@ -2,6 +2,9 @@ import { NextResponse }           from 'next/server'
 import { getCentralBankRates }   from '@/lib/api/central-banks'
 import type { CentralBankRate }  from '@/lib/api/central-banks'
 import { cachedFetch }           from '@/lib/cache/redis'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(3600)
 
 export interface CentralBanksPayload {
   rates:       CentralBankRate[]
@@ -20,5 +23,5 @@ export async function GET() {
       return { rates, generatedAt: Date.now() } satisfies CentralBanksPayload
     },
   )
-  return NextResponse.json(data)
+  return NextResponse.json(data, { headers: EDGE_HEADERS })
 }

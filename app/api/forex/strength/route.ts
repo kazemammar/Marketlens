@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getForexSnapshot, FX_CURRENCIES } from '@/lib/api/forex'
 import { redis } from '@/lib/cache/redis'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(300)
 
 export const dynamic = 'force-dynamic'
 
@@ -78,22 +81,22 @@ function computeStrengths(allRates: Record<string, Record<string, number>>): Cur
 export async function GET() {
   try {
     const cached = await redis.get<{ strengths: CurrencyStrength[]; asOf: string }>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through to live fetch */ }
 
   try {
     const snapshot = await getForexSnapshot()
     if (!snapshot?.allRates) {
-      return NextResponse.json({ strengths: [], asOf: new Date().toISOString() })
+      return NextResponse.json({ strengths: [], asOf: new Date().toISOString() }, { headers: EDGE_HEADERS })
     }
 
     const strengths = computeStrengths(snapshot.allRates)
     const result = { strengths, asOf: new Date().toISOString() }
 
     redis.set(CACHE_KEY, result, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[forex/strength]', err)
-    return NextResponse.json({ strengths: [], asOf: new Date().toISOString() })
+    return NextResponse.json({ strengths: [], asOf: new Date().toISOString() }, { headers: EDGE_HEADERS })
   }
 }

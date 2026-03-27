@@ -4,6 +4,9 @@ import { redis } from '@/lib/cache/redis'
 import { STOCK_SECTORS } from '@/lib/utils/sectors'
 import { scoreSentiment, classifySentiment } from '@/lib/utils/sentiment'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(600)
 
 const CACHE_KEY = 'sector-sentiment:v1'
 const CACHE_TTL = 600 // 10 min
@@ -33,7 +36,7 @@ export async function GET(req: Request) {
   // Return cached if fresh
   try {
     const cached = await redis.get<SectorSentimentPayload>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   const articles = await getFinanceNews()
@@ -138,5 +141,5 @@ export async function GET(req: Request) {
 
   const payload: SectorSentimentPayload = { sectors, generatedAt: Date.now(), totalArticles }
   redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: EDGE_HEADERS })
 }

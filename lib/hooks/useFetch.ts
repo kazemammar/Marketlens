@@ -83,12 +83,10 @@ export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): 
       return
     }
 
-    // Initial fetch — silent if we have fresh cache, show loading only if no cache at all
-    if (cached && !isStale) {
-      doFetch(false)
-    } else {
-      doFetch(!cached)
-    }
+    // Stale-while-revalidate: if we have ANY cached data (even stale),
+    // show it immediately and refresh silently in the background.
+    // Only show loading skeleton when there's no cached data at all.
+    doFetch(!cached)
 
     if (!refreshInterval) return
 

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getIpoCalendar } from '@/lib/api/finnhub'
 import { cachedFetch }    from '@/lib/cache/redis'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(3600)
 
 export async function GET() {
   try {
@@ -14,7 +17,7 @@ export async function GET() {
       () => getIpoCalendar(from, to),
     )
 
-    return NextResponse.json(events)
+    return NextResponse.json(events, { headers: EDGE_HEADERS })
   } catch {
     return NextResponse.json([], { status: 200 })
   }

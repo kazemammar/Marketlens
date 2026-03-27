@@ -4,6 +4,9 @@ import { redis }             from '@/lib/cache/redis'
 import { getQuotesBatched }  from '@/lib/api/finnhub'
 import { getCryptoMarkets }  from '@/lib/api/coingecko'
 import { getYahooQuotesBatch } from '@/lib/api/yahoo'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(120)
 
 // ─── Symbol lists ────────────────────────────────────────────────────────────
 
@@ -160,8 +163,8 @@ function topLosers(items: MoverItem[], n: number): MoverItem[] {
 
 const CACHE_KEY     = 'movers:v2'
 const LOCK_KEY      = 'movers:lock'
-const CACHE_TTL     = 1_800          // keep stale data for 30 min in Redis
-const REFRESH_AFTER = 5 * 60 * 1_000 // background refresh if > 5 min old
+const CACHE_TTL     = 1_800           // keep stale data for 30 min in Redis
+const REFRESH_AFTER = 10 * 60 * 1_000 // background refresh if > 10 min old
 
 interface CachedMovers {
   data:      MoversPayload
@@ -290,7 +293,7 @@ export async function GET(req: Request) {
         triggerBackgroundRefresh()  // non-blocking
       }
 
-      return NextResponse.json(cached.data)
+      return NextResponse.json(cached.data, { headers: EDGE_HEADERS })
     }
   } catch { /* fallthrough to blocking fetch */ }
 
@@ -301,9 +304,9 @@ export async function GET(req: Request) {
     if (payload) {
       redis.set(CACHE_KEY, { data: payload, fetchedAt: Date.now() } satisfies CachedMovers, { ex: CACHE_TTL }).catch(() => {})
     }
-    return NextResponse.json(payload ?? emptyPayload())
+    return NextResponse.json(payload ?? emptyPayload(), { headers: EDGE_HEADERS })
   } catch (err) {
     console.warn('[movers] cold fetch failed:', err instanceof Error ? err.message : err)
-    return NextResponse.json(emptyPayload())
+    return NextResponse.json(emptyPayload(), { headers: EDGE_HEADERS })
   }
 }

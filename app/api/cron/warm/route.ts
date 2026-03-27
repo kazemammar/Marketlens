@@ -57,13 +57,15 @@ export async function GET(req: NextRequest) {
     () => warm('fear_greed',        '/api/fear-greed'),
     () => warm('commodities_strip', '/api/commodities-strip'),
     () => warm('ipo_calendar',      '/api/ipo-calendar'),
+    () => warm('homepage_bundle',   '/api/homepage-data'),
     // Daily tasks (previously a separate cron — merged for Hobby plan 1-cron limit)
     () => warm('portfolio_snapshots', '/api/cron/snapshot'),
   ]
 
-  for (let i = 0; i < calls.length; i += 5) {
-    await Promise.allSettled(calls.slice(i, i + 5).map(fn => fn()))
-    if (i + 5 < calls.length) await new Promise(r => setTimeout(r, 500))
+  // Execute in batches of 4 with 800ms gap to avoid Redis burst
+  for (let i = 0; i < calls.length; i += 4) {
+    await Promise.allSettled(calls.slice(i, i + 4).map(fn => fn()))
+    if (i + 4 < calls.length) await new Promise(r => setTimeout(r, 800))
   }
 
   return NextResponse.json({ ok: true, ran: new Date().toISOString(), results })

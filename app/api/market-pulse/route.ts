@@ -5,6 +5,9 @@ import { groqChat }       from '@/lib/api/groq'
 import { withRateLimit }  from '@/lib/utils/rate-limit'
 import type { HomepageData } from '@/lib/api/homepage'
 import { HOMEPAGE_CACHE_KEY } from '@/lib/api/homepage'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(60)
 
 const CACHE_KEY = 'market-pulse:live'
 const CACHE_TTL = 300 // 5 minutes
@@ -43,7 +46,7 @@ export async function GET(req: Request) {
 
   try {
     const cached = await redis.get<MarketPulsePayload>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   let headlines: string[] = []
@@ -59,7 +62,7 @@ export async function GET(req: Request) {
       generatedAt:    Date.now(),
     }
     redis.set(CACHE_KEY, fallback, { ex: 60 }).catch(() => {})
-    return NextResponse.json(fallback)
+    return NextResponse.json(fallback, { headers: EDGE_HEADERS })
   }
 
   // Fetch cached price snapshot (non-fatal)
@@ -115,7 +118,7 @@ export async function GET(req: Request) {
     }
 
     redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(payload)
+    return NextResponse.json(payload, { headers: EDGE_HEADERS })
 
   } catch (err) {
     console.error('[api/market-pulse]', err)
@@ -125,6 +128,6 @@ export async function GET(req: Request) {
       generatedAt:    Date.now(),
     }
     redis.set(CACHE_KEY, fallback, { ex: 120 }).catch(() => {})
-    return NextResponse.json(fallback)
+    return NextResponse.json(fallback, { headers: EDGE_HEADERS })
   }
 }

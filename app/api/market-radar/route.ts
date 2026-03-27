@@ -7,6 +7,9 @@ import type {
   RadarSignal,
   MarketRadarPayload,
 } from '@/lib/api/homepage'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(60)
 
 // Re-export so existing imports from this route file still work
 export type { SignalVerdict, RadarSignal, MarketRadarPayload }
@@ -27,7 +30,7 @@ export async function GET() {
   // Return cached payload if fresh
   try {
     const cached = await redis.get<MarketRadarPayload>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   // Fetch ETFs (Finnhub) and commodities (Yahoo) in parallel
@@ -163,5 +166,5 @@ export async function GET() {
   // Cache for 90s to absorb concurrent requests
   redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
 
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: EDGE_HEADERS })
 }

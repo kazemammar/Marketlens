@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+export const revalidate = 60 // ISR: rebuild every 60 seconds
 
 import { Suspense }      from 'react'
 import TickerTape        from '@/components/layout/TickerTape'

@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
     () => warm('news_heat',        '/api/news-heat'),
     () => warm('ipo_calendar',      '/api/ipo-calendar'),
     () => warm('market_events',    '/api/market-events'),
+    () => warm('earnings_preview', '/api/earnings-preview'),
     () => warm('homepage_bundle',   '/api/homepage-data'),
     // Daily tasks (previously a separate cron — merged for Hobby plan 1-cron limit)
     () => warm('portfolio_snapshots', '/api/cron/snapshot'),

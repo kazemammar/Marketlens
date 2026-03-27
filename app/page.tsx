@@ -30,6 +30,7 @@ import SectorSentimentPulse from '@/components/warroom/SectorSentimentPulse'
 import ChokepointIntel      from '@/components/warroom/ChokepointIntel'
 import TradeIdeas           from '@/components/warroom/TradeIdeas'
 import SocialTrending       from '@/components/warroom/SocialTrending'
+import EarningsPreview      from '@/components/warroom/EarningsPreview'
 import EventTimeline        from '@/components/warroom/EventTimeline'
 import WatchlistAlerts      from '@/components/warroom/WatchlistAlerts'
 import StatusBar            from '@/components/layout/StatusBar'
@@ -228,6 +229,13 @@ export default async function HomePage({
       <div className="px-3 sm:px-4 py-2">
         <PanelErrorBoundary fallbackTitle="Earnings Calendar">
           <EarningsCalendar limit={8} />
+        </PanelErrorBoundary>
+      </div>
+
+      {/* Earnings Preview — AI bull/base/bear scenarios for upcoming reports */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Earnings Preview">
+          <EarningsPreview />
         </PanelErrorBoundary>
       </div>
 

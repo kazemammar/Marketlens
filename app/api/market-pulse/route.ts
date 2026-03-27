@@ -52,6 +52,8 @@ Rules:
 - Affected assets: 2-5, from: GLD, SLV, USO, GC=F, CL=F, BTC, ETH, SOL, EUR/USD, USD/JPY, GBP/USD, AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN, XOM, JPM, SPY, QQQ, TLT, VIX, DXY
 - When headlines are thin or markets are quiet, say so honestly — "Thin tape ahead of Friday NFP — SPY pinned at 5,200 as vol sellers dominate"
 - Never be generic. "Markets are volatile" is useless. Be specific.
+- Distinguish between ACTIONABLE events (earnings surprises, rate decisions, major data) and NOISE (minor analyst notes, routine press releases). Only pulse on what actually moves markets.
+- If multiple stories compete, pick the one with the biggest price impact — not the loudest headline.
 - NEVER use markdown formatting (no **, no *, no #, no backticks) — plain text only.`
 
 export async function GET(req: Request) {

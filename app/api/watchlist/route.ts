@@ -7,7 +7,10 @@ import { noCacheHeaders } from '@/lib/utils/cache-headers'
 const NO_CACHE = noCacheHeaders()
 const VALID_TYPES = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 

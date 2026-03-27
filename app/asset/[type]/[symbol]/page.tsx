@@ -88,37 +88,83 @@ async function getStockData(symbol: string): Promise<{
   exchange?: string
   industry?: string
 } | null> {
+  // Try Finnhub first (richer data: high/low/open + profile)
   try {
     const [quote, profile] = await Promise.allSettled([
       getQuote(symbol),
       getCompanyProfile(symbol),
     ])
 
-    if (quote.status !== 'fulfilled' || quote.value === null) return null
-
-    const q = quote.value
+    const q = quote.status === 'fulfilled' ? quote.value : null
     const p = profile.status === 'fulfilled' ? profile.value : null
-    const price = q.price > 0 ? q.price : q.previousClose
-    if (price <= 0) return null
 
-    return {
-      asset: {
-        symbol,
-        name:          p?.name ?? symbol,
-        type:          'stock',
-        price,
-        change:        q.price > 0 ? q.change        : 0,
-        changePercent: q.price > 0 ? q.changePercent : 0,
-        currency:      p?.currency ?? 'USD',
-        open:          q.open  > 0 ? q.open  : price,
-        high:          q.high  > 0 ? q.high  : price,
-        low:           q.low   > 0 ? q.low   : price,
-      },
-      logoUrl:  p?.logo       || undefined,
-      exchange: p?.exchange   || undefined,
-      industry: p?.finnhubIndustry || undefined,
+    if (q) {
+      const price = q.price > 0 ? q.price : q.previousClose
+      if (price > 0) {
+        return {
+          asset: {
+            symbol,
+            name:          p?.name ?? symbol,
+            type:          'stock',
+            price,
+            change:        q.price > 0 ? q.change        : 0,
+            changePercent: q.price > 0 ? q.changePercent : 0,
+            currency:      p?.currency ?? 'USD',
+            open:          q.open  > 0 ? q.open  : price,
+            high:          q.high  > 0 ? q.high  : price,
+            low:           q.low   > 0 ? q.low   : price,
+          },
+          logoUrl:  p?.logo       || undefined,
+          exchange: p?.exchange   || undefined,
+          industry: p?.finnhubIndustry || undefined,
+        }
+      }
     }
+
+    // Finnhub quote failed — fall back to Yahoo Finance
+    const yq = await getYahooQuote(symbol)
+    if (yq && yq.price > 0) {
+      return {
+        asset: {
+          symbol,
+          name:          p?.name ?? symbol,
+          type:          'stock',
+          price:         yq.price,
+          change:        yq.change,
+          changePercent: yq.changePercent,
+          currency:      'USD',
+          open:          yq.price - yq.change,
+          high:          yq.price,
+          low:           yq.price,
+        },
+        logoUrl:  p?.logo       || undefined,
+        exchange: p?.exchange   || undefined,
+        industry: p?.finnhubIndustry || undefined,
+      }
+    }
+
+    return null
   } catch {
+    // Last resort: try Yahoo even if Finnhub threw
+    try {
+      const yq = await getYahooQuote(symbol)
+      if (yq && yq.price > 0) {
+        return {
+          asset: {
+            symbol,
+            name:          symbol,
+            type:          'stock',
+            price:         yq.price,
+            change:        yq.change,
+            changePercent: yq.changePercent,
+            currency:      'USD',
+            open:          yq.price - yq.change,
+            high:          yq.price,
+            low:           yq.price,
+          },
+        }
+      }
+    } catch { /* both sources failed */ }
     return null
   }
 }
@@ -132,27 +178,71 @@ async function getEtfData(symbol: string): Promise<{
       getQuote(symbol),
       getCompanyProfile(symbol),
     ])
-    if (quoteRes.status !== 'fulfilled' || quoteRes.value === null) return null
-    const q = quoteRes.value
+    const q = quoteRes.status === 'fulfilled' ? quoteRes.value : null
     const p = profileRes.status === 'fulfilled' ? profileRes.value : null
-    const price = q.price > 0 ? q.price : q.previousClose
-    if (price <= 0) return null
-    return {
-      asset: {
-        symbol,
-        name:          p?.name ?? symbol,
-        type:          'etf',
-        price,
-        change:        q.price > 0 ? q.change        : 0,
-        changePercent: q.price > 0 ? q.changePercent : 0,
-        currency:      p?.currency ?? 'USD',
-        open:          q.open  > 0 ? q.open  : price,
-        high:          q.high  > 0 ? q.high  : price,
-        low:           q.low   > 0 ? q.low   : price,
-      },
-      logoUrl: p?.logo || undefined,
+
+    if (q) {
+      const price = q.price > 0 ? q.price : q.previousClose
+      if (price > 0) {
+        return {
+          asset: {
+            symbol,
+            name:          p?.name ?? symbol,
+            type:          'etf',
+            price,
+            change:        q.price > 0 ? q.change        : 0,
+            changePercent: q.price > 0 ? q.changePercent : 0,
+            currency:      p?.currency ?? 'USD',
+            open:          q.open  > 0 ? q.open  : price,
+            high:          q.high  > 0 ? q.high  : price,
+            low:           q.low   > 0 ? q.low   : price,
+          },
+          logoUrl: p?.logo || undefined,
+        }
+      }
     }
+
+    // Finnhub failed — fall back to Yahoo Finance
+    const yq = await getYahooQuote(symbol)
+    if (yq && yq.price > 0) {
+      return {
+        asset: {
+          symbol,
+          name:          p?.name ?? symbol,
+          type:          'etf',
+          price:         yq.price,
+          change:        yq.change,
+          changePercent: yq.changePercent,
+          currency:      'USD',
+          open:          yq.price - yq.change,
+          high:          yq.price,
+          low:           yq.price,
+        },
+        logoUrl: p?.logo || undefined,
+      }
+    }
+
+    return null
   } catch {
+    try {
+      const yq = await getYahooQuote(symbol)
+      if (yq && yq.price > 0) {
+        return {
+          asset: {
+            symbol,
+            name:          symbol,
+            type:          'etf',
+            price:         yq.price,
+            change:        yq.change,
+            changePercent: yq.changePercent,
+            currency:      'USD',
+            open:          yq.price - yq.change,
+            high:          yq.price,
+            low:           yq.price,
+          },
+        }
+      }
+    } catch { /* both sources failed */ }
     return null
   }
 }
@@ -229,26 +319,40 @@ async function getCommodityData(symbol: string): Promise<{ asset: AssetCardData 
     }
   }
 
-  // Legacy ETF-proxy commodities → Finnhub
+  // Legacy ETF-proxy commodities → Finnhub, fallback to Yahoo
   try {
     const q = await getQuote(symbol)
-    if (q === null) return null
-    const price = q.price > 0 ? q.price : q.previousClose
-    if (price <= 0) return null
-    return {
-      asset: {
-        symbol,
-        name,
-        type:          'commodity',
-        price,
-        change:        q.price > 0 ? q.change        : 0,
-        changePercent: q.price > 0 ? q.changePercent : 0,
-        currency:      'USD',
-        open:          q.open  > 0 ? q.open  : price,
-        high:          q.high  > 0 ? q.high  : price,
-        low:           q.low   > 0 ? q.low   : price,
-      },
+    if (q) {
+      const price = q.price > 0 ? q.price : q.previousClose
+      if (price > 0) {
+        return {
+          asset: {
+            symbol,
+            name,
+            type:          'commodity',
+            price,
+            change:        q.price > 0 ? q.change        : 0,
+            changePercent: q.price > 0 ? q.changePercent : 0,
+            currency:      'USD',
+            open:          q.open  > 0 ? q.open  : price,
+            high:          q.high  > 0 ? q.high  : price,
+            low:           q.low   > 0 ? q.low   : price,
+          },
+        }
+      }
     }
+    // Finnhub failed — try Yahoo
+    const yq = await getYahooQuote(symbol)
+    if (yq && yq.price > 0) {
+      return {
+        asset: {
+          symbol, name, type: 'commodity',
+          price: yq.price, change: yq.change, changePercent: yq.changePercent,
+          currency: 'USD', open: yq.price - yq.change, high: yq.price, low: yq.price,
+        },
+      }
+    }
+    return null
   } catch {
     return null
   }
@@ -284,7 +388,32 @@ export default async function AssetPage({ params }: AssetPageProps) {
   if (type === 'forex')     assetData = await getForexData(symbol)
   if (type === 'commodity') assetData = await getCommodityData(symbol)
 
-  if (!assetData) notFound()
+  if (!assetData) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
+        <div className="rounded-full border border-[var(--border)] bg-[var(--surface)] p-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h1 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
+          Unable to load {symbol.toUpperCase()}
+        </h1>
+        <p className="max-w-sm text-sm" style={{ color: 'var(--text-muted)' }}>
+          Market data is temporarily unavailable. This can happen during off-hours or when data providers are busy.
+        </p>
+        <a
+          href={`/asset/${type}/${encodeURIComponent(symbol)}`}
+          className="mt-2 rounded-md px-4 py-2 text-sm font-medium transition-colors"
+          style={{ background: 'var(--accent)', color: '#fff' }}
+        >
+          Try again
+        </a>
+      </div>
+    )
+  }
 
   const { asset, logoUrl, exchange, industry } = assetData
 

@@ -601,6 +601,7 @@ export default function GeoMap() {
     bases: false, cables: false, nuclear: false, lanes: true,
     earthquakes: true, sanctions: false, newsHeat: true, energy: false,
   })
+  const [showOverlays,     setShowOverlays]     = useState(false)
   const [mapReady,         setMapReady]         = useState(false)
   const [utcTime,          setUtcTime]          = useState('')
   const [chokepointStatus, setChokepointStatus] = useState<Record<string, ChokepointStatus>>({})
@@ -1073,17 +1074,36 @@ export default function GeoMap() {
           </span>
         </div>
 
+        {/* Mobile toggle for overlays — small button, top right on mobile; hidden when overlays open */}
+        {!showOverlays && (
+          <button
+            onClick={() => setShowOverlays(true)}
+            className="absolute right-1.5 top-1.5 z-20 flex items-center gap-1 rounded border border-white/10 bg-black/60 px-2 py-1 backdrop-blur-md lg:hidden"
+          >
+            <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3 text-white/60">
+              <path d="M1 4h10M1 8h10M3 1v10M7 1v10" stroke="currentColor" strokeWidth="0.8" opacity="0.7"/>
+            </svg>
+            <span className="font-mono text-[8px] font-bold text-white/50">LAYERS</span>
+          </button>
+        )}
+
         {/* Layer toggles — top right (draggable) */}
         <div
           ref={dragLayers.ref}
           onPointerDown={dragLayers.onPointerDown}
           onPointerMove={dragLayers.onPointerMove}
           onPointerUp={dragLayers.onPointerUp}
-          className="absolute right-1.5 top-1.5 z-20 flex flex-col gap-px"
+          className={`absolute right-1.5 top-1.5 z-20 flex flex-col gap-px ${showOverlays ? '' : 'hidden'} lg:flex`}
           style={{ cursor: 'grab' }}
         >
           <div className="rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50">
-            <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Layers</p>
+            {/* Header with close button on mobile */}
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Layers</p>
+              <button onClick={() => setShowOverlays(false)} className="lg:hidden ml-3 flex items-center justify-center rounded hover:bg-white/10 h-4 w-4">
+                <svg viewBox="0 0 10 10" className="h-2.5 w-2.5 text-white/50"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
+            </div>
             {LAYER_CFG.map(({ key, label, dot }) => (
               <label key={key} className="flex cursor-pointer items-center gap-1.5 py-0.5">
                 <input
@@ -1106,7 +1126,7 @@ export default function GeoMap() {
             onPointerDown={dragPipeline.onPointerDown}
             onPointerMove={dragPipeline.onPointerMove}
             onPointerUp={dragPipeline.onPointerUp}
-            className="absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50"
+            className={`absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50 ${showOverlays ? '' : 'hidden'} lg:block`}
             style={{ cursor: 'grab' }}
           >
             <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Pipelines</p>
@@ -1126,7 +1146,7 @@ export default function GeoMap() {
           onPointerDown={dragChokeBar.onPointerDown}
           onPointerMove={dragChokeBar.onPointerMove}
           onPointerUp={dragChokeBar.onPointerUp}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 rounded border border-white/10 bg-black/70 px-3 py-1.5 backdrop-blur-sm"
+          className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 rounded border border-white/10 bg-black/70 px-3 py-1.5 backdrop-blur-sm ${showOverlays ? '' : 'hidden'} lg:flex`}
           style={{ cursor: 'grab' }}
         >
           <span className="font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-white/30">

@@ -32,6 +32,7 @@ const STRIP = [
   { symbol: 'ZW=F',  name: 'Wheat',          shortName: 'Wheat'   },
   { symbol: 'ZC=F',  name: 'Corn',           shortName: 'Corn'    },
   { symbol: 'URA',   name: 'Uranium ETF',    shortName: 'Uranium' },
+  { symbol: 'DX-Y.NYB', name: 'Dollar Index', shortName: 'DXY' },
 ]
 
 export async function GET(req: Request) {

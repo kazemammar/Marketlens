@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { ChokepointStatus, ChokepointIntelPayload } from '@/lib/api/chokepoints'
+import type { Earthquake } from '@/lib/api/usgs'
 
 function escapeHtml(str: string): string {
   return str
@@ -36,6 +37,27 @@ const CONFLICT_ZONES = [
   { id: 'haiti',    name: 'Haiti Crisis',          lat: 18.9,  lng: -72.3, severity: 1,
     status: 'Ongoing', description: 'Gang-controlled capital. Regional instability, aid disruption.',
     assets: [], risk: 'LOW' },
+  { id: 'drcongo', name: 'DR Congo (M23)', lat: -1.5, lng: 29.2, severity: 2,
+    status: 'Active', description: 'M23 rebel offensive. Controls cobalt and coltan mining regions critical for EV batteries and electronics.',
+    assets: [], risk: 'HIGH' },
+  { id: 'sahel', name: 'Sahel Insurgency', lat: 14.0, lng: 0.0, severity: 2,
+    status: 'Active', description: 'Jihadist insurgency across Niger, Burkina Faso, Mali. Affects uranium mining (Niger supplies 5% of global uranium) and gold production.',
+    assets: ['GLD', 'URA'], risk: 'HIGH' },
+  { id: 'southchinasea', name: 'South China Sea', lat: 14.5, lng: 115.0, severity: 2,
+    status: 'Tensions', description: 'Territorial disputes involving China, Philippines, Vietnam. Controls $5T in annual trade. Direct Taiwan contingency implications.',
+    assets: [], risk: 'HIGH' },
+  { id: 'kashmir', name: 'India-Pakistan (Kashmir)', lat: 34.0, lng: 75.0, severity: 1,
+    status: 'Tensions', description: 'Nuclear-armed rivals. Escalation risk affects South Asian markets, rupee, and defense stocks.',
+    assets: [], risk: 'MEDIUM' },
+  { id: 'ethiopia', name: 'Ethiopia (Post-Tigray)', lat: 9.0, lng: 39.0, severity: 1,
+    status: 'Fragile Peace', description: 'Post-Tigray ceasefire. Amhara insurgency ongoing. Affects Nile dam negotiations and Horn of Africa stability.',
+    assets: [], risk: 'MEDIUM' },
+  { id: 'taiwan', name: 'Taiwan Strait', lat: 24.0, lng: 120.0, severity: 2,
+    status: 'Tensions', description: 'Chinese military exercises near Taiwan. TSMC produces 90% of advanced chips. Blockade scenario would crash global tech supply.',
+    assets: [], risk: 'HIGH' },
+  { id: 'libya', name: 'Libya (Divided)', lat: 31.0, lng: 16.0, severity: 1,
+    status: 'Fragile', description: 'Split between east and west governments. Oil production swings on militia control. 1.2M bbl/day when stable.',
+    assets: ['USO'], risk: 'MEDIUM' },
 ]
 
 const CHOKEPOINTS = [
@@ -146,6 +168,40 @@ const NUCLEAR_SITES = [
   { id: 'zaporizhzhia', name: 'Zaporizhzhia NPP', lat: 47.5, lng: 34.6, country: 'Ukraine', note: 'Largest NPP in Europe. Under Russian military control. Recurring safety alerts.' },
   { id: 'bushehr',      name: 'Bushehr NPP',       lat: 28.8, lng: 50.9, country: 'Iran',    note: 'Iranian civilian nuclear facility. Under IAEA monitoring with enrichment concerns.' },
   { id: 'yongbyon',     name: 'Yongbyon Complex',  lat: 39.8, lng: 125.8, country: 'N.Korea', note: 'North Korean plutonium/enrichment complex. Active weapons program.' },
+  { id: 'natanz',   name: 'Natanz Enrichment Facility',    lat: 33.7,  lng: 51.7,  country: 'Iran',         note: 'Primary uranium enrichment site. Subject of IAEA inspections and reported sabotage. Enrichment level is key market trigger.' },
+  { id: 'fordow',   name: 'Fordow Enrichment Facility',    lat: 34.9,  lng: 51.6,  country: 'Iran',         note: 'Underground enrichment facility near Qom. Hardened against airstrikes. 60% enrichment reported.' },
+  { id: 'dimona',   name: 'Dimona Nuclear Research Center', lat: 31.0,  lng: 35.1,  country: 'Israel',       note: 'Undeclared nuclear weapons facility. Estimated 80-400 warheads. Never officially confirmed.' },
+  { id: 'barakah',  name: 'Barakah Nuclear Power Plant',    lat: 23.95, lng: 52.2,  country: 'UAE',          note: 'First nuclear power plant in the Arab world. 4 reactors, 5.6GW capacity. Korean-built APR-1400 design.' },
+  { id: 'hinkley',  name: 'Hinkley Point C',                lat: 51.2,  lng: -3.13, country: 'UK',           note: 'Under construction. Largest infrastructure project in Europe. EDF/CGN joint venture. Major cost overruns.' },
+]
+
+// ─── Sanctioned countries ────────────────────────────────────────────────
+
+const SANCTIONED_COUNTRIES = [
+  { id: 'russia',    name: 'Russia',       lat: 61.5,  lng: 105.3, regime: 'US/EU/UK',
+    sectors: 'Energy, finance, technology, defense, luxury goods',
+    impact: 'Oil price cap at $60/bbl. SWIFT disconnection. Rerouted oil to India/China.' },
+  { id: 'iran',      name: 'Iran',         lat: 32.4,  lng: 53.7,  regime: 'US/EU',
+    sectors: 'Oil exports, banking, nuclear technology, metals',
+    impact: 'Oil exports reduced to ~1.5M bbl/day (from 3.8M). Significant shadow fleet operations.' },
+  { id: 'northkorea', name: 'North Korea', lat: 40.3,  lng: 127.5, regime: 'US/EU/UN',
+    sectors: 'All trade, weapons, luxury goods, financial services',
+    impact: 'Near-total economic isolation. Coal and mineral exports sanctioned.' },
+  { id: 'syria_s',   name: 'Syria',        lat: 34.8,  lng: 38.9,  regime: 'US/EU',
+    sectors: 'Oil, government officials, military procurement',
+    impact: 'Reconstruction blocked. Caesar Act sanctions on any entity aiding Assad regime.' },
+  { id: 'venezuela', name: 'Venezuela',    lat: 6.4,   lng: -66.6, regime: 'US',
+    sectors: 'Oil (PDVSA), gold, government officials',
+    impact: 'Oil exports severely curtailed. Largest proven reserves globally (303B barrels) largely untapped.' },
+  { id: 'myanmar_s', name: 'Myanmar',      lat: 19.7,  lng: 96.2,  regime: 'US/EU/UK',
+    sectors: 'Military entities, gems, timber, metals',
+    impact: 'Rare earth and natural gas exports disrupted. Key supplier of rare earths to China.' },
+  { id: 'cuba',      name: 'Cuba',         lat: 21.5,  lng: -77.8, regime: 'US',
+    sectors: 'Comprehensive trade embargo since 1962',
+    impact: 'Longest-running trade embargo in history. Nickel and cobalt exports limited.' },
+  { id: 'belarus',   name: 'Belarus',      lat: 53.7,  lng: 27.9,  regime: 'US/EU/UK',
+    sectors: 'Potash, petroleum products, government officials',
+    impact: 'Major potash producer (20% of global supply). Sanctions drove potash prices up 300% in 2022.' },
 ]
 
 // ─── Shipping lanes (major global trade routes) ───────────────────────────
@@ -274,6 +330,8 @@ interface LayerState {
   cables:      boolean
   nuclear:     boolean
   lanes:       boolean
+  earthquakes: boolean
+  sanctions:   boolean
 }
 
 interface MarkerRef {
@@ -350,6 +408,35 @@ function basePopup(b: typeof MILITARY_BASES[0]) {
     </div>`
 }
 
+function sanctionPopup(s: typeof SANCTIONED_COUNTRIES[0]) {
+  return `
+    <div style="min-width:200px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+        <span style="font-weight:700;font-size:12px;color:#f1f5f9">${escapeHtml(s.name)}</span>
+        <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:#dc262622;color:#dc2626;border:1px solid #dc262644">${escapeHtml(s.regime)}</span>
+      </div>
+      <p style="font-size:10px;font-weight:600;color:#fca5a5;margin:0 0 4px">Sectors: ${escapeHtml(s.sectors)}</p>
+      <p style="font-size:11px;color:#94a3b8;margin:0;line-height:1.5">${escapeHtml(s.impact)}</p>
+    </div>`
+}
+
+function earthquakePopupHtml(props: { magnitude: number; place: string; depth: number; time: number; tsunami: boolean }) {
+  const ago = Math.round((Date.now() - props.time) / 3600_000)
+  const timeStr = ago < 1 ? '<1h ago' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`
+  const magColor = props.magnitude >= 7 ? '#ef4444' : props.magnitude >= 6 ? '#f97316' : '#fb923c'
+  const tsunamiTag = props.tsunami ? '<span style="display:block;margin-top:4px;font-size:10px;font-weight:700;color:#ef4444">⚠ TSUNAMI WARNING</span>' : ''
+  return `
+    <div style="min-width:180px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <span style="font-weight:800;font-size:14px;color:${magColor}">M${props.magnitude.toFixed(1)}</span>
+        <span style="font-size:10px;color:#64748b">${escapeHtml(timeStr)}</span>
+      </div>
+      <p style="font-size:11px;color:#f1f5f9;margin:0 0 3px;font-weight:600">${escapeHtml(props.place)}</p>
+      <p style="font-size:10px;color:#94a3b8;margin:0">Depth: ${props.depth.toFixed(1)} km</p>
+      ${tsunamiTag}
+    </div>`
+}
+
 // ─── Region presets ───────────────────────────────────────────────────────
 
 const PRESETS = [
@@ -370,10 +457,12 @@ export default function GeoMap() {
   const [layers, setLayers] = useState<LayerState>({
     conflicts: true, chokepoints: true, pipelines: true,
     bases: false, cables: false, nuclear: false, lanes: true,
+    earthquakes: true, sanctions: false,
   })
   const [mapReady,         setMapReady]         = useState(false)
   const [utcTime,          setUtcTime]          = useState('')
   const [chokepointStatus, setChokepointStatus] = useState<Record<string, ChokepointStatus>>({})
+  const [earthquakes,      setEarthquakes]      = useState<Earthquake[]>([])
 
   useEffect(() => {
     const tick = () => setUtcTime(new Date().toUTCString().slice(17, 25))
@@ -395,6 +484,20 @@ export default function GeoMap() {
     }
     fetchStatus()
     const id = setInterval(fetchStatus, 5 * 60_000)
+    return () => clearInterval(id)
+  }, [])
+
+  // ── Fetch earthquake data ────────────────────────────────────────────
+  useEffect(() => {
+    async function fetchQuakes() {
+      try {
+        const res  = await fetch('/api/earthquakes')
+        const data = await res.json() as { earthquakes: Earthquake[] }
+        setEarthquakes(data.earthquakes ?? [])
+      } catch { /* silent */ }
+    }
+    fetchQuakes()
+    const id = setInterval(fetchQuakes, 10 * 60_000)
     return () => clearInterval(id)
   }, [])
 
@@ -510,6 +613,52 @@ export default function GeoMap() {
           markersRef.current.push({ el, group: 'nuclear' })
         }
 
+        // Sanctions — translucent red circles
+        for (const s of SANCTIONED_COUNTRIES) {
+          const el = document.createElement('div')
+          Object.assign(el.style, {
+            width: '40px', height: '40px', borderRadius: '50%',
+            background: 'rgba(220,38,38,0.15)', border: '1.5px solid rgba(220,38,38,0.4)',
+            cursor: 'pointer', display: 'none',
+          })
+          const popup = new mgl.Popup({ offset: 20, closeButton: true, maxWidth: '270px' }).setHTML(sanctionPopup(s))
+          new mgl.Marker({ element: el }).setLngLat([s.lng, s.lat]).setPopup(popup).addTo(map)
+          markersRef.current.push({ el, group: 'sanctions' })
+        }
+
+        // Earthquakes — GeoJSON circle layer (source populated later via useEffect)
+        map.addSource('earthquakes', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        })
+        map.addLayer({
+          id: 'earthquake-circles',
+          type: 'circle',
+          source: 'earthquakes',
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 4.5, 6, 6, 14, 7, 20, 8, 28],
+            'circle-color': '#f97316',
+            'circle-opacity': 0.6,
+            'circle-stroke-width': 1.5,
+            'circle-stroke-color': '#f97316',
+            'circle-stroke-opacity': 0.3,
+          },
+        })
+
+        // Earthquake click popup
+        map.on('click', 'earthquake-circles', (e: import('maplibre-gl').MapMouseEvent & { features?: import('maplibre-gl').MapGeoJSONFeature[] }) => {
+          const f = e.features?.[0]
+          if (!f || f.geometry.type !== 'Point') return
+          const props = f.properties as { magnitude: number; place: string; depth: number; time: number; tsunami: boolean }
+          const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number]
+          new mgl.Popup({ closeButton: true, maxWidth: '250px' })
+            .setLngLat(coords)
+            .setHTML(earthquakePopupHtml(props))
+            .addTo(map)
+        })
+        map.on('mouseenter', 'earthquake-circles', () => { map.getCanvas().style.cursor = 'pointer' })
+        map.on('mouseleave', 'earthquake-circles', () => { map.getCanvas().style.cursor = '' })
+
         setMapReady(true)
       })
     })
@@ -544,6 +693,30 @@ export default function GeoMap() {
     }
   }, [chokepointStatus, mapReady])
 
+  // ── Update earthquake GeoJSON when data arrives ─────────────────────
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !earthquakes.length) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const m = mapRef.current as any
+    const src = m.getSource?.('earthquakes')
+    if (!src) return
+    src.setData({
+      type: 'FeatureCollection',
+      features: earthquakes.map((q: Earthquake) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [q.lng, q.lat] },
+        properties: {
+          id: q.id,
+          magnitude: q.magnitude,
+          place: q.place,
+          depth: q.depth,
+          time: q.time,
+          tsunami: q.tsunami,
+        },
+      })),
+    })
+  }, [earthquakes, mapReady])
+
   // ── Sync layer visibility ────────────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
@@ -559,6 +732,9 @@ export default function GeoMap() {
     }
     if (m.getLayer?.('shipping-lanes-layer')) {
       m.setLayoutProperty('shipping-lanes-layer', 'visibility', vis(layers.lanes))
+    }
+    if (m.getLayer?.('earthquake-circles')) {
+      m.setLayoutProperty('earthquake-circles', 'visibility', vis(layers.earthquakes))
     }
     for (const { el, group } of markersRef.current) {
       el.style.display = layers[group] ? '' : 'none'
@@ -579,6 +755,8 @@ export default function GeoMap() {
     { key: 'bases'       as keyof LayerState, label: 'Military Bases',  dot: '#a78bfa' },
     { key: 'cables'      as keyof LayerState, label: 'Undersea Cables', dot: '#8b5cf6' },
     { key: 'nuclear'     as keyof LayerState, label: 'Nuclear Sites',   dot: '#facc15' },
+    { key: 'earthquakes' as keyof LayerState, label: 'Earthquakes',     dot: '#f97316' },
+    { key: 'sanctions'   as keyof LayerState, label: 'Sanctions',       dot: '#dc2626' },
   ] as const
 
   const PIPELINE_LEGEND = [

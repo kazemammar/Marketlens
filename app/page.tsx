@@ -10,6 +10,7 @@ import GeoMap            from '@/components/warroom/GeoMap'
 import IntelPanel        from '@/components/warroom/IntelPanel'
 import MarketRadar       from '@/components/warroom/MarketRadar'
 import FXMonitor         from '@/components/warroom/FXMonitor'
+import DollarIndex       from '@/components/warroom/DollarIndex'
 import RiskGauge         from '@/components/warroom/RiskGauge'
 import SignalsPanel      from '@/components/warroom/SignalsPanel'
 import TrendingKeywords from '@/components/warroom/TrendingKeywords'
@@ -161,6 +162,13 @@ export default async function HomePage({
             <HeatmapPanel initialStocks={homepage?.stocks ?? []} />
           </PanelErrorBoundary>
         </div>
+      </div>
+
+      {/* ══ US DOLLAR INDEX — DXY tracker ═══════════════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Dollar Index">
+          <DollarIndex />
+        </PanelErrorBoundary>
       </div>
 
       {/* ══ SECTOR ROTATION — daily sector performance bars ══════════ */}

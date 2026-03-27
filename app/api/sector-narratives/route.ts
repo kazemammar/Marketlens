@@ -4,6 +4,9 @@ import { groqChat } from '@/lib/api/groq'
 import { redis } from '@/lib/cache/redis'
 import { STOCK_SECTORS } from '@/lib/utils/sectors'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(1800)
 
 const CACHE_KEY = 'sector-narratives:v1'
 const CACHE_TTL = 1800 // 30 min
@@ -20,7 +23,7 @@ export async function GET(req: Request) {
   // Check cache first
   try {
     const cached = await redis.get<SectorNarratives>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   try {
@@ -57,7 +60,7 @@ export async function GET(req: Request) {
     if (matchedSectors.length === 0) {
       const result: SectorNarratives = { narratives: {}, generatedAt: Date.now() }
       redis.set(CACHE_KEY, result, { ex: CACHE_TTL }).catch(() => {})
-      return NextResponse.json(result)
+      return NextResponse.json(result, { headers: EDGE_HEADERS })
     }
 
     // Build the user message for Groq
@@ -92,9 +95,9 @@ export async function GET(req: Request) {
 
     const result: SectorNarratives = { narratives, generatedAt: Date.now() }
     redis.set(CACHE_KEY, result, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[sector-narratives]', err)
-    return NextResponse.json({ narratives: {}, generatedAt: Date.now() })
+    return NextResponse.json({ narratives: {}, generatedAt: Date.now() }, { headers: EDGE_HEADERS })
   }
 }

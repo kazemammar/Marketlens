@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { redis } from '@/lib/cache/redis'
 import type { MarketBriefPayload, AffectedAsset } from '@/app/api/market-brief/route'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(120)
 
 export type { AffectedAsset }
 
@@ -288,9 +291,9 @@ export async function GET(req: Request) {
         await appendHistory({ score: cached.score, timestamp: Date.now() })
         // Re-read so the response includes the just-appended point
         const freshHistory = await readHistory()
-        return NextResponse.json({ ...cached, history: freshHistory })
+        return NextResponse.json({ ...cached, history: freshHistory }, { headers: EDGE_HEADERS })
       }
-      return NextResponse.json({ ...cached, history })
+      return NextResponse.json({ ...cached, history }, { headers: EDGE_HEADERS })
     }
   } catch { /* fall through */ }
 
@@ -322,7 +325,7 @@ export async function GET(req: Request) {
         history,
         updatedAt: Date.now(),
       }
-      return NextResponse.json(defaultPayload)
+      return NextResponse.json(defaultPayload, { headers: EDGE_HEADERS })
     }
 
     const { breakdown, overallScore, categoryDetails } = computeCategoryScores(brief)
@@ -351,7 +354,7 @@ export async function GET(req: Request) {
     redis.set(RISK_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
 
     const history = await readHistory()
-    return NextResponse.json({ ...payload, history })
+    return NextResponse.json({ ...payload, history }, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[api/market-risk]', err)
     return NextResponse.json({ error: 'Risk score unavailable' }, { status: 503 })

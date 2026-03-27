@@ -26,13 +26,11 @@ interface UseFetchResult<T> {
 export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): UseFetchResult<T> {
   const {
     refreshInterval = 5 * 60 * 1000,
-    maxAge = 30 * 60 * 1000,
     enabled = true,
   } = options
 
   // Initialize from cache synchronously
   const cached = url ? cache.get(url) as CacheEntry<T> | undefined : undefined
-  const isStale = cached ? Date.now() - cached.timestamp > maxAge : true
 
   const [data, setData] = useState<T | null>(cached?.data ?? null)
   const [loading, setLoading] = useState(cached ? false : true)
@@ -83,12 +81,10 @@ export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): 
       return
     }
 
-    // Initial fetch — silent if we have fresh cache, show loading only if no cache at all
-    if (cached && !isStale) {
-      doFetch(false)
-    } else {
-      doFetch(!cached)
-    }
+    // Stale-while-revalidate: if we have ANY cached data (even stale),
+    // show it immediately and refresh silently in the background.
+    // Only show loading skeleton when there's no cached data at all.
+    doFetch(!cached)
 
     if (!refreshInterval) return
 

@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { getEconomicCalendar } from '@/lib/api/finnhub'
 import { cachedFetch } from '@/lib/cache/redis'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(3600)
 
 export interface EconomicCalendarPayload {
   events: import('@/lib/api/finnhub').EconomicEvent[]
@@ -24,9 +27,9 @@ export async function GET(req: Request) {
         return { events, generatedAt: Date.now() }
       }
     )
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[api/economic-calendar]', err)
-    return NextResponse.json({ events: [], generatedAt: Date.now() })
+    return NextResponse.json({ events: [], generatedAt: Date.now() }, { headers: EDGE_HEADERS })
   }
 }

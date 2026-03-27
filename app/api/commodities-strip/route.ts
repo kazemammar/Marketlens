@@ -2,6 +2,9 @@ import { NextResponse }             from 'next/server'
 import { getYahooQuotesBatch }      from '@/lib/api/yahoo'
 import { redis }                    from '@/lib/cache/redis'
 import type { CommodityStripItem }  from '@/lib/api/homepage'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(120)
 
 // Re-export so existing imports of this type from this route still work
 export type { CommodityStripItem }
@@ -33,7 +36,7 @@ const STRIP = [
 export async function GET() {
   try {
     const cached = await redis.get<CommodityStripResponse>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   const quotes = await getYahooQuotesBatch(STRIP.map((s) => s.symbol))
@@ -55,5 +58,5 @@ export async function GET() {
 
   const payload: CommodityStripResponse = { items, updatedAt }
   try { await redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }) } catch { /* */ }
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: EDGE_HEADERS })
 }

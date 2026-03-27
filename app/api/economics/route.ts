@@ -3,6 +3,9 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { getMultipleSeries } from '@/lib/api/fred'
 import { cachedFetch } from '@/lib/cache/redis'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(3600)
 
 const CACHE_TTL = 6 * 60 * 60 // 6 hours
 
@@ -233,9 +236,9 @@ export async function GET() {
       },
     )
 
-    return NextResponse.json(indicators)
+    return NextResponse.json(indicators, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[economics] route error:', err)
-    return NextResponse.json(MOCK_INDICATORS)
+    return NextResponse.json(MOCK_INDICATORS, { headers: EDGE_HEADERS })
   }
 }

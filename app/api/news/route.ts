@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getFinanceNews }            from '@/lib/api/rss'
 import { clusterArticles }           from '@/lib/utils/news-clustering'
 import type { NewsArticle }          from '@/lib/utils/types'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(60)
 
 // Keyword sets for each category filter
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
@@ -39,7 +42,7 @@ export async function GET(req: NextRequest) {
         total:    allClusters.length,
         page,
         hasMore:  start + perPage < allClusters.length,
-      })
+      }, { headers: EDGE_HEADERS })
     }
 
     // Backward-compatible flat response
@@ -50,12 +53,12 @@ export async function GET(req: NextRequest) {
       total:    filtered.length,
       page,
       hasMore:  start + perPage < filtered.length,
-    })
+    }, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[api/news]', err)
     const empty = clustered
       ? { clusters: [], total: 0, page: 1, hasMore: false }
       : { articles: [], total: 0, page: 1, hasMore: false }
-    return NextResponse.json(empty)
+    return NextResponse.json(empty, { headers: EDGE_HEADERS })
   }
 }

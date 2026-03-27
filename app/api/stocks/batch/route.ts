@@ -4,7 +4,11 @@ import { NextResponse } from 'next/server'
 import { getQuotesBatched, getCompanyProfile } from '@/lib/api/finnhub'
 import { redis } from '@/lib/cache/redis'
 import type { AssetCardData } from '@/lib/utils/types'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(60)
 // ─── Route-level cache ────────────────────────────────────────────────────────
 // One cache entry per unique symbol set (sorted, so order-independent).
 // Strips the _t (tick/refresh) param so manual refreshes still hit the cache
@@ -86,11 +90,14 @@ function triggerBackgroundRefresh(symbols: string[]): void {
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function GET(req: Request) {
+  const limited = withRateLimit(req, 30)
+  if (limited) return limited
+
   const url          = new URL(req.url)
   const symbolsParam = url.searchParams.get('symbols') ?? ''
   const symbols      = symbolsParam.split(',').map(s => s.trim()).filter(Boolean).slice(0, 60)
 
-  if (symbols.length === 0) return NextResponse.json([])
+  if (symbols.length === 0) return NextResponse.json([], { headers: EDGE_HEADERS })
 
   const ck = cacheKey(symbols)
 
@@ -103,7 +110,7 @@ export async function GET(req: Request) {
 
       if (ageMs >= REFRESH_AFTER) triggerBackgroundRefresh(symbols)
 
-      return NextResponse.json(cached.data)
+      return NextResponse.json(cached.data, { headers: EDGE_HEADERS })
     }
   } catch { /* fallthrough */ }
 
@@ -114,9 +121,9 @@ export async function GET(req: Request) {
     if (data.length > 0) {
       redis.set(ck, { data, fetchedAt: Date.now() } satisfies CachedBatch, { ex: CACHE_TTL }).catch(() => {})
     }
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[stocks/batch]', err)
-    return NextResponse.json([])
+    return NextResponse.json([], { headers: EDGE_HEADERS })
   }
 }

@@ -3,6 +3,7 @@ import { getFinanceNews }            from '@/lib/api/rss'
 import { clusterArticles }           from '@/lib/utils/news-clustering'
 import type { NewsArticle }          from '@/lib/utils/types'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(60)
 
@@ -24,6 +25,9 @@ function matchesCategory(article: NewsArticle, category: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const category  = req.nextUrl.searchParams.get('category')?.toLowerCase() ?? 'all'
   const page      = Math.max(1, parseInt(req.nextUrl.searchParams.get('page')  ?? '1',  10))
   const perPage   = Math.min(200, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') ?? '20', 10)))

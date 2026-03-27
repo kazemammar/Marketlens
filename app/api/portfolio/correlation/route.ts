@@ -3,7 +3,10 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { getYahooHistory } from '@/lib/api/yahoo'
 import { redis } from '@/lib/cache/redis'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const NO_CACHE = noCacheHeaders()
 // Crypto symbol mapping for Yahoo Finance
 const CRYPTO_YAHOO: Record<string, string> = {
   BTC: 'BTC-USD', ETH: 'ETH-USD', SOL: 'SOL-USD', BNB: 'BNB-USD',
@@ -36,13 +39,13 @@ export async function GET(req: Request) {
 
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   // Check cache
   const cacheKey = `correlation:${user.id}`
   try {
     const cached = await redis.get<{ symbols: string[]; matrix: number[][]; generatedAt: number }>(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
   } catch { /* fall through */ }
 
   const { data: positions } = await supabase
@@ -110,5 +113,5 @@ export async function GET(req: Request) {
 
   const payload = { symbols: validSymbols, matrix, generatedAt: Date.now() }
   redis.set(cacheKey, payload, { ex: 6 * 3600 }).catch(() => {})
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: NO_CACHE })
 }

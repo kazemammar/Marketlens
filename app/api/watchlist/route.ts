@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const NO_CACHE = noCacheHeaders()
 const VALID_TYPES = ['stock', 'crypto', 'forex', 'commodity', 'etf']
 
 export async function GET() {
@@ -9,7 +12,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
   }
 
   const { data, error } = await supabase
@@ -19,10 +22,10 @@ export async function GET() {
     .order('added_at', { ascending: false })
 
   if (error) {
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500, headers: NO_CACHE })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(data, { headers: NO_CACHE })
 }
 
 export async function POST(req: Request) {
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
   }
 
   const body = await req.json()
@@ -41,10 +44,10 @@ export async function POST(req: Request) {
   const asset_type = typeof body.asset_type === 'string' ? body.asset_type.trim().toLowerCase() : ''
 
   if (!symbol || symbol.length > 20 || !/^[A-Z0-9/.\-=!]+$/.test(symbol)) {
-    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400, headers: NO_CACHE })
   }
   if (!VALID_TYPES.includes(asset_type)) {
-    return NextResponse.json({ error: 'Invalid asset type' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid asset type' }, { status: 400, headers: NO_CACHE })
   }
 
   const { data, error } = await supabase
@@ -55,12 +58,12 @@ export async function POST(req: Request) {
 
   if (error) {
     if (error.code === '23505') {
-      return NextResponse.json({ error: 'Already in watchlist' }, { status: 409 })
+      return NextResponse.json({ error: 'Already in watchlist' }, { status: 409, headers: NO_CACHE })
     }
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500, headers: NO_CACHE })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(data, { headers: NO_CACHE })
 }
 
 export async function DELETE(req: Request) {
@@ -71,14 +74,14 @@ export async function DELETE(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
   }
 
   const body   = await req.json()
   const symbol = typeof body.symbol === 'string' ? body.symbol.trim().toUpperCase() : ''
 
   if (!symbol || symbol.length > 20) {
-    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400, headers: NO_CACHE })
   }
 
   const { error } = await supabase
@@ -88,8 +91,8 @@ export async function DELETE(req: Request) {
     .eq('symbol', symbol)
 
   if (error) {
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500, headers: NO_CACHE })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true }, { headers: NO_CACHE })
 }

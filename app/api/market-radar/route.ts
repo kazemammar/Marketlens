@@ -8,6 +8,7 @@ import type {
   MarketRadarPayload,
 } from '@/lib/api/homepage'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(60)
 
@@ -26,7 +27,10 @@ const ETF_SYMBOLS  = ['SPY', 'QQQ', 'VXX', 'TLT']
 // Commodity futures fetched via Yahoo Finance — same source as the rest of the page
 const CMDTY_SYMBOLS = ['GC=F', 'CL=F', 'BZ=F']
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   // Return cached payload if fresh
   try {
     const cached = await redis.get<MarketRadarPayload>(CACHE_KEY)

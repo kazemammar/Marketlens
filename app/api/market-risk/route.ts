@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { redis } from '@/lib/cache/redis'
 import type { MarketBriefPayload, AffectedAsset } from '@/app/api/market-brief/route'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(120)
 
@@ -279,6 +280,9 @@ async function fetchBrief(reqUrl: string): Promise<MarketBriefPayload | null> {
 // ─── Route handler ─────────────────────────────────────────────────────────
 
 export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   // Return cached risk score if available
   try {
     const cached = await redis.get<MarketRiskPayload>(RISK_KEY)

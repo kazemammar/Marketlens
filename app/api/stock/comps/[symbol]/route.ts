@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import { getPeers, getCompanyProfile, getQuote, getFinancialMetrics } from '@/lib/api/finnhub'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 import { redis } from '@/lib/cache/redis'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+const EDGE_HEADERS = cacheHeaders(300)
 const CACHE_TTL = 3_600 // 1 hour
 const SYMBOL_RE = /^[A-Z0-9.=\-]{1,12}$/i
 
@@ -50,14 +52,14 @@ export async function GET(
   const { symbol: rawSymbol } = await params
   const symbol    = decodeURIComponent(rawSymbol).toUpperCase()
   if (!SYMBOL_RE.test(symbol)) {
-    return NextResponse.json({ error: 'Invalid symbol format' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid symbol format' }, { status: 400, headers: EDGE_HEADERS })
   }
   const cacheKeyStr = `comps:v4:${symbol}`
 
   // 1. Cache check
   try {
     const cached = await redis.get<CompsPayload>(cacheKeyStr)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through on Redis error */ }
 
   try {
@@ -102,6 +104,8 @@ export async function GET(
     })
 
     // 5. Compute medians from peer rows only (exclude current stock)
+
+const EDGE_HEADERS = cacheHeaders(300)
     const peerRows = rows.filter((r) => !r.isCurrent)
 
     const medians: Record<string, number | null> = {
@@ -117,7 +121,7 @@ export async function GET(
 
     // 6. Cache (fire-and-forget) and respond
     redis.set(cacheKeyStr, payload, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(payload)
+    return NextResponse.json(payload, { headers: EDGE_HEADERS })
 
   } catch (err) {
     console.error(`[api/stock/comps/${symbol}]`, err)

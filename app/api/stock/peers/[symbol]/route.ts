@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getPeers, getCompanyProfile } from '@/lib/api/finnhub'
 import { redis } from '@/lib/cache/redis'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(300)
 export interface PeerInfo {
   symbol:    string
   name:      string
@@ -14,18 +18,21 @@ const CACHE_TTL = 86_400  // 24 hours — peer lists are stable
 const SYMBOL_RE = /^[A-Z0-9.=\-]{1,12}$/i
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const { symbol } = await params
   if (!symbol || !SYMBOL_RE.test(symbol)) {
-    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400, headers: EDGE_HEADERS })
   }
   const cacheKey = `peers:v1:${symbol.toUpperCase()}`
 
   try {
     const cached = await redis.get<PeerInfo[]>(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   try {
@@ -51,9 +58,9 @@ export async function GET(
       .filter((p): p is PeerInfo => p !== null)
 
     redis.set(cacheKey, peers, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(peers)
+    return NextResponse.json(peers, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[api/stock/peers]', err)
-    return NextResponse.json([])
+    return NextResponse.json([], { headers: EDGE_HEADERS })
   }
 }

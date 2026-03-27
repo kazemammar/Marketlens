@@ -8,6 +8,7 @@ import type { NewsCluster }    from '@/lib/utils/news-clustering'
 import { explainMove }         from '@/lib/utils/news-correlation'
 import type { NewsArticle }    from '@/lib/utils/types'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(60)
 
@@ -116,7 +117,10 @@ function severity(pct: number, symbol?: string): Signal['severity'] {
   return 'LOW'
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const cached = await redis.get<Signal[]>(CACHE_KEY)
     if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })

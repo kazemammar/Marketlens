@@ -3,13 +3,17 @@ import { getPredictionMarkets } from '@/lib/api/polymarket'
 import type { PolymarketMarket } from '@/lib/api/polymarket'
 import { redis } from '@/lib/cache/redis'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(300)
 
 const CACHE_KEY = 'predictions:v1'
 const CACHE_TTL = 300  // 5 min — prediction markets update continuously
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const cached = await redis.get<PolymarketMarket[]>(CACHE_KEY)
     if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })

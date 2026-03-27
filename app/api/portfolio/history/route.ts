@@ -2,6 +2,9 @@ import { NextResponse }        from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { withRateLimit }        from '@/lib/utils/rate-limit'
 import { redis }                from '@/lib/cache/redis'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
+
+const NO_CACHE = noCacheHeaders()
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,7 +37,7 @@ export async function GET(req: Request) {
 
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   const url   = new URL(req.url)
   const range = (VALID_RANGES.includes(url.searchParams.get('range') as Range)
@@ -45,7 +48,7 @@ export async function GET(req: Request) {
   const cacheKey = `portfolio:history:${user.id}:${range}`
   try {
     const cached = await redis.get<HistoryPayload>(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
   } catch { /* fallthrough */ }
 
   // Calculate from date
@@ -85,5 +88,5 @@ export async function GET(req: Request) {
 
   redis.set(cacheKey, payload, { ex: 3600 }).catch(() => {})
 
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: NO_CACHE })
 }

@@ -1,6 +1,10 @@
 import { NextResponse }         from 'next/server'
 import { cachedFetch }          from '@/lib/cache/redis'
 import { getYahooQuotesBatch }  from '@/lib/api/yahoo'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(300)
 
 // ─── ETF definitions ──────────────────────────────────────────────────────
 
@@ -43,7 +47,10 @@ export interface BtcEtfPayload {
 
 // ─── Route ────────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const data = await cachedFetch<BtcEtfPayload>(
       'crypto:btc-etfs:v1',
@@ -94,7 +101,7 @@ export async function GET() {
         return { etfs, netDirection, inflowCount, outflowCount, generatedAt: Date.now() }
       },
     )
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[crypto/btc-etfs]', err)
     return NextResponse.json({

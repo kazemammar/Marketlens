@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getForexSnapshot, FX_CURRENCIES } from '@/lib/api/forex'
 import { redis } from '@/lib/cache/redis'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(300)
 
@@ -78,7 +79,10 @@ function computeStrengths(allRates: Record<string, Record<string, number>>): Cur
   return strengths
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const cached = await redis.get<{ strengths: CurrencyStrength[]; asOf: string }>(CACHE_KEY)
     if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })

@@ -115,7 +115,7 @@ export default function ForexStrength({ symbol }: { symbol: string }) {
                   <div key={s.name} className="flex items-center gap-2">
                     <span
                       className="h-1.5 w-1.5 shrink-0 rounded-full"
-                      style={{ background: active ? 'var(--price-up)' : '#334155' }}
+                      style={{ background: active ? 'var(--price-up)' : 'var(--surface-2)' }}
                     />
                     <span
                       className="font-mono text-[9px] font-semibold"

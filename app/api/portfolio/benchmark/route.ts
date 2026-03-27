@@ -3,6 +3,9 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { withRateLimit }        from '@/lib/utils/rate-limit'
 import { redis }                from '@/lib/cache/redis'
 import { getYahooHistory, toYahooSymbol } from '@/lib/api/yahoo'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
+
+const NO_CACHE = noCacheHeaders()
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,7 +42,7 @@ export async function GET(req: Request) {
 
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   const url     = new URL(req.url)
   const range   = (VALID_RANGES.includes(url.searchParams.get('range') as Range)
@@ -56,7 +59,7 @@ export async function GET(req: Request) {
   if (!refresh) {
     try {
       const cached = await redis.get<BenchmarkPayload>(cacheKey)
-      if (cached) return NextResponse.json(cached)
+      if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
     } catch { /* fallthrough */ }
   }
 
@@ -199,5 +202,5 @@ export async function GET(req: Request) {
 
   redis.set(cacheKey, payload, { ex: 1800 }).catch(() => {})
 
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: NO_CACHE })
 }

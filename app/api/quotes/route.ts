@@ -14,7 +14,11 @@ import { getQuotesBatched, QuoteRaw } from '@/lib/api/finnhub'
 import { getYahooQuotesBatch }        from '@/lib/api/yahoo'
 import { getCryptoByIds }             from '@/lib/api/coingecko'
 import { redis }                      from '@/lib/cache/redis'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(60)
 export const dynamic = 'force-dynamic'
 
 const ROUTE_CACHE_TTL = 90 // seconds
@@ -36,6 +40,9 @@ function isFutures(sym: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const raw     = req.nextUrl.searchParams.get('symbols') ?? ''
   const symbols = raw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 30)
 

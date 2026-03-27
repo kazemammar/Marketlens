@@ -3,6 +3,7 @@ import { getYahooQuotesBatch }      from '@/lib/api/yahoo'
 import { redis }                    from '@/lib/cache/redis'
 import type { CommodityStripItem }  from '@/lib/api/homepage'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(120)
 
@@ -33,7 +34,10 @@ const STRIP = [
   { symbol: 'URA',   name: 'Uranium ETF',    shortName: 'Uranium' },
 ]
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const cached = await redis.get<CommodityStripResponse>(CACHE_KEY)
     if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })

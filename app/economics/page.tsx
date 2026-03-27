@@ -15,7 +15,7 @@ function Sparkline({ data }: { data: Array<{ date: string; value: number }> }) {
   const range  = max - min || 1
 
   const W = 100
-  const H = 28
+  const H = 40
 
   const pts = values.map((v, i) => {
     const x = (i / (values.length - 1)) * W
@@ -27,8 +27,18 @@ function Sparkline({ data }: { data: Array<{ date: string; value: number }> }) {
   const firstVal = values[0]
   const trending = lastVal >= firstVal
 
+  const areaPoints = `0,${H} ${pts.join(' ')} ${W},${H}`
+  const gradId = trending ? 'sparkUp' : 'sparkDown'
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={trending ? 'var(--price-up)' : 'var(--price-down)'} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={trending ? 'var(--price-up)' : 'var(--price-down)'} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={areaPoints} fill={`url(#${gradId})`} />
       <polyline
         points={pts.join(' ')}
         fill="none"
@@ -38,21 +48,6 @@ function Sparkline({ data }: { data: Array<{ date: string; value: number }> }) {
         strokeLinejoin="round"
         opacity="0.8"
       />
-      {/* Dots at each reading */}
-      {values.map((v, i) => {
-        const x = (i / (values.length - 1)) * W
-        const y = H - ((v - min) / range) * H
-        return (
-          <circle
-            key={i}
-            cx={x}
-            cy={y}
-            r="1.5"
-            fill={trending ? 'var(--price-up)' : 'var(--price-down)'}
-            opacity="0.6"
-          />
-        )
-      })}
     </svg>
   )
 }
@@ -153,8 +148,8 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
   const daysAway = Math.ceil((new Date(next).getTime() - now.getTime()) / 86400000)
 
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface)] p-2.5">
-      <div className="mb-2.5 flex items-center gap-2">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-amber-400" aria-hidden>
           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -163,7 +158,7 @@ function FedWatch({ fedRate }: { fedRate: EconomicIndicator | undefined }) {
         <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3">
         <div>
           <p className="font-mono text-[9px] text-[var(--text-muted)] font-semibold uppercase tracking-[0.1em] mb-1">Current Rate</p>
           <p className="font-mono text-[22px] font-bold text-[var(--text)] tabular-nums">
@@ -238,26 +233,37 @@ export default function EconomicsPage() {
         </div>
 
         {/* Indicators grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
-                <div className="flex h-full animate-pulse flex-col gap-3 p-4">
-                  <div className="skeleton h-2 w-24 rounded" />
-                  <div className="skeleton h-8 w-20 rounded" />
-                  <div className="skeleton flex-1 rounded" />
-                  <div className="skeleton h-2 w-32 rounded" />
-                </div>
+        <div className="overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+            <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-emerald-400" aria-hidden>
+              <path d="M2 12l4-4 3 3 5-7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Economic Indicators</span>
+            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+          </div>
+          <div className="p-3">
+            {loading ? (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
+                    <div className="flex h-full animate-pulse flex-col gap-3 p-4">
+                      <div className="skeleton h-2 w-24 rounded" />
+                      <div className="skeleton h-8 w-20 rounded" />
+                      <div className="skeleton flex-1 rounded" />
+                      <div className="skeleton h-2 w-32 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {indicators.map((ind) => (
+                  <LargeCard key={ind.id} ind={ind} />
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {indicators.map((ind) => (
-              <LargeCard key={ind.id} ind={ind} />
-            ))}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

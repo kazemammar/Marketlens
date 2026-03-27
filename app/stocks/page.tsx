@@ -31,19 +31,8 @@ export default function StocksPage() {
           <GlobalSearch placeholder="Search stocks by symbol or name..." className="w-full max-w-lg" />
         </div>
 
-        {/* StockExplorer — wrap in its own card */}
-        <div className="overflow-hidden rounded border border-[var(--border)]">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-              <path d="M1 12l4-5 3 3 7-8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Stock Explorer</span>
-            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-          </div>
-          <div className="p-3">
-            <StockExplorer />
-          </div>
-        </div>
+        {/* Market Indices + Stock Explorer — each in its own card */}
+        <StockExplorer />
 
         {/* Earnings Calendar — full week, anchor-linked from dashboard */}
         <div id="earnings" className="mt-4 scroll-mt-20">

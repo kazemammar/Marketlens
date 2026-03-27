@@ -2,7 +2,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { cachedFetch } from '@/lib/cache/redis'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(300)
 const CACHE_TTL = 30 * 60
 
 interface FngDataPoint {
@@ -11,7 +15,10 @@ interface FngDataPoint {
   timestamp:            string
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const data = await cachedFetch<{ current: FngDataPoint; history: FngDataPoint[] }>(
       'crypto:feargreed',
@@ -23,9 +30,9 @@ export async function GET() {
         return { current: json.data[0], history: json.data.slice(0, 30) }
       },
     )
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[crypto/fear-greed]', err)
-    return NextResponse.json({ current: null, history: [] })
+    return NextResponse.json({ current: null, history: [] }, { headers: EDGE_HEADERS })
   }
 }

@@ -4,6 +4,9 @@ import { getNewsForSymbol, getRelatedNewsForAsset } from '@/lib/api/rss'
 import { analyzeSentiment } from '@/lib/api/groq'
 import { AssetType } from '@/lib/utils/types'
 import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(300)
 
 export async function GET(
   req: Request,
@@ -22,6 +25,8 @@ export async function GET(
     if (type === 'stock' || type === 'etf') {
       const to   = new Date()
       const from = new Date(to.getTime() - 14 * 24 * 60 * 60 * 1000)
+
+const EDGE_HEADERS = cacheHeaders(300)
       const fmt  = (d: Date) => d.toISOString().slice(0, 10)
       const articles = await getCompanyNews(symbol, fmt(from), fmt(to))
       headlines = articles.map((a) => a.headline)
@@ -58,7 +63,7 @@ export async function GET(
     }
 
     const sentiment = await analyzeSentiment(symbol, headlines)
-    return NextResponse.json(sentiment)
+    return NextResponse.json(sentiment, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error(`[api/sentiment/${symbol}]`, err)
     return NextResponse.json(

@@ -2,9 +2,13 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { cachedFetch } from '@/lib/cache/redis'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
 // Map of uppercase symbol to CoinGecko ID
 // (extends CRYPTO_SYMBOL_TO_CG_ID from constants.ts)
+
+const EDGE_HEADERS = cacheHeaders(300)
 const CG_IDS: Record<string, string> = {
   BTC:  'bitcoin',
   ETH:  'ethereum',
@@ -49,12 +53,15 @@ interface CryptoStatsResponse {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const { symbol } = await params
   const cgId = CG_IDS[symbol.toUpperCase()]
-  if (!cgId) return NextResponse.json(null)
+  if (!cgId) return NextResponse.json(null, { headers: EDGE_HEADERS })
 
   try {
     const stats = await cachedFetch<CryptoStatsResponse>(
@@ -96,9 +103,9 @@ export async function GET(
         }
       },
     )
-    return NextResponse.json(stats)
+    return NextResponse.json(stats, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error(`[crypto/stats/${symbol}]`, err)
-    return NextResponse.json(null)
+    return NextResponse.json(null, { headers: EDGE_HEADERS })
   }
 }

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getQuote, getFinancialMetrics, getPriceTarget, getAggregateIndicator } from '@/lib/api/finnhub'
 import { redis } from '@/lib/cache/redis'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(120)
 interface TechSignal {
   name:   string
   value:  string
@@ -36,15 +40,18 @@ interface TechResponse {
 const CACHE_TTL = 300  // 5 min — technical signals are price-based
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
+  const limited = withRateLimit(req, 30)
+  if (limited) return limited
+
   const { symbol } = await params
   const cacheKey = `technicals:v1:${symbol.toUpperCase()}`
 
   try {
     const cached = await redis.get<TechResponse>(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
   } catch { /* fall through */ }
 
   const empty: TechResponse = {
@@ -68,7 +75,7 @@ export async function GET(
 
     if (!quote || quote.price <= 0) {
       redis.set(cacheKey, empty, { ex: CACHE_TTL }).catch(() => {})
-      return NextResponse.json(empty)
+      return NextResponse.json(empty, { headers: EDGE_HEADERS })
     }
 
     const price    = quote.price
@@ -214,9 +221,9 @@ export async function GET(
     }
 
     redis.set(cacheKey, result, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[api/stock/technicals]', err)
-    return NextResponse.json(empty)
+    return NextResponse.json(empty, { headers: EDGE_HEADERS })
   }
 }

@@ -1,7 +1,11 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(300)
 // ─── Static ETF holdings data ─────────────────────────────────────────────
 // Source: fund prospectuses / public filings (approximate weights, updated periodically)
 // All live APIs for this data are paywalled — FMP v3 legacy (sunset Aug 2025),
@@ -223,12 +227,20 @@ const ETF_STATIC: Record<string, EtfBlob> = {
   },
 }
 
+const SYMBOL_RE = /^[A-Z0-9.=\-\/!]{1,20}$/i
+
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ symbol: string }> },
 ) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const { symbol } = await params
+  if (!symbol || !SYMBOL_RE.test(symbol)) {
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+  }
   const sym  = symbol.toUpperCase()
   const data = ETF_STATIC[sym] ?? { holdings: [], sectors: [] }
-  return NextResponse.json(data)
+  return NextResponse.json(data, { headers: EDGE_HEADERS })
 }

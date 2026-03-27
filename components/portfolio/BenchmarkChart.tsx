@@ -93,7 +93,7 @@ function ReturnBar({ pct, color }: { pct: number; color: string }) {
 // ─── SPY-only state (no cost data) ────────────────────────────────────────────
 
 function SpyOnlyCard({ spyReturn, rangeFull }: { spyReturn: number; rangeFull: string }) {
-  const color = spyReturn >= 0 ? '#3b82f6' : 'var(--price-down)'
+  const color = spyReturn >= 0 ? 'var(--accent)' : 'var(--price-down)'
   return (
     <div className="flex flex-col items-center gap-4 px-4 py-6">
       <div

@@ -3,7 +3,11 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { groqChat } from '@/lib/api/groq'
 import { redis } from '@/lib/cache/redis'
 import { rateLimit } from '@/lib/utils/rate-limit'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const NO_CACHE = noCacheHeaders()
 export interface WhatIfResult {
   impact: 'positive' | 'negative' | 'mixed'
   severity: 'HIGH' | 'MEDIUM' | 'LOW'
@@ -14,16 +18,19 @@ export interface WhatIfResult {
 }
 
 export async function POST(req: Request) {
+  const limited = withRateLimit(req, 10)
+  if (limited) return limited
+
   // Auth first — rate limit only applies to actual Groq calls (after cache check)
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   let body: { scenario?: string }
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400, headers: NO_CACHE })
   }
 
   const scenario = body.scenario?.trim()
@@ -35,12 +42,12 @@ export async function POST(req: Request) {
   const cacheKey = `whatif:${user.id}:${scenario.toLowerCase().replace(/\s+/g, '-').slice(0, 80)}`
   try {
     const cached = await redis.get<WhatIfResult>(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
   } catch { /* fall through */ }
 
   // Rate limit only actual Groq calls, keyed by user ID (10/min)
   if (!rateLimit(`whatif:${user.id}`, 10)) {
-    return NextResponse.json({ error: 'Too many requests — try again in a minute' }, { status: 429 })
+    return NextResponse.json({ error: 'Too many requests — try again in a minute' }, { status: 429, headers: NO_CACHE })
   }
 
   // Fetch portfolio positions
@@ -50,7 +57,7 @@ export async function POST(req: Request) {
     .eq('user_id', user.id)
 
   if (!positions || positions.length === 0) {
-    return NextResponse.json({ error: 'No positions found' }, { status: 400 })
+    return NextResponse.json({ error: 'No positions found' }, { status: 400, headers: NO_CACHE })
   }
 
   const positionList = positions.map(p =>
@@ -106,9 +113,9 @@ Rules:
     }
 
     redis.set(cacheKey, result, { ex: 900 }).catch(() => {})
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: NO_CACHE })
   } catch (err) {
     console.error('[what-if]', err)
-    return NextResponse.json({ error: 'AI analysis failed' }, { status: 500 })
+    return NextResponse.json({ error: 'AI analysis failed' }, { status: 500, headers: NO_CACHE })
   }
 }

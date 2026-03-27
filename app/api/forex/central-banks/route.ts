@@ -3,7 +3,11 @@ export const dynamic = 'force-dynamic'
 import { NextResponse }           from 'next/server'
 import { getSeriesObservations }  from '@/lib/api/fred'
 import { cachedFetch }            from '@/lib/cache/redis'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(300)
 const CACHE_TTL = 6 * 60 * 60 // 6 hours
 
 const CENTRAL_BANK_RATES: Record<string, { name: string; series: string; bank: string }> = {
@@ -37,6 +41,9 @@ function safeFloat(v: string | undefined): number | null {
 }
 
 export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const url   = new URL(req.url)
   const base  = (url.searchParams.get('base')  ?? 'EUR').toUpperCase()
   const quote = (url.searchParams.get('quote') ?? 'USD').toUpperCase()
@@ -100,9 +107,9 @@ export async function GET(req: Request) {
       },
     )
 
-    return NextResponse.json(result)
+    return NextResponse.json(result, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[forex/central-banks]', err)
-    return NextResponse.json({ base: null, quote: null, differential: null, carryDirection: null })
+    return NextResponse.json({ base: null, quote: null, differential: null, carryDirection: null }, { headers: EDGE_HEADERS })
   }
 }

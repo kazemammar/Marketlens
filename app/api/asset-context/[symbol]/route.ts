@@ -6,7 +6,9 @@ import { getNewsForSymbol, getRelatedNewsForAsset } from '@/lib/api/rss'
 import { analyzeAssetContext } from '@/lib/api/groq'
 import type { AssetType }      from '@/lib/utils/types'
 import { withRateLimit }       from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+const EDGE_HEADERS = cacheHeaders(300)
 const SYMBOL_RE = /^[A-Z0-9.=\-/]{1,20}$/i
 
 export async function GET(
@@ -18,7 +20,7 @@ export async function GET(
 
   const { symbol } = await params
   if (!symbol || !SYMBOL_RE.test(symbol)) {
-    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid symbol' }, { status: 400, headers: EDGE_HEADERS })
   }
   const url  = new URL(req.url)
   const type = (url.searchParams.get('type') ?? 'stock') as AssetType
@@ -33,6 +35,8 @@ export async function GET(
 
       const to   = new Date()
       const from = new Date(to.getTime() - 14 * 24 * 60 * 60 * 1000)
+
+const EDGE_HEADERS = cacheHeaders(300)
       const fmt  = (d: Date) => d.toISOString().slice(0, 10)
       const articles = await getCompanyNews(symbol, fmt(from), fmt(to)).catch(() => [])
       headlines = articles.map((a) => a.headline)
@@ -65,7 +69,7 @@ export async function GET(
     }
 
     const context = await analyzeAssetContext(symbol, type, headlines, metadata)
-    return NextResponse.json(context)
+    return NextResponse.json(context, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error(`[api/asset-context/${symbol}]`, err)
     return NextResponse.json({

@@ -4,7 +4,10 @@ import { withRateLimit }        from '@/lib/utils/rate-limit'
 import { redis }                from '@/lib/cache/redis'
 import { getQuote }             from '@/lib/api/finnhub'
 import { getYahooQuote }        from '@/lib/api/yahoo'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const NO_CACHE = noCacheHeaders()
 // NOTE: For users to INSERT their own snapshots, run this in Supabase SQL editor:
 // create policy "Users insert own snapshots" on portfolio_snapshots
 //   for insert with check (auth.uid() = user_id);
@@ -32,7 +35,7 @@ export async function POST(req: Request) {
 
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   // Fetch user's positions
   const { data: positions } = await supabase.from('portfolio_positions')
@@ -45,7 +48,7 @@ export async function POST(req: Request) {
   }> = positions ?? []
 
   if (!rows.length) {
-    return NextResponse.json({ error: 'No positions found' }, { status: 400 })
+    return NextResponse.json({ error: 'No positions found' }, { status: 400, headers: NO_CACHE })
   }
 
   // Fetch quotes for each position
@@ -89,7 +92,7 @@ export async function POST(req: Request) {
   })
 
   if (countWithData === 0) {
-    return NextResponse.json({ error: 'No positions with cost data found' }, { status: 400 })
+    return NextResponse.json({ error: 'No positions with cost data found' }, { status: 400, headers: NO_CACHE })
   }
 
   const today    = new Date().toISOString().slice(0, 10)
@@ -106,7 +109,7 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error('[portfolio/snapshot]', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500, headers: NO_CACHE })
   }
 
   // Bust history cache for all ranges

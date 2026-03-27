@@ -4,6 +4,9 @@ import { withRateLimit }        from '@/lib/utils/rate-limit'
 import { redis }                from '@/lib/cache/redis'
 import { getEarnings }          from '@/lib/api/finnhub'
 import type { EarningsData }    from '@/lib/utils/types'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
+
+const NO_CACHE = noCacheHeaders()
 
 export interface EarningsItem {
   symbol:          string
@@ -42,7 +45,7 @@ export async function GET(req: Request) {
 
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   const cacheKey = `portfolio:earnings:${user.id}`
 
@@ -56,7 +59,7 @@ export async function GET(req: Request) {
   if (!forceRefresh) {
     try {
       const cached = await redis.get<EarningsPayload>(cacheKey)
-      if (cached) return NextResponse.json(cached)
+      if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
     } catch { /* fall through */ }
   }
 
@@ -139,5 +142,5 @@ export async function GET(req: Request) {
 
   const payload: EarningsPayload = { upcoming, recent, generatedAt: Date.now() }
   redis.set(cacheKey, payload, { ex: 21600 }).catch(() => {})
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: NO_CACHE })
 }

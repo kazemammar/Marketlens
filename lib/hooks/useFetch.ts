@@ -8,7 +8,19 @@ interface CacheEntry<T> {
 }
 
 // Module-level cache shared across all instances
+const CACHE_MAX = 100
+const CACHE_TTL = 10 * 60 * 1000 // 10 minutes
 const cache = new Map<string, CacheEntry<unknown>>()
+
+function getCached<T>(url: string): CacheEntry<T> | undefined {
+  const entry = cache.get(url) as CacheEntry<T> | undefined
+  if (!entry) return undefined
+  if (Date.now() - entry.timestamp > CACHE_TTL) {
+    cache.delete(url)
+    return undefined
+  }
+  return entry
+}
 
 interface UseFetchOptions {
   refreshInterval?: number  // ms, default 5 min
@@ -29,8 +41,8 @@ export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): 
     enabled = true,
   } = options
 
-  // Initialize from cache synchronously
-  const cached = url ? cache.get(url) as CacheEntry<T> | undefined : undefined
+  // Initialize from cache synchronously (with TTL check)
+  const cached = url ? getCached<T>(url) : undefined
 
   const [data, setData] = useState<T | null>(cached?.data ?? null)
   const [loading, setLoading] = useState(cached ? false : true)
@@ -55,14 +67,11 @@ export function useFetch<T>(url: string | null, options: UseFetchOptions = {}): 
         setError(false)
         setLastUpdated(Date.now())
         // Update module-level cache
-        const now = Date.now()
-        cache.set(url, { data: json, timestamp: now })
-        // Evict oldest entries when cache exceeds 200 entries
-        if (cache.size > 200) {
-          const entries = [...cache.entries()]
-          entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
-          const toDelete = entries.slice(0, entries.length - 150)
-          for (const [key] of toDelete) cache.delete(key)
+        cache.set(url, { data: json, timestamp: Date.now() })
+        // Evict oldest entry when cache exceeds limit
+        if (cache.size > CACHE_MAX) {
+          const firstKey = cache.keys().next().value
+          if (firstKey !== undefined) cache.delete(firstKey)
         }
       }
     } catch {

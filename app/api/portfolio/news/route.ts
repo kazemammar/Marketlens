@@ -8,6 +8,9 @@ import type { NewsArticle }           from '@/lib/utils/types'
 import { classifySeverity }           from '@/lib/utils/severity-keywords'
 import { clusterArticles }            from '@/lib/utils/news-clustering'
 import type { SourceMeta }            from '@/lib/utils/source-registry'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
+
+const NO_CACHE = noCacheHeaders()
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -55,14 +58,14 @@ export async function GET(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
   }
 
   // Check per-user cache
   const cacheKey = `portfolio:news:v2:${user.id}`
   try {
     const cached = await redis.get<{ clusters: PortfolioNewsCluster[]; generatedAt: number }>(cacheKey)
-    if (cached) return NextResponse.json(cached)
+    if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
   } catch { /* fall through */ }
 
   // Fetch positions
@@ -172,17 +175,17 @@ export async function GET(req: Request) {
 
   redis.set(cacheKey, payload, { ex: 300 }).catch(() => {})
 
-  return NextResponse.json(payload)
+  return NextResponse.json(payload, { headers: NO_CACHE })
 }
 
 export async function DELETE(req: Request) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401, headers: NO_CACHE })
 
   // Bust both old and new cache keys
   const cacheKey    = `portfolio:news:${user.id}`
   const cacheKeyV2  = `portfolio:news:v2:${user.id}`
   await Promise.allSettled([redis.del(cacheKey), redis.del(cacheKeyV2)])
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true }, { headers: NO_CACHE })
 }

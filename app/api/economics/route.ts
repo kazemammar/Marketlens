@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { getMultipleSeries } from '@/lib/api/fred'
 import { cachedFetch } from '@/lib/cache/redis'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import { withRateLimit } from '@/lib/utils/rate-limit'
 
 const EDGE_HEADERS = cacheHeaders(3600)
 
@@ -216,7 +217,10 @@ function buildIndicators(
 
 // ─── Route handler ────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const indicators = await cachedFetch<EconomicIndicator[]>(
       'economics:indicators:v2',

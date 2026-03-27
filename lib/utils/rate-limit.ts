@@ -39,8 +39,9 @@ export function rateLimit(
 export function withRateLimit(req: Request, limit = 60) {
   const forwarded = req.headers.get('x-forwarded-for')
   const ip        = forwarded?.split(',')[0]?.trim() ?? 'unknown'
+  const pathname  = new URL(req.url).pathname
 
-  if (!rateLimit(ip, limit)) {
+  if (!rateLimit(`${ip}:${pathname}`, limit)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
   }
   return null

@@ -25,7 +25,11 @@ import {
   DEFAULT_COMMODITIES,
 } from '@/lib/utils/constants'
 import { AssetCardData, AssetType } from '@/lib/utils/types'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(60)
 // ─── Name maps ────────────────────────────────────────────────────────────
 
 const STOCK_NAMES: Record<string, string> = {
@@ -195,6 +199,9 @@ async function refreshCache(tab: AssetType): Promise<void> {
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const tab = req.nextUrl.searchParams.get('tab') as AssetType | null
 
   if (!tab) {

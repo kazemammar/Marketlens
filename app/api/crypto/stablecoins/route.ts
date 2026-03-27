@@ -1,6 +1,10 @@
 import { NextResponse }    from 'next/server'
 import { cachedFetch }     from '@/lib/cache/redis'
 import { getCryptoByIds }  from '@/lib/api/coingecko'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
+
+const EDGE_HEADERS = cacheHeaders(300)
 
 // ─── Stablecoin definitions ────────────────────────────────────────────────
 
@@ -46,7 +50,10 @@ function classifyPeg(deviationPct: number): StablecoinData['status'] {
 
 // ─── Route ────────────────────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   try {
     const data = await cachedFetch<StablecoinPayload>(
       'crypto:stablecoins:v1',
@@ -96,7 +103,7 @@ export async function GET() {
         }
       },
     )
-    return NextResponse.json(data)
+    return NextResponse.json(data, { headers: EDGE_HEADERS })
   } catch (err) {
     console.error('[crypto/stablecoins]', err)
     return NextResponse.json({

@@ -74,7 +74,7 @@ function TickerItem({
 }
 
 function Dot() {
-  return <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: '#333333' }} aria-hidden />
+  return <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: 'var(--border)' }} aria-hidden />
 }
 
 export default function TickerTape({ initialData }: { initialData?: Record<string, QuoteRaw> }) {

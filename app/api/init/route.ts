@@ -14,10 +14,17 @@
 
 import { NextResponse }        from 'next/server'
 import { getHomepageData }     from '@/lib/api/homepage'
+import { withRateLimit } from '@/lib/utils/rate-limit'
+import { cacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const EDGE_HEADERS = cacheHeaders(120)
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: Request) {
+  const limited = withRateLimit(req, 60)
+  if (limited) return limited
+
   const t0   = Date.now()
   const data = await getHomepageData()
   const ms   = Date.now() - t0
@@ -27,5 +34,5 @@ export async function GET() {
     fetchMs:  ms,
     // Flag so callers can tell if this was a Redis hit or a live Finnhub fetch
     fromCache: ms < 100,
-  })
+  }, { headers: EDGE_HEADERS })
 }

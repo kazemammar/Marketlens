@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withRateLimit }             from '@/lib/utils/rate-limit'
 import { redis }                     from '@/lib/cache/redis'
 import { getYahooHistory, toYahooSymbol } from '@/lib/api/yahoo'
+import { noCacheHeaders } from '@/lib/utils/cache-headers'
 
+
+const NO_CACHE = noCacheHeaders()
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 type YahooRange = '1mo' | '3mo' | '6mo' | '1y'
@@ -40,7 +43,7 @@ export async function GET(req: NextRequest) {
   const agoParam  = searchParams.get('ago')    // "3mo"
 
   if (!rawSymbol) {
-    return NextResponse.json({ error: 'symbol is required' }, { status: 400 })
+    return NextResponse.json({ error: 'symbol is required' }, { status: 400, headers: NO_CACHE })
   }
 
   const yahooSymbol = toYahooSymbol(rawSymbol, assetType)
@@ -55,14 +58,14 @@ export async function GET(req: NextRequest) {
     const cacheKey = `priceOnDate:${yahooSymbol}:${dateParam}`
     try {
       const cached = await redis.get(cacheKey)
-      if (cached) return NextResponse.json(cached)
+      if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
     } catch { /* fallthrough */ }
 
     const range   = rangeForDate(targetDate)
     const history = await getYahooHistory(yahooSymbol, range)
 
     if (!history.length) {
-      return NextResponse.json({ error: 'No historical data available', symbol: rawSymbol, date: dateParam }, { status: 404 })
+      return NextResponse.json({ error: 'No historical data available', symbol: rawSymbol, date: dateParam }, { status: 404, headers: NO_CACHE })
     }
 
     // Find exact match or nearest trading day on or before the target
@@ -82,20 +85,20 @@ export async function GET(req: NextRequest) {
     }
 
     redis.set(cacheKey, payload, { ex: 86_400 }).catch(() => {})
-    return NextResponse.json(payload)
+    return NextResponse.json(payload, { headers: NO_CACHE })
   }
 
   // ── Window/ago mode ──────────────────────────────────────────────────────────
   if (agoParam) {
     const agoDays = AGO_DAYS[agoParam]
     if (!agoDays) {
-      return NextResponse.json({ error: 'ago must be one of: 1w, 1mo, 3mo, 6mo, 1y, 2y' }, { status: 400 })
+      return NextResponse.json({ error: 'ago must be one of: 1w, 1mo, 3mo, 6mo, 1y, 2y' }, { status: 400, headers: NO_CACHE })
     }
 
     const cacheKey = `priceOnDate:${yahooSymbol}:ago:${agoParam}`
     try {
       const cached = await redis.get(cacheKey)
-      if (cached) return NextResponse.json(cached)
+      if (cached) return NextResponse.json(cached, { headers: NO_CACHE })
     } catch { /* fallthrough */ }
 
     const targetDate = new Date(Date.now() - agoDays * 86_400_000)
@@ -104,7 +107,7 @@ export async function GET(req: NextRequest) {
     const history    = await getYahooHistory(yahooSymbol, range)
 
     if (!history.length) {
-      return NextResponse.json({ error: 'No historical data available', symbol: rawSymbol }, { status: 404 })
+      return NextResponse.json({ error: 'No historical data available', symbol: rawSymbol }, { status: 404, headers: NO_CACHE })
     }
 
     // Take a ±5 day window around the target date
@@ -125,8 +128,8 @@ export async function GET(req: NextRequest) {
     }
 
     redis.set(cacheKey, payload, { ex: 86_400 }).catch(() => {})
-    return NextResponse.json(payload)
+    return NextResponse.json(payload, { headers: NO_CACHE })
   }
 
-  return NextResponse.json({ error: 'Either date or ago param is required' }, { status: 400 })
+  return NextResponse.json({ error: 'Either date or ago param is required' }, { status: 400, headers: NO_CACHE })
 }

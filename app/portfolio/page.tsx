@@ -298,69 +298,60 @@ export default function PortfolioPage() {
       {/* ══ PORTFOLIO CONTENT ════════════════════════════════════════════ */}
       {!isLoading && activePositions.length > 0 && (
         <>
-          {/* ── PORTFOLIO INTELLIGENCE card ──────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-2">
-            <div className="overflow-hidden rounded border border-[var(--border)]">
-              <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
-                <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                  <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1"/>
-                  <circle cx="8" cy="8" r="1" fill="currentColor"/>
-                </svg>
-                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-                  Portfolio Intelligence
-                </span>
-                <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-                <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-              </div>
-              <div className="p-3 space-y-3">
-                {/* ══ WHAT-IF SCENARIO ENGINE ════════════════════════════════════ */}
-                <PanelErrorBoundary fallbackTitle="What-If Analysis">
-                  <WhatIfPanel />
-                </PanelErrorBoundary>
+          {/* ── WHAT-IF SCENARIO ENGINE ═════════════════════════════════ */}
+          <div className="px-3 sm:px-4 py-1.5">
+            <PanelErrorBoundary fallbackTitle="What-If Analysis">
+              <WhatIfPanel />
+            </PanelErrorBoundary>
+          </div>
 
-                {/* ── Row 1: Day Movers | Allocation ──────────────────────────── */}
-                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <DayMovers positions={activePositions} quotes={activeQuotes} />
-                  </div>
-                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <AllocationPanel positions={activePositions} quotes={activeQuotes} />
-                  </div>
-                </div>
-
-                {/* ── Row 2: Risk Alerts | Exposure ───────────────────────────── */}
-                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <RiskAlerts positions={activePositions} quotes={activeQuotes} />
-                  </div>
-                  <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <ExposurePanel positions={activePositions} quotes={activeQuotes} />
-                  </div>
-                </div>
-
-                {/* ── Correlation Matrix ──────────────────────────────────── */}
-                <CorrelationMatrix />
-
-                {/* ── Benchmark Comparison ─────────────────────────────────────── */}
-                <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
-                  <BenchmarkChart {...allTimeStats} />
-                </div>
-
-                {/* ── Performance History ──────────────────────────────────────── */}
-                <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
-                  <PerformanceChart />
-                </div>
-
-                {/* ── Earnings Calendar ────────────────────────────────────────── */}
-                {activePositions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
-                  <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <EarningsCalendar />
-                  </div>
-                )}
-              </div>
+          {/* ── Day Movers | Allocation ────────────────────────────────── */}
+          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-1.5">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+              <DayMovers positions={activePositions} quotes={activeQuotes} />
+            </div>
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+              <AllocationPanel positions={activePositions} quotes={activeQuotes} />
             </div>
           </div>
+
+          {/* ── Risk Alerts | Exposure ─────────────────────────────────── */}
+          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-1.5">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+              <RiskAlerts positions={activePositions} quotes={activeQuotes} />
+            </div>
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+              <ExposurePanel positions={activePositions} quotes={activeQuotes} />
+            </div>
+          </div>
+
+          {/* ── Correlation Matrix ─────────────────────────────────────── */}
+          <div className="px-3 sm:px-4 py-1.5">
+            <CorrelationMatrix />
+          </div>
+
+          {/* ── Benchmark Comparison ───────────────────────────────────── */}
+          <div className="px-3 sm:px-4 py-1.5">
+            <div className="overflow-hidden rounded border border-[var(--border)]">
+              <BenchmarkChart {...allTimeStats} />
+            </div>
+          </div>
+
+          {/* ── Performance History ────────────────────────────────────── */}
+          <div className="px-3 sm:px-4 py-1.5">
+            <div className="overflow-hidden rounded border border-[var(--border)]">
+              <PerformanceChart />
+            </div>
+          </div>
+
+          {/* ── Earnings Calendar ──────────────────────────────────────── */}
+          {activePositions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
+            <div className="px-3 sm:px-4 py-1.5">
+              <div className="overflow-hidden rounded border border-[var(--border)]">
+                <EarningsCalendar />
+              </div>
+            </div>
+          )}
 
           {/* ── POSITIONS card ────────────────────────────────────────── */}
           <div className="px-3 sm:px-4 py-2">

@@ -30,6 +30,8 @@ import SectorSentimentPulse from '@/components/warroom/SectorSentimentPulse'
 import ChokepointIntel      from '@/components/warroom/ChokepointIntel'
 import TradeIdeas           from '@/components/warroom/TradeIdeas'
 import SocialTrending       from '@/components/warroom/SocialTrending'
+import EventTimeline        from '@/components/warroom/EventTimeline'
+import WatchlistAlerts      from '@/components/warroom/WatchlistAlerts'
 import StatusBar            from '@/components/layout/StatusBar'
 import GlobalSearch         from '@/components/search/GlobalSearch'
 import SectionReveal        from '@/components/layout/SectionReveal'
@@ -60,6 +62,13 @@ export default async function HomePage({
       <PanelErrorBoundary fallbackTitle="Market Pulse">
         <MarketPulse />
       </PanelErrorBoundary>
+
+      {/* ══ WATCHLIST ALERTS — big movers in user's watchlist ═══════════ */}
+      <Suspense fallback={null}>
+        <PanelErrorBoundary fallbackTitle="">
+          <WatchlistAlerts />
+        </PanelErrorBoundary>
+      </Suspense>
 
       {/* ══ TICKER TAPE — scrolling prices ══════════════════════════════ */}
       <PanelErrorBoundary fallbackTitle="Ticker Tape">
@@ -226,6 +235,13 @@ export default async function HomePage({
       <div className="px-3 sm:px-4 py-2">
         <PanelErrorBoundary fallbackTitle="IPO Calendar">
           <IpoCalendar limit={6} />
+        </PanelErrorBoundary>
+      </div>
+
+      {/* ══ MARKET EVENT TIMELINE — historical events ═════════════════════ */}
+      <div className="px-3 sm:px-4 py-2">
+        <PanelErrorBoundary fallbackTitle="Event Timeline">
+          <EventTimeline />
         </PanelErrorBoundary>
       </div>
 

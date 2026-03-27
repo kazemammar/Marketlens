@@ -6,10 +6,10 @@ import { STOCK_SECTORS } from '@/lib/utils/sectors'
 import { withRateLimit } from '@/lib/utils/rate-limit'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
 
-const EDGE_HEADERS = cacheHeaders(1800)
+const EDGE_HEADERS = cacheHeaders(3600)
 
 const CACHE_KEY = 'sector-narratives:v1'
-const CACHE_TTL = 1800 // 30 min
+const CACHE_TTL = 3600 // 1 hour — sector themes don't shift faster than this
 
 interface SectorNarratives {
   narratives: Record<string, string>

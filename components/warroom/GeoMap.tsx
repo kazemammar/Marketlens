@@ -160,6 +160,20 @@ const MILITARY_BASES = [
     purpose: 'Indian Ocean strategic hub. Supports Middle East operations, controls maritime routes.' },
   { id: 'yokosuka',  name: 'Yokosuka Naval Base, Japan',     lat: 35.3,  lng: 139.7, country: 'USA',
     purpose: 'US 7th Fleet HQ. Controls Western Pacific including Taiwan Strait approaches.' },
+  { id: 'guam', name: 'Naval Base Guam', lat: 13.4, lng: 144.7, country: 'USA',
+    purpose: 'Strategic Pacific hub. Nuclear submarine base. Key for Taiwan contingency and South China Sea operations.' },
+  { id: 'naples', name: 'Naval Support Activity Naples', lat: 40.8, lng: 14.2, country: 'USA/NATO',
+    purpose: 'US 6th Fleet HQ. Mediterranean naval operations. Coordinates NATO southern flank defense.' },
+  { id: 'tartus', name: 'Tartus Naval Facility', lat: 34.9, lng: 35.9, country: 'Russia',
+    purpose: 'Russia\'s only Mediterranean naval base. Supports Syrian operations and power projection into the Med.' },
+  { id: 'hmeimim', name: 'Hmeimim Air Base', lat: 35.4, lng: 35.9, country: 'Russia',
+    purpose: 'Russian air base in Syria. Hosts Su-35s and S-400 systems. Projects Russian power across Middle East.' },
+  { id: 'djibouti_china', name: 'PLA Support Base, Djibouti', lat: 11.6, lng: 43.1, country: 'China',
+    purpose: 'China\'s first overseas military base. Guards Bab el-Mandeb approach. Just 6 miles from US Camp Lemonnier.' },
+  { id: 'changi', name: 'Changi Naval Base', lat: 1.34, lng: 104.0, country: 'Singapore',
+    purpose: 'Largest naval base in Southeast Asia. US Navy logistics hub for Indo-Pacific. Controls Malacca Strait exit.' },
+  { id: 'norfolk', name: 'Naval Station Norfolk', lat: 36.9, lng: -76.3, country: 'USA',
+    purpose: 'World\'s largest naval base. HQ of US Atlantic Fleet. 75 ships and 134 aircraft home-ported.' },
 ]
 
 const PIPELINES = {
@@ -189,6 +203,26 @@ const PIPELINES = {
       type: 'Feature' as const,
       properties: { name: 'Nord Stream', color: '#64748b', status: 'damaged', capacity: '0 (damaged)' },
       geometry: { type: 'LineString' as const, coordinates: [[28.9,59.9],[22.0,58.5],[17.0,57.0],[13.8,54.1]] },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'TurkStream', color: '#3b82f6', status: 'active', capacity: '31.5 bcm/yr gas' },
+      geometry: { type: 'LineString' as const, coordinates: [[38.5,44.6],[36.0,43.0],[31.5,42.5],[28.8,41.2]] },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'TAP (Trans Adriatic)', color: '#22c55e', status: 'active', capacity: '10 bcm/yr gas' },
+      geometry: { type: 'LineString' as const, coordinates: [[40.4,49.8],[36.0,39.0],[28.0,40.0],[20.0,39.5],[18.5,40.5]] },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'East-West (Petroline)', color: '#f59e0b', status: 'active', capacity: '5M bbl/day' },
+      geometry: { type: 'LineString' as const, coordinates: [[50.1,26.6],[46.0,24.5],[39.0,22.5],[38.5,21.5]] },
+    },
+    {
+      type: 'Feature' as const,
+      properties: { name: 'ESPO Pipeline', color: '#a78bfa', status: 'active', capacity: '1.6M bbl/day' },
+      geometry: { type: 'LineString' as const, coordinates: [[57.0,56.0],[90.0,55.0],[120.0,52.0],[132.0,47.0],[133.5,43.5]] },
     },
   ],
 }
@@ -252,6 +286,46 @@ const SANCTIONED_COUNTRIES = [
   { id: 'belarus',   name: 'Belarus',      lat: 53.7,  lng: 27.9,  regime: 'US/EU/UK',
     sectors: 'Potash, petroleum products, government officials',
     impact: 'Major potash producer (20% of global supply). Sanctions drove potash prices up 300% in 2022.' },
+]
+
+// ─── Energy infrastructure ──────────────────────────────────────────────
+
+const ENERGY_INFRA = [
+  // Major Refineries (top global by capacity)
+  { id: 'jamnagar', name: 'Jamnagar Refinery', lat: 22.3, lng: 69.1, type: 'refinery' as const,
+    operator: 'Reliance Industries', capacity: '1.24M bbl/day', note: 'World\'s largest refinery complex. Processes crude from Middle East.' },
+  { id: 'ulsan', name: 'Ulsan Refinery', lat: 35.5, lng: 129.3, type: 'refinery' as const,
+    operator: 'SK Energy', capacity: '0.84M bbl/day', note: 'South Korea\'s largest. Critical for Asian fuel supply.' },
+  { id: 'ruwais', name: 'Ruwais Refinery', lat: 24.1, lng: 52.7, type: 'refinery' as const,
+    operator: 'ADNOC', capacity: '0.92M bbl/day', note: 'UAE mega-refinery. Expanding to become world\'s largest.' },
+  { id: 'portarthur', name: 'Port Arthur Refinery', lat: 29.9, lng: -93.9, type: 'refinery' as const,
+    operator: 'Motiva (Saudi Aramco)', capacity: '0.63M bbl/day', note: 'Largest refinery in the US. Saudi-owned on US soil.' },
+  { id: 'jurong', name: 'Jurong Island Complex', lat: 1.27, lng: 103.7, type: 'refinery' as const,
+    operator: 'ExxonMobil/Shell', capacity: '0.59M bbl/day', note: 'Singapore hub. Controls Malacca Strait fuel supply.' },
+  { id: 'rotterdam', name: 'Pernis Refinery', lat: 51.88, lng: 4.38, type: 'refinery' as const,
+    operator: 'Shell', capacity: '0.40M bbl/day', note: 'Europe\'s largest refinery. Rotterdam hub for NW European supply.' },
+  { id: 'ras_tanura', name: 'Ras Tanura', lat: 26.6, lng: 50.1, type: 'refinery' as const,
+    operator: 'Saudi Aramco', capacity: '0.55M bbl/day', note: 'World\'s largest offshore oil loading facility. Hormuz-dependent.' },
+
+  // Major LNG Export Terminals
+  { id: 'sabine', name: 'Sabine Pass LNG', lat: 29.7, lng: -93.9, type: 'lng_export' as const,
+    operator: 'Cheniere Energy', capacity: '30 MTPA', note: 'Largest US LNG export terminal. Supplies Europe and Asia.' },
+  { id: 'ras_laffan', name: 'Ras Laffan LNG', lat: 25.9, lng: 51.5, type: 'lng_export' as const,
+    operator: 'QatarEnergy', capacity: '77 MTPA', note: 'World\'s largest LNG facility. Qatar is #1 global LNG exporter.' },
+  { id: 'gladstone', name: 'Gladstone LNG', lat: -23.8, lng: 151.3, type: 'lng_export' as const,
+    operator: 'Santos/GLNG', capacity: '24 MTPA', note: 'Australia\'s Curtis Island hub. Three LNG plants.' },
+  { id: 'yamal', name: 'Yamal LNG', lat: 71.3, lng: 72.1, type: 'lng_export' as const,
+    operator: 'Novatek', capacity: '17.4 MTPA', note: 'Russian Arctic LNG. Sanctioned but still operating via ice-class tankers.' },
+  { id: 'cameron', name: 'Cameron LNG', lat: 29.8, lng: -93.3, type: 'lng_export' as const,
+    operator: 'Sempra Energy', capacity: '15 MTPA', note: 'US Gulf Coast LNG export. Major European supply source post-Ukraine war.' },
+
+  // Major LNG Import Terminals (demand side)
+  { id: 'gate', name: 'Gate LNG Terminal', lat: 51.95, lng: 4.15, type: 'lng_import' as const,
+    operator: 'Gasunie/Vopak', capacity: '12 bcm/yr', note: 'Netherlands. Key European LNG import hub replacing Russian pipeline gas.' },
+  { id: 'incheon', name: 'Incheon LNG Terminal', lat: 37.45, lng: 126.6, type: 'lng_import' as const,
+    operator: 'KOGAS', capacity: '48 MTPA', note: 'World\'s largest LNG import terminal. South Korea is #3 LNG importer.' },
+  { id: 'dahej', name: 'Dahej LNG Terminal', lat: 21.7, lng: 72.5, type: 'lng_import' as const,
+    operator: 'Petronet LNG', capacity: '17.5 MTPA', note: 'India\'s largest LNG import terminal. Growing demand.' },
 ]
 
 // ─── Shipping lanes (major global trade routes) ───────────────────────────
@@ -383,6 +457,7 @@ interface LayerState {
   earthquakes: boolean
   sanctions:   boolean
   newsHeat:    boolean
+  energy:      boolean
 }
 
 interface MarkerRef {
@@ -471,6 +546,20 @@ function sanctionPopup(s: typeof SANCTIONED_COUNTRIES[0]) {
     </div>`
 }
 
+function energyPopup(e: typeof ENERGY_INFRA[0]) {
+  const typeLabel = e.type === 'refinery' ? 'Refinery' : e.type === 'lng_export' ? 'LNG Export' : 'LNG Import'
+  const typeColor = e.type === 'refinery' ? '#f59e0b' : e.type === 'lng_export' ? '#22c55e' : '#3b82f6'
+  return `
+    <div style="min-width:200px">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+        <span style="font-weight:700;font-size:12px;color:#f1f5f9">${escapeHtml(e.name)}</span>
+        <span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:${typeColor}22;color:${typeColor};border:1px solid ${typeColor}44">${typeLabel}</span>
+      </div>
+      <p style="font-size:10px;color:#94a3b8;margin:0 0 3px"><span style="font-weight:600;color:#cbd5e1">${escapeHtml(e.operator)}</span> · ${escapeHtml(e.capacity)}</p>
+      <p style="font-size:11px;color:#94a3b8;margin:0;line-height:1.5">${escapeHtml(e.note)}</p>
+    </div>`
+}
+
 function earthquakePopupHtml(props: { magnitude: number; place: string; depth: number; time: number; tsunami: boolean }) {
   const ago = Math.round((Date.now() - props.time) / 3600_000)
   const timeStr = ago < 1 ? '<1h ago' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`
@@ -496,6 +585,8 @@ const PRESETS = [
   { label: 'Europe',      center: [20, 50]   as [number,number], zoom: 3.5 },
   { label: 'Asia-Pac',    center: [112, 20]  as [number,number], zoom: 2.8 },
   { label: 'Americas',    center: [-85, 15]  as [number,number], zoom: 2.8 },
+  { label: 'Africa',      center: [20, 5]    as [number,number], zoom: 3.2 },
+  { label: 'Arctic',      center: [40, 72]   as [number,number], zoom: 3.0 },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────
@@ -508,7 +599,7 @@ export default function GeoMap() {
   const [layers, setLayers] = useState<LayerState>({
     conflicts: true, chokepoints: true, pipelines: true,
     bases: false, cables: false, nuclear: false, lanes: true,
-    earthquakes: true, sanctions: false, newsHeat: true,
+    earthquakes: true, sanctions: false, newsHeat: true, energy: false,
   })
   const [mapReady,         setMapReady]         = useState(false)
   const [utcTime,          setUtcTime]          = useState('')
@@ -715,6 +806,28 @@ export default function GeoMap() {
           markersRef.current.push({ el, group: 'sanctions' })
         }
 
+        // Energy infrastructure — refineries (amber diamond), LNG export (green), LNG import (blue)
+        for (const e of ENERGY_INFRA) {
+          const el = document.createElement('div')
+          const color = e.type === 'refinery' ? '#f59e0b' : e.type === 'lng_export' ? '#22c55e' : '#3b82f6'
+          if (e.type === 'refinery') {
+            Object.assign(el.style, {
+              width: '8px', height: '8px', transform: 'rotate(45deg)',
+              background: color, border: `1px solid ${color}99`,
+              cursor: 'pointer', display: 'none', boxShadow: `0 0 6px ${color}40`,
+            })
+          } else {
+            Object.assign(el.style, {
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: color, border: `1px solid ${color}99`,
+              cursor: 'pointer', display: 'none', boxShadow: `0 0 6px ${color}40`,
+            })
+          }
+          const popup = new mgl.Popup({ offset: 10, closeButton: true, maxWidth: '260px' }).setHTML(energyPopup(e))
+          new mgl.Marker({ element: el }).setLngLat([e.lng, e.lat]).setPopup(popup).addTo(map)
+          markersRef.current.push({ el, group: 'energy' })
+        }
+
         // Earthquakes — teal concentric rings (seismic wave effect)
         map.addSource('earthquakes', {
           type: 'geojson',
@@ -911,6 +1024,7 @@ export default function GeoMap() {
     { key: 'cables'      as keyof LayerState, label: 'Undersea Cables', dot: '#8b5cf6' },
     { key: 'nuclear'     as keyof LayerState, label: 'Nuclear Sites',   dot: '#facc15' },
     { key: 'earthquakes' as keyof LayerState, label: 'Earthquakes',     dot: '#06b6d4' },
+    { key: 'energy'      as keyof LayerState, label: 'Energy Infra',    dot: '#f59e0b' },
     { key: 'sanctions'   as keyof LayerState, label: 'Sanctions',       dot: '#dc2626' },
     { key: 'newsHeat'    as keyof LayerState, label: 'News Heat',       dot: '#fbbf24' },
   ] as const
@@ -921,6 +1035,10 @@ export default function GeoMap() {
     { name: 'Trans-Arabian', color: '#f59e0b', status: 'Inactive'},
     { name: 'Keystone',      color: '#ef4444', status: 'Active'  },
     { name: 'Nord Stream',   color: '#64748b', status: 'Damaged' },
+    { name: 'TurkStream',     color: '#3b82f6', status: 'Active'  },
+    { name: 'TAP',            color: '#22c55e', status: 'Active'  },
+    { name: 'East-West',      color: '#f59e0b', status: 'Active'  },
+    { name: 'ESPO',           color: '#a78bfa', status: 'Active'  },
   ]
 
   // Key chokepoints to show in the footer status bar

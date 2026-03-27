@@ -1,16 +1,19 @@
+// GET /api/market-pulse
+// Derives the live pulse from the Market Brief's narrative + affectedAssets.
+// This eliminates a separate Groq call — the Brief already generates exactly
+// what the pulse needs (a one-liner + asset chips).
+// Falls back to the top RSS headline if no Brief is cached yet.
+
 import { NextResponse } from 'next/server'
 import { getFinanceNews } from '@/lib/api/rss'
 import { redis }          from '@/lib/cache/redis'
-import { groqChat }       from '@/lib/api/groq'
 import { withRateLimit }  from '@/lib/utils/rate-limit'
-import type { HomepageData } from '@/lib/api/homepage'
-import { HOMEPAGE_CACHE_KEY } from '@/lib/api/homepage'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
+import type { MarketBriefPayload } from '@/app/api/market-brief/route'
 
-const EDGE_HEADERS = cacheHeaders(60)
+const EDGE_HEADERS = cacheHeaders(120)
 
-const CACHE_KEY = 'market-pulse:live'
-const CACHE_TTL = 300 // 5 minutes
+const BRIEF_CACHE_KEY = 'market-brief:daily'
 
 export interface PulseAsset {
   symbol:    string
@@ -19,115 +22,46 @@ export interface PulseAsset {
 }
 
 export interface MarketPulsePayload {
-  pulse:          string        // 1-2 sentence live take
-  affectedAssets: PulseAsset[]  // up to 5 asset chips
+  pulse:          string
+  affectedAssets: PulseAsset[]
   generatedAt:    number
 }
 
-const SYSTEM_PROMPT = `You are a live markets desk analyst. Based on today's headlines, write ONE punchy sentence (max 25 words) capturing what is moving markets RIGHT NOW. Then identify up to 5 specific assets being moved by this news.
-
-Respond with valid JSON only — no markdown:
-{
-  "pulse": "<one sentence, max 25 words, specific and direct — name assets, levels, events>",
-  "affectedAssets": [
-    { "symbol": "CL=F", "type": "commodity", "direction": "up" }
-  ]
-}
-
-Rules:
-- pulse must be specific — no generic "markets are volatile" statements
-- affectedAssets symbols must be from: GLD, SLV, USO, GC=F, CL=F, BTC, ETH, SOL, EUR/USD, USD/JPY, GBP/USD, AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN, XOM, JPM, SPY, QQQ, TLT, VIX
-- direction is "up", "down", or "volatile"
-- max 5 assets, min 2`
-
 export async function GET(req: Request) {
-  const limited = withRateLimit(req, 10)
+  const limited = withRateLimit(req, 20)
   if (limited) return limited
 
+  // Try to derive pulse from the cached Market Brief
   try {
-    const cached = await redis.get<MarketPulsePayload>(CACHE_KEY)
-    if (cached) return NextResponse.json(cached, { headers: EDGE_HEADERS })
+    const brief = await redis.get<MarketBriefPayload>(BRIEF_CACHE_KEY)
+    if (brief) {
+      const pulse = brief.narrative || brief.brief?.split('.')[0] || 'Markets active — monitoring key developments.'
+      const assets: PulseAsset[] = (brief.affectedAssets ?? []).slice(0, 5).map((a) => ({
+        symbol: a.symbol,
+        type: a.type,
+        direction: a.direction,
+      }))
+
+      const payload: MarketPulsePayload = {
+        pulse,
+        affectedAssets: assets,
+        generatedAt: brief.generatedAt,
+      }
+      return NextResponse.json(payload, { headers: EDGE_HEADERS })
+    }
   } catch { /* fall through */ }
 
-  let headlines: string[] = []
+  // Fallback: top RSS headline (no Groq call)
+  let headline = 'Markets active — monitoring key developments.'
   try {
     const articles = await getFinanceNews()
-    headlines = articles.slice(0, 8).map((a) => a.headline)
-  } catch { /* proceed with fallback */ }
+    if (articles.length > 0) headline = articles[0].headline
+  } catch { /* use default */ }
 
-  if (headlines.length === 0) {
-    const fallback: MarketPulsePayload = {
-      pulse:          'Markets trading cautiously as data feeds are temporarily unavailable.',
-      affectedAssets: [],
-      generatedAt:    Date.now(),
-    }
-    redis.set(CACHE_KEY, fallback, { ex: 60 }).catch(() => {})
-    return NextResponse.json(fallback, { headers: EDGE_HEADERS })
+  const fallback: MarketPulsePayload = {
+    pulse: headline,
+    affectedAssets: [],
+    generatedAt: Date.now(),
   }
-
-  // Fetch cached price snapshot (non-fatal)
-  let priceContext = ''
-  try {
-    const homepage = await redis.get<HomepageData>(HOMEPAGE_CACHE_KEY)
-    if (homepage?.tickerQuotes) {
-      const snaps: string[] = []
-      const LABELS: Record<string, string> = {
-        SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones', IWM: 'Russell 2000',
-        'BINANCE:BTCUSDT': 'Bitcoin', 'BINANCE:ETHUSDT': 'Ethereum',
-      }
-      for (const [sym, q] of Object.entries(homepage.tickerQuotes)) {
-        const label = LABELS[sym] ?? sym
-        if (q.price > 0) {
-          const sign = q.changePercent >= 0 ? '+' : ''
-          snaps.push(`${label}: ${q.price.toFixed(2)} (${sign}${q.changePercent.toFixed(2)}%)`)
-        }
-      }
-      if (homepage.commodityStrip) {
-        for (const c of homepage.commodityStrip.slice(0, 4)) {
-          const sign = c.changePercent >= 0 ? '+' : ''
-          snaps.push(`${c.name}: ${c.price.toFixed(2)} (${sign}${c.changePercent.toFixed(2)}%)`)
-        }
-      }
-      if (snaps.length > 0) priceContext = `\n\nCurrent Market Snapshot:\n${snaps.join('\n')}`
-    }
-  } catch { /* non-fatal — proceed without price context */ }
-
-  try {
-    const userMessage = `Headlines (${new Date().toUTCString()}):\n${headlines.map((h, i) => `${i + 1}. ${h}`).join('\n')}${priceContext}`
-
-    const completion = await groqChat({
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user',   content: userMessage },
-      ],
-      temperature:     0.4,
-      max_tokens:      200,
-      response_format: { type: 'json_object' },
-    })
-
-    const raw    = completion.choices[0]?.message?.content ?? '{}'
-    let parsed: Record<string, unknown>
-    try { parsed = JSON.parse(raw) } catch { parsed = {} }
-
-    const payload: MarketPulsePayload = {
-      pulse:          typeof parsed.pulse === 'string' ? parsed.pulse : headlines[0],
-      affectedAssets: Array.isArray(parsed.affectedAssets)
-        ? (parsed.affectedAssets as PulseAsset[]).slice(0, 5)
-        : [],
-      generatedAt:    Date.now(),
-    }
-
-    redis.set(CACHE_KEY, payload, { ex: CACHE_TTL }).catch(() => {})
-    return NextResponse.json(payload, { headers: EDGE_HEADERS })
-
-  } catch (err) {
-    console.error('[api/market-pulse]', err)
-    const fallback: MarketPulsePayload = {
-      pulse:          headlines[0] ?? 'Markets active — monitor key levels and data releases.',
-      affectedAssets: [],
-      generatedAt:    Date.now(),
-    }
-    redis.set(CACHE_KEY, fallback, { ex: 120 }).catch(() => {})
-    return NextResponse.json(fallback, { headers: EDGE_HEADERS })
-  }
+  return NextResponse.json(fallback, { headers: EDGE_HEADERS })
 }

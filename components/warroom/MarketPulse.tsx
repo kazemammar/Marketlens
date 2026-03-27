@@ -51,9 +51,9 @@ export default function MarketPulse() {
 
   useEffect(() => { fetchPulse() }, [fetchPulse])
 
-  // Refresh every 5 minutes
+  // Refresh every 10 minutes (pulse derives from the Brief cache, no Groq call)
   useEffect(() => {
-    const id = setInterval(() => fetchPulse(true), 5 * 60_000)
+    const id = setInterval(() => fetchPulse(true), 10 * 60_000)
     return () => clearInterval(id)
   }, [fetchPulse])
 

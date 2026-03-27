@@ -170,22 +170,21 @@ interface CachedMovers {
 
 // ─── Data fetcher ─────────────────────────────────────────────────────────────
 
-// Wrap with a 25-second overall timeout to prevent Vercel function timeouts (30s limit)
+// Fetch movers data with individual timeouts per source.
+// Each source gets 20s; if one is slow the others still return data.
 async function fetchMoversData(): Promise<MoversPayload | null> {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('movers fetch timeout')), 25_000)
-  )
+  const withTimeout = <T>(p: Promise<T>, ms: number): Promise<T | null> =>
+    Promise.race([p, new Promise<null>(res => setTimeout(() => res(null), ms))])
 
-  const fetches = Promise.allSettled([
-    getQuotesBatched(STOCK_SYMBOLS, 3, 1000),
-    getCryptoMarkets(1, 'usd', 30),
-    getYahooQuotesBatch(COMMODITY_SYMBOLS),
+  const [stocksRaw, cryptoRaw, commoditiesRaw] = await Promise.all([
+    withTimeout(getQuotesBatched(STOCK_SYMBOLS, 4, 400), 20_000),
+    withTimeout(getCryptoMarkets(1, 'usd', 30), 10_000),
+    withTimeout(getYahooQuotesBatch(COMMODITY_SYMBOLS), 10_000),
   ])
 
-  const [stocksResult, cryptoResult, commoditiesResult] = await Promise.race([fetches, timeout]) as
-    [PromiseSettledResult<Map<string, import('@/lib/api/finnhub').QuoteRaw>>,
-     PromiseSettledResult<Awaited<ReturnType<typeof getCryptoMarkets>>>,
-     PromiseSettledResult<Awaited<ReturnType<typeof getYahooQuotesBatch>>>]
+  const stocksResult      = stocksRaw      !== null ? { status: 'fulfilled' as const, value: stocksRaw }      : { status: 'rejected' as const, reason: 'timeout' }
+  const cryptoResult      = cryptoRaw      !== null ? { status: 'fulfilled' as const, value: cryptoRaw }      : { status: 'rejected' as const, reason: 'timeout' }
+  const commoditiesResult = commoditiesRaw !== null ? { status: 'fulfilled' as const, value: commoditiesRaw } : { status: 'rejected' as const, reason: 'timeout' }
 
   // Map stocks
   const stockItems: MoverItem[] = []
@@ -297,9 +296,14 @@ export async function GET(req: Request) {
 
   // 2. No cache — cold start blocking fetch
   console.log('[movers] cold fetch')
-  const payload = await fetchMoversData()
-  if (payload) {
-    redis.set(CACHE_KEY, { data: payload, fetchedAt: Date.now() } satisfies CachedMovers, { ex: CACHE_TTL }).catch(() => {})
+  try {
+    const payload = await fetchMoversData()
+    if (payload) {
+      redis.set(CACHE_KEY, { data: payload, fetchedAt: Date.now() } satisfies CachedMovers, { ex: CACHE_TTL }).catch(() => {})
+    }
+    return NextResponse.json(payload ?? emptyPayload())
+  } catch (err) {
+    console.warn('[movers] cold fetch failed:', err instanceof Error ? err.message : err)
+    return NextResponse.json(emptyPayload())
   }
-  return NextResponse.json(payload ?? emptyPayload())
 }

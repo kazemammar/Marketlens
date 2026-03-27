@@ -215,7 +215,7 @@ export default function NewsBriefing() {
     <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
 
       {/* Section header */}
-      <div className="flex items-center gap-3 border-b border-[var(--border)] px-3 py-2 sm:px-4">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <rect x="1" y="2" width="14" height="2" rx="1" fill="currentColor" opacity=".6"/>
@@ -261,7 +261,7 @@ export default function NewsBriefing() {
                   {col.icon}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text)]">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
                     {col.label}
                   </span>
                   <span className="ml-1.5 font-mono text-[8px] text-[var(--text-muted)] opacity-40 hidden sm:inline">

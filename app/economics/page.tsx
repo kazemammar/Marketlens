@@ -223,12 +223,12 @@ export default function EconomicsPage() {
         </div>
 
         {/* Fed Watch */}
-        <div className="mb-5">
+        <div className="mb-4">
           <FedWatch fedRate={fedRate} />
         </div>
 
         {/* Central Bank Policy Rates */}
-        <div className="mb-5">
+        <div className="mb-4">
           <CentralBankRates />
         </div>
 

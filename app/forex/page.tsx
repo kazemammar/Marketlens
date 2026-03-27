@@ -32,7 +32,7 @@ export default async function ForexPage() {
         </div>
 
         {/* Currency Strength Meter — already has its own card styling */}
-        <div className="mb-1.5">
+        <div className="mb-4">
           <CurrencyStrengthMeter />
         </div>
 
@@ -52,7 +52,7 @@ export default async function ForexPage() {
 
           {/* Grid */}
           {pairs.length > 0 ? (
-            <div className="p-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="p-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {pairs.map((asset) => (
                 <AssetCard key={`forex-${asset.symbol}`} asset={asset} />
               ))}

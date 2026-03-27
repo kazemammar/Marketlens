@@ -299,14 +299,14 @@ export default function PortfolioPage() {
       {!isLoading && activePositions.length > 0 && (
         <>
           {/* ── WHAT-IF SCENARIO ENGINE ═════════════════════════════════ */}
-          <div className="px-3 sm:px-4 py-1.5">
+          <div className="px-3 sm:px-4 py-2">
             <PanelErrorBoundary fallbackTitle="What-If Analysis">
               <WhatIfPanel />
             </PanelErrorBoundary>
           </div>
 
           {/* ── Day Movers | Allocation ────────────────────────────────── */}
-          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-1.5">
+          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
             <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <DayMovers positions={activePositions} quotes={activeQuotes} />
             </div>
@@ -316,7 +316,7 @@ export default function PortfolioPage() {
           </div>
 
           {/* ── Risk Alerts | Exposure ─────────────────────────────────── */}
-          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-1.5">
+          <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
             <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
               <RiskAlerts positions={activePositions} quotes={activeQuotes} />
             </div>
@@ -326,19 +326,19 @@ export default function PortfolioPage() {
           </div>
 
           {/* ── Correlation Matrix ─────────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-1.5">
+          <div className="px-3 sm:px-4 py-2">
             <CorrelationMatrix />
           </div>
 
           {/* ── Benchmark Comparison ───────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-1.5">
+          <div className="px-3 sm:px-4 py-2">
             <div className="overflow-hidden rounded border border-[var(--border)]">
               <BenchmarkChart {...allTimeStats} />
             </div>
           </div>
 
           {/* ── Performance History ────────────────────────────────────── */}
-          <div className="px-3 sm:px-4 py-1.5">
+          <div className="px-3 sm:px-4 py-2">
             <div className="overflow-hidden rounded border border-[var(--border)]">
               <PerformanceChart />
             </div>
@@ -346,7 +346,7 @@ export default function PortfolioPage() {
 
           {/* ── Earnings Calendar ──────────────────────────────────────── */}
           {activePositions.some((p) => p.asset_type === 'stock' || p.asset_type === 'etf') && (
-            <div className="px-3 sm:px-4 py-1.5">
+            <div className="px-3 sm:px-4 py-2">
               <div className="overflow-hidden rounded border border-[var(--border)]">
                 <EarningsCalendar />
               </div>

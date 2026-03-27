@@ -51,7 +51,7 @@ export default function SectorRotation() {
   return (
     <div className="rounded border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M2 14V6l3-4 3 3 3-2 3 5v6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>

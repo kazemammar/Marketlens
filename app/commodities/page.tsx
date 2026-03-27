@@ -57,7 +57,7 @@ export default async function CommoditiesPage() {
         </div>
 
         {/* OilEnergyPanel — has its own card styling internally */}
-        <div className="mb-1.5">
+        <div className="mb-4">
           <OilEnergyPanel />
         </div>
 

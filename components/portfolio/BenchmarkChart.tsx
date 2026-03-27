@@ -209,7 +209,7 @@ export default function BenchmarkChart({
 
   // ── Header ──
   const Header = (
-    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
       <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#3b82f6' }} aria-hidden>
         <polyline points="1,12 4,7 7,9 10,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         <polyline points="1,14 4,10 7,12 10,7 15,5" stroke="#10b981" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>

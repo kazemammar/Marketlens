@@ -45,7 +45,7 @@ function urgencyConfig(days: number): { color: string; bg: string; borderHex: st
 
 function PanelHeader({ upcomingCount }: { upcomingCount: number }) {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
       <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0 text-[var(--text-muted)]" aria-hidden>
         <rect x="1" y="2" width="14" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
         <line x1="1" y1="6" x2="15" y2="6" stroke="currentColor" strokeWidth="1.3"/>

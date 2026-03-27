@@ -89,7 +89,7 @@ function MarketIndices() {
 
   return (
     <div className="overflow-hidden rounded border border-[var(--border)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <span className="relative flex h-1.5 w-1.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
@@ -196,7 +196,7 @@ export default function StockExplorer() {
       {/* Sector tabs + grid */}
       <div className="overflow-hidden rounded border border-[var(--border)]">
         {/* Header */}
-        <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2">
+        <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <path d="M2 14h12M4 10v4M8 7v7M12 4v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
@@ -243,7 +243,7 @@ export default function StockExplorer() {
         </div>
 
         {/* Stock grid */}
-        <div className="p-2.5">
+        <div className="p-3">
           {loading ? (
             <GridSkeleton count={activeTab === 'All' ? ALL_TOP_PICKS.length : STOCK_SECTORS[activeTab]?.length ?? 10} />
           ) : stocks.length === 0 ? (

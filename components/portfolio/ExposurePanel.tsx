@@ -32,7 +32,7 @@ function fmtPrice(price: number, type: string): string {
 
 function PanelHeader() {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
+    <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
       <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
         <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3"/>
         <line x1="8" y1="2" x2="8" y2="14" stroke="currentColor" strokeWidth="1" strokeDasharray="1.5 1.5"/>

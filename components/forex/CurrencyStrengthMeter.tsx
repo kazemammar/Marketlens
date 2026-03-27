@@ -68,7 +68,7 @@ export default function CurrencyStrengthMeter() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <span className="relative flex h-1.5 w-1.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--accent)] opacity-60" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
@@ -233,7 +233,7 @@ function StrengthTooltip({
 function SkeletonMeter() {
   return (
     <div className="overflow-hidden rounded border border-[var(--border)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <div className="h-1.5 w-1.5 rounded-full bg-[var(--surface-2)] animate-pulse" />
         <div className="h-2 w-32 rounded bg-[var(--surface-2)] animate-pulse" />
       </div>

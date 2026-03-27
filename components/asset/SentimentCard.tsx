@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { SentimentAnalysis, SentimentLabel, AssetType } from '@/lib/utils/types'
 import { useFetch } from '@/lib/hooks/useFetch'
+import type { StocktwitsSentiment } from '@/lib/api/stocktwits'
 
 interface SocialPulseData {
   reddit:  { mention: number; positiveScore: number; negativeScore: number; score: number }[]
@@ -115,6 +116,50 @@ function SocialPulse({ symbol, type }: { symbol: string; type: AssetType }) {
   )
 }
 
+function StocktwitsPulse({ symbol }: { symbol: string }) {
+  const { data } = useFetch<StocktwitsSentiment>(
+    `/api/social/sentiment/${encodeURIComponent(symbol)}`,
+    { refreshInterval: 10 * 60_000 },
+  )
+
+  if (!data || data.totalMessages === 0) return null
+
+  const total = data.bullish + data.bearish
+  const bullPct = total > 0 ? (data.bullish / total) * 100 : 50
+
+  return (
+    <div className="space-y-1.5">
+      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted)]">
+        Stocktwits Pulse <span className="opacity-50">({data.totalMessages} messages)</span>
+      </p>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[10px] font-bold tabular-nums text-[var(--price-up)]">
+          {data.bullish}
+        </span>
+        <div className="flex-1 h-2 overflow-hidden rounded-full bg-[var(--surface-2)]">
+          <div className="flex h-full">
+            <div
+              className="h-full rounded-l-full transition-all duration-500"
+              style={{ width: `${bullPct}%`, background: 'var(--price-up)' }}
+            />
+            <div
+              className="h-full rounded-r-full transition-all duration-500"
+              style={{ width: `${100 - bullPct}%`, background: 'var(--price-down)' }}
+            />
+          </div>
+        </div>
+        <span className="font-mono text-[10px] font-bold tabular-nums text-[var(--price-down)]">
+          {data.bearish}
+        </span>
+      </div>
+      <div className="flex items-center justify-between font-mono text-[8px] text-[var(--text-muted)]">
+        <span>Bullish</span>
+        <span>Bearish</span>
+      </div>
+    </div>
+  )
+}
+
 export default function SentimentCard({ symbol, type }: SentimentCardProps) {
   const { data, loading, error } = useFetch<SentimentAnalysis>(
     `/api/sentiment/${encodeURIComponent(symbol)}?type=${type}`,
@@ -210,6 +255,9 @@ export default function SentimentCard({ symbol, type }: SentimentCardProps) {
 
             {/* Social Pulse */}
             <SocialPulse symbol={symbol} type={type} />
+
+            {/* Stocktwits Pulse */}
+            <StocktwitsPulse symbol={symbol} />
           </>
         )}
       </div>

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import type { ChokepointStatus, ChokepointIntelPayload } from '@/lib/api/chokepoints'
 import type { Earthquake } from '@/lib/api/usgs'
+import type { NewsHeatPoint } from '@/app/api/news-heat/route'
 
 function escapeHtml(str: string): string {
   return str
@@ -11,6 +12,55 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;')
+}
+
+// ─── Draggable hook ──────────────────────────────────────────────────────
+function useDraggable() {
+  const ref = useRef<HTMLDivElement>(null)
+  const dragging = useRef(false)
+  const offset = useRef({ x: 0, y: 0 })
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const el = ref.current
+    if (!el) return
+    // Don't start drag on interactive elements
+    const tag = (e.target as HTMLElement).tagName
+    if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'A') return
+    dragging.current = true
+    offset.current = {
+      x: e.clientX - el.getBoundingClientRect().left,
+      y: e.clientY - el.getBoundingClientRect().top,
+    }
+    el.setPointerCapture(e.pointerId)
+    el.style.cursor = 'grabbing'
+    e.preventDefault()
+  }, [])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragging.current || !ref.current) return
+    const parent = ref.current.parentElement
+    if (!parent) return
+    const parentRect = parent.getBoundingClientRect()
+    const newLeft = e.clientX - parentRect.left - offset.current.x
+    const newTop = e.clientY - parentRect.top - offset.current.y
+    // Clamp within parent
+    const el = ref.current
+    const maxLeft = parentRect.width - el.offsetWidth
+    const maxTop = parentRect.height - el.offsetHeight
+    el.style.left = `${Math.max(0, Math.min(maxLeft, newLeft))}px`
+    el.style.top = `${Math.max(0, Math.min(maxTop, newTop))}px`
+    // Clear any right/bottom/transform positioning
+    el.style.right = 'auto'
+    el.style.bottom = 'auto'
+    el.style.transform = 'none'
+  }, [])
+
+  const onPointerUp = useCallback(() => {
+    dragging.current = false
+    if (ref.current) ref.current.style.cursor = 'grab'
+  }, [])
+
+  return { ref, onPointerDown, onPointerMove, onPointerUp }
 }
 
 // ─── Static data ──────────────────────────────────────────────────────────
@@ -332,6 +382,7 @@ interface LayerState {
   lanes:       boolean
   earthquakes: boolean
   sanctions:   boolean
+  newsHeat:    boolean
 }
 
 interface MarkerRef {
@@ -423,7 +474,7 @@ function sanctionPopup(s: typeof SANCTIONED_COUNTRIES[0]) {
 function earthquakePopupHtml(props: { magnitude: number; place: string; depth: number; time: number; tsunami: boolean }) {
   const ago = Math.round((Date.now() - props.time) / 3600_000)
   const timeStr = ago < 1 ? '<1h ago' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`
-  const magColor = props.magnitude >= 7 ? '#ef4444' : props.magnitude >= 6 ? '#f97316' : '#fb923c'
+  const magColor = props.magnitude >= 7 ? '#ef4444' : props.magnitude >= 6 ? '#0891b2' : '#06b6d4'
   const tsunamiTag = props.tsunami ? '<span style="display:block;margin-top:4px;font-size:10px;font-weight:700;color:#ef4444">⚠ TSUNAMI WARNING</span>' : ''
   return `
     <div style="min-width:180px">
@@ -457,12 +508,17 @@ export default function GeoMap() {
   const [layers, setLayers] = useState<LayerState>({
     conflicts: true, chokepoints: true, pipelines: true,
     bases: false, cables: false, nuclear: false, lanes: true,
-    earthquakes: true, sanctions: false,
+    earthquakes: true, sanctions: false, newsHeat: true,
   })
   const [mapReady,         setMapReady]         = useState(false)
   const [utcTime,          setUtcTime]          = useState('')
   const [chokepointStatus, setChokepointStatus] = useState<Record<string, ChokepointStatus>>({})
   const [earthquakes,      setEarthquakes]      = useState<Earthquake[]>([])
+  const [newsHeatPoints,   setNewsHeatPoints]   = useState<NewsHeatPoint[]>([])
+
+  const dragLayers    = useDraggable()
+  const dragPipeline  = useDraggable()
+  const dragChokeBar  = useDraggable()
 
   useEffect(() => {
     const tick = () => setUtcTime(new Date().toUTCString().slice(17, 25))
@@ -498,6 +554,20 @@ export default function GeoMap() {
     }
     fetchQuakes()
     const id = setInterval(fetchQuakes, 10 * 60_000)
+    return () => clearInterval(id)
+  }, [])
+
+  // ── Fetch news heat data ───────────────────────────────────────────
+  useEffect(() => {
+    async function fetchHeat() {
+      try {
+        const res = await fetch('/api/news-heat')
+        const data = await res.json() as { heatPoints: NewsHeatPoint[] }
+        setNewsHeatPoints(data.heatPoints ?? [])
+      } catch { /* silent */ }
+    }
+    fetchHeat()
+    const id = setInterval(fetchHeat, 10 * 60_000)
     return () => clearInterval(id)
   }, [])
 
@@ -585,63 +655,96 @@ export default function GeoMap() {
           markersRef.current.push({ el, group: 'conflicts' })
         }
 
-        // Chokepoints — store chokepointId + popup ref for dynamic updates
+        // Chokepoints — diamond shape (⬥) with status glow
         for (const c of CHOKEPOINTS) {
           const el = document.createElement('div')
-          el.className = 'chokepoint-marker'
+          Object.assign(el.style, {
+            width: '10px', height: '10px', transform: 'rotate(45deg)',
+            background: '#10b981', border: '1.5px solid rgba(16,185,129,0.6)',
+            cursor: 'pointer', boxShadow: '0 0 8px rgba(16,185,129,0.4)',
+          })
           const popup = new mgl.Popup({ offset: 14, closeButton: true, maxWidth: '270px' }).setHTML(chokepointPopup(c))
           new mgl.Marker({ element: el }).setLngLat([c.lng, c.lat]).setPopup(popup).addTo(map)
           markersRef.current.push({ el, group: 'chokepoints', chokepointId: c.id, popup })
         }
 
-        // Military bases
+        // Military bases — crosshair shape (+)
         for (const b of MILITARY_BASES) {
           const el = document.createElement('div')
-          Object.assign(el.style, { width:'9px', height:'9px', background:'transparent', border:'2px solid #a78bfa', transform:'rotate(45deg)', cursor:'pointer', boxShadow:'0 0 6px #7c3aed66' })
+          Object.assign(el.style, {
+            width: '12px', height: '12px', cursor: 'pointer', position: 'relative',
+          })
+          el.innerHTML = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <line x1="6" y1="1" x2="6" y2="11" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="1" y1="6" x2="11" y2="6" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="6" cy="6" r="2" fill="#a78bfa" opacity="0.4"/>
+          </svg>`
           const popup = new mgl.Popup({ offset: 12, closeButton: true, maxWidth: '250px' }).setHTML(basePopup(b))
           new mgl.Marker({ element: el }).setLngLat([b.lng, b.lat]).setPopup(popup).addTo(map)
           markersRef.current.push({ el, group: 'bases' })
         }
 
-        // Nuclear sites
+        // Nuclear sites — warning triangle (▲)
         for (const n of NUCLEAR_SITES) {
           const el = document.createElement('div')
-          Object.assign(el.style, { width:'10px', height:'10px', background:'#facc15', borderRadius:'50%', border:'2px solid #a16207', cursor:'pointer', boxShadow:'0 0 8px #ca8a0466', display:'none' })
+          Object.assign(el.style, {
+            width: '14px', height: '13px', cursor: 'pointer', display: 'none',
+          })
+          el.innerHTML = `<svg width="14" height="13" viewBox="0 0 14 13" fill="none">
+            <path d="M7 1L13 12H1L7 1Z" fill="#facc15" fill-opacity="0.25" stroke="#facc15" stroke-width="1.2" stroke-linejoin="round"/>
+            <circle cx="7" cy="8" r="1.2" fill="#facc15"/>
+          </svg>`
           const popup = new mgl.Popup({ offset: 12, closeButton: true, maxWidth: '240px' })
-            .setHTML(`<div style="min-width:190px"><p style="font-weight:700;font-size:12px;color:#f1f5f9;margin:0 0 3px">${n.name}</p><span style="font-size:9px;color:#fbbf24">${n.country}</span><p style="font-size:11px;color:#94a3b8;margin:6px 0 0;line-height:1.5">${n.note}</p></div>`)
+            .setHTML(`<div style="min-width:190px"><div style="display:flex;align-items:center;gap:5px;margin-bottom:3px"><span style="font-size:11px">☢</span><p style="font-weight:700;font-size:12px;color:#f1f5f9;margin:0">${n.name}</p></div><span style="font-size:9px;font-weight:600;color:#fbbf24;background:#fbbf2418;border:1px solid #fbbf2433;border-radius:2px;padding:1px 5px">${n.country}</span><p style="font-size:11px;color:#94a3b8;margin:6px 0 0;line-height:1.5">${n.note}</p></div>`)
           new mgl.Marker({ element: el }).setLngLat([n.lng, n.lat]).setPopup(popup).addTo(map)
           markersRef.current.push({ el, group: 'nuclear' })
         }
 
-        // Sanctions — translucent red circles
+        // Sanctions — dashed border "restricted zone" circles
         for (const s of SANCTIONED_COUNTRIES) {
           const el = document.createElement('div')
           Object.assign(el.style, {
-            width: '40px', height: '40px', borderRadius: '50%',
-            background: 'rgba(220,38,38,0.15)', border: '1.5px solid rgba(220,38,38,0.4)',
-            cursor: 'pointer', display: 'none',
+            width: '36px', height: '36px', cursor: 'pointer', display: 'none',
           })
+          el.innerHTML = `<svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="16" fill="#991b1b" fill-opacity="0.08" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4 3" stroke-opacity="0.5"/>
+            <line x1="8" y1="8" x2="28" y2="28" stroke="#dc2626" stroke-width="1" stroke-opacity="0.3"/>
+          </svg>`
           const popup = new mgl.Popup({ offset: 20, closeButton: true, maxWidth: '270px' }).setHTML(sanctionPopup(s))
           new mgl.Marker({ element: el }).setLngLat([s.lng, s.lat]).setPopup(popup).addTo(map)
           markersRef.current.push({ el, group: 'sanctions' })
         }
 
-        // Earthquakes — GeoJSON circle layer (source populated later via useEffect)
+        // Earthquakes — teal concentric rings (seismic wave effect)
         map.addSource('earthquakes', {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: [] },
         })
+        // Outer ring — faint wave
+        map.addLayer({
+          id: 'earthquake-outer',
+          type: 'circle',
+          source: 'earthquakes',
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 4.5, 12, 6, 24, 7, 36, 8, 48],
+            'circle-color': 'transparent',
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#06b6d4',
+            'circle-stroke-opacity': 0.2,
+          },
+        })
+        // Inner dot
         map.addLayer({
           id: 'earthquake-circles',
           type: 'circle',
           source: 'earthquakes',
           paint: {
-            'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 4.5, 6, 6, 14, 7, 20, 8, 28],
-            'circle-color': '#f97316',
-            'circle-opacity': 0.6,
+            'circle-radius': ['interpolate', ['linear'], ['get', 'magnitude'], 4.5, 4, 6, 8, 7, 12, 8, 18],
+            'circle-color': '#06b6d4',
+            'circle-opacity': 0.7,
             'circle-stroke-width': 1.5,
-            'circle-stroke-color': '#f97316',
-            'circle-stroke-opacity': 0.3,
+            'circle-stroke-color': '#22d3ee',
+            'circle-stroke-opacity': 0.4,
           },
         })
 
@@ -658,6 +761,37 @@ export default function GeoMap() {
         })
         map.on('mouseenter', 'earthquake-circles', () => { map.getCanvas().style.cursor = 'pointer' })
         map.on('mouseleave', 'earthquake-circles', () => { map.getCanvas().style.cursor = '' })
+
+        // News heat — warm amber blurred blobs (clearly "heat" not markers)
+        map.addSource('news-heat', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        })
+        map.addLayer({
+          id: 'news-heat-circles',
+          type: 'circle',
+          source: 'news-heat',
+          paint: {
+            'circle-radius': ['interpolate', ['linear'], ['get', 'intensity'], 0, 20, 50, 40, 100, 65],
+            'circle-color': '#fbbf24',
+            'circle-opacity': ['interpolate', ['linear'], ['get', 'intensity'], 0, 0.03, 50, 0.08, 100, 0.18],
+            'circle-blur': 1,
+          },
+        })
+
+        // News heat click popup
+        map.on('click', 'news-heat-circles', (e: import('maplibre-gl').MapMouseEvent & { features?: import('maplibre-gl').MapGeoJSONFeature[] }) => {
+          const f = e.features?.[0]
+          if (!f || f.geometry.type !== 'Point') return
+          const p = f.properties as { region: string; intensity: number; count: number }
+          const coords = (f.geometry as GeoJSON.Point).coordinates as [number, number]
+          new mgl.Popup({ closeButton: true, maxWidth: '200px' })
+            .setLngLat(coords)
+            .setHTML(`<div style="min-width:120px"><p style="font-weight:700;font-size:12px;color:#f1f5f9;margin:0 0 3px">${escapeHtml(p.region)}</p><p style="font-size:10px;color:#fbbf24;margin:0">${p.count} article mentions</p><p style="font-size:9px;color:#64748b;margin:2px 0 0">Intensity: ${p.intensity}/100</p></div>`)
+            .addTo(map)
+        })
+        map.on('mouseenter', 'news-heat-circles', () => { map.getCanvas().style.cursor = 'pointer' })
+        map.on('mouseleave', 'news-heat-circles', () => { map.getCanvas().style.cursor = '' })
 
         setMapReady(true)
       })
@@ -681,10 +815,10 @@ export default function GeoMap() {
         const status = chokepointStatus[m.chokepointId] ?? 'NORMAL'
         const color  = STATUS_COLORS_MAP[status]
         m.el.style.background  = color
-        m.el.style.borderColor = `${color}80`
+        m.el.style.borderColor = `${color}99`
         m.el.style.boxShadow   = status !== 'NORMAL'
-          ? `0 0 12px ${color}99`
-          : `0 0 8px ${color}66`
+          ? `0 0 14px ${color}aa`
+          : `0 0 8px ${color}55`
         if (m.popup) {
           const def = CHOKEPOINTS.find(c => c.id === m.chokepointId)
           if (def) m.popup.setHTML(chokepointPopup(def, status))
@@ -717,6 +851,23 @@ export default function GeoMap() {
     })
   }, [earthquakes, mapReady])
 
+  // ── Update news heat GeoJSON when data arrives ─────────────────────
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || !newsHeatPoints.length) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const m = mapRef.current as any
+    const src = m.getSource?.('news-heat')
+    if (!src) return
+    src.setData({
+      type: 'FeatureCollection',
+      features: newsHeatPoints.map((hp: NewsHeatPoint) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [hp.lng, hp.lat] },
+        properties: { region: hp.region, intensity: hp.intensity, count: hp.articleCount },
+      })),
+    })
+  }, [newsHeatPoints, mapReady])
+
   // ── Sync layer visibility ────────────────────────────────────────────
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
@@ -735,6 +886,10 @@ export default function GeoMap() {
     }
     if (m.getLayer?.('earthquake-circles')) {
       m.setLayoutProperty('earthquake-circles', 'visibility', vis(layers.earthquakes))
+      m.setLayoutProperty('earthquake-outer', 'visibility', vis(layers.earthquakes))
+    }
+    if (m.getLayer?.('news-heat-circles')) {
+      m.setLayoutProperty('news-heat-circles', 'visibility', vis(layers.newsHeat))
     }
     for (const { el, group } of markersRef.current) {
       el.style.display = layers[group] ? '' : 'none'
@@ -755,8 +910,9 @@ export default function GeoMap() {
     { key: 'bases'       as keyof LayerState, label: 'Military Bases',  dot: '#a78bfa' },
     { key: 'cables'      as keyof LayerState, label: 'Undersea Cables', dot: '#8b5cf6' },
     { key: 'nuclear'     as keyof LayerState, label: 'Nuclear Sites',   dot: '#facc15' },
-    { key: 'earthquakes' as keyof LayerState, label: 'Earthquakes',     dot: '#f97316' },
+    { key: 'earthquakes' as keyof LayerState, label: 'Earthquakes',     dot: '#06b6d4' },
     { key: 'sanctions'   as keyof LayerState, label: 'Sanctions',       dot: '#dc2626' },
+    { key: 'newsHeat'    as keyof LayerState, label: 'News Heat',       dot: '#fbbf24' },
   ] as const
 
   const PIPELINE_LEGEND = [
@@ -799,8 +955,15 @@ export default function GeoMap() {
           </span>
         </div>
 
-        {/* Layer toggles — top right */}
-        <div className="absolute right-1.5 top-1.5 z-20 flex flex-col gap-px">
+        {/* Layer toggles — top right (draggable) */}
+        <div
+          ref={dragLayers.ref}
+          onPointerDown={dragLayers.onPointerDown}
+          onPointerMove={dragLayers.onPointerMove}
+          onPointerUp={dragLayers.onPointerUp}
+          className="absolute right-1.5 top-1.5 z-20 flex flex-col gap-px"
+          style={{ cursor: 'grab' }}
+        >
           <div className="rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50">
             <p className="mb-1.5 font-mono text-[8px] font-bold uppercase tracking-[0.14em] text-white/30">Layers</p>
             {LAYER_CFG.map(({ key, label, dot }) => (
@@ -818,9 +981,16 @@ export default function GeoMap() {
           </div>
         </div>
 
-        {/* Pipeline legend — bottom left */}
+        {/* Pipeline legend — bottom left (draggable) */}
         {layers.pipelines && (
-          <div className="absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50">
+          <div
+            ref={dragPipeline.ref}
+            onPointerDown={dragPipeline.onPointerDown}
+            onPointerMove={dragPipeline.onPointerMove}
+            onPointerUp={dragPipeline.onPointerUp}
+            className="absolute bottom-6 left-1.5 z-10 rounded border border-white/10 bg-black/60 px-2 py-1.5 backdrop-blur-md shadow-black/50"
+            style={{ cursor: 'grab' }}
+          >
             <p className="mb-1 font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-white/30">Pipelines</p>
             {PIPELINE_LEGEND.map((p) => (
               <div key={p.name} className="flex items-center gap-1.5 py-0.5">
@@ -832,8 +1002,15 @@ export default function GeoMap() {
           </div>
         )}
 
-        {/* Chokepoint status bar — bottom center */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 rounded border border-white/10 bg-black/70 px-3 py-1.5 backdrop-blur-sm">
+        {/* Chokepoint status bar — bottom center (draggable) */}
+        <div
+          ref={dragChokeBar.ref}
+          onPointerDown={dragChokeBar.onPointerDown}
+          onPointerMove={dragChokeBar.onPointerMove}
+          onPointerUp={dragChokeBar.onPointerUp}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 rounded border border-white/10 bg-black/70 px-3 py-1.5 backdrop-blur-sm"
+          style={{ cursor: 'grab' }}
+        >
           <span className="font-mono text-[8px] font-bold uppercase tracking-[0.1em] text-white/30">
             Chokepoints
           </span>

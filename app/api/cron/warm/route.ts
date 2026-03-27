@@ -57,6 +57,9 @@ export async function GET(req: NextRequest) {
     () => warm('fear_greed',        '/api/fear-greed'),
     () => warm('commodities_strip', '/api/commodities-strip'),
     () => warm('earthquakes',       '/api/earthquakes'),
+    () => warm('social_trending',  '/api/social/trending'),
+    () => warm('trade_ideas',      '/api/trade-ideas'),
+    () => warm('news_heat',        '/api/news-heat'),
     () => warm('ipo_calendar',      '/api/ipo-calendar'),
     () => warm('homepage_bundle',   '/api/homepage-data'),
     // Daily tasks (previously a separate cron — merged for Hobby plan 1-cron limit)

@@ -56,7 +56,7 @@ export default function MarketBrief() {
       ])
         .then(([b, r]) => { if (b) setBrief(b); if (r) setRisk(r) })
         .catch(() => {})
-    }, 60 * 60_000)
+    }, 30 * 60_000)
     return () => clearInterval(id)
   }, [])
 

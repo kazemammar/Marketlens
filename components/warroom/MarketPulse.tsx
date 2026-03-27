@@ -12,6 +12,12 @@ const DIR_COLOR: Record<string, string> = {
 }
 const DIR_ARROW: Record<string, string> = { up: '▲', down: '▼', volatile: '↕' }
 
+const URGENCY_STYLE: Record<string, { border: string; bg: string; dotColor: string; label: string }> = {
+  breaking: { border: 'border-red-500/40',   bg: 'bg-red-500/[0.03]',   dotColor: '#ef4444', label: 'BREAKING' },
+  alert:    { border: 'border-amber-500/30', bg: 'bg-amber-500/[0.03]', dotColor: '#f59e0b', label: 'ALERT' },
+  normal:   { border: 'border-[var(--border)]', bg: 'bg-[var(--surface)]', dotColor: '#ef4444', label: 'LIVE' },
+}
+
 const SESSION_STYLE: Record<MarketSession, { label: string; color: string }> = {
   pre_market:  { label: 'PRE-MKT',   color: '#60a5fa' },
   morning:     { label: 'MORNING',   color: 'var(--accent)' },
@@ -51,9 +57,9 @@ export default function MarketPulse() {
 
   useEffect(() => { fetchPulse() }, [fetchPulse])
 
-  // Refresh every 10 minutes (pulse derives from the Brief cache, no Groq call)
+  // Refresh every 5 minutes (own Groq call, 5-min Redis cache)
   useEffect(() => {
-    const id = setInterval(() => fetchPulse(true), 10 * 60_000)
+    const id = setInterval(() => fetchPulse(true), 5 * 60_000)
     return () => clearInterval(id)
   }, [fetchPulse])
 
@@ -72,15 +78,26 @@ export default function MarketPulse() {
   if (!data) return null
 
   const { label: sessionLabel, color: sessionColor } = getSession()
+  const urgency = URGENCY_STYLE[data.urgency] ?? URGENCY_STYLE.normal
+  const isBreaking = data.urgency === 'breaking'
+  const isAlert = data.urgency === 'alert'
 
   return (
-    <div className="flex flex-col gap-1.5 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2 sm:flex-row sm:min-h-10 sm:items-center sm:gap-3 sm:py-1.5 sm:px-4">
+    <div className={`flex flex-col gap-1.5 border-b px-3 py-2 sm:flex-row sm:min-h-10 sm:items-center sm:gap-3 sm:py-1.5 sm:px-4 ${urgency.border} ${urgency.bg} ${isBreaking ? 'animate-pulse' : ''}`}>
 
       {/* LIVE badge + label + session + timestamp */}
       <div className="flex shrink-0 items-center gap-1.5">
-        <div className="flex items-center gap-1 rounded px-1 py-0.5" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)' }}>
-          <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-red-400">LIVE</span>
+        <div
+          className="flex items-center gap-1 rounded px-1 py-0.5"
+          style={{
+            background: `${urgency.dotColor}1F`,
+            border: `1px solid ${urgency.dotColor}40`,
+          }}
+        >
+          <span className="live-dot h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: urgency.dotColor }} />
+          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.12em]" style={{ color: urgency.dotColor }}>
+            {urgency.label}
+          </span>
         </div>
         <span className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--text-muted)]">
           AI BRIEF

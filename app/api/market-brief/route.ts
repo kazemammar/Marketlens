@@ -7,10 +7,10 @@ import type { HomepageData } from '@/lib/api/homepage'
 import { HOMEPAGE_CACHE_KEY } from '@/lib/api/homepage'
 import { cacheHeaders } from '@/lib/utils/cache-headers'
 
-const EDGE_HEADERS = cacheHeaders(300)
+const EDGE_HEADERS = cacheHeaders(180)
 
 const CACHE_KEY = 'market-brief:daily'
-const CACHE_TTL = 3600 // 60 minutes — hourly brief
+const CACHE_TTL = 1800 // 30 minutes — half-hourly brief
 const RISK_KEY  = 'market-risk:v6'
 
 const BREAKING_KEYWORDS = [
@@ -124,7 +124,8 @@ Rules:
 - confidence: "low" if <5 headlines, "medium" for 5-12, "high" for 12+
 - looking_ahead must reference SPECIFIC upcoming events (earnings, data releases, Fed speakers)
 - Be opinionated — notes without a directional view are useless
-- Traders scan in 10 seconds — lead with what matters most`
+- Traders scan in 10 seconds — lead with what matters most
+- NEVER use markdown formatting (no **, no *, no #, no backticks) — output plain text only`
 }
 
 // ─── Route handler ──────────────────────────────────────────────────────
@@ -214,7 +215,7 @@ export async function GET(req: Request) {
         { role: 'system', content: systemPrompt },
         { role: 'user',   content: userMessage },
       ],
-      temperature:     0.3,
+      temperature:     0.2,
       max_tokens:      1100,
       response_format: { type: 'json_object' },
     })
@@ -223,23 +224,25 @@ export async function GET(req: Request) {
     let parsed: Record<string, unknown>
     try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
+    const strip = (s: string) => s.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1').replace(/`([^`]+)`/g, '$1')
+
     const payload: MarketBriefPayload = {
       // v2 narrative fields
-      narrative:       typeof parsed.narrative === 'string' ? parsed.narrative : undefined,
+      narrative:       typeof parsed.narrative === 'string' ? strip(parsed.narrative) : undefined,
       delta:           Array.isArray(parsed.delta) ? (parsed.delta as string[]).slice(0, 4) : undefined,
       session,
-      session_context: typeof parsed.session_context === 'string' ? parsed.session_context : undefined,
-      looking_ahead:   typeof parsed.looking_ahead === 'string' ? parsed.looking_ahead : undefined,
+      session_context: typeof parsed.session_context === 'string' ? strip(parsed.session_context) : undefined,
+      looking_ahead:   typeof parsed.looking_ahead === 'string' ? strip(parsed.looking_ahead) : undefined,
       confidence:      (['high', 'medium', 'low'] as const).includes(parsed.confidence as 'high') ? parsed.confidence as 'high' | 'medium' | 'low' : undefined,
       // Structured fields
-      overnight:      typeof parsed.overnight === 'string' ? parsed.overnight : undefined,
-      macro:          typeof parsed.macro === 'string' ? parsed.macro : undefined,
-      sectors:        typeof parsed.sectors === 'string' ? parsed.sectors : undefined,
+      overnight:      typeof parsed.overnight === 'string' ? strip(parsed.overnight) : undefined,
+      macro:          typeof parsed.macro === 'string' ? strip(parsed.macro) : undefined,
+      sectors:        typeof parsed.sectors === 'string' ? strip(parsed.sectors) : undefined,
       watchlist:      Array.isArray(parsed.watchlist) ? (parsed.watchlist as Array<{ symbol: string; type: string; direction: 'up' | 'down' | 'volatile'; reason: string }>).slice(0, 5) : undefined,
       // Backward compat
-      brief:          typeof parsed.brief === 'string' ? parsed.brief : 'Market analysis unavailable.',
-      risks:          Array.isArray(parsed.risks) ? (parsed.risks as string[]).slice(0, 4) : [],
-      opportunities:  Array.isArray(parsed.opportunities) ? (parsed.opportunities as string[]).slice(0, 3) : [],
+      brief:          typeof parsed.brief === 'string' ? strip(parsed.brief) : 'Market analysis unavailable.',
+      risks:          Array.isArray(parsed.risks) ? (parsed.risks as string[]).slice(0, 4).map(strip) : [],
+      opportunities:  Array.isArray(parsed.opportunities) ? (parsed.opportunities as string[]).slice(0, 3).map(strip) : [],
       affectedAssets: Array.isArray(parsed.watchlist)
         ? (parsed.watchlist as Array<{ symbol: string; type: string; direction: string }>).slice(0, 6).map((w) => ({
             symbol: w.symbol, type: w.type as AffectedAsset['type'], direction: w.direction as AffectedAsset['direction'],

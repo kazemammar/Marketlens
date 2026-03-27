@@ -43,33 +43,35 @@ export default async function CommoditiesPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="mx-auto max-w-screen-xl px-3 sm:px-4 py-4">
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+        {/* Page header — NOT in a card */}
+        <div className="mb-6 space-y-4">
+          <div>
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
+              Commodities
+            </h1>
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+              Real-time commodity prices — gold, silver, crude oil, natural gas, and more
+            </p>
+          </div>
+          <GlobalSearch placeholder="Search commodities, e.g. Gold, Oil..." className="w-full max-w-lg" />
+        </div>
+
+        {/* OilEnergyPanel — has its own card styling internally */}
+        <div className="mb-1.5">
+          <OilEnergyPanel />
+        </div>
+
+        {/* Asset grid — wrapped in its own card */}
+        <div className="overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
             <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
               <rect x="3" y="6" width="4" height="8" rx="0.5" stroke="currentColor" strokeWidth="1.3" />
               <rect x="9" y="2" width="4" height="12" rx="0.5" stroke="currentColor" strokeWidth="1.3" />
             </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-              Commodities
-            </span>
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Commodity Prices</span>
             <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           </div>
           <div className="p-3">
-            {/* Search */}
-            <div className="mb-4">
-              <GlobalSearch
-                placeholder="Search commodities, e.g. Gold, Oil..."
-                className="w-full max-w-lg"
-              />
-            </div>
-
-            {/* EIA Energy Intelligence */}
-            <div className="mb-4">
-              <OilEnergyPanel />
-            </div>
-
-            {/* Grid */}
             {assets.length > 0 ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {assets.map((asset) => (

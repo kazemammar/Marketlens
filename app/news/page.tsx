@@ -190,21 +190,26 @@ export default function NewsPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <main className="mx-auto max-w-screen-xl px-3 sm:px-4 py-4">
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          {/* Card header */}
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+        {/* Page header */}
+        <div className="mb-6 space-y-4">
+          <div>
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">Market News</h1>
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">Clustered headlines across all asset classes</p>
+          </div>
+        </div>
+
+        {/* Latest Stories card */}
+        <div className="overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
             <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
               <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.4"/>
               <path d="M4 5h8M4 8h5M4 11h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-              Market News
+              Latest Stories
             </span>
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           </div>
-
-          {/* Card body */}
           <div className="p-3">
             {/* Category tabs */}
             <div className="mb-6 flex items-center gap-1 overflow-x-auto border-b border-[var(--border)]">

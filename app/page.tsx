@@ -284,8 +284,8 @@ export default async function HomePage({
 
       {/* ══ MARKET OVERVIEW ══════════════════════════════════════════════ */}
       <div id="market-overview" className="px-3 sm:px-4 py-2">
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+        <div className="overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
             <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
               <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>

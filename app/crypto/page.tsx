@@ -32,38 +32,33 @@ export default async function CryptoPage() {
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
 
-        {/* Card wrapper */}
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          {/* Card header */}
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+        {/* Page header — NOT in a card */}
+        <div className="mb-6 space-y-4">
+          <div>
+            <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
+              Crypto Market
+            </h1>
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+              Real-time prices and analysis for top cryptocurrencies by market cap
+            </p>
+          </div>
+          <GlobalSearch placeholder="Search crypto by name or symbol..." className="w-full max-w-lg" />
+        </div>
+
+        {/* Intel panels — stablecoin peg monitor + BTC ETF flows */}
+        <CryptoIntelPanels />
+
+        {/* Crypto Grid — wrap in its own card */}
+        <div className="mt-4 overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
             <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
               <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2"/>
               <path d="M9.5 4.5H7.2c-.7 0-1.2.5-1.2 1.2s.5 1.2 1.2 1.2h1.6c.7 0 1.2.5 1.2 1.2s-.5 1.2-1.2 1.2H6.5M8 3.5v1M8 11.5v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
             </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-              Crypto Market
-            </span>
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">Top Cryptocurrencies</span>
             <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
           </div>
-
-          {/* Card body */}
           <div className="p-3">
-            {/* Search */}
-            <div className="mb-6 space-y-4">
-              <p className="font-mono text-[10px] text-[var(--text-muted)]">
-                Real-time prices and analysis for top cryptocurrencies by market cap
-              </p>
-              <GlobalSearch
-                placeholder="Search crypto by name or symbol..."
-                className="w-full max-w-lg"
-              />
-            </div>
-
-            {/* Intel panels — stablecoin peg monitor + BTC ETF flows */}
-            <CryptoIntelPanels />
-
-            {/* Grid */}
             {assets.length > 0 ? (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {assets.map((asset) => (

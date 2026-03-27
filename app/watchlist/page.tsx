@@ -120,35 +120,29 @@ export default function WatchlistPage() {
     return (
       <div className="min-h-screen bg-[var(--bg)]">
         <div className="mx-auto max-w-screen-xl px-3 py-4 sm:px-4">
-          <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-            <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-              <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-                <path d="M8 1.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12l-4.2 2.5.8-4.7L1.2 6.5l4.7-.7z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
-              </svg>
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-                Watchlist
-              </span>
-              <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-              <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+          {/* Page header */}
+          <div className="mb-6 space-y-4">
+            <div>
+              <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">My Watchlist</h1>
+              <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">Track your favorite assets in one place</p>
             </div>
-            <div className="p-3">
-              <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
-                <p className="text-3xl">🔒</p>
-                <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
-                  Sign in to see your watchlist
-                </p>
-                <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
-                  Create a free account to save assets and track them here.
-                </p>
-                <button
-                  onClick={() => setModalOpen(true)}
-                  className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-[var(--text)] transition hover:opacity-90"
-                  style={{ background: 'var(--accent)' }}
-                >
-                  Sign In / Create Account
-                </button>
-              </div>
-            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-center rounded border border-dashed border-[var(--border)] py-20 text-center">
+            <p className="text-3xl">🔒</p>
+            <p className="mt-4 font-mono text-[14px] font-medium text-[var(--text)]">
+              Sign in to see your watchlist
+            </p>
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+              Create a free account to save assets and track them here.
+            </p>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="mt-6 rounded px-5 py-2.5 font-mono text-[12px] font-semibold text-[var(--text)] transition hover:opacity-90"
+              style={{ background: 'var(--accent)' }}
+            >
+              Sign In / Create Account
+            </button>
           </div>
         </div>
         <AuthModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
@@ -161,21 +155,15 @@ export default function WatchlistPage() {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <div className="mx-auto max-w-screen-xl px-3 py-4 sm:px-4">
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-              <path d="M8 1.5l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12l-4.2 2.5.8-4.7L1.2 6.5l4.7-.7z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" fill="none" />
-            </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-              Watchlist
-            </span>
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-            {user && (
-              <span className="font-mono text-[9px] text-[var(--text-muted)]">
-                {items.length} asset{items.length !== 1 ? 's' : ''}
-              </span>
-            )}
+        {/* Page header */}
+        <div className="mb-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">My Watchlist</h1>
+              <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+                {user ? `${items.length} asset${items.length !== 1 ? 's' : ''} tracked` : 'Track your favorite assets in one place'}
+              </p>
+            </div>
             {items.length > 0 && (
               <Link
                 href="/stocks"
@@ -185,41 +173,40 @@ export default function WatchlistPage() {
               </Link>
             )}
           </div>
-          <div className="p-3">
-            {/* Loading skeleton */}
-            {isLoading && (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="h-3.5 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
-                        <div className="h-3 w-24 animate-pulse rounded bg-[var(--surface-2)]" />
-                      </div>
-                      <div className="h-8 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
-                    </div>
-                    <div className="h-5 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Content */}
-            {!isLoading && items.length === 0 && <EmptyWatchlist />}
-
-            {!isLoading && items.length > 0 && (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                {items.map((item) => (
-                  <WatchlistCard
-                    key={`${item.asset_type}-${item.symbol}`}
-                    item={item}
-                    onRemove={removeFromWatchlist}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
         </div>
+
+        {/* Loading skeleton */}
+        {isLoading && (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="h-3.5 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
+                    <div className="h-3 w-24 animate-pulse rounded bg-[var(--surface-2)]" />
+                  </div>
+                  <div className="h-8 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+                </div>
+                <div className="h-5 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Content */}
+        {!isLoading && items.length === 0 && <EmptyWatchlist />}
+
+        {!isLoading && items.length > 0 && (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {items.map((item) => (
+              <WatchlistCard
+                key={`${item.asset_type}-${item.symbol}`}
+                item={item}
+                onRemove={removeFromWatchlist}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

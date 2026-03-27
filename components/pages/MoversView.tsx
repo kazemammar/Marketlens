@@ -283,91 +283,98 @@ export default function MoversView() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <div className="mx-auto max-w-screen-xl px-3 sm:px-4 py-4">
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          {/* Card header */}
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-              <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-              Top Movers
-            </span>
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-            <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
-              {!loading && `${gainers.length + losers.length} tracked`}
-              {generatedAt && ` · Updated ${generatedAt}`}
-            </span>
-            <button
-              onClick={() => fetchData()}
-              disabled={loading}
-              className="ml-1 font-mono text-[8px] text-[var(--accent)] opacity-60 hover:opacity-100 hover:underline disabled:opacity-30"
-            >
-              ↻ Refresh
-            </button>
-          </div>
+      <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6">
 
-          <div className="p-3">
-            {/* Error state */}
-            {error && !data && (
-              <div className="flex items-center justify-center rounded border border-[var(--border)] bg-[var(--surface-2,var(--surface))] px-6 py-12">
-                <div className="text-center">
-                  <svg viewBox="0 0 20 20" fill="none" className="mx-auto mb-3 h-8 w-8 text-[var(--text-muted)] opacity-30" stroke="currentColor" strokeWidth="1.3">
-                    <circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="11"/><circle cx="10" cy="13.5" r="0.8" fill="currentColor"/>
-                  </svg>
-                  <p className="font-mono text-[11px] text-[var(--text-muted)]">Market data temporarily unavailable</p>
-                  <button
-                    onClick={() => fetchData()}
-                    className="mt-3 font-mono text-[10px] text-[var(--accent)] hover:underline"
-                  >
-                    Try again
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Gainers / Losers panel */}
-            {!error && (
-              <>
-                <div className="overflow-hidden rounded border border-[var(--border)]">
-                  {/* Asset type tabs */}
-                  <div className="flex items-center gap-0 overflow-x-auto border-b border-[var(--border)] px-1">
-                    {TABS.map((t) => {
-                      const isActive = t.key === tab
-                      return (
-                      <button
-                        key={t.key}
-                        onClick={() => setTab(t.key)}
-                        className="relative shrink-0 px-3 py-2.5 font-mono text-[10px] font-semibold tracking-[0.06em] transition-colors"
-                        style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}
-                      >
-                        {t.label}
-                        {isActive && (
-                          <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[var(--accent)]" />
-                        )}
-                      </button>
-                      )
-                    })}
-                  </div>
-
-                  {/* Two-column grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--border)]">
-                    <MoverColumn items={gainers} isGainer={true}  showType={showType} loading={loading && !data} />
-                    <MoverColumn items={losers}  isGainer={false} showType={showType} loading={loading && !data} />
-                  </div>
-                </div>
-
-                {/* Disclaimer */}
-                {!loading && (
-                  <p className="px-1 py-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
-                    Stocks: Finnhub · Crypto: CoinGecko · Commodities: Yahoo Finance · All data 15min delayed
-                  </p>
-                )}
-              </>
-            )}
-          </div>
+        {/* Page header */}
+        <div className="mb-6">
+          <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">
+            Top Movers
+          </h1>
+          <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">
+            Biggest gainers and losers across stocks, crypto &amp; commodities
+          </p>
         </div>
+
+        {/* Error state */}
+        {error && !data && (
+          <div className="flex items-center justify-center rounded border border-[var(--border)] bg-[var(--surface)] px-6 py-12">
+            <div className="text-center">
+              <svg viewBox="0 0 20 20" fill="none" className="mx-auto mb-3 h-8 w-8 text-[var(--text-muted)] opacity-30" stroke="currentColor" strokeWidth="1.3">
+                <circle cx="10" cy="10" r="8"/><line x1="10" y1="6" x2="10" y2="11"/><circle cx="10" cy="13.5" r="0.8" fill="currentColor"/>
+              </svg>
+              <p className="font-mono text-[11px] text-[var(--text-muted)]">Market data temporarily unavailable</p>
+              <button
+                onClick={() => fetchData()}
+                className="mt-3 font-mono text-[10px] text-[var(--accent)] hover:underline"
+              >
+                Try again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Gainers / Losers panel */}
+        {!error && (
+          <>
+            <div className="overflow-hidden rounded border border-[var(--border)]">
+              {/* Card header */}
+              <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
+                <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
+                  <polyline points="1,12 5,7 8,9 11,4 15,2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
+                  Top Movers
+                </span>
+                <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
+                <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
+                <span className="font-mono text-[8px] text-[var(--text-muted)] opacity-50">
+                  {!loading && `${gainers.length + losers.length} tracked`}
+                  {generatedAt && ` · Updated ${generatedAt}`}
+                </span>
+                <button
+                  onClick={() => fetchData()}
+                  disabled={loading}
+                  className="ml-1 font-mono text-[8px] text-[var(--accent)] opacity-60 hover:opacity-100 hover:underline disabled:opacity-30"
+                >
+                  ↻ Refresh
+                </button>
+              </div>
+
+              {/* Asset type tabs */}
+              <div className="flex items-center gap-0 overflow-x-auto border-b border-[var(--border)] px-1">
+                {TABS.map((t) => {
+                  const isActive = t.key === tab
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={() => setTab(t.key)}
+                      className="relative shrink-0 px-3 py-2.5 font-mono text-[10px] font-semibold tracking-[0.06em] transition-colors"
+                      style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}
+                    >
+                      {t.label}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-[var(--accent)]" />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Two-column grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[var(--border)]">
+                <MoverColumn items={gainers} isGainer={true}  showType={showType} loading={loading && !data} />
+                <MoverColumn items={losers}  isGainer={false} showType={showType} loading={loading && !data} />
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            {!loading && (
+              <p className="px-1 py-2 font-mono text-[8px] text-[var(--text-muted)] opacity-40">
+                Stocks: Finnhub · Crypto: CoinGecko · Commodities: Yahoo Finance · All data 15min delayed
+              </p>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

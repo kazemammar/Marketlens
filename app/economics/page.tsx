@@ -212,60 +212,52 @@ export default function EconomicsPage() {
   return (
     <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-3 sm:px-4 py-4">
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          {/* Card header */}
-          <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
-            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
-              <path d="M2 14V3a1 1 0 011-1h6l4 4v8a1 1 0 01-1 1H3a1 1 0 01-1-1z" stroke="currentColor" strokeWidth="1.4"/>
-              <path d="M5 9h6M5 12h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-            </svg>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
-              Economics
-            </span>
-            <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
-            {inverted && (
-              <span className="rounded border border-red-500/40 bg-red-500/10 px-2 py-1 font-mono text-[9px] font-bold text-red-400">
-                ⚠ YIELD CURVE INVERTED — RECESSION SIGNAL
-              </span>
-            )}
-            <div className="h-px flex-1 bg-gradient-to-r from-[var(--border)] to-transparent" />
-          </div>
-
-          {/* Card body */}
-          <div className="p-3">
-            {/* Fed Watch */}
-            <div className="mb-5">
-              <FedWatch fedRate={fedRate} />
+        {/* Page header */}
+        <div className="mb-6 space-y-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="font-mono text-[22px] font-bold tracking-tight text-[var(--text)]">Economic Dashboard</h1>
+              {inverted && (
+                <span className="rounded border border-red-500/40 bg-red-500/10 px-2 py-1 font-mono text-[9px] font-bold text-red-400">
+                  ⚠ YIELD CURVE INVERTED — RECESSION SIGNAL
+                </span>
+              )}
             </div>
-
-            {/* Central Bank Policy Rates */}
-            <div className="mb-5">
-              <CentralBankRates />
-            </div>
-
-            {/* Indicators grid */}
-            {loading ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <div className="flex h-full animate-pulse flex-col gap-3 p-4">
-                      <div className="skeleton h-2 w-24 rounded" />
-                      <div className="skeleton h-8 w-20 rounded" />
-                      <div className="skeleton flex-1 rounded" />
-                      <div className="skeleton h-2 w-32 rounded" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {indicators.map((ind) => (
-                  <LargeCard key={ind.id} ind={ind} />
-                ))}
-              </div>
-            )}
+            <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">Key indicators, central bank rates, and macro data</p>
           </div>
         </div>
+
+        {/* Fed Watch */}
+        <div className="mb-5">
+          <FedWatch fedRate={fedRate} />
+        </div>
+
+        {/* Central Bank Policy Rates */}
+        <div className="mb-5">
+          <CentralBankRates />
+        </div>
+
+        {/* Indicators grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
+                <div className="flex h-full animate-pulse flex-col gap-3 p-4">
+                  <div className="skeleton h-2 w-24 rounded" />
+                  <div className="skeleton h-8 w-20 rounded" />
+                  <div className="skeleton flex-1 rounded" />
+                  <div className="skeleton h-2 w-32 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {indicators.map((ind) => (
+              <LargeCard key={ind.id} ind={ind} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -227,8 +227,12 @@ export async function GET(req: NextRequest) {
 // ─── Weekly change computation ────────────────────────────────────────────
 
 const WEEKLY_SYMBOLS = [
+  // Main indices + commodities + crypto + dollar
   'SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'BZ=F', 'SI=F', 'NG=F',
   'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB',
+  // Heatmap stocks (top 15 S&P by weight) — needed for weekly heatmap %
+  'AAPL', 'MSFT', 'NVDA', 'AMZN', 'GOOGL', 'META', 'BRK-B', 'AVGO',
+  'LLY', 'TSLA', 'JPM', 'V', 'UNH', 'XOM', 'WMT',
 ]
 const YAHOO_CHART = 'https://query1.finance.yahoo.com/v8/finance/chart'
 
@@ -302,18 +306,17 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     data[key] = result.status === 'fulfilled' ? result.value : null
   })
 
-  // 2. For weekly/weekend editions, replace daily % with weekly cumulative %
-  if (isWeeklyEdition(edition)) {
+  // 2. For weekly wrap: replace daily % with weekly cumulative % (Mon→Fri)
+  //    For weekend: skip — stock markets are closed, crypto uses live 24h change
+  if (edition === 'weekly') {
     const weeklyChanges = await fetchWeeklyChanges()
     const quotes = data.quotes ?? {}
     for (const [sym, { pct, price }] of Object.entries(weeklyChanges)) {
       if (quotes[sym] && quotes[sym].price > 0) {
-        // Update existing quote with weekly %
         const prevPrice = quotes[sym].price / (1 + pct / 100)
         quotes[sym].changePercent = pct
         quotes[sym].change = quotes[sym].price - prevPrice
       } else {
-        // Create quote from Yahoo weekly data (BTC-USD, DX-Y.NYB may be missing)
         const prevPrice = price / (1 + pct / 100)
         quotes[sym] = {
           price,
@@ -328,6 +331,34 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
       }
     }
     data.quotes = quotes
+
+    // Overlay weekly % onto heatmap stocks (from /api/market?tab=stock)
+    const stocksArr = data.stocks
+      ? (Array.isArray(data.stocks) ? data.stocks : (data.stocks.data ?? data.stocks.stocks ?? []))
+      : []
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const s of stocksArr) {
+      const wc = weeklyChanges[s.symbol] ?? weeklyChanges[s.symbol?.replace('.', '-')]
+      if (wc) s.changePercent = wc.pct
+    }
+
+    // Build weekly movers from Yahoo 5d data instead of daily movers API
+    const MOVER_NAMES: Record<string, string> = {
+      SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones', IWM: 'Russell 2000',
+      'BTC-USD': 'Bitcoin', 'ETH-USD': 'Ethereum', 'SOL-USD': 'Solana',
+      AAPL: 'Apple', MSFT: 'Microsoft', NVDA: 'Nvidia', AMZN: 'Amazon',
+      GOOGL: 'Alphabet', META: 'Meta', 'BRK-B': 'Berkshire', AVGO: 'Broadcom',
+      LLY: 'Eli Lilly', TSLA: 'Tesla', JPM: 'JPMorgan', V: 'Visa',
+      UNH: 'UnitedHealth', XOM: 'Exxon Mobil', WMT: 'Walmart',
+    }
+    const weeklyMovers = Object.entries(weeklyChanges)
+      .filter(([sym]) => !['GC=F', 'BZ=F', 'SI=F', 'NG=F', 'DX-Y.NYB'].includes(sym))
+      .map(([sym, { pct, price }]) => ({ symbol: sym, name: MOVER_NAMES[sym] ?? sym, change: 0, changePercent: pct, price }))
+      .sort((a, b) => b.changePercent - a.changePercent)
+    data.movers = {
+      gainers: weeklyMovers.filter(m => m.changePercent > 0).slice(0, 5),
+      losers:  weeklyMovers.filter(m => m.changePercent < 0).sort((a, b) => a.changePercent - b.changePercent).slice(0, 5),
+    }
   }
 
   // Merge archived articles with live RSS — archive is primary, live fills gaps
@@ -573,14 +604,12 @@ function extractData(raw: Record<string, any>, edition: Edition): ExtractedData 
       return hl && !JUNK_PATTERNS.some(p => p.test(hl))
     })
 
-  // For weekly/weekend editions: sample evenly across days so the full
-  // time window is represented, not just the earliest articles.
-  // For daily editions: sort by source quality (wire services first).
-  const weekly = isWeeklyEdition(edition)
-  const headlineLimit = weekly ? 25 : 15   // more headlines for week-long editions
+  // For weekly wrap: sample evenly across Mon→Fri so no day is overrepresented.
+  // For weekend/daily: sort by source quality (wire services first).
+  const headlineLimit = edition === 'weekly' ? 25 : 15
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let articles: any[]
-  if (weekly && filtered.length > headlineLimit) {
+  if (edition === 'weekly' && filtered.length > headlineLimit) {
     // Group by day, then round-robin pick from each day (newest first within each day)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const byDay = new Map<string, any[]>()
@@ -717,12 +746,15 @@ moved markets, sector rotation patterns, which sectors led/lagged, why winners w
 and losers lost. Frame everything as "Here's what happened and what it means."
 Include a setup for tomorrow.`,
 
-  weekend: `This is the WEEKEND BRIEF posted Monday morning.
-Provide a FULL RECAP of the previous trading week: how each major index performed
-over the entire week, the week's biggest stories and turning points, which sectors
-rotated in/out, the week's top movers. Then preview what to watch THIS WEEK:
-key economic data, earnings season, Fed activity, geopolitical risks.
-Think of this as a comprehensive weekly intelligence report.`,
+  weekend: `This is the WEEKEND BRIEF posted Sunday night / Monday morning.
+Focus EXCLUSIVELY on what happened OVER THE WEEKEND (Saturday & Sunday):
+breaking geopolitical events, weekend policy announcements, crypto moves (the
+only major market open 24/7), oil/energy supply developments, OPEC news,
+central bank weekend statements, and any events that will impact Monday's open.
+Do NOT recap the previous trading week — that was already covered in Friday's
+weekly wrap. Frame everything as: "Here's what happened while markets were
+closed and what it means for Monday."
+Then preview what to watch THIS WEEK: key economic data, earnings, Fed speakers.`,
 
   weekly: `This is the WEEKLY WRAP posted Friday evening.
 Provide a comprehensive WEEK IN REVIEW: how the week started vs how it ended,
@@ -734,9 +766,14 @@ Think of this as closing the chapter on this week.`,
 
 async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefResponse> {
   const weekly = isWeeklyEdition(edition)
-  const middleSlideCount = weekly ? 6 : 5
+  const isWeekend = edition === 'weekend'
+  const middleSlideCount = isWeekend ? 4 : weekly ? 6 : 5
 
-  const quoteLines = ['SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'BZ=F', 'SI=F', 'NG=F', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB']
+  // Weekend: only show crypto + commodities (stock markets closed)
+  const quoteSymbols = isWeekend
+    ? ['BTC-USD', 'ETH-USD', 'SOL-USD', 'GC=F', 'BZ=F']
+    : ['SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'BZ=F', 'SI=F', 'NG=F', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB']
+  const quoteLines = quoteSymbols
     .map(sym => {
       const q = d.quotes[sym]
       if (!q) return null
@@ -768,10 +805,11 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
     .join(', ')
 
   // Pass headlines for Groq to rank by importance (more for weekly editions)
-  // For weekly: include source + date so Groq can assess day-by-day importance
-  const headlineBlock = d.newsArticlesAll.slice(0, weekly ? 25 : 15).map((a, i) => {
+  // For weekly wrap: include source + date so Groq can assess day-by-day importance
+  const isWeeklyWrap = edition === 'weekly'
+  const headlineBlock = d.newsArticlesAll.slice(0, isWeeklyWrap ? 25 : 15).map((a, i) => {
     const dateStr = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-US', { weekday: 'short' }) : ''
-    return weekly && dateStr
+    return isWeeklyWrap && dateStr
       ? `${i + 1}. [${dateStr}] [${a.source}] ${a.headline}`
       : `${i + 1}. ${a.headline}`
   }).join('\n')
@@ -786,7 +824,7 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
     return `${p.question ?? p.title ?? ''} (${pct.toFixed(0)}%)`
   }).join('\n')
 
-  const weekRecapField = weekly
+  const weekRecapField = edition === 'weekly'
     ? `"weekRecap": "<exactly 4 bullet points separated by \\n, each starts with a bold label then colon then details. Example: 'MONDAY: S&P opened flat then sold off 1.5% on tariff fears\\nWEDNESDAY: Oil spiked $8 after Saudi supply cut\\nTHURSDAY: Tech earnings missed, NVDA down 4%\\nFRIDAY: Fear index hit 10, worst since 2022'. Use specific data from above.>",`
     : ''
 
@@ -794,13 +832,13 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
 
 ${EDITION_PROMPTS[edition]}
 
-LIVE MARKET DATA${weekly ? ' (% changes are WEEKLY cumulative, not daily)' : ''}:
+LIVE MARKET DATA${edition === 'weekly' ? ' (% changes are WEEKLY cumulative Mon→Fri, not daily)' : isWeekend ? ' (stock markets CLOSED — only crypto trades 24/7, commodity % is Friday close)' : ''}:
 
 PRICES:
 ${quoteLines}
-
+${isWeekend ? '' : `
 TOP GAINERS: ${gainerLines || 'N/A'}
-TOP LOSERS: ${loserLines || 'N/A'}
+TOP LOSERS: ${loserLines || 'N/A'}`}
 
 CNN FEAR & GREED: ${d.fearGreed ? `${d.fearGreed.score} (${d.fearGreed.rating})` : 'N/A'}
 CRYPTO FEAR & GREED: ${d.cryptoFearGreed ? `${d.cryptoFearGreed.score} (${d.cryptoFearGreed.label})` : 'N/A'}
@@ -825,7 +863,7 @@ ${predictionLines || 'N/A'}
 Respond with valid JSON only — no markdown fences:
 {
   "briefTitle": "<powerful headline, max 10 words, attention-grabbing and specific>",
-  "briefSubtitle": "<max 65 chars, use · separator, e.g. 'S&P -3.2% · Oil $99 · Gold $4524 · Fear: 10' — use human names not ticker symbols, use actual numbers from data>",
+  "briefSubtitle": "<max 65 chars, use · separator, e.g. '${isWeekend ? 'BTC $68k · ETH $3.8k · Oil $85 · Gold $2.4k' : 'S&P -3.2% · Oil $99 · Gold $4524 · Fear: 10'}' — use human names not ticker symbols, use actual numbers from data>",
   "whyMoved": "<exactly 4 bullet points separated by \\n, each starts with a bold label then a colon then details. Example: 'OIL SHOCK: Saudi output cut sent crude to $99, highest in 6 weeks\\nTECH ROUT: NVDA, META, AMZN all dropped 3%+ on earnings fears\\nGOLD RUSH: Safe-haven buying pushed gold above $4500\\nYIELD SPIKE: 10Y treasury hit 4.8%, highest since October'. Use specific numbers.>",
   ${weekRecapField}
   "energyNarrative": "<1 sentence on oil/commodities, max 20 words>",
@@ -849,17 +887,27 @@ HEADLINE CURATION (topHeadlineIndices):
 
 SLIDE SELECTION RULES:
 - ALWAYS start with "cover" and end with "cta"
-- Pick exactly ${middleSlideCount} middle slides from: heatmap, headlines, sentiment, narrative, movers, energy, crypto, forex, sectors, radar, outlook, pulse
+- Pick exactly ${middleSlideCount} middle slides
+${isWeekend
+  ? `- WEEKEND: pick from headlines, crypto, narrative, outlook, radar, sentiment
+- DO NOT include heatmap, movers, scoreboard, sectors, forex, pulse — stock markets are CLOSED, these show stale Friday data
+- ALWAYS include "headlines" and "crypto" — weekend news + the only 24/7 market
+- "narrative" = what happened over the weekend
+- "outlook" = what to watch this week (Monday preview)`
+  : edition === 'weekly'
+  ? `- WEEKLY: pick from heatmap, headlines, sentiment, narrative, movers, energy, crypto, forex, sectors, radar, outlook, pulse
+- ALWAYS include "heatmap" and "headlines" as the first two middle slides
+- ALWAYS include narrative and scoreboard for weekly wraps
+- "heatmap" = S&P 500 treemap with weekly % changes
+- "narrative" = the week-in-review story`
+  : `- DAILY: pick from heatmap, headlines, sentiment, narrative, movers, energy, crypto, forex, sectors, radar, outlook, pulse
+- ALWAYS include "heatmap" and "headlines" as the first two middle slides
+- Pick the slides with the most interesting/dramatic data TODAY — skip boring ones
+- Be opinionated. If crypto barely moved, skip it. If oil spiked 5%, include energy.`}
 - DO NOT include "scoreboard" — the cover already shows key price levels
-- ALWAYS include "heatmap" and "headlines" as the first two middle slides — they are the visual anchors
-- ${weekly ? 'For weekly briefs, ALWAYS include scoreboard and narrative. Pick remaining from the rest.' : 'Pick the slides with the most interesting/dramatic data TODAY — skip boring ones.'}
-- Be opinionated. If crypto barely moved, skip it. If oil spiked 5%, include energy.
-- "heatmap" = S&P 500 treemap heatmap (always include)
-- "headlines" = top news stories with images (always include)
-- "narrative" = the why-things-moved story slide
+- "headlines" = top news stories with images
 - "outlook" = what to watch next (forward-looking)
-- "scoreboard" = the 6-index price grid
-- "pulse" = AI analysis text + headlines
+- "pulse" = AI market vitals dashboard
 
 WRITING RULES:
 - briefTitle: make it scroll-stopping, specific to today (not "Market Recap")
@@ -883,7 +931,7 @@ WRITING RULES:
       { role: 'user',   content: `Generate the ${editionLabels[edition]} brief for ${dateFormatted}.` },
     ],
     temperature:     0.4,
-    max_tokens:      weekly ? 1600 : 1200,
+    max_tokens:      edition === 'weekly' ? 1600 : 1200,
     response_format: { type: 'json_object' },
   })
 
@@ -894,15 +942,29 @@ WRITING RULES:
   // Validate + enforce slide order rules
   let slideOrder = Array.isArray(parsed.slideOrder) ? parsed.slideOrder : []
   slideOrder = slideOrder.filter((s: string) => s !== 'cover' && s !== 'cta' && s !== 'scoreboard')
+
+  // Weekend: block stock-market slides (markets closed, data is stale Friday)
+  const WEEKEND_BLOCKED: string[] = ['heatmap', 'movers', 'sectors', 'forex', 'scoreboard', 'pulse']
+  if (isWeekend) {
+    slideOrder = slideOrder.filter((s: string) => !WEEKEND_BLOCKED.includes(s))
+  }
+
   // Ensure key slides are always included
   const must: SlideType[] = []
-  if (d.heatmapStocks.length > 0) must.push('heatmap' as SlideType)
-  if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
-  // Pulse (Market Vitals dashboard) — always include as a premium summary card
-  must.push('pulse' as SlideType)
-  // For weekly editions, always include narrative, sentiment, and outlook
-  if (weekly) {
-    must.push('narrative' as SlideType, 'sentiment' as SlideType, 'outlook' as SlideType)
+  if (isWeekend) {
+    // Weekend: news + crypto (24/7) + outlook (week ahead) + narrative (weekend events)
+    if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
+    must.push('crypto' as SlideType, 'outlook' as SlideType, 'narrative' as SlideType)
+  } else if (edition === 'weekly') {
+    // Weekly wrap: full market overview
+    if (d.heatmapStocks.length > 0) must.push('heatmap' as SlideType)
+    if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
+    must.push('pulse' as SlideType, 'narrative' as SlideType, 'sentiment' as SlideType, 'outlook' as SlideType)
+  } else {
+    // Daily (morning/close): market data + news
+    if (d.heatmapStocks.length > 0) must.push('heatmap' as SlideType)
+    if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
+    must.push('pulse' as SlideType)
   }
   slideOrder = slideOrder.filter((s: string) => !must.map(String).includes(s))
   slideOrder = [...must, ...slideOrder].slice(0, middleSlideCount) as SlideType[]
@@ -946,7 +1008,9 @@ function buildSlides(
   const builders: Record<SlideType, () => SlideData> = {
     cover: () => {
       // Edition-specific hero data for visual differentiation
-      const heroSyms = edition === 'morning'
+      const heroSyms = edition === 'weekend'
+        ? ['BTC-USD', 'ETH-USD', 'SOL-USD', 'GC=F'] // crypto + gold (only 24/7 markets)
+        : edition === 'morning'
         ? ['SPY', 'QQQ', 'BTC-USD']           // pre-market focus
         : edition === 'close'
         ? ['SPY', 'QQQ', 'DIA', 'IWM']        // full index scorecard
@@ -970,8 +1034,8 @@ function buildSlides(
           radarVerdict: d.radarVerdict?.verdict ?? null,
           riskScore: d.riskLevel?.score ?? null,
           topHeadline: d.newsArticles[0]?.headline ?? d.headlines[0] ?? null,
-          isWeekly: weekly,
-          dateRange: weekly ? getWeekDateRange() : null,
+          isWeekly: edition === 'weekly',
+          dateRange: edition === 'weekly' ? getWeekDateRange() : null,
         },
       }
     },
@@ -1009,12 +1073,14 @@ function buildSlides(
 
     narrative: () => ({
       type: 'narrative',
-      title: weekly
-        ? (edition === 'weekend' ? 'Last Week in Review' : 'The Week That Was')
-        : (edition === 'morning' ? 'Overnight Story' : 'Why Markets Moved'),
-      label: weekly ? 'WEEK NARRATIVE' : 'MARKET NARRATIVE',
+      title: edition === 'weekend' ? 'Weekend Developments'
+        : edition === 'weekly' ? 'The Week That Was'
+        : edition === 'morning' ? 'Overnight Story' : 'Why Markets Moved',
+      label: edition === 'weekend' ? 'WEEKEND EVENTS'
+        : edition === 'weekly' ? 'WEEK NARRATIVE' : 'MARKET NARRATIVE',
       content: {
-        narrative: weekly && groq.weekRecap ? groq.weekRecap : groq.whyMoved,
+        // Weekend uses whyMoved (weekend events), weekly uses weekRecap (Mon→Fri story)
+        narrative: edition === 'weekly' && groq.weekRecap ? groq.weekRecap : groq.whyMoved,
         chokepoints: d.chokepoints.filter(c => c.status !== 'NORMAL'),
       },
     }),

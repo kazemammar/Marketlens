@@ -9,8 +9,8 @@
 // Editions & time windows (all UTC):
 //   morning  — weekday pre-market: yesterday 17:00 → today 14:00
 //   close    — weekday post-market: today 07:00 → today 22:00
-//   weekend  — Monday AM: previous Friday 17:00 → Monday 14:00
-//   weekly   — Friday PM: Monday 07:00 → Friday 22:00
+//   weekend  — Fri night → Mon open: Friday 21:00 → Monday 14:00
+//   weekly   — full trading week: Monday 07:00 → Friday 22:00
 
 import { NextRequest, NextResponse } from 'next/server'
 import { groqChat } from '@/lib/api/groq'
@@ -95,19 +95,25 @@ function editionTimeWindow(edition: Edition): { from: number; to: number } {
       return { from, to }
     }
     case 'weekend': {
-      // Previous Friday 17:00 → Monday 14:00 UTC
+      // Friday 21:00 UTC (after US close) → Monday 14:00 UTC (market open)
+      // Always anchored to the actual Fri→Mon window, not "today"
       const friday = new Date(Date.UTC(y, m, d))
       friday.setUTCDate(d - ((dayOfWeek + 2) % 7))
-      const from = Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate(), 17, 0)
-      const to   = Date.UTC(y, m, d, 14, 0)
+      const monday = new Date(friday)
+      monday.setUTCDate(friday.getUTCDate() + 3)
+      const from = Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate(), 21, 0)
+      const to   = Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate(), 14, 0)
       return { from, to }
     }
     case 'weekly': {
-      // Monday 07:00 → Friday 22:00 UTC
+      // Monday 07:00 UTC → Friday 22:00 UTC (full trading week)
+      // Always anchored to Mon→Fri, not relative to "today"
       const monday = new Date(Date.UTC(y, m, d))
       monday.setUTCDate(d - ((dayOfWeek + 6) % 7))
+      const friday = new Date(monday)
+      friday.setUTCDate(monday.getUTCDate() + 4)
       const from = Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate(), 7, 0)
-      const to   = Date.UTC(y, m, d, 22, 0)
+      const to   = Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate(), 22, 0)
       return { from, to }
     }
   }

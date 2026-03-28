@@ -283,7 +283,7 @@ function SlideFrame({ slide, index, total, date, edition }: {
     setDownloading(true)
     try {
       const { toPng } = await import('html-to-image')
-      const dataUrl = await toPng(slideRef.current, { pixelRatio: 2, backgroundColor: C.bg })
+      const dataUrl = await toPng(slideRef.current, { pixelRatio: 3, backgroundColor: C.bg })
       const link = document.createElement('a')
       link.download = `marketlens-${edition}-${index + 1}-${slide.type}.png`
       link.href = dataUrl
@@ -326,14 +326,29 @@ function SlideFrame({ slide, index, total, date, edition }: {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '10px 20px 0', position: 'relative', zIndex: 1, flexShrink: 0,
         }}>
+          {/* Logo lockup — mark + wordmark + LIVE (matches navbar) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%', background: C.green,
-              display: 'inline-block', boxShadow: `0 0 8px ${C.green}, 0 0 16px ${C.green}40`,
-            }} />
-            <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: C.text3, letterSpacing: '0.18em' }}>
-              MARKETLENS
-            </span>
+            <svg width={18} height={Math.round(18 * 48 / 56)} viewBox="0 0 56 48" fill="#22c55e" style={{ flexShrink: 0 }}>
+              <path d="M28,0 L56,14 L28,28 L0,14 Z" />
+              <path d="M0,22 L28,36 L56,22" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" />
+              <path d="M0,32 L28,46 L56,32" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" opacity="0.4" />
+            </svg>
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+              <span style={{
+                fontFamily: C.sans, fontSize: 12, fontWeight: 700, color: '#F0F0F5',
+                letterSpacing: '-0.3px', whiteSpace: 'nowrap' as const,
+              }}>MarketLens</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: 1.5 }}>
+                <span style={{
+                  width: 3, height: 3, borderRadius: '50%', background: '#22c55e',
+                  display: 'inline-block',
+                }} />
+                <span style={{
+                  fontFamily: C.sans, fontSize: 5.5, fontWeight: 400, color: '#C8C8D0',
+                  letterSpacing: '0.8px', opacity: 0.5,
+                }}>LIVE</span>
+              </div>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: C.mono, fontSize: 9, color: C.text3 }}>{date}</span>

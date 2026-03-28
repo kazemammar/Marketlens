@@ -8,7 +8,7 @@ type Edition = 'morning' | 'close' | 'weekend' | 'weekly'
 type SlideType =
   | 'cover' | 'scoreboard' | 'sentiment' | 'narrative' | 'movers'
   | 'energy' | 'crypto' | 'forex' | 'sectors' | 'radar'
-  | 'outlook' | 'pulse' | 'cta' | 'heatmap' | 'headlines'
+  | 'outlook' | 'pulse' | 'cta' | 'heatmap' | 'headlines' | 'signals'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface SlideData { type: SlideType; title: string; label: string; content: Record<string, any> }
@@ -438,6 +438,7 @@ function SlideContent({ slide, edition }: { slide: SlideData; edition: Edition }
     case 'cover':      return <CoverSlide c={c} title={slide.title} edition={edition} />
     case 'heatmap':    return <HeatmapSlide c={c} />
     case 'headlines':  return <HeadlinesSlide c={c} edition={edition} />
+    case 'signals':    return <SignalsSlide c={c} />
     case 'scoreboard': return <ScoreboardSlide c={c} />
     case 'sentiment':  return <SentimentSlide c={c} />
     case 'narrative':  return <NarrativeSlide c={c} title={slide.title} edition={edition} />
@@ -847,6 +848,96 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
       </div>
 
       <SharePrompt text="SHARE THESE STORIES" color={accent} />
+    </div>
+  )
+}
+
+// ─── SIGNALS — overnight/intraday market-moving alerts ─────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function SignalsSlide({ c }: { c: Record<string, any> }) {
+  const signals: Array<{ text: string; severity: string; category: string; explanation?: { type: string; headline?: string; source?: string } }> = c.signals ?? []
+  const newsHeat: Array<{ region: string; intensity: number; articles: number }> = c.newsHeat ?? []
+
+  const severityColor = (sev: string) =>
+    sev === 'HIGH' ? C.red : sev === 'MED' ? C.amber : C.text3
+
+  const categoryIcon = (cat: string) => {
+    switch (cat) {
+      case 'price': return '◆'
+      case 'geopolitical': return '⚑'
+      case 'macro': return '◉'
+      default: return '●'
+    }
+  }
+
+  const intensityBar = (pct: number) => {
+    const barColor = pct >= 70 ? C.red : pct >= 40 ? C.amber : C.greenMed
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+        <div style={{ flex: 1, height: 4, borderRadius: 2, background: C.surface3 }}>
+          <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', borderRadius: 2, background: barColor }} />
+        </div>
+        <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: barColor, minWidth: 24, textAlign: 'right' as const }}>{pct}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10, justifyContent: 'center' }}>
+      {/* Signals list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {signals.slice(0, 4).map((s, i) => {
+          const sc = severityColor(s.severity)
+          return (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'flex-start', gap: 8,
+              padding: '9px 12px', background: C.surface, borderRadius: 8,
+              border: `1px solid ${C.border}`, borderLeft: `3px solid ${sc}60`,
+            }}>
+              <span style={{ fontFamily: C.mono, fontSize: 11, color: sc, flexShrink: 0, marginTop: 1 }}>
+                {categoryIcon(s.category)}
+              </span>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <span style={{ fontFamily: C.sans, fontSize: 11, fontWeight: 600, color: C.text, lineHeight: 1.35 }}>{s.text}</span>
+                {s.explanation?.headline && (
+                  <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, lineHeight: 1.3 }}>
+                    {s.explanation.source ? `${s.explanation.source}: ` : ''}{s.explanation.headline}
+                  </span>
+                )}
+              </div>
+              <span style={{
+                fontFamily: C.mono, fontSize: 8, fontWeight: 800, color: sc,
+                padding: '2px 6px', borderRadius: 4, background: `${sc}14`, flexShrink: 0,
+              }}>{s.severity}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* News heat by region */}
+      {newsHeat.length > 0 && (
+        <div style={{
+          padding: '10px 12px', background: C.surface, borderRadius: 8,
+          border: `1px solid ${C.border}`,
+        }}>
+          <span style={{
+            fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: C.text3,
+            letterSpacing: '0.1em', marginBottom: 8, display: 'block',
+          }}>NEWS HEAT BY REGION</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {newsHeat.slice(0, 3).map((h, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{
+                  fontFamily: C.mono, fontSize: 10, fontWeight: 600, color: C.text2,
+                  minWidth: 70,
+                }}>{h.region}</span>
+                {intensityBar(h.intensity)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

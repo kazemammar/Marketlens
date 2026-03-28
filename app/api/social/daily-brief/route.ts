@@ -6,11 +6,11 @@
 // sorted set (news:archive). Each edition pulls from a specific time
 // window so important stories are never lost to RSS rotation.
 //
-// Editions & time windows (all UTC):
-//   morning  — weekday pre-market: yesterday 17:00 → today 14:00
-//   close    — weekday post-market: today 07:00 → today 22:00
-//   weekend  — Fri night → Mon open: Friday 21:00 → Monday 14:00
-//   weekly   — full trading week: Monday 07:00 → Friday 22:00
+// Editions & time windows (all UTC, MECE — no overlap between consecutive editions):
+//   morning  — weekday pre-market: yesterday 22:00 → today 14:00
+//   close    — weekday post-market: today 14:00 → today 22:00
+//   weekend  — Sat/Sun only: Saturday 00:00 → Monday 06:00
+//   weekly   — full trading week: Monday 07:00 → Friday 22:00 (standalone recap)
 
 import { NextRequest, NextResponse } from 'next/server'
 import { groqChat } from '@/lib/api/groq'
@@ -25,7 +25,7 @@ type Edition = 'morning' | 'close' | 'weekend' | 'weekly'
 type SlideType =
   | 'cover' | 'scoreboard' | 'sentiment' | 'narrative' | 'movers'
   | 'energy' | 'crypto' | 'forex' | 'sectors' | 'radar'
-  | 'outlook' | 'pulse' | 'cta' | 'heatmap' | 'headlines'
+  | 'outlook' | 'pulse' | 'cta' | 'heatmap' | 'headlines' | 'signals'
 
 interface GroqBriefResponse {
   briefTitle:        string
@@ -83,26 +83,26 @@ function editionTimeWindow(edition: Edition): { from: number; to: number } {
 
   switch (edition) {
     case 'morning': {
-      // Yesterday 17:00 UTC → today 14:00 UTC
-      const from = Date.UTC(y, m, d - 1, 17, 0)
+      // Yesterday 22:00 UTC → today 14:00 UTC (no overlap with previous close)
+      const from = Date.UTC(y, m, d - 1, 22, 0)
       const to   = Date.UTC(y, m, d, 14, 0)
       return { from, to }
     }
     case 'close': {
-      // Today 07:00 UTC → today 22:00 UTC
-      const from = Date.UTC(y, m, d, 7, 0)
+      // Today 14:00 UTC → today 22:00 UTC (no overlap with morning)
+      const from = Date.UTC(y, m, d, 14, 0)
       const to   = Date.UTC(y, m, d, 22, 0)
       return { from, to }
     }
     case 'weekend': {
-      // Friday 21:00 UTC (after US close) → Monday 14:00 UTC (market open)
-      // Always anchored to the actual Fri→Mon window, not "today"
-      const friday = new Date(Date.UTC(y, m, d))
-      friday.setUTCDate(d - ((dayOfWeek + 2) % 7))
-      const monday = new Date(friday)
-      monday.setUTCDate(friday.getUTCDate() + 3)
-      const from = Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate(), 21, 0)
-      const to   = Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate(), 14, 0)
+      // Saturday 00:00 UTC → Monday 06:00 UTC (only true weekend events)
+      // No overlap with Friday close or Monday morning
+      const saturday = new Date(Date.UTC(y, m, d))
+      saturday.setUTCDate(d - ((dayOfWeek + 1) % 7)) // find previous Saturday
+      const monday = new Date(saturday)
+      monday.setUTCDate(saturday.getUTCDate() + 2)
+      const from = Date.UTC(saturday.getUTCFullYear(), saturday.getUTCMonth(), saturday.getUTCDate(), 0, 0)
+      const to   = Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate(), 6, 0)
       return { from, to }
     }
     case 'weekly': {
@@ -170,7 +170,10 @@ async function fetchOgImage(articleUrl: string): Promise<string | null> {
   try {
     const r = await fetch(articleUrl, {
       signal: AbortSignal.timeout(4000),
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MarketLens/1.0)' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
       redirect: 'follow',
     })
     if (!r.ok) return null
@@ -197,6 +200,53 @@ async function fetchOgImage(articleUrl: string): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+/** Dedup headlines: if two headlines share 3+ significant words, keep only the first
+ *  and backfill from the remaining pool so we always have 6. */
+function dedupHeadlines(
+  picked: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>,
+  pool: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>,
+) {
+  const STOP = new Set(['the','a','an','in','on','at','to','for','of','and','or','is','are','was','were','has','have','its','by','as','with','from','after','over','says','said','may','could','will','new','us','uk'])
+  const keyWords = (hl: string) =>
+    hl.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w))
+
+  const result: typeof picked = []
+  const usedHls = new Set<string>()
+
+  for (const a of picked) {
+    const words = keyWords(a.headline)
+    const isDup = result.some(existing => {
+      const ew = keyWords(existing.headline)
+      const overlap = words.filter(w => ew.includes(w)).length
+      return overlap >= 3
+    })
+    if (!isDup) {
+      result.push(a)
+      usedHls.add(a.headline.toLowerCase().trim())
+    }
+  }
+
+  // Backfill from pool if dedup removed entries
+  if (result.length < 6) {
+    for (const a of pool) {
+      if (result.length >= 6) break
+      const hl = a.headline.toLowerCase().trim()
+      if (usedHls.has(hl)) continue
+      const words = keyWords(a.headline)
+      const isDup = result.some(existing => {
+        const ew = keyWords(existing.headline)
+        return words.filter(w => ew.includes(w)).length >= 3
+      })
+      if (!isDup) {
+        result.push(a)
+        usedHls.add(hl)
+      }
+    }
+  }
+
+  return result
 }
 
 // ─── GET handler ────────────────────────────────────────────────────────────
@@ -300,6 +350,8 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     ['earningsCalendar', '/api/earnings-calendar'],
     ['predictions',      '/api/predictions'],
     ['energy',           '/api/energy'],
+    ['signals',          '/api/signals'],
+    ['newsHeat',         '/api/news-heat'],
   ]
 
   // Fetch archived articles from Redis alongside live API calls
@@ -375,6 +427,20 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     const liveArticles = Array.isArray(data.news)
       ? data.news
       : (data.news?.articles ?? data.news?.data ?? [])
+    // Backfill archived articles missing images from the live feed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const liveImageMap = new Map<string, string>(liveArticles.map((a: any) => [
+      (a.headline ?? a.title ?? '').toLowerCase().trim(),
+      a.imageUrl ?? a.image ?? a.thumbnail ?? '',
+    ]).filter(([, img]: [string, string]) => img))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const a of archivedArticles as any[]) {
+      if (!a.imageUrl) {
+        const hl = (a.headline ?? a.title ?? '').toLowerCase().trim()
+        const liveImg = liveImageMap.get(hl)
+        if (liveImg) a.imageUrl = liveImg
+      }
+    }
     // Deduplicate: archive first, then live articles not already in archive
     const seenHeadlines = new Set(archivedArticles.map(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -397,9 +463,11 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
       .map((idx: number) => extracted.newsArticlesAll?.[idx - 1])  // 1-based → 0-based
       .filter(Boolean)
     if (picked.length >= 3) {
+      // Dedup: remove headlines about the same event (same key nouns)
+      const deduped = dedupHeadlines(picked, extracted.newsArticlesAll)
       // Move hero story: prefer an article WITH an image for the hero (first position)
-      const withImg = picked.filter((a: { imageUrl: string | null }) => a.imageUrl)
-      const noImg = picked.filter((a: { imageUrl: string | null }) => !a.imageUrl)
+      const withImg = deduped.filter((a: { imageUrl: string | null }) => a.imageUrl)
+      const noImg = deduped.filter((a: { imageUrl: string | null }) => !a.imageUrl)
       extracted.newsArticles = [...withImg, ...noImg].slice(0, 6)
     }
   }
@@ -458,6 +526,8 @@ interface ExtractedData {
   predictions: any[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   energy: any
+  signals: Array<{ text: string; severity: string; category: string; explanation?: { type: string; headline?: string; source?: string } }>
+  newsHeat: Array<{ region: string; intensity: number; articles: number }>
   newsArticles: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>
   newsArticlesAll: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>
   heatmapStocks: Array<{ symbol: string; name: string; changePercent: number; weight: number }>
@@ -699,6 +769,29 @@ function extractData(raw: Record<string, any>, edition: Edition): ExtractedData 
     : []
   const energy = raw.energy ?? null
 
+  // Signals: top market-moving alerts
+  const signalsRaw = raw.signals
+  const signals = (Array.isArray(signalsRaw) ? signalsRaw : [])
+    .filter((s: { severity?: string }) => s.severity === 'HIGH' || s.severity === 'MED')
+    .slice(0, 5)
+    .map((s: { text?: string; severity?: string; category?: string; explanation?: { type?: string; headline?: string; source?: string } }) => ({
+      text: s.text ?? '',
+      severity: s.severity ?? 'MED',
+      category: s.category ?? 'price',
+      explanation: s.explanation ? { type: s.explanation.type ?? '', headline: s.explanation.headline ?? '', source: s.explanation.source ?? '' } : undefined,
+    }))
+
+  // News heat: geopolitical intensity by region
+  const nhRaw = raw.newsHeat
+  const newsHeat = (Array.isArray(nhRaw) ? nhRaw : (nhRaw?.regions ?? nhRaw?.data ?? []))
+    .filter((h: { intensity?: number }) => (h.intensity ?? 0) > 20)
+    .slice(0, 4)
+    .map((h: { region?: string; name?: string; intensity?: number; articles?: number; count?: number }) => ({
+      region: h.region ?? h.name ?? '',
+      intensity: h.intensity ?? 0,
+      articles: h.articles ?? h.count ?? 0,
+    }))
+
   // Heatmap: top 15 S&P stocks by market-cap weight
   const HEATMAP_WEIGHTS: Record<string, number> = {
     AAPL: 36, MSFT: 31, NVDA: 30, AMZN: 22, GOOGL: 21,
@@ -726,6 +819,7 @@ function extractData(raw: Record<string, any>, edition: Edition): ExtractedData 
     radarVerdict, chokepoints, forexStrength, sectorSentiment, headlines,
     newsArticles, newsArticlesAll, heatmapStocks,
     pulseText, commodities, centralBanks, econEvents, earnings, predictions, energy,
+    signals, newsHeat,
   }
 }
 
@@ -740,47 +834,314 @@ function mapMover(m: any) {
   }
 }
 
+// ─── Data-driven slide scoring ─────────────────────────────────────────────
+// Each slide type gets a 0-100 "interest" score based on how dramatic its
+// current data is. The top N scoring slides win slots in the brief.
+// This replaces the old hardcoded editionSlides map.
+
+interface SlideScore { type: SlideType; score: number; reason: string }
+
+const WEEKEND_BLOCKED = new Set<SlideType>([
+  'heatmap', 'movers', 'sectors', 'forex', 'scoreboard', 'pulse', 'energy',
+])
+
+/** Check whether a slide type has enough data to render */
+function hasSlideData(type: SlideType, d: ExtractedData): boolean {
+  switch (type) {
+    case 'heatmap':    return d.heatmapStocks.length > 0
+    case 'headlines':  return d.newsArticles.length > 0 || d.newsArticlesAll.length > 0
+    case 'signals':    return d.signals.length > 0
+    case 'movers':     return d.gainers.length > 0 || d.losers.length > 0
+    case 'energy':     return d.quotes['BZ=F']?.price > 0
+    case 'crypto':     return d.quotes['BTC-USD']?.price > 0
+    case 'forex':      return d.forexStrength.length > 0
+    case 'sectors':    return d.sectorSentiment.length > 0
+    case 'radar':      return d.radarVerdict != null
+    case 'sentiment':  return d.fearGreed != null
+    case 'outlook':    return true
+    case 'pulse':      return d.quotes['SPY']?.price > 0
+    case 'scoreboard': return Object.keys(d.quotes).length > 2
+    case 'narrative':  return true
+    default:           return false
+  }
+}
+
+const abs = (n: number | null | undefined) => Math.abs(n ?? 0)
+
+/** Score every slide type based on how "interesting" its data is right now */
+function scoreSlides(
+  d: ExtractedData,
+  edition: Edition,
+  groqNarrative: { whyMoved: string; weekRecap: string },
+): SlideType[] {
+  const isWeekend = edition === 'weekend'
+  const isWeekly  = edition === 'weekly'
+  const middleCount = isWeekend ? 4 : isWeekly ? 6 : 5
+
+  const scores: SlideScore[] = []
+  const q = d.quotes
+
+  // Helper: clamp score to a max
+  const s = (type: SlideType, score: number, reason: string) =>
+    scores.push({ type, score: Math.min(score, 100), reason })
+
+  // ── heatmap ──────────────────────────────────────────────────
+  {
+    let sc = 40, why = 'base'
+    const spyAbs = abs(q['SPY']?.changePercent)
+    if (spyAbs > 1.5)      { sc += 30; why = `SPY ${spyAbs.toFixed(1)}%` }
+    else if (spyAbs > 0.8) { sc += 20; why = `SPY ${spyAbs.toFixed(1)}%` }
+    const maxStock = Math.max(...d.heatmapStocks.map(x => abs(x.changePercent)), 0)
+    if (maxStock > 5) { sc += 15; why += `, stock ${maxStock.toFixed(1)}%` }
+    const spread = d.heatmapStocks.length > 1
+      ? Math.max(...d.heatmapStocks.map(x => x.changePercent)) - Math.min(...d.heatmapStocks.map(x => x.changePercent))
+      : 0
+    if (spread > 4) { sc += 10; why += `, spread ${spread.toFixed(1)}` }
+    s('heatmap', sc, why)
+  }
+
+  // ── headlines ────────────────────────────────────────────────
+  {
+    let sc = 70, why = 'base (always relevant)'
+    const imgCount = d.newsArticles.filter(a => a.imageUrl).length
+    if (imgCount >= 4) { sc += 15; why = `${imgCount} articles w/ images` }
+    const hasHighSignalHeadline = d.signals.some(sg =>
+      sg.severity === 'HIGH' && sg.explanation?.headline
+    )
+    if (hasHighSignalHeadline) { sc += 10; why += ' + HIGH signal headline' }
+    s('headlines', sc, why)
+  }
+
+  // ── signals ──────────────────────────────────────────────────
+  {
+    let sc = 15, why = 'base'
+    const high = d.signals.filter(sg => sg.severity === 'HIGH').length
+    const med  = d.signals.filter(sg => sg.severity === 'MED').length
+    sc += Math.min(high, 3) * 20
+    sc += Math.min(med, 3) * 8
+    if (high > 0) why = `${high} HIGH signals`
+    else if (med > 0) why = `${med} MED signals`
+    const hotRegion = d.newsHeat.some(h => h.intensity > 70)
+    if (hotRegion) { sc += 15; why += ' + hot region' }
+    s('signals', sc, why)
+  }
+
+  // ── sentiment ────────────────────────────────────────────────
+  {
+    let sc = 25, why = 'base'
+    const fg = d.fearGreed?.score ?? 50
+    if (fg <= 20 || fg >= 80) { sc += 30; why = `F&G extreme: ${fg}` }
+    else if (fg <= 30 || fg >= 70) { sc += 20; why = `F&G notable: ${fg}` }
+    const fgPrev = d.fearGreed?.previousClose ?? fg
+    if (abs(fg - fgPrev) > 10) { sc += 15; why += `, shift ${Math.abs(fg - fgPrev)}` }
+    if ((d.riskLevel?.score ?? 50) > 70) { sc += 10; why += ', high risk' }
+    const radar = d.radarVerdict?.verdict ?? 'MIXED'
+    if (radar === 'BUY' || radar === 'SELL') { sc += 10; why += `, radar ${radar}` }
+    s('sentiment', sc, why)
+  }
+
+  // ── movers ───────────────────────────────────────────────────
+  {
+    let sc = 30, why = 'base'
+    const topGain = d.gainers[0]?.changePercent ?? 0
+    const topLoss = d.losers[0]?.changePercent ?? 0
+    if (topGain > 8 || topLoss < -8)      { sc += 25; why = `extreme mover ${Math.max(topGain, abs(topLoss)).toFixed(1)}%` }
+    else if (topGain > 5 || topLoss < -5)  { sc += 15; why = `strong mover ${Math.max(topGain, abs(topLoss)).toFixed(1)}%` }
+    const bigGainers = d.gainers.filter(g => g.changePercent > 3).length
+    const bigLosers  = d.losers.filter(l => l.changePercent < -3).length
+    if (bigGainers >= 3 && bigLosers >= 3) { sc += 10; why += ', broad volatility' }
+    s('movers', sc, why)
+  }
+
+  // ── energy ───────────────────────────────────────────────────
+  {
+    let sc = 15, why = 'base'
+    const brentPct = abs(q['BZ=F']?.changePercent)
+    const ngPct    = abs(q['NG=F']?.changePercent)
+    const goldPct  = abs(q['GC=F']?.changePercent)
+    if (brentPct > 3)      { sc += 35; why = `Brent ${brentPct.toFixed(1)}%` }
+    else if (brentPct > 2) { sc += 25; why = `Brent ${brentPct.toFixed(1)}%` }
+    if (ngPct > 4)   { sc += 20; why += `, NatGas ${ngPct.toFixed(1)}%` }
+    if (goldPct > 1.5) { sc += 15; why += `, Gold ${goldPct.toFixed(1)}%` }
+    const activeChokepoints = d.chokepoints.filter(c => c.status !== 'NORMAL').length
+    if (activeChokepoints > 0) { sc += 10; why += `, ${activeChokepoints} chokepoints` }
+    s('energy', sc, why)
+  }
+
+  // ── crypto ───────────────────────────────────────────────────
+  {
+    let sc = 20, why = 'base'
+    const btcPct = abs(q['BTC-USD']?.changePercent)
+    const ethPct = abs(q['ETH-USD']?.changePercent)
+    const solPct = abs(q['SOL-USD']?.changePercent)
+    if (btcPct > 5)      { sc += 35; why = `BTC ${btcPct.toFixed(1)}%` }
+    else if (btcPct > 3) { sc += 25; why = `BTC ${btcPct.toFixed(1)}%` }
+    if (ethPct > 7 || solPct > 7) { sc += 15; why += `, alt ${Math.max(ethPct, solPct).toFixed(1)}%` }
+    const cfg = d.cryptoFearGreed?.score ?? 50
+    if (cfg <= 15 || cfg >= 85)      { sc += 15; why += `, crypto F&G ${cfg}` }
+    else if (cfg <= 25 || cfg >= 75) { sc += 10; why += `, crypto F&G ${cfg}` }
+    if (isWeekend) { sc += 15; why += ' (weekend — only live market)' }
+    s('crypto', sc, why)
+  }
+
+  // ── forex ────────────────────────────────────────────────────
+  {
+    let sc = 15, why = 'base'
+    const dxyPct = abs(q['DX-Y.NYB']?.changePercent)
+    if (dxyPct > 0.8)      { sc += 25; why = `DXY ${dxyPct.toFixed(2)}%` }
+    else if (dxyPct > 0.5) { sc += 15; why = `DXY ${dxyPct.toFixed(2)}%` }
+    const fxScores = d.forexStrength.map(f => f.score)
+    const maxFx = Math.max(...fxScores.map(Math.abs), 0)
+    if (maxFx > 3) { sc += 20; why += `, extreme fx ${maxFx.toFixed(1)}` }
+    const fxSpread = fxScores.length > 1 ? Math.max(...fxScores) - Math.min(...fxScores) : 0
+    if (fxSpread > 5) { sc += 10; why += `, spread ${fxSpread.toFixed(1)}` }
+    s('forex', sc, why)
+  }
+
+  // ── sectors ──────────────────────────────────────────────────
+  {
+    let sc = 15, why = 'base'
+    const secScores = d.sectorSentiment.map(x => x.score)
+    const secSpread = secScores.length > 1 ? Math.max(...secScores) - Math.min(...secScores) : 0
+    if (secSpread > 6) { sc += 25; why = `rotation spread ${secSpread.toFixed(1)}` }
+    const maxSec = Math.max(...secScores.map(Math.abs), 0)
+    if (maxSec > 4) { sc += 15; why += `, extreme sector ${maxSec.toFixed(1)}` }
+    const negCount = secScores.filter(x => x < 0).length
+    if (negCount >= 3) { sc += 10; why += `, ${negCount} sectors negative` }
+    s('sectors', sc, why)
+  }
+
+  // ── radar ────────────────────────────────────────────────────
+  {
+    let sc = 15, why = 'base'
+    const verdict = d.radarVerdict?.verdict ?? 'MIXED'
+    if (verdict === 'BUY' || verdict === 'SELL') { sc += 25; why = `radar ${verdict}` }
+    const signalCount = d.radarVerdict?.signals?.length ?? 0
+    if (signalCount >= 4) { sc += 10; why += `, ${signalCount} signals` }
+    s('radar', sc, why)
+  }
+
+  // ── outlook ──────────────────────────────────────────────────
+  {
+    let sc = 35, why = 'base (forward-looking)'
+    if (d.econEvents.length >= 3)  { sc += 15; why = `${d.econEvents.length} econ events` }
+    if (d.earnings.length >= 3)    { sc += 10; why += `, ${d.earnings.length} earnings` }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const extremePred = d.predictions.some((p: any) => {
+      const prob = p.probability ?? p.yesPrice ?? 0.5
+      const pct = prob > 1 ? prob : prob * 100
+      return pct > 80 || pct < 20
+    })
+    if (extremePred) { sc += 10; why += ', extreme prediction' }
+    if (isWeekend) { sc += 10; why += ' (week ahead)' }
+    s('outlook', sc, why)
+  }
+
+  // ── narrative ────────────────────────────────────────────────
+  {
+    let sc = 30, why = 'base'
+    if (groqNarrative.whyMoved || groqNarrative.weekRecap) { sc += 20; why = 'Groq generated content' }
+    const activeChokepoints = d.chokepoints.filter(c => c.status !== 'NORMAL').length
+    if (activeChokepoints > 0) { sc += 15; why += `, ${activeChokepoints} chokepoints` }
+    // Guarantee for recap editions
+    if (isWeekend || isWeekly) { sc = 100; why = 'guaranteed for recap edition' }
+    s('narrative', sc, why)
+  }
+
+  // ── pulse ────────────────────────────────────────────────────
+  {
+    let sc = 20, why = 'base'
+    const spyPct = q['SPY']?.changePercent ?? 0
+    const btcPct = q['BTC-USD']?.changePercent ?? 0
+    const riskAvg = (spyPct + btcPct) / 2
+    if (abs(riskAvg) > 1.5) { sc += 15; why = `risk bias ${riskAvg.toFixed(1)}` }
+    if (abs(spyPct) > 1 && abs(btcPct) > 1 && Math.sign(spyPct) === Math.sign(btcPct)) {
+      sc += 10; why += ', correlated move'
+    }
+    s('pulse', sc, why)
+  }
+
+  // ── scoreboard ───────────────────────────────────────────────
+  {
+    let sc = 20, why = 'base'
+    const bigMoves = ['SPY','QQQ','DIA','IWM','BTC-USD','GC=F','BZ=F','DX-Y.NYB']
+      .filter(sym => abs(q[sym]?.changePercent) > 1).length
+    if (bigMoves >= 4) { sc += 15; why = `${bigMoves}/8 moved >1%` }
+    s('scoreboard', sc, why)
+  }
+
+  // ── Filter, rank, select ─────────────────────────────────────
+
+  const eligible = scores
+    .filter(x => x.score > 0)
+    .filter(x => !(isWeekend && WEEKEND_BLOCKED.has(x.type)))
+    .filter(x => hasSlideData(x.type, d))
+    .sort((a, b) => b.score - a.score)
+
+  const selected = eligible.slice(0, middleCount)
+
+  // Guarantee headlines (always included if we have news)
+  if (!selected.find(x => x.type === 'headlines')) {
+    const headlineEntry = eligible.find(x => x.type === 'headlines')
+    if (headlineEntry && selected.length > 0) {
+      selected[selected.length - 1] = headlineEntry
+    }
+  }
+
+  // Guarantee narrative for recap editions
+  if ((isWeekend || isWeekly) && !selected.find(x => x.type === 'narrative')) {
+    const narrativeEntry = eligible.find(x => x.type === 'narrative')
+    if (narrativeEntry) {
+      const replaceIdx = [...selected].reverse().findIndex(x => x.type !== 'headlines')
+      if (replaceIdx >= 0) selected[selected.length - 1 - replaceIdx] = narrativeEntry
+    }
+  }
+
+  // Sort by score descending — most dramatic slide is first after cover
+  selected.sort((a, b) => b.score - a.score)
+
+  // Log for debugging
+  console.log('[daily-brief] slide scores:', selected.map(x => `${x.type}:${x.score} (${x.reason})`).join(', '))
+
+  return selected.map(x => x.type)
+}
+
 // ─── Groq call ──────────────────────────────────────────────────────────────
 
 const EDITION_PROMPTS: Record<Edition, string> = {
-  morning: `This is the MORNING PRE-MARKET brief.
+  morning: `MORNING PRE-MARKET brief.
 Focus on: what happened overnight (Asia/Europe sessions), pre-market futures,
-what to watch TODAY (earnings reports, economic data releases, Fed speakers,
-geopolitical developments). Set the tone for the trading day ahead.
-Frame everything as forward-looking: "Here's what you need to know before the bell."`,
+what to watch TODAY (earnings, econ data, Fed speakers, geopolitics).
+Frame: "Here's what you need to know before the bell."
+The PREVIOUS closing brief already covered yesterday's session — do NOT repeat yesterday's stock moves.`,
 
-  close: `This is the EVENING POST-MARKET brief.
-Focus on: how today actually played out vs expectations, the dominant story that
-moved markets, sector rotation patterns, which sectors led/lagged, why winners won
-and losers lost. Frame everything as "Here's what happened and what it means."
-Include a setup for tomorrow.`,
+  close: `EVENING POST-MARKET brief.
+Focus on: how today actually played out, the dominant story, sector rotation,
+winners/losers, and what it means.
+Frame: "Here's what happened and what it means."
+The MORNING brief already covered overnight + pre-market setup — focus on the SESSION itself.`,
 
-  weekend: `This is the WEEKEND BRIEF posted Sunday night / Monday morning.
-Focus EXCLUSIVELY on what happened OVER THE WEEKEND (Saturday & Sunday):
-breaking geopolitical events, weekend policy announcements, crypto moves (the
-only major market open 24/7), oil/energy supply developments, OPEC news,
-central bank weekend statements, and any events that will impact Monday's open.
-Do NOT recap the previous trading week — that was already covered in Friday's
-weekly wrap. Frame everything as: "Here's what happened while markets were
-closed and what it means for Monday."
-Then preview what to watch THIS WEEK: key economic data, earnings, Fed speakers.`,
+  weekend: `WEEKEND BRIEF for Monday morning.
+Focus ONLY on Saturday/Sunday events: geopolitical breaking news, weekend policy
+announcements, crypto moves (the only live market), and their Monday implications.
+ALL stock, commodity, forex, and bond markets are CLOSED. Do NOT cite any prices
+or percentage moves for closed markets — the Friday closing brief already covered those.
+Only reference crypto prices (BTC, ETH, SOL) as live data.
+Frame: "Here's what happened while markets were closed and what it means for Monday."`,
 
-  weekly: `This is the WEEKLY WRAP posted Friday evening.
-Provide a comprehensive WEEK IN REVIEW: how the week started vs how it ended,
-the narrative arc of the week (what changed from Monday to Friday), cumulative
-weekly performance for major indices, the week's defining moments and surprises.
-Then give a forward look at next week's catalysts and risks.
-Think of this as closing the chapter on this week.`,
+  weekly: `WEEKLY WRAP for Friday evening.
+WEEK IN REVIEW: narrative arc from Monday to Friday, cumulative weekly performance,
+the week's defining moments and surprises. Forward look at next week's catalysts.
+Frame: "Closing the chapter on this week."`,
 }
 
 async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefResponse> {
   const weekly = isWeeklyEdition(edition)
   const isWeekend = edition === 'weekend'
-  const middleSlideCount = isWeekend ? 4 : weekly ? 6 : 5
 
-  // Weekend: only show crypto + commodities (stock markets closed)
+  // Weekend: only crypto (the only markets actually open and moving)
   const quoteSymbols = isWeekend
-    ? ['BTC-USD', 'ETH-USD', 'SOL-USD', 'GC=F', 'BZ=F']
+    ? ['BTC-USD', 'ETH-USD', 'SOL-USD']
     : ['SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'BZ=F', 'SI=F', 'NG=F', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB']
   const quoteLines = quoteSymbols
     .map(sym => {
@@ -834,95 +1195,68 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
   }).join('\n')
 
   const weekRecapField = edition === 'weekly'
-    ? `"weekRecap": "<exactly 4 bullet points separated by \\n, each starts with an ALL-CAPS day label then colon then details — NO markdown, NO asterisks. Example: 'MONDAY: S&P opened flat then sold off 1.5% on tariff fears\\nWEDNESDAY: Oil spiked $8 after Saudi supply cut\\nTHURSDAY: Tech earnings missed, NVDA down 4%\\nFRIDAY: Fear index hit 10, worst since 2022'. Use specific data from above.>",`
+    ? `"weekRecap": "<exactly 4 bullets separated by \\n. Format: DAY_LABEL: what happened — consequence. NO dollar amounts (we inject real prices). NO markdown. Example format: 'MONDAY: Markets opened cautious on tariff fears — S&P fell sharply\\nWEDNESDAY: Brent crude spiked after Saudi supply cut\\nTHURSDAY: Tech earnings disappointed — NVDA and META led selloff\\nFRIDAY: Fear index reached extreme levels, worst reading since 2022'>",`
     : ''
+
+  // Signals summary for Groq context
+  const signalLines = d.signals.slice(0, 5).map(s => s.text).join('\n')
 
   const systemPrompt = `You are a senior financial content strategist creating a market brief for Instagram carousel slides.
 
 ${EDITION_PROMPTS[edition]}
 
-LIVE MARKET DATA${edition === 'weekly' ? ' (% changes are WEEKLY cumulative Mon→Fri, not daily)' : isWeekend ? ' (stock markets CLOSED — only crypto trades 24/7, commodity % is Friday close)' : ''}:
+MARKET DATA${edition === 'weekly' ? ' (% are WEEKLY cumulative Mon→Fri)' : isWeekend ? ' (WEEKEND — only crypto is live)' : ''}:
 
 PRICES:
 ${quoteLines}
 ${isWeekend ? '' : `
-TOP GAINERS: ${gainerLines || 'N/A'}
-TOP LOSERS: ${loserLines || 'N/A'}`}
-
-CNN FEAR & GREED: ${d.fearGreed ? `${d.fearGreed.score} (${d.fearGreed.rating})` : 'N/A'}
+GAINERS: ${gainerLines || 'N/A'}
+LOSERS: ${loserLines || 'N/A'}`}
+${isWeekend ? '' : `
+FEAR & GREED: ${d.fearGreed ? `${d.fearGreed.score} (${d.fearGreed.rating})` : 'N/A'}
+RISK: ${d.riskLevel ? `${d.riskLevel.score} (${d.riskLevel.label})` : 'N/A'}
+RADAR: ${d.radarVerdict ? d.radarVerdict.verdict : 'N/A'}`}
 CRYPTO FEAR & GREED: ${d.cryptoFearGreed ? `${d.cryptoFearGreed.score} (${d.cryptoFearGreed.label})` : 'N/A'}
-RISK LEVEL: ${d.riskLevel ? `${d.riskLevel.score} (${d.riskLevel.label})` : 'N/A'}
-RADAR VERDICT: ${d.radarVerdict ? d.radarVerdict.verdict : 'N/A'}
 
-CHOKEPOINTS:
-${chokepointLines}
-
-FOREX STRENGTH: ${fxLines || 'N/A'}
-SECTOR SENTIMENT: ${sectorLines || 'N/A'}
-MARKET PULSE: ${d.pulseText || 'N/A'}
+CHOKEPOINTS: ${chokepointLines}
+${signalLines ? `\nSIGNALS:\n${signalLines}` : ''}
+${isWeekend ? '' : `FOREX: ${fxLines || 'N/A'}
+SECTORS: ${sectorLines || 'N/A'}`}
 
 HEADLINES:
 ${headlineBlock || 'N/A'}
 
-UPCOMING EARNINGS: ${earningsList || 'None today'}
-
-POLYMARKET:
-${predictionLines || 'N/A'}
+EARNINGS: ${earningsList || 'None'}
+POLYMARKET: ${predictionLines || 'N/A'}
 
 Respond with valid JSON only — no markdown fences:
 {
-  "briefTitle": "<powerful headline, max 10 words, attention-grabbing and specific>",
-  "briefSubtitle": "<max 65 chars, use · separator, e.g. '${isWeekend ? 'BTC $68k · ETH $3.8k · Oil $85 · Gold $2.4k' : 'S&P -3.2% · Oil $99 · Gold $4524 · Fear: 10'}' — use human names not ticker symbols, use actual numbers from data>",
-  "whyMoved": "<exactly 4 bullet points separated by \\n, each starts with an ALL-CAPS label then a colon then details — NO markdown, NO asterisks. Example: 'OIL SHOCK: Saudi output cut sent crude to $99, highest in 6 weeks\\nTECH ROUT: NVDA, META, AMZN all dropped 3%+ on earnings fears\\nGOLD RUSH: Safe-haven buying pushed gold above $4500\\nYIELD SPIKE: 10Y treasury hit 4.8%, highest since October'. Use specific numbers.>",
+  "briefTitle": "<powerful headline, max 10 words, specific to today's events>",
+  "briefSubtitle": "ignored",
+  "whyMoved": "<exactly 4 bullets separated by \\n. Format: ALL_CAPS_TOPIC: what happened — consequence. Each bullet must cover a DIFFERENT theme (no two about the same topic). NO dollar amounts or percentages — we auto-inject real numbers. NO markdown. Just describe events and consequences in plain text.>",
   ${weekRecapField}
-  "energyNarrative": "<1 sentence on oil/commodities, max 20 words>",
-  "cryptoNarrative": "<1 sentence on crypto, max 20 words>",
-  "forexNarrative": "<1 sentence on USD/FX, max 20 words>",
-  "sentimentVerdict": "<1 punchy sentence on what fear/greed means, max 15 words>",
-  "watchItems": ["<item 1: max 12 words>", "<item 2: max 12 words>", "<item 3: max 12 words — the 3 most actionable catalysts, each its own array element>"],
-  "topHeadlineIndices": "<array of exactly 6 numbers — 1-based indices from the HEADLINES list, ranked by macro importance>",
-  "slideOrder": ["cover", "<${middleSlideCount} best middle slides>", "cta"]
+  "energyNarrative": "<1 sentence, max 20 words, NO dollar amounts — describe the move, not the price>",
+  "cryptoNarrative": "<1 sentence, max 20 words, NO dollar amounts>",
+  "forexNarrative": "<1 sentence, max 20 words>",
+  "sentimentVerdict": "<1 punchy sentence, max 15 words>",
+  "watchItems": ["<item 1: max 12 words>", "<item 2>", "<item 3>"],
+  "topHeadlineIndices": [<6 numbers: 1-based indices from HEADLINES, ranked by macro importance>],
+  "slideOrder": ["ignored"]
 }
 
-HEADLINE CURATION (topHeadlineIndices):
-- You MUST analyze each headline and select the 6 most relevant to macro markets, geopolitics, or finance
-- Return exactly 6 1-based indices from the HEADLINES list above, ordered by importance (most important first)
-- The first index = hero story shown largest — pick the single most market-moving headline
-- STRONGLY PREFER: oil/energy supply shocks, central bank decisions, GDP/inflation data, trade wars, sanctions, military conflicts, commodity price moves, major index selloffs, gold/currency moves, major earnings surprises
-- ACCEPTABLE: sector-level analysis, analyst calls on mega-cap stocks, government policy changes, defense contracts
-- ALWAYS SKIP: personal finance advice ("should I buy/ditch/keep..."), insurance questions, retirement planning, "I'm X years old and..." stories, hospital accidents, human interest, lifestyle, celebrity, sports, individual small-cap analysis, ETF comparisons, generic "what analysts say" articles, app/gadget reviews, product roundups, "best of" lists, Holocaust/history stories, medical stories, tech tips, weather personal stories, clickbait
-- If fewer than 6 headlines pass the filter, return only the ones that do — never pad with irrelevant stories
-- DO NOT copy the example — actually read each headline and judge its macro relevance
-
-SLIDE SELECTION RULES:
-- ALWAYS start with "cover" and end with "cta"
-- Pick exactly ${middleSlideCount} middle slides
-${isWeekend
-  ? `- WEEKEND: pick from headlines, crypto, narrative, outlook, radar, sentiment
-- DO NOT include heatmap, movers, scoreboard, sectors, forex, pulse — stock markets are CLOSED, these show stale Friday data
-- ALWAYS include "headlines" and "crypto" — weekend news + the only 24/7 market
-- "narrative" = what happened over the weekend
-- "outlook" = what to watch this week (Monday preview)`
-  : edition === 'weekly'
-  ? `- WEEKLY: pick from heatmap, headlines, sentiment, narrative, movers, energy, crypto, forex, sectors, radar, outlook, pulse
-- ALWAYS include "heatmap" and "headlines" as the first two middle slides
-- ALWAYS include narrative and scoreboard for weekly wraps
-- "heatmap" = S&P 500 treemap with weekly % changes
-- "narrative" = the week-in-review story`
-  : `- DAILY: pick from heatmap, headlines, sentiment, narrative, movers, energy, crypto, forex, sectors, radar, outlook, pulse
-- ALWAYS include "heatmap" and "headlines" as the first two middle slides
-- Pick the slides with the most interesting/dramatic data TODAY — skip boring ones
-- Be opinionated. If crypto barely moved, skip it. If oil spiked 5%, include energy.`}
-- DO NOT include "scoreboard" — the cover already shows key price levels
-- "headlines" = top news stories with images
-- "outlook" = what to watch next (forward-looking)
-- "pulse" = AI market vitals dashboard
+HEADLINE RANKING (topHeadlineIndices):
+- Pick the 6 most macro-relevant headlines. First = hero story (shown largest).
+- PREFER: geopolitics, central banks, GDP/inflation, sanctions, military conflicts, energy shocks, major earnings
+- SKIP: personal finance, insurance, lifestyle, sports, clickbait, "best of" lists, celebrity
+- Each picked headline must cover a DIFFERENT event — never pick 2 headlines about the same story
 
 WRITING RULES:
-- NEVER use markdown formatting (no **, no *, no #, no backticks) — output plain text only
-- briefTitle: make it scroll-stopping, specific to today (not "Market Recap")
-- whyMoved: tell a STORY with cause and effect, name specific events
-- Be direct, opinionated, and use trader language`
+- NO markdown (no **, *, #, backticks) — plain text only
+- NO dollar amounts or percentages in whyMoved/weekRecap/narratives — we inject real numbers automatically
+- Say "Brent crude" not "oil" or "crude" when discussing petroleum
+- briefTitle: scroll-stopping, event-specific (not "Market Recap" or "Weekly Wrap")
+- Each whyMoved bullet must be a DISTINCT theme — if 2 bullets are about the same topic, merge them
+- Be direct, opinionated, trader language`
 
   const dateFormatted = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
@@ -949,45 +1283,72 @@ WRITING RULES:
   let parsed: Partial<GroqBriefResponse>
   try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
-  // Validate + enforce slide order rules
-  let slideOrder = Array.isArray(parsed.slideOrder) ? parsed.slideOrder : []
-  slideOrder = slideOrder.filter((s: string) => s !== 'cover' && s !== 'cta' && s !== 'scoreboard')
+  // ── Data-driven slide selection — scored by how interesting the data is ────
+  const dynamicMiddle = scoreSlides(d, edition, {
+    whyMoved: parsed.whyMoved ?? '',
+    weekRecap: parsed.weekRecap ?? '',
+  })
+  const slideOrder = ['cover' as SlideType, ...dynamicMiddle, 'cta' as SlideType]
 
-  // Weekend: block stock-market slides (markets closed, data is stale Friday)
-  const WEEKEND_BLOCKED: string[] = ['heatmap', 'movers', 'sectors', 'forex', 'scoreboard', 'pulse']
-  if (isWeekend) {
-    slideOrder = slideOrder.filter((s: string) => !WEEKEND_BLOCKED.includes(s))
-  }
+  // Post-process: fix hallucinated prices in Groq text with real data
+  const fixPrices = (text: string): string => {
+    if (!text) return text
 
-  // Ensure key slides are always included
-  const must: SlideType[] = []
-  if (isWeekend) {
-    // Weekend: news + crypto (24/7) + outlook (week ahead) + narrative (weekend events)
-    if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
-    must.push('crypto' as SlideType, 'outlook' as SlideType, 'narrative' as SlideType)
-  } else if (edition === 'weekly') {
-    // Weekly wrap: full market overview
-    if (d.heatmapStocks.length > 0) must.push('heatmap' as SlideType)
-    if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
-    must.push('pulse' as SlideType, 'narrative' as SlideType, 'sentiment' as SlideType, 'outlook' as SlideType)
-  } else {
-    // Daily (morning/close): market data + news
-    if (d.heatmapStocks.length > 0) must.push('heatmap' as SlideType)
-    if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
-    must.push('pulse' as SlideType)
+    const fmtPrice = (p: number) =>
+      p >= 10000 ? `$${(p / 1000).toFixed(1)}k` : p >= 100 ? `$${Math.round(p)}` : `$${p.toFixed(2)}`
+
+    // Map of keywords → real price from quotes (all 12 symbols)
+    const priceMap: Array<[RegExp, number]> = [
+      [/\b(?:Brent|brent|crude|oil)\b[^$]*\$[\d,.]+k?/gi, d.quotes['BZ=F']?.price],
+      [/\bgold\b[^$]*\$[\d,.]+k?/gi, d.quotes['GC=F']?.price],
+      [/\bsilver\b[^$]*\$[\d,.]+k?/gi, d.quotes['SI=F']?.price],
+      [/\b(?:nat(?:ural)?\s*gas|NG)\b[^$]*\$[\d,.]+k?/gi, d.quotes['NG=F']?.price],
+      [/\b(?:BTC|Bitcoin|bitcoin)\b[^$]*\$[\d,.]+k?/gi, d.quotes['BTC-USD']?.price],
+      [/\b(?:ETH|Ethereum|ethereum)\b[^$]*\$[\d,.]+k?/gi, d.quotes['ETH-USD']?.price],
+      [/\b(?:SOL|Solana|solana)\b[^$]*\$[\d,.]+k?/gi, d.quotes['SOL-USD']?.price],
+      [/\b(?:S&P|SPY|S&P\s*500)\b[^$]*\$[\d,.]+k?/gi, d.quotes['SPY']?.price],
+      [/\b(?:QQQ|Nasdaq\s*100)\b[^$]*\$[\d,.]+k?/gi, d.quotes['QQQ']?.price],
+      [/\b(?:DIA|Dow)\b[^$]*\$[\d,.]+k?/gi, d.quotes['DIA']?.price],
+      [/\b(?:IWM|Russell)\b[^$]*\$[\d,.]+k?/gi, d.quotes['IWM']?.price],
+      [/\b(?:DXY|dollar\s*index)\b[^$]*\$[\d,.]+k?/gi, d.quotes['DX-Y.NYB']?.price],
+    ].filter((p): p is [RegExp, number] => p[1] != null && p[1] > 0)
+
+    let fixed = text
+    for (const [pattern, realPrice] of priceMap) {
+      fixed = fixed.replace(pattern, (match) =>
+        match.replace(/\$[\d,.]+k?/i, fmtPrice(realPrice))
+      )
+    }
+
+    // Fix hallucinated percentages — match "SPY fell 3.2%" patterns
+    const pctMap: Array<[RegExp, number]> = [
+      [/\b(?:S&P|SPY)\b[^%]*[\d.]+%/gi, d.quotes['SPY']?.changePercent],
+      [/\b(?:QQQ|Nasdaq)\b[^%]*[\d.]+%/gi, d.quotes['QQQ']?.changePercent],
+      [/\b(?:DIA|Dow)\b[^%]*[\d.]+%/gi, d.quotes['DIA']?.changePercent],
+      [/\b(?:Brent|brent|crude|oil)\b[^%]*[\d.]+%/gi, d.quotes['BZ=F']?.changePercent],
+      [/\b(?:BTC|Bitcoin)\b[^%]*[\d.]+%/gi, d.quotes['BTC-USD']?.changePercent],
+      [/\b(?:ETH|Ethereum)\b[^%]*[\d.]+%/gi, d.quotes['ETH-USD']?.changePercent],
+      [/\bgold\b[^%]*[\d.]+%/gi, d.quotes['GC=F']?.changePercent],
+    ].filter((p): p is [RegExp, number] => p[1] != null)
+
+    for (const [pattern, realPct] of pctMap) {
+      const fmtPct = `${Math.abs(realPct).toFixed(1)}%`
+      fixed = fixed.replace(pattern, (match) =>
+        match.replace(/[\d.]+%/, fmtPct)
+      )
+    }
+
+    return fixed
   }
-  slideOrder = slideOrder.filter((s: string) => !must.map(String).includes(s))
-  slideOrder = [...must, ...slideOrder].slice(0, middleSlideCount) as SlideType[]
-  slideOrder = ['cover' as SlideType, ...slideOrder, 'cta' as SlideType]
 
   return {
     briefTitle:       parsed.briefTitle       ?? 'Market Brief',
     briefSubtitle:    parsed.briefSubtitle    ?? '',
-    whyMoved:         parsed.whyMoved         ?? '',
-    weekRecap:        parsed.weekRecap        ?? '',
-    energyNarrative:  parsed.energyNarrative  ?? '',
-    cryptoNarrative:  parsed.cryptoNarrative  ?? '',
-    forexNarrative:   parsed.forexNarrative   ?? '',
+    whyMoved:         fixPrices(parsed.whyMoved ?? ''),
+    weekRecap:        fixPrices(parsed.weekRecap ?? ''),
+    energyNarrative:  fixPrices(parsed.energyNarrative ?? ''),
+    cryptoNarrative:  fixPrices(parsed.cryptoNarrative ?? ''),
+    forexNarrative:   fixPrices(parsed.forexNarrative ?? ''),
     sentimentVerdict: parsed.sentimentVerdict  ?? '',
     watchItems:       Array.isArray(parsed.watchItems) ? parsed.watchItems.slice(0, 6) : [],
     topHeadlineIndices: Array.isArray(parsed.topHeadlineIndices) ? parsed.topHeadlineIndices : [],
@@ -1019,7 +1380,7 @@ function buildSlides(
     cover: () => {
       // Edition-specific hero data for visual differentiation
       const heroSyms = edition === 'weekend'
-        ? ['BTC-USD', 'ETH-USD', 'SOL-USD', 'GC=F'] // crypto + gold (only 24/7 markets)
+        ? ['BTC-USD', 'ETH-USD', 'SOL-USD'] // crypto only — all other markets closed
         : edition === 'morning'
         ? ['SPY', 'QQQ', 'BTC-USD', 'BZ=F']   // pre-market focus + Brent
         : edition === 'close'
@@ -1030,19 +1391,38 @@ function buildSlides(
         price: d.quotes[sym]?.price ?? 0,
         changePercent: d.quotes[sym]?.changePercent ?? 0,
       }))
+
+      // Build subtitle from REAL data — never let Groq hallucinate prices
+      const fmtSub = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(1)}k` : `$${n.toFixed(0)}`
+      const fmtPct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`
+      const subtitleParts: string[] = []
+      const sq = d.quotes
+      if (edition === 'weekend') {
+        if (sq['BTC-USD']?.price) subtitleParts.push(`BTC ${fmtSub(sq['BTC-USD'].price)}`)
+        if (sq['ETH-USD']?.price) subtitleParts.push(`ETH ${fmtSub(sq['ETH-USD'].price)}`)
+        if (sq['SOL-USD']?.price) subtitleParts.push(`SOL ${fmtSub(sq['SOL-USD'].price)}`)
+      } else {
+        if (sq['SPY']?.changePercent != null) subtitleParts.push(`S&P ${fmtPct(sq['SPY'].changePercent)}`)
+        if (sq['BZ=F']?.price)    subtitleParts.push(`Brent ${fmtSub(sq['BZ=F'].price)}`)
+        if (sq['GC=F']?.price)    subtitleParts.push(`Gold ${fmtSub(sq['GC=F'].price)}`)
+      }
+      if (edition !== 'weekend' && d.fearGreed?.score != null) subtitleParts.push(`Fear: ${d.fearGreed.score}`)
+      const realSubtitle = subtitleParts.join(' · ')
+
       return {
         type: 'cover' as SlideType,
         title: groq.briefTitle,
         label: EDITION_LABELS[edition],
         content: {
-          subtitle: groq.briefSubtitle,
+          subtitle: realSubtitle,
           edition,
           heroQuotes,
-          topGainer: d.gainers[0] ?? null,
-          topLoser: d.losers[0] ?? null,
-          fearGreedScore: d.fearGreed?.score ?? null,
-          radarVerdict: d.radarVerdict?.verdict ?? null,
-          riskScore: d.riskLevel?.score ?? null,
+          topGainer: edition === 'weekend' ? null : (d.gainers[0] ?? null),
+          topLoser: edition === 'weekend' ? null : (d.losers[0] ?? null),
+          // Weekend: all sentiment indicators are stale Friday data — hide them
+          fearGreedScore: edition === 'weekend' ? null : (d.fearGreed?.score ?? null),
+          radarVerdict: edition === 'weekend' ? null : (d.radarVerdict?.verdict ?? null),
+          riskScore: edition === 'weekend' ? null : (d.riskLevel?.score ?? null),
           topHeadline: d.newsArticles[0]?.headline ?? d.headlines[0] ?? null,
           isWeekly: edition === 'weekly',
           dateRange: edition === 'weekly' ? getWeekDateRange() : null,
@@ -1178,6 +1558,16 @@ function buildSlides(
       label: 'TOP STORIES',
       content: {
         articles: d.newsArticles,
+      },
+    }),
+
+    signals: () => ({
+      type: 'signals' as SlideType,
+      title: edition === 'morning' ? 'Overnight Signals' : "Today's Signals",
+      label: 'WHAT MOVED',
+      content: {
+        signals: d.signals.slice(0, 4),
+        newsHeat: d.newsHeat.slice(0, 3),
       },
     }),
 

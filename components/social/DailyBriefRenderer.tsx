@@ -862,7 +862,6 @@ function SentimentSlide({ c }: { c: Record<string, any> }) {
   const circ = 2 * Math.PI * gr       // full circumference
   const half = circ / 2               // dome = half circle
   const zoneLen = half / 5            // 5 equal zones
-  const gap = 3                       // gap between zones
   const activeLen = (score / 100) * half
 
   // Zone colors
@@ -889,8 +888,7 @@ function SentimentSlide({ c }: { c: Record<string, any> }) {
           {zoneColors.map((color, i) => (
             <circle key={i} cx={gcx} cy={gcy} r={gr} fill="none"
               stroke={color} strokeWidth={sw} opacity={0.25}
-              strokeLinecap="round"
-              strokeDasharray={`${zoneLen - gap} ${circ}`}
+              strokeDasharray={`${zoneLen + 0.5} ${circ}`}
               strokeDashoffset={-(i * zoneLen)}
               transform={`rotate(180, ${gcx}, ${gcy})`}
             />

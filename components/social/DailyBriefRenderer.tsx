@@ -160,10 +160,11 @@ export default function DailyBriefRenderer() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  const fetchBrief = useCallback(async (ed: Edition) => {
+  const fetchBrief = useCallback(async (ed: Edition, refresh = false) => {
     setLoading(true); setError(false)
     try {
-      const r = await fetch(`/api/social/daily-brief?edition=${ed}`)
+      const url = `/api/social/daily-brief?edition=${ed}${refresh ? '&refresh=1' : ''}`
+      const r = await fetch(url)
       if (!r.ok) throw new Error('fetch failed')
       setData(await r.json())
     } catch { setError(true) } finally { setLoading(false) }
@@ -214,6 +215,19 @@ export default function DailyBriefRenderer() {
   return (
     <Shell>
       <EditionBar editions={editions} active={edition} onChange={setEdition} />
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+        <button
+          onClick={() => fetchBrief(edition, true)}
+          style={{
+            fontFamily: C.mono, fontSize: 11, fontWeight: 600,
+            padding: '6px 18px', borderRadius: 8,
+            background: 'transparent', color: C.text3,
+            border: `1px solid ${C.border}`, cursor: 'pointer',
+          }}
+        >
+          ↻ Regenerate
+        </button>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
         {data.slides.map((slide, idx) => (
           <SlideFrame key={idx} slide={slide} index={idx} total={total} date={dateStr} edition={data.edition} />
@@ -695,8 +709,19 @@ function HeatmapSlide({ c }: { c: Record<string, any> }) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
-  const articles: Array<{ headline: string; imageUrl: string | null; source: string }> = c.articles ?? []
+  const articles: Array<{ headline: string; imageUrl: string | null; source: string; publishedAt?: number | null }> = c.articles ?? []
   const accent = EDITION_ACCENT[edition]
+
+  const fmtDate = (ts: number | null | undefined) => {
+    if (!ts) return null
+    const d = new Date(ts)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+  const fmtTime = (ts: number | null | undefined) => {
+    if (!ts) return null
+    const d = new Date(ts)
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  }
 
   if (articles.length === 0) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
@@ -746,10 +771,17 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
           background: 'linear-gradient(to top, rgba(7,7,10,0.95) 0%, rgba(7,7,10,0.5) 40%, rgba(7,7,10,0.15) 100%)',
         }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 16px' }}>
-          <span style={{
-            fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: accent,
-            letterSpacing: '0.12em', textTransform: 'uppercase' as const,
-          }}>{hero.source}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{
+              fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: accent,
+              letterSpacing: '0.12em', textTransform: 'uppercase' as const,
+            }}>{hero.source}</span>
+            {hero.publishedAt && (
+              <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3 }}>
+                {fmtDate(hero.publishedAt)} · {fmtTime(hero.publishedAt)}
+              </span>
+            )}
+          </div>
           <h3 style={{
             fontFamily: C.sans, fontSize: 17, fontWeight: 800, color: C.text,
             margin: '4px 0 0', lineHeight: 1.25, letterSpacing: '-0.2px',
@@ -780,7 +812,14 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
               </div>
             )}
             <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-              <span style={{ fontFamily: C.mono, fontSize: 7, color: accent, letterSpacing: '0.08em', fontWeight: 600 }}>{a.source}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ fontFamily: C.mono, fontSize: 7, color: accent, letterSpacing: '0.08em', fontWeight: 600 }}>{a.source}</span>
+                {a.publishedAt && (
+                  <span style={{ fontFamily: C.mono, fontSize: 7, color: C.text3 }}>
+                    {fmtDate(a.publishedAt)} · {fmtTime(a.publishedAt)}
+                  </span>
+                )}
+              </div>
               <p style={{
                 fontFamily: C.sans, fontSize: 11, fontWeight: 600, color: C.text,
                 margin: '2px 0 0', lineHeight: 1.3,
@@ -1012,8 +1051,9 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
   const narrative: string = c.narrative ?? ''
 
   // Split into bullet points — Groq outputs "TOPIC: explanation" lines
+  // Strip markdown bold (**), leading list markers (- * 1.), and stray asterisks
   const bullets = narrative.split(/\n/)
-    .map((b: string) => b.replace(/^[\-\*\d\.]+\s*/, '').trim())
+    .map((b: string) => b.replace(/^[\-\*\d\.]+\s*/, '').replace(/\*\*/g, '').trim())
     .filter((b: string) => b.length > 10)
     .slice(0, 5)
 

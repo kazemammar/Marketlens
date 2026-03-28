@@ -205,15 +205,24 @@ export async function GET(req: NextRequest) {
   const editionParam = req.nextUrl.searchParams.get('edition') as Edition | null
   const edition: Edition = editionParam && VALID_EDITIONS.includes(editionParam)
     ? editionParam : detectEdition()
+  const refresh = req.nextUrl.searchParams.get('refresh') === '1'
   const date = todayStr()
   const cacheKey = `social:daily-brief:${edition}:${date}`
 
   try {
-    const payload = await cachedFetch<DailyBriefPayload>(
-      cacheKey,
-      editionCacheTtl(edition),
-      () => generateBrief(edition, date),
-    )
+    let payload: DailyBriefPayload
+    if (refresh) {
+      // Force fresh generation, bypassing cache
+      payload = await generateBrief(edition, date)
+      // Store the fresh result in cache for subsequent requests
+      await redis.set(cacheKey, payload, { ex: editionCacheTtl(edition) })
+    } else {
+      payload = await cachedFetch<DailyBriefPayload>(
+        cacheKey,
+        editionCacheTtl(edition),
+        () => generateBrief(edition, date),
+      )
+    }
     return NextResponse.json(payload)
   } catch (err) {
     console.error('[daily-brief] generation failed:', err)
@@ -825,7 +834,7 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
   }).join('\n')
 
   const weekRecapField = edition === 'weekly'
-    ? `"weekRecap": "<exactly 4 bullet points separated by \\n, each starts with a bold label then colon then details. Example: 'MONDAY: S&P opened flat then sold off 1.5% on tariff fears\\nWEDNESDAY: Oil spiked $8 after Saudi supply cut\\nTHURSDAY: Tech earnings missed, NVDA down 4%\\nFRIDAY: Fear index hit 10, worst since 2022'. Use specific data from above.>",`
+    ? `"weekRecap": "<exactly 4 bullet points separated by \\n, each starts with an ALL-CAPS day label then colon then details — NO markdown, NO asterisks. Example: 'MONDAY: S&P opened flat then sold off 1.5% on tariff fears\\nWEDNESDAY: Oil spiked $8 after Saudi supply cut\\nTHURSDAY: Tech earnings missed, NVDA down 4%\\nFRIDAY: Fear index hit 10, worst since 2022'. Use specific data from above.>",`
     : ''
 
   const systemPrompt = `You are a senior financial content strategist creating a market brief for Instagram carousel slides.
@@ -864,7 +873,7 @@ Respond with valid JSON only — no markdown fences:
 {
   "briefTitle": "<powerful headline, max 10 words, attention-grabbing and specific>",
   "briefSubtitle": "<max 65 chars, use · separator, e.g. '${isWeekend ? 'BTC $68k · ETH $3.8k · Oil $85 · Gold $2.4k' : 'S&P -3.2% · Oil $99 · Gold $4524 · Fear: 10'}' — use human names not ticker symbols, use actual numbers from data>",
-  "whyMoved": "<exactly 4 bullet points separated by \\n, each starts with a bold label then a colon then details. Example: 'OIL SHOCK: Saudi output cut sent crude to $99, highest in 6 weeks\\nTECH ROUT: NVDA, META, AMZN all dropped 3%+ on earnings fears\\nGOLD RUSH: Safe-haven buying pushed gold above $4500\\nYIELD SPIKE: 10Y treasury hit 4.8%, highest since October'. Use specific numbers.>",
+  "whyMoved": "<exactly 4 bullet points separated by \\n, each starts with an ALL-CAPS label then a colon then details — NO markdown, NO asterisks. Example: 'OIL SHOCK: Saudi output cut sent crude to $99, highest in 6 weeks\\nTECH ROUT: NVDA, META, AMZN all dropped 3%+ on earnings fears\\nGOLD RUSH: Safe-haven buying pushed gold above $4500\\nYIELD SPIKE: 10Y treasury hit 4.8%, highest since October'. Use specific numbers.>",
   ${weekRecapField}
   "energyNarrative": "<1 sentence on oil/commodities, max 20 words>",
   "cryptoNarrative": "<1 sentence on crypto, max 20 words>",
@@ -910,6 +919,7 @@ ${isWeekend
 - "pulse" = AI market vitals dashboard
 
 WRITING RULES:
+- NEVER use markdown formatting (no **, no *, no #, no backticks) — output plain text only
 - briefTitle: make it scroll-stopping, specific to today (not "Market Recap")
 - whyMoved: tell a STORY with cause and effect, name specific events
 - Be direct, opinionated, and use trader language`

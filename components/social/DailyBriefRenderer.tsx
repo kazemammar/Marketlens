@@ -119,20 +119,6 @@ const arrow = (n: number | null | undefined) => (n ?? 0) >= 0 ? '▲' : '▼'
 const glow = (c: string, blur = 20): React.CSSProperties => ({ textShadow: `0 0 ${blur}px ${c}80` })
 const tab: React.CSSProperties = { fontVariantNumeric: 'tabular-nums' }
 
-function gaugeArc(from: number, to: number, cx: number, cy: number, r: number): string {
-  const pt = (v: number) => {
-    const a = Math.PI * (1 - v / 100)
-    return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }
-  }
-  const p1 = pt(from), p2 = pt(to)
-  // For arcs near 180° the sweep-flag=0 is ambiguous and SVG picks the bottom
-  // semicircle. Split into two sub-arcs via the midpoint to stay on the dome.
-  if (to - from >= 90) {
-    const pm = pt((from + to) / 2)
-    return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${r} ${r} 0 0 0 ${pm.x.toFixed(1)} ${pm.y.toFixed(1)} A ${r} ${r} 0 0 0 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
-  }
-  return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${r} ${r} 0 0 0 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
-}
 
 function sparklinePath(values: number[], w: number, h: number, padding = 4): { line: string; area: string } {
   if (values.length < 2) return { line: '', area: '' }
@@ -860,7 +846,7 @@ function ScoreboardSlide({ c }: { c: Record<string, any> }) {
   )
 }
 
-// ─── SENTIMENT — redesigned premium gauge ───────────────────────────────────
+// ─── SENTIMENT — Fear & Greed gauge using stroke-dasharray (no SVG arc flags) ─
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function SentimentSlide({ c }: { c: Record<string, any> }) {
@@ -869,75 +855,75 @@ function SentimentSlide({ c }: { c: Record<string, any> }) {
   const rating = fg?.rating ?? 'Neutral'
   const history: number[] = (fg?.history ?? []).map((h: { score: number }) => h.score)
 
-  // Zone colors
-  const zones = [
-    { from: 0, to: 20, color: '#EF4444', label: 'EXTREME FEAR' },
-    { from: 20, to: 40, color: '#F97316', label: 'FEAR' },
-    { from: 40, to: 60, color: '#6B7280', label: 'NEUTRAL' },
-    { from: 60, to: 80, color: '#34D399', label: 'GREED' },
-    { from: 80, to: 100, color: '#22C55E', label: 'EXTREME GREED' },
-  ]
-
   const sc = score <= 20 ? '#EF4444' : score <= 40 ? '#F97316' : score <= 60 ? '#6B7280' : score <= 80 ? '#34D399' : '#22C55E'
 
-  // Clean gauge geometry — thin arcs, score below
-  const W = 300, gcx = W / 2, gcy = 118, gr = 100
-  const sw = 10 // thin stroke
+  // Gauge geometry — circle-based, avoids SVG arc path bugs
+  const W = 300, gcx = W / 2, gcy = 126, gr = 96, sw = 14
+  const circ = 2 * Math.PI * gr       // full circumference
+  const half = circ / 2               // dome = half circle
+  const zoneLen = half / 5            // 5 equal zones
+  const gap = 3                       // gap between zones
+  const activeLen = (score / 100) * half
 
-  // Needle angle and tip
-  const na = Math.PI * (1 - score / 100)
-  const ntx = gcx + (gr + 2) * Math.cos(na)
-  const nty = gcy - (gr + 2) * Math.sin(na)
+  // Zone colors
+  const zoneColors = ['#EF4444', '#F97316', '#6B7280', '#34D399', '#22C55E']
+
+  // Needle tip — dome goes from 180° (left) through 270° (top) to 360° (right)
+  const na = Math.PI + (score / 100) * Math.PI
+  const ntx = gcx + (gr - 4) * Math.cos(na)
+  const nty = gcy + (gr - 4) * Math.sin(na)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 6, padding: '0' }}>
       {/* SVG Gauge */}
       <div style={{ textAlign: 'center', margin: '0 -4px' }}>
-        <svg width="100%" viewBox={`0 0 ${W} 190`}>
+        <svg width="100%" viewBox={`0 0 ${W} 188`}>
           <defs>
-            <linearGradient id="gaugeGrad" gradientUnits="userSpaceOnUse" x1={gcx - gr} y1={gcy} x2={gcx + gr} y2={gcy}>
-              <stop offset="0%" stopColor="#EF4444" />
-              <stop offset="25%" stopColor="#F97316" />
-              <stop offset="50%" stopColor="#6B7280" />
-              <stop offset="75%" stopColor="#34D399" />
-              <stop offset="100%" stopColor="#22C55E" />
-            </linearGradient>
-            <filter id="needleGlow2">
-              <feGaussianBlur stdDeviation="3" result="b" />
+            <filter id="activeGlow">
+              <feGaussianBlur stdDeviation="4" result="b" />
               <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
           </defs>
 
-          {/* Background track */}
-          <path d={gaugeArc(0, 100, gcx, gcy, gr)} fill="none"
-            stroke="rgba(255,255,255,0.06)" strokeWidth={sw + 6} strokeLinecap="round" />
+          {/* 5 colored zone segments — each is a circle with dasharray */}
+          {zoneColors.map((color, i) => (
+            <circle key={i} cx={gcx} cy={gcy} r={gr} fill="none"
+              stroke={color} strokeWidth={sw} opacity={0.25}
+              strokeLinecap="round"
+              strokeDasharray={`${zoneLen - gap} ${circ}`}
+              strokeDashoffset={-(i * zoneLen)}
+              transform={`rotate(180, ${gcx}, ${gcy})`}
+            />
+          ))}
 
-          {/* Gradient arc — clean colored band */}
-          <path d={gaugeArc(0, 100, gcx, gcy, gr)} fill="none"
-            stroke="url(#gaugeGrad)" strokeWidth={sw} strokeLinecap="round" opacity={0.55} />
-
-          {/* Active arc — bright fill up to score */}
+          {/* Active fill — bright arc from 0 up to score */}
           {score > 1 && (
-            <path d={gaugeArc(0, Math.min(score, 99), gcx, gcy, gr)} fill="none"
-              stroke={sc} strokeWidth={sw + 2} strokeLinecap="round" opacity={0.9} />
+            <circle cx={gcx} cy={gcy} r={gr} fill="none"
+              stroke={sc} strokeWidth={sw + 2} opacity={0.9}
+              strokeLinecap="round"
+              strokeDasharray={`${activeLen} ${circ}`}
+              strokeDashoffset={0}
+              transform={`rotate(180, ${gcx}, ${gcy})`}
+              filter="url(#activeGlow)"
+            />
           )}
 
-          {/* Zone labels along the arc */}
-          <text x={gcx - gr - 14} y={gcy + 6} textAnchor="end" fill="#EF4444"
+          {/* Needle */}
+          <line x1={gcx} y1={gcy} x2={ntx} y2={nty}
+            stroke={C.text} strokeWidth={2.5} strokeLinecap="round" opacity={0.9} />
+          <circle cx={ntx} cy={nty} r={4} fill={sc} />
+          <circle cx={gcx} cy={gcy} r={5} fill={C.surface2} stroke={C.text3} strokeWidth={1.5} />
+
+          {/* 0 and 100 labels at dome endpoints */}
+          <text x={gcx - gr - 12} y={gcy + 5} textAnchor="end" fill="#EF4444"
             style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700 }}>0</text>
-          <text x={gcx + gr + 14} y={gcy + 6} textAnchor="start" fill="#22C55E"
+          <text x={gcx + gr + 12} y={gcy + 5} textAnchor="start" fill="#22C55E"
             style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700 }}>100</text>
 
-          {/* Needle — thin, clean */}
-          <line x1={gcx} y1={gcy} x2={ntx} y2={nty}
-            stroke={C.text} strokeWidth={2.5} strokeLinecap="round" filter="url(#needleGlow2)" />
-          <circle cx={ntx} cy={nty} r={4} fill={sc} />
-          <circle cx={gcx} cy={gcy} r={4} fill={C.surface2} stroke={C.text3} strokeWidth={1.5} />
-
-          {/* Score — big number below gauge */}
-          <text x={gcx} y={gcy + 42} textAnchor="middle" fill={C.text}
+          {/* Score — big number centered inside dome */}
+          <text x={gcx} y={gcy - 26} textAnchor="middle" fill={C.text}
             style={{ fontFamily: C.mono, fontSize: 48, fontWeight: 900 }}>{score}</text>
-          <text x={gcx} y={gcy + 60} textAnchor="middle" fill={sc}
+          <text x={gcx} y={gcy - 8} textAnchor="middle" fill={sc}
             style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em' }}>
             {rating.toUpperCase()}
           </text>
@@ -964,14 +950,13 @@ function SentimentSlide({ c }: { c: Record<string, any> }) {
               </defs>
               <path d={area} fill="url(#fgArea)" />
               <path d={line} fill="none" stroke={lastClr} strokeWidth={2.5} strokeLinecap="round" opacity={0.8} />
-              {/* End dot */}
               <circle cx={500 - 4} cy={50 / 2} r={4} fill={lastClr} opacity={0.9} />
             </svg>
           </div>
         )
       })()}
 
-      {/* Compact stats row — crypto F&G + risk + 1mo change in one strip */}
+      {/* Compact stats row */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '7px 12px', borderRadius: 8, background: C.surface,

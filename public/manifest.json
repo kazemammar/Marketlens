@@ -4,8 +4,8 @@
   "description": "Real-time market intelligence",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0e17",
-  "theme_color": "#0a0e17",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
   "orientation": "portrait-primary",
   "categories": ["finance", "news", "business"],
   "icons": [

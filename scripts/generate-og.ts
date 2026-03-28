@@ -20,21 +20,46 @@ const svgFull = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 48" fil
 </svg>`
 
 // App icon: mark centered on dark background
-const appIcon = (size: number) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" fill="#0a0e17"/>
-  <svg x="${size * 0.18}" y="${size * 0.22}" width="${size * 0.64}" height="${size * 0.56}" viewBox="0 0 56 48" fill="#22c55e">
-    <path d="M28,0 L56,14 L28,28 L0,14 Z"/>
-    <path d="M0,22 L28,36 L56,22" fill="none" stroke="#22c55e" stroke-width="${size < 64 ? '4.5' : '3.5'}" stroke-linejoin="round"/>
-    <path d="M0,32 L28,46 L56,32" fill="none" stroke="#22c55e" stroke-width="${size < 64 ? '4.5' : '3.5'}" stroke-linejoin="round" opacity="0.4"/>
+function appIcon(size: number): string {
+  const isSmall = size < 40
+  const isMedium = size >= 40 && size < 60
+
+  // Mark dimensions — 60% of icon width (59% for tiny), maintain aspect ratio
+  const markW = Math.round(size * (isSmall ? 0.59 : 0.60))
+  const markH = Math.round(markW * (48 / 56))
+
+  // Center the mark
+  const markX = Math.round((size - markW) / 2)
+  const markY = Math.round((size - markH) / 2)
+
+  // Stroke weight varies by size
+  const sw = isSmall ? 5.5 : isMedium ? 4.5 : 3.5
+
+  // Layer paths
+  const layer1 = '<path d="M28,0 L56,14 L28,28 L0,14 Z"/>'
+  const layer2 = isSmall
+    ? `<path d="M0,24 L28,38 L56,24" fill="none" stroke="#22c55e" stroke-width="${sw}" stroke-linejoin="round"/>`
+    : `<path d="M0,22 L28,36 L56,22" fill="none" stroke="#22c55e" stroke-width="${sw}" stroke-linejoin="round"/>`
+  const layer3 = isSmall
+    ? ''
+    : `<path d="M0,32 L28,46 L56,32" fill="none" stroke="#22c55e" stroke-width="${sw}" stroke-linejoin="round" opacity="0.4"/>`
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+  <rect width="${size}" height="${size}" fill="#09090b"/>
+  <svg x="${markX}" y="${markY}" width="${markW}" height="${markH}" viewBox="0 0 56 48" fill="#22c55e">
+    ${layer1}
+    ${layer2}
+    ${layer3}
   </svg>
 </svg>`
+}
 
 // ── OG image 1200×630 ───────────────────────────────────────────────────────
 
 const ogSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0a0e17"/>
+      <stop offset="0%" stop-color="#09090b"/>
       <stop offset="100%" stop-color="#0d1117"/>
     </linearGradient>
   </defs>

@@ -1171,7 +1171,7 @@ export default function GeoMap() {
 
         {/* Loading */}
         {!mapReady && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-[#0a0e17]">
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-[#09090b]">
             <span className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)]" />
             <span className="font-mono text-[10px] tracking-[0.2em] text-white/25">LOADING MAP…</span>
           </div>

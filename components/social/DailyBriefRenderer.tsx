@@ -212,10 +212,36 @@ export default function DailyBriefRenderer() {
   const total = data.slides.length
   const dateStr = new Date(data.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [downloadingAll, setDownloadingAll] = useState(false)
+
+  const handleDownloadAll = useCallback(async () => {
+    if (downloadingAll || !data) return
+    setDownloadingAll(true)
+    try {
+      const { toPng } = await import('html-to-image')
+      for (let i = 0; i < data.slides.length; i++) {
+        const el = slideRefs.current[i]
+        if (!el) continue
+        const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
+        const link = document.createElement('a')
+        link.download = `marketlens-${data.edition}-${i + 1}-${data.slides[i].type}.png`
+        link.href = dataUrl
+        link.click()
+        // Small delay between downloads so browser doesn't block them
+        if (i < data.slides.length - 1) await new Promise(r => setTimeout(r, 300))
+      }
+    } catch (err) {
+      console.error('Download all failed:', err)
+    } finally {
+      setDownloadingAll(false)
+    }
+  }, [downloadingAll, data])
+
   return (
     <Shell>
       <EditionBar editions={editions} active={edition} onChange={setEdition} />
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
         <button
           onClick={() => fetchBrief(edition, true)}
           style={{
@@ -227,10 +253,28 @@ export default function DailyBriefRenderer() {
         >
           ↻ Regenerate
         </button>
+        <button
+          onClick={handleDownloadAll}
+          disabled={downloadingAll}
+          style={{
+            fontFamily: C.mono, fontSize: 11, fontWeight: 600,
+            padding: '6px 18px', borderRadius: 8,
+            background: downloadingAll ? C.surface2 : EDITION_ACCENT[edition],
+            color: downloadingAll ? C.text3 : '#000',
+            border: 'none', cursor: downloadingAll ? 'wait' : 'pointer',
+            opacity: downloadingAll ? 0.6 : 1,
+            transition: 'all 0.2s',
+          }}
+        >
+          {downloadingAll ? `Exporting…` : `↓ Download All (${total})`}
+        </button>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
         {data.slides.map((slide, idx) => (
-          <SlideFrame key={idx} slide={slide} index={idx} total={total} date={dateStr} edition={data.edition} />
+          <SlideFrame
+            key={idx} slide={slide} index={idx} total={total} date={dateStr} edition={data.edition}
+            onRef={(el) => { slideRefs.current[idx] = el }}
+          />
         ))}
       </div>
     </Shell>
@@ -268,13 +312,18 @@ function EditionBar({ editions, active, onChange }: {
 
 // ─── Slide frame with download ──────────────────────────────────────────────
 
-function SlideFrame({ slide, index, total, date, edition }: {
+function SlideFrame({ slide, index, total, date, edition, onRef }: {
   slide: SlideData; index: number; total: number; date: string; edition: Edition
+  onRef?: (el: HTMLDivElement | null) => void
 }) {
   const accent = EDITION_ACCENT[edition]
   const isCover = slide.type === 'cover'
   const isCta = slide.type === 'cta'
   const slideRef = useRef<HTMLDivElement>(null)
+  const setRef = useCallback((el: HTMLDivElement | null) => {
+    (slideRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+    onRef?.(el)
+  }, [onRef])
   const [downloading, setDownloading] = useState(false)
 
   const handleDownload = async (e: React.MouseEvent) => {
@@ -297,7 +346,7 @@ function SlideFrame({ slide, index, total, date, edition }: {
 
   return (
     <div style={{ position: 'relative', width: '100%', maxWidth: 540 }}>
-      <div ref={slideRef} style={{
+      <div ref={setRef} style={{
         width: '100%', aspectRatio: '4/5',
         background: C.bg, borderRadius: 20,
         border: `1px solid ${C.borderMed}`,

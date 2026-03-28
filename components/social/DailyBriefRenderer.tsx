@@ -1692,36 +1692,24 @@ function CtaSlide({ c }: { c: Record<string, any> }) {
       display: 'flex', flexDirection: 'column', height: '100%',
       alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center',
     }}>
-      {/* Exact MarketLensLogo — icon + wordmark + LIVE */}
+      {/* Logo — stacked diamond mark + wordmark + LIVE */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Logo SVG icon */}
-        <svg width={52} height={52} viewBox="0 0 100 100" fill="none">
-          <defs>
-            <filter id="ctaGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="b" />
-              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id="ctaArea" x="-20%" y="-20%" width="140%" height="160%">
-              <feGaussianBlur stdDeviation="5" />
-            </filter>
-          </defs>
-          <rect x="5" y="5" width="90" height="90" rx="18" stroke="#00FF88" strokeWidth="2" fill="none" opacity="0.2" />
-          <line x1="14" y1="78" x2="86" y2="78" stroke="#00FF88" strokeWidth="1" opacity="0.1" />
-          <polygon points="14,68 28,52 40,58 54,28 66,38 78,18 86,24 86,78 14,78" fill="#00FF88" opacity="0.12" filter="url(#ctaArea)" />
-          <polyline points="14,68 28,52 40,58 54,28 66,38 78,18 86,24" stroke="#00FF88" strokeWidth="3" strokeLinejoin="round" fill="none" filter="url(#ctaGlow)" />
+        <svg width={48} height={Math.round(48 * 48 / 56)} viewBox="0 0 56 48" fill="#22c55e">
+          <path d="M28,0 L56,14 L28,28 L0,14 Z" />
+          <path d="M0,22 L28,36 L56,22" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" />
+          <path d="M0,32 L28,46 L56,32" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" opacity="0.4" />
         </svg>
-        {/* Wordmark */}
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
           <span style={{
             fontFamily: C.sans, fontSize: 28, fontWeight: 700, color: '#F0F0F5',
             letterSpacing: '-0.3px', whiteSpace: 'nowrap' as const,
           }}>
-            Market<span style={{ color: '#00FF88', fontWeight: 800 }}>Lens</span>
+            MarketLens
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 3 }}>
             <span style={{
-              width: 5, height: 5, borderRadius: '50%', background: '#00FF88',
-              display: 'inline-block', boxShadow: '0 0 6px #00FF88',
+              width: 5, height: 5, borderRadius: '50%', background: '#22c55e',
+              display: 'inline-block', boxShadow: '0 0 6px #22c55e',
             }} />
             <span style={{
               fontFamily: C.sans, fontSize: 9, fontWeight: 400, color: '#C8C8D0',

@@ -4,15 +4,11 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
       {/* Logo mark */}
-      <div className="mb-6 flex h-16 w-16 items-center justify-center rounded" style={{ background: 'var(--accent)' }}>
-        <svg viewBox="0 0 16 16" fill="none" className="h-9 w-9" aria-hidden>
-          <polyline
-            points="1,12 5,7 8,9 11,4 15,2"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+      <div className="mb-6">
+        <svg width={56} height={48} viewBox="0 0 56 48" fill="#22c55e" aria-hidden>
+          <path d="M28,0 L56,14 L28,28 L0,14 Z" />
+          <path d="M0,22 L28,36 L56,22" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" />
+          <path d="M0,32 L28,46 L56,32" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" opacity="0.4" />
         </svg>
       </div>
 

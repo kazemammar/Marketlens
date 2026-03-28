@@ -48,9 +48,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   icons: {
     icon: [
-      { url: '/marketlens-icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon-32x32.png',   type: 'image/png', sizes: '32x32' },
-      { url: '/favicon-16x16.png',   type: 'image/png', sizes: '16x16' },
+      { url: '/favicon.svg',        type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png',  type: 'image/png', sizes: '32x32' },
+      { url: '/favicon-16x16.png',  type: 'image/png', sizes: '16x16' },
     ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
   },
@@ -61,13 +61,13 @@ export const metadata: Metadata = {
     siteName:    'MarketLens',
     title:       'MarketLens — Live Market Data & AI Analysis',
     description: 'Free real-time financial intelligence. AI-powered market analysis, geopolitical risk mapping, and portfolio analytics.',
-    images: [{ url: '/logo/marketlens-icon-512x512.png', width: 512, height: 512, alt: 'MarketLens' }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'MarketLens' }],
   },
   twitter: {
     card:        'summary',
     title:       'MarketLens — Live Market Data & AI Analysis',
     description: 'Free real-time financial intelligence. AI-powered market analysis, geopolitical risk mapping, and portfolio analytics.',
-    images:      ['/logo/marketlens-icon-512x512.png'],
+    images:      ['/og-image.png'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor:    '#09090b',
+  themeColor:    '#0a0e17',
   width:         'device-width',
   initialScale:  1,
   maximumScale:  5,

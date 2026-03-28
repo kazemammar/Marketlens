@@ -1,17 +1,14 @@
-// MarketLensLogo — Complete logo component
-// Drop this into your codebase and use <MarketLensLogo /> in the navbar
-
-import React from 'react';
+import React from 'react'
 
 interface MarketLensLogoProps {
   /** Icon size in pixels — wordmark scales proportionally */
-  size?: number;
+  size?: number
   /** Show wordmark text or icon only (useful for mobile) */
-  showWordmark?: boolean;
+  showWordmark?: boolean
   /** Optional className for the wrapper */
-  className?: string;
+  className?: string
   /** Link href — defaults to "/" */
-  href?: string;
+  href?: string
 }
 
 const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
@@ -20,11 +17,11 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
   className = '',
   href = '/',
 }) => {
-  // Scale all wordmark dimensions relative to the icon size
-  const fontSize = size * 0.53;
-  const subFontSize = size * 0.18;
-  const dotSize = size * 0.1;
-  const gap = size * 0.25;
+  const fontSize = size * 0.53
+  const subFontSize = size * 0.18
+  const dotSize = size * 0.1
+  const gap = size * 0.25
+  const markHeight = size * (48 / 56)
 
   return (
     <a
@@ -33,7 +30,7 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: gap,
+        gap,
         textDecoration: 'none',
         cursor: 'pointer',
       }}
@@ -41,76 +38,32 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
       {/* ─── ICON ─── */}
       <svg
         width={size}
-        height={size}
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
+        height={markHeight}
+        viewBox="0 0 56 48"
+        fill="#22c55e"
+        aria-label="MarketLens logo"
       >
-        <defs>
-          {/* Glow filter for the chart line */}
-          <filter id="mlLogoGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="b" />
-            <feMerge>
-              <feMergeNode in="b" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          {/* Blur filter for the area fill — makes all edges soft */}
-          <filter id="mlLogoAreaBlur" x="-20%" y="-20%" width="140%" height="160%">
-            <feGaussianBlur stdDeviation="5" />
-          </filter>
-        </defs>
-
-        {/* Rounded rectangle frame */}
-        <rect
-          x="5" y="5" width="90" height="90" rx="18"
-          stroke="#00FF88" strokeWidth="2" fill="none" opacity="0.2"
-        />
-
-        {/* Baseline */}
-        <line
-          x1="14" y1="78" x2="86" y2="78"
-          stroke="#00FF88" strokeWidth="1" opacity="0.1"
-        />
-
-        {/* Area fill — blurred polygon, all edges feathered */}
-        <polygon
-          points="14,68 28,52 40,58 54,28 66,38 78,18 86,24 86,78 14,78"
-          fill="#00FF88"
-          opacity="0.12"
-          filter="url(#mlLogoAreaBlur)"
-        />
-
-        {/* Chart line */}
-        <polyline
-          points="14,68 28,52 40,58 54,28 66,38 78,18 86,24"
-          stroke="#00FF88"
-          strokeWidth="3"
-          strokeLinejoin="round"
-          fill="none"
-          filter="url(#mlLogoGlow)"
-        />
+        <path d="M28,0 L56,14 L28,28 L0,14 Z" />
+        <path d="M0,22 L28,36 L56,22" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" />
+        <path d="M0,32 L28,46 L56,32" fill="none" stroke="#22c55e" strokeWidth="3.5" strokeLinejoin="round" opacity="0.4" />
       </svg>
 
       {/* ─── WORDMARK ─── */}
       {showWordmark && (
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-          {/* MarketLens text */}
           <span
             style={{
               fontFamily: "var(--font-dm-sans), 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-              fontSize: fontSize,
+              fontSize,
               fontWeight: 700,
               color: '#F0F0F5',
               letterSpacing: '-0.3px',
               whiteSpace: 'nowrap',
             }}
           >
-            Market
-            <span style={{ color: '#00FF88', fontWeight: 800 }}>Lens</span>
+            MarketLens
           </span>
 
-          {/* LIVE indicator with pulsating dot */}
           <div
             style={{
               display: 'flex',
@@ -119,7 +72,6 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
               marginTop: size * 0.05,
             }}
           >
-            {/* Pulsating green dot */}
             <span
               style={{
                 position: 'relative',
@@ -128,24 +80,22 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
                 height: dotSize,
               }}
             >
-              {/* Ping animation ring */}
               <span
                 style={{
                   position: 'absolute',
                   inset: 0,
                   borderRadius: '50%',
-                  backgroundColor: '#00FF88',
+                  backgroundColor: '#22c55e',
                   opacity: 0.4,
                   animation: 'mlLogoPulse 2s ease-in-out infinite',
                 }}
               />
-              {/* Solid dot */}
               <span
                 style={{
                   position: 'absolute',
                   inset: 0,
                   borderRadius: '50%',
-                  backgroundColor: '#00FF88',
+                  backgroundColor: '#22c55e',
                   opacity: 0.7,
                 }}
               />
@@ -167,7 +117,6 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
         </div>
       )}
 
-      {/* Keyframe animation for the pulsating dot */}
       <style>{`
         @keyframes mlLogoPulse {
           0%, 100% {
@@ -181,7 +130,7 @@ const MarketLensLogo: React.FC<MarketLensLogoProps> = ({
         }
       `}</style>
     </a>
-  );
-};
+  )
+}
 
-export default MarketLensLogo;
+export default MarketLensLogo

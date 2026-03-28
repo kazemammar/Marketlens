@@ -172,6 +172,28 @@ export default function DailyBriefRenderer() {
     } catch { setError(true) } finally { setLoading(false) }
   }, [])
 
+  const handleDownloadAll = useCallback(async () => {
+    if (downloadingAll || !data) return
+    setDownloadingAll(true)
+    try {
+      const { toPng } = await import('html-to-image')
+      for (let i = 0; i < data.slides.length; i++) {
+        const el = slideRefs.current[i]
+        if (!el) continue
+        const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
+        const link = document.createElement('a')
+        link.download = `marketlens-${data.edition}-${i + 1}-${data.slides[i].type}.png`
+        link.href = dataUrl
+        link.click()
+        if (i < data.slides.length - 1) await new Promise(r => setTimeout(r, 300))
+      }
+    } catch (err) {
+      console.error('Download all failed:', err)
+    } finally {
+      setDownloadingAll(false)
+    }
+  }, [downloadingAll, data])
+
   useEffect(() => { fetchBrief(edition) }, [edition, fetchBrief])
 
   const editions: { key: Edition; label: string }[] = [
@@ -213,29 +235,6 @@ export default function DailyBriefRenderer() {
 
   const total = data.slides.length
   const dateStr = new Date(data.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-
-  const handleDownloadAll = useCallback(async () => {
-    if (downloadingAll || !data) return
-    setDownloadingAll(true)
-    try {
-      const { toPng } = await import('html-to-image')
-      for (let i = 0; i < data.slides.length; i++) {
-        const el = slideRefs.current[i]
-        if (!el) continue
-        const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
-        const link = document.createElement('a')
-        link.download = `marketlens-${data.edition}-${i + 1}-${data.slides[i].type}.png`
-        link.href = dataUrl
-        link.click()
-        // Small delay between downloads so browser doesn't block them
-        if (i < data.slides.length - 1) await new Promise(r => setTimeout(r, 300))
-      }
-    } catch (err) {
-      console.error('Download all failed:', err)
-    } finally {
-      setDownloadingAll(false)
-    }
-  }, [downloadingAll, data])
 
   return (
     <Shell>

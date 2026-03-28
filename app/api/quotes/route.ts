@@ -39,6 +39,17 @@ function isFutures(sym: string) {
   return sym.includes('=') || sym.includes('!')
 }
 
+// BTC-USD, ETH-USD, SOL-USD etc. — Yahoo handles these natively
+function isYahooCrypto(sym: string) {
+  return /^[A-Z]{2,5}-USD$/.test(sym)
+}
+
+// Symbols that Yahoo handles natively but Finnhub doesn't
+// DX-Y.NYB = US Dollar Index, ^VIX = Volatility index, etc.
+function isYahooNative(sym: string) {
+  return sym.includes('.') || sym.startsWith('^')
+}
+
 export async function GET(req: NextRequest) {
   const limited = withRateLimit(req, 60)
   if (limited) return limited
@@ -71,7 +82,7 @@ export async function GET(req: NextRequest) {
 
   for (const sym of symbols) {
     if (BINANCE_TO_CG[sym])  cryptoSymbols.push(sym)
-    else if (isFutures(sym)) futuresSymbols.push(sym)
+    else if (isFutures(sym) || isYahooCrypto(sym) || isYahooNative(sym)) futuresSymbols.push(sym)
     else                     finnhubSymbols.push(sym)
   }
 

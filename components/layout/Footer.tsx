@@ -42,10 +42,15 @@ export default function Footer() {
           <p className="font-mono text-[10px] text-[var(--text-muted)]" suppressHydrationWarning>
             © {year} MarketLens. Built by <span className="text-[var(--text-2)]">Kazem Julien Ammar</span>. All rights reserved.
           </p>
-          <p className="max-w-md font-mono text-[10px] text-[var(--text-muted)] opacity-70">
-            Not financial advice. Data provided for informational purposes only.
-            Always do your own research before making investment decisions.
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="max-w-md font-mono text-[10px] text-[var(--text-muted)] opacity-70">
+              Not financial advice. Data provided for informational purposes only.
+              Always do your own research before making investment decisions.
+            </p>
+            <a href="/social/daily" className="font-mono text-[9px] text-[var(--text-muted)] opacity-30 hover:opacity-60 transition-opacity">
+              Social Brief
+            </a>
+          </div>
         </div>
       </div>
     </footer>

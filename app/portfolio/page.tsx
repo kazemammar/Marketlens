@@ -240,8 +240,8 @@ export default function PortfolioPage() {
     return (
       <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
         <div className="mx-auto max-w-screen-xl px-3 py-4 sm:px-4">
-          <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-            <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+          <div className="overflow-hidden rounded border border-[var(--border)]">
+            <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
               <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
                 <rect x="1" y="3" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.5"/>
                 <rect x="1" y="7" width="14" height="2" rx="0.5" fill="currentColor" opacity="0.7"/>
@@ -307,20 +307,20 @@ export default function PortfolioPage() {
 
           {/* ── Day Movers | Allocation ────────────────────────────────── */}
           <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)]">
               <DayMovers positions={activePositions} quotes={activeQuotes} />
             </div>
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)]">
               <AllocationPanel positions={activePositions} quotes={activeQuotes} />
             </div>
           </div>
 
           {/* ── Risk Alerts | Exposure ─────────────────────────────────── */}
           <div className="grid grid-cols-1 gap-1.5 px-3 sm:grid-cols-2 sm:px-4 py-2">
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)]">
               <RiskAlerts positions={activePositions} quotes={activeQuotes} />
             </div>
-            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)] bg-[var(--surface)]">
+            <div className="min-w-0 overflow-hidden flex flex-col rounded border border-[var(--border)]">
               <ExposurePanel positions={activePositions} quotes={activeQuotes} />
             </div>
           </div>
@@ -415,8 +415,8 @@ export default function PortfolioPage() {
 
           {/* ── PORTFOLIO NEWS card ───────────────────────────────────── */}
           <div className="px-3 sm:px-4 py-2">
-            <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-              <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+            <div className="overflow-hidden rounded border border-[var(--border)]">
+              <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
                 <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
                   <rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.2" fill="none"/>
                   <line x1="5" y1="5.5" x2="11" y2="5.5" stroke="currentColor" strokeWidth="1"/>

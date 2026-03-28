@@ -82,9 +82,9 @@ export default function BtcEtfTracker() {
   const outflowCount = data?.outflowCount ?? 0
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         {/* Bitcoin ₿ symbol */}
         <span className="font-mono text-[13px] font-bold leading-none shrink-0" style={{ color: '#f7931a' }}>
           ₿

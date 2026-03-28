@@ -103,9 +103,9 @@ export default function WhatIfPanel() {
   const severityBadge = result ? SEVERITY_BADGE[result.severity] ?? SEVERITY_BADGE.MEDIUM : null
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.4"/>
           <path d="M6.5 6a1.5 1.5 0 1 1 1.5 1.5V9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>

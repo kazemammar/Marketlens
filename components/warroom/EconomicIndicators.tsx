@@ -122,9 +122,9 @@ export default function EconomicIndicators() {
   const inverted = indicators.find((i) => i.id === 'YIELD_SPREAD' && (i.value ?? 0) < 0)
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="9" width="3" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>
           <rect x="6" y="5" width="3" height="10" rx="0.5" stroke="currentColor" strokeWidth="1.4"/>

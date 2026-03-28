@@ -255,9 +255,9 @@ export default function TechnicalSummary({ symbol }: { symbol: string }) {
     : null
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <polyline points="1,12 4,8 7,10 10,5 13,3 15,3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>

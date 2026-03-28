@@ -106,9 +106,9 @@ export default function HeatmapPanel({ initialStocks = [] }: { initialStocks?: A
   const narratives = narrativeData?.narratives ?? {}
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)] flex flex-col h-full min-h-[220px] sm:min-h-0">
+    <div className="overflow-hidden rounded border border-[var(--border)] flex flex-col h-full min-h-[220px] sm:min-h-0">
       {/* Header */}
-      <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-1.5 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="1" width="6" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>
           <rect x="9" y="1" width="6" height="3.5" rx="0.5" stroke="currentColor" strokeWidth="1.2"/>

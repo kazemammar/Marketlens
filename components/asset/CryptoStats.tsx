@@ -61,9 +61,9 @@ export default function CryptoStats({ symbol }: { symbol: string }) {
   const { data, loading } = useFetch<CryptoStatsData>(`/api/crypto/stats/${symbol}`, { refreshInterval: 2 * 60_000 })
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 mb-2.5">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 mb-2.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="2" y="2" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>
           <rect x="9" y="2" width="5" height="5" rx="0.5" stroke="currentColor" strokeWidth="1.3"/>

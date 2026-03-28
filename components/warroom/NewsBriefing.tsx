@@ -212,10 +212,10 @@ export default function NewsBriefing() {
   }, [hasMore, loadingMore, loading, page, fetchPage])
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
 
       {/* Section header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
             <rect x="1" y="2" width="14" height="2" rx="1" fill="currentColor" opacity=".6"/>

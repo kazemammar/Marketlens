@@ -91,8 +91,8 @@ export default async function HomePage({
       {/* ══ MAP + INTEL PANEL — 65/35 grid (stacked on mobile) ══════════ */}
       <div className="grid grid-cols-1 gap-1.5 px-3 sm:px-4 py-2 lg:grid-cols-[65fr_35fr]">
         {/* GeoMap — left */}
-        <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+        <div className="overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full bg-red-500" />
             <span className="truncate font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
               Geopolitical Intelligence Map
@@ -106,8 +106,8 @@ export default async function HomePage({
         </div>
 
         {/* IntelPanel — right */}
-        <div className="h-[300px] sm:h-[350px] lg:h-[540px] xl:h-[640px] flex flex-col overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+        <div className="h-[300px] sm:h-[350px] lg:h-[540px] xl:h-[640px] flex flex-col overflow-hidden rounded border border-[var(--border)]">
+          <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
             <span className="live-dot h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
               Intelligence Feed

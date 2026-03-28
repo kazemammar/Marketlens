@@ -63,8 +63,8 @@ export default function MarketBrief() {
   // ── Loading skeleton ────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="overflow-hidden rounded border border-[var(--border)]">
+        <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
           <div className="skeleton h-3 w-3 rounded" />
           <div className="skeleton h-3 w-28 rounded" />
           <div className="flex-1" />
@@ -88,10 +88,10 @@ export default function MarketBrief() {
   const hasDelta = brief.delta && brief.delta.length > 0
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
 
       {/* ══ HEADER ══════════════════════════════════════════════════════════ */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.3"/>
           <path d="M5 6h6M5 8.5h4M5 11h5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/>

@@ -194,10 +194,10 @@ export default function FearGreedIndex() {
   const rating = data ? ratingLabel(data.rating) : '—'
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
 
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         {/* Gauge icon */}
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M2 11 A6 6 0 0 1 14 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>

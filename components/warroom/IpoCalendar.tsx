@@ -32,9 +32,9 @@ export default function IpoCalendar({ limit }: { limit?: number }) {
   const hasMore = limit ? events.length > limit : false
 
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+    <div className="rounded border border-[var(--border)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
           <path d="M5 1v3M11 1v3M2 7h12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>

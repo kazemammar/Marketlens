@@ -117,9 +117,9 @@ export default function StablecoinMonitor() {
   const health  = data?.overallHealth ?? 'HEALTHY'
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         {/* Lock icon */}
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="3" y="8" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.3"/>

@@ -31,8 +31,8 @@ function rowBg(score: number, articleCount: number): string {
 
 function Skeleton() {
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <div className="skeleton h-3 w-3 rounded" />
         <div className="skeleton h-3 w-44 rounded" />
       </div>
@@ -169,9 +169,9 @@ export default function SectorSentimentPulse() {
   const maxAbs = Math.max(...data.sectors.map(s => Math.abs(s.score)), 1)
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="4" width="3" height="8" rx="0.5" fill="currentColor" opacity="0.4"/>
           <rect x="5" y="2" width="3" height="10" rx="0.5" fill="currentColor" opacity="0.6"/>

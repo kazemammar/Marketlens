@@ -25,9 +25,9 @@ export default function TradeIdeas() {
   const ideas = data?.ideas ?? []
 
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M8 1l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z" fill="currentColor" />
         </svg>

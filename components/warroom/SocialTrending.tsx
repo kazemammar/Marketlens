@@ -19,9 +19,9 @@ export default function SocialTrending() {
   const symbols = data?.symbols ?? []
 
   return (
-    <div className="rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-1.5">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-1.5">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3" style={{ color: 'var(--accent)' }} aria-hidden>
           <path d="M8 1v4M8 11v4M1 8h4M11 8h4M3.5 3.5l2.8 2.8M9.7 9.7l2.8 2.8M12.5 3.5l-2.8 2.8M6.3 9.7l-2.8 2.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
         </svg>

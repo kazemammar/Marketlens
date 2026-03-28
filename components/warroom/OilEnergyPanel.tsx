@@ -150,9 +150,9 @@ export default function OilEnergyPanel() {
   const series = data?.series ?? []
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         {/* Oil barrel icon */}
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: '#f97316' }} aria-hidden>
           <rect x="3" y="3" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.4"/>

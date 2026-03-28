@@ -87,7 +87,7 @@ export default function CurrencyStrengthMeter() {
       {/* Bars + Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-2 lg:items-stretch">
         {/* Strength bars */}
-        <div className="border-b border-[var(--border)] bg-[var(--surface)] p-3 lg:border-b-0 lg:border-r flex flex-col min-h-[260px]">
+        <div className="border-b border-[var(--border)] p-3 lg:border-b-0 lg:border-r flex flex-col min-h-[260px]">
           <div className="flex flex-col justify-evenly flex-1">
             {strengths.map((s) => {
               const pct   = (Math.abs(s.score) / maxAbs) * 50
@@ -143,7 +143,7 @@ export default function CurrencyStrengthMeter() {
         </div>
 
         {/* Trend chart */}
-        <div className="flex flex-col bg-[var(--surface)] p-3 min-h-[260px]">
+        <div className="flex flex-col p-3 min-h-[260px]">
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -16 }}>

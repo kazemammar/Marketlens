@@ -117,8 +117,8 @@ function ChokepointCard({ data }: { data: ChokepointIntelItem }) {
 
 function Skeleton() {
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <div className="skeleton h-3 w-3 rounded" />
         <div className="skeleton h-2.5 w-44 rounded" />
         <div className="flex-1" />
@@ -151,9 +151,9 @@ export default function ChokepointIntel() {
   const disruptedCount = data?.disruptedCount ?? 0
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Panel header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         {/* Anchor / chokepoint icon */}
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <circle cx="8" cy="4.5" r="1.5" stroke="currentColor" strokeWidth="1.4"/>

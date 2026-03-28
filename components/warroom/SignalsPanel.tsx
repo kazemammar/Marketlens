@@ -159,9 +159,9 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
     const correlationCount = signals.filter(s => s.category === 'correlation').length
 
     return (
-      <div className="flex flex-col overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+      <div className="flex flex-col overflow-hidden rounded border border-[var(--border)]">
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-[var(--border)] px-3 py-2">
+        <div className="flex items-center gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
           <div className="flex items-center gap-1.5">
             <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">
@@ -246,8 +246,8 @@ export default function SignalsPanel({ layout = 'vertical' }: { layout?: 'vertic
 
   // ─── Vertical layout (default) ───────────────────────────────────────────
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+    <div className="flex h-full flex-col overflow-hidden rounded border border-[var(--border)]">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <div className="flex items-center gap-1.5">
           <span className="live-dot inline-block h-1.5 w-1.5 rounded-full" style={{ background: 'var(--accent)' }} />
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--text)]">

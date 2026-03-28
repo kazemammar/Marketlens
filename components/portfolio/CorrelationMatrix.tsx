@@ -23,8 +23,8 @@ export default function CorrelationMatrix() {
 
   if (loading) {
     return (
-      <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="overflow-hidden rounded border border-[var(--border)]">
+        <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
           <div className="h-3 w-3 animate-pulse rounded bg-[var(--surface-2)]" />
           <div className="h-3 w-40 animate-pulse rounded bg-[var(--surface-2)]" />
         </div>
@@ -46,9 +46,9 @@ export default function CorrelationMatrix() {
   const { symbols, matrix } = data
 
   return (
-    <div className="overflow-hidden rounded border border-[var(--border)] bg-[var(--surface)]">
+    <div className="overflow-hidden rounded border border-[var(--border)]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-3 py-2">
         <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 shrink-0" style={{ color: 'var(--accent)' }} aria-hidden>
           <rect x="1" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.4"/>
           <rect x="9" y="1" width="6" height="6" rx="1" fill="currentColor" opacity="0.7"/>

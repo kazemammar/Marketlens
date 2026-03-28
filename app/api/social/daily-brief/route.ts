@@ -1561,15 +1561,31 @@ function buildSlides(
       },
     }),
 
-    signals: () => ({
-      type: 'signals' as SlideType,
-      title: edition === 'morning' ? 'Overnight Signals' : "Today's Signals",
-      label: 'WHAT MOVED',
-      content: {
-        signals: d.signals.slice(0, 4),
-        newsHeat: d.newsHeat.slice(0, 3),
-      },
-    }),
+    signals: () => {
+      // Top movers: pick the biggest absolute % moves from key assets
+      const ASSET_LABELS: Record<string, string> = {
+        SPY: 'S&P 500', QQQ: 'Nasdaq', 'BZ=F': 'Brent Crude', 'GC=F': 'Gold',
+        'BTC-USD': 'Bitcoin', 'ETH-USD': 'Ethereum', 'DX-Y.NYB': 'Dollar',
+        'NG=F': 'Nat Gas', 'SI=F': 'Silver', 'SOL-USD': 'Solana',
+      }
+      const bigMoves = Object.entries(ASSET_LABELS)
+        .map(([sym, name]) => ({ sym, name, pct: d.quotes[sym]?.changePercent ?? 0, price: d.quotes[sym]?.price ?? 0 }))
+        .filter(m => Math.abs(m.pct) > 0.5)
+        .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
+        .slice(0, 4)
+
+      return {
+        type: 'signals' as SlideType,
+        title: edition === 'morning' ? 'Overnight Signals' : "Today's Signals",
+        label: 'WHAT MOVED',
+        content: {
+          signals: d.signals.slice(0, 5),
+          newsHeat: d.newsHeat.slice(0, 4),
+          bigMoves,
+          activeChokepoints: d.chokepoints.filter(c => c.status !== 'NORMAL').slice(0, 2),
+        },
+      }
+    },
 
     radar: () => ({
       type: 'radar',

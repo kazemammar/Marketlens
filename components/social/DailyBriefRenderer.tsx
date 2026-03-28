@@ -172,6 +172,47 @@ export default function DailyBriefRenderer() {
     } catch { setError(true) } finally { setLoading(false) }
   }, [])
 
+  /** Convert all cross-origin <img> in a container to inline base64 data URLs */
+  const inlineImages = useCallback(async (container: HTMLElement): Promise<Array<{ img: HTMLImageElement; original: string }>> => {
+    const imgs = container.querySelectorAll('img')
+    const originals: Array<{ img: HTMLImageElement; original: string }> = []
+    await Promise.allSettled(
+      Array.from(imgs).map(async (img) => {
+        if (!img.src || img.src.startsWith('data:')) return
+        try {
+          const res = await fetch(img.src, { mode: 'cors' })
+          if (!res.ok) throw new Error('fetch failed')
+          const blob = await res.blob()
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result as string)
+            reader.readAsDataURL(blob)
+          })
+          originals.push({ img, original: img.src })
+          img.src = dataUrl
+        } catch {
+          // If CORS fetch fails, try via our proxy
+          try {
+            const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(img.src)}`
+            const res = await fetch(proxyUrl)
+            if (!res.ok) throw new Error('proxy failed')
+            const blob = await res.blob()
+            const dataUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result as string)
+              reader.readAsDataURL(blob)
+            })
+            originals.push({ img, original: img.src })
+            img.src = dataUrl
+          } catch {
+            // Give up on this image — it won't show in the export
+          }
+        }
+      }),
+    )
+    return originals
+  }, [])
+
   const handleDownloadAll = useCallback(async () => {
     if (downloadingAll || !data) return
     setDownloadingAll(true)
@@ -186,24 +227,16 @@ export default function DailyBriefRenderer() {
         const el = slideRefs.current[i]
         if (!el) continue
         const filename = `${i + 1}-${data.slides[i].type}.png`
+        // Inline cross-origin images as base64 before export
+        const inlined = await inlineImages(el)
         try {
-          const dataUrl = await toPng(el, {
-            pixelRatio: 3,
-            backgroundColor: C.bg,
-            filter: (node: HTMLElement) => {
-              if (node instanceof HTMLImageElement && node.src && !node.src.startsWith(window.location.origin) && !node.src.startsWith('data:')) return false
-              return true
-            },
-          })
+          const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
           zip.file(filename, dataUrl.split(',')[1], { base64: true })
-        } catch {
-          try {
-            const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg, cacheBust: true })
-            zip.file(filename, dataUrl.split(',')[1], { base64: true })
-          } catch (e2) {
-            console.warn(`Slide ${i + 1} (${data.slides[i].type}) export failed, skipping`, e2)
-          }
+        } catch (e) {
+          console.warn(`Slide ${i + 1} (${data.slides[i].type}) export failed, skipping`, e)
         }
+        // Restore original src values
+        for (const { img, original } of inlined) img.src = original
       }
 
       const blob = await zip.generateAsync({ type: 'blob' })
@@ -355,7 +388,26 @@ function SlideFrame({ slide, index, total, date, edition, onRef }: {
     setDownloading(true)
     try {
       const { toPng } = await import('html-to-image')
+      // Inline cross-origin images before export
+      const imgs = slideRef.current.querySelectorAll('img')
+      const originals: Array<{ img: HTMLImageElement; src: string }> = []
+      await Promise.allSettled(
+        Array.from(imgs).map(async (img) => {
+          if (!img.src || img.src.startsWith('data:')) return
+          try {
+            let res = await fetch(img.src, { mode: 'cors' }).catch(() => null)
+            if (!res?.ok) res = await fetch(`/api/proxy/image?url=${encodeURIComponent(img.src)}`)
+            if (!res.ok) return
+            const blob = await res.blob()
+            const dataUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader(); reader.onloadend = () => resolve(reader.result as string); reader.readAsDataURL(blob)
+            })
+            originals.push({ img, src: img.src }); img.src = dataUrl
+          } catch { /* skip */ }
+        }),
+      )
       const dataUrl = await toPng(slideRef.current, { pixelRatio: 3, backgroundColor: C.bg })
+      for (const { img, src } of originals) img.src = src // restore
       const link = document.createElement('a')
       link.download = `marketlens-${edition}-${index + 1}-${slide.type}.png`
       link.href = dataUrl
@@ -930,86 +982,118 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
 function SignalsSlide({ c }: { c: Record<string, any> }) {
   const signals: Array<{ text: string; severity: string; category: string; explanation?: { type: string; headline?: string; source?: string } }> = c.signals ?? []
   const newsHeat: Array<{ region: string; intensity: number; articles: number }> = c.newsHeat ?? []
+  const bigMoves: Array<{ sym: string; name: string; pct: number; price: number }> = c.bigMoves ?? []
+  const chokepoints: Array<{ name: string; status: string; description: string }> = c.activeChokepoints ?? []
 
   const severityColor = (sev: string) =>
     sev === 'HIGH' ? C.red : sev === 'MED' ? C.amber : C.text3
 
-  const categoryIcon = (cat: string) => {
-    switch (cat) {
-      case 'price': return '◆'
-      case 'geopolitical': return '⚑'
-      case 'macro': return '◉'
-      default: return '●'
-    }
-  }
-
-  const intensityBar = (pct: number) => {
-    const barColor = pct >= 70 ? C.red : pct >= 40 ? C.amber : C.greenMed
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-        <div style={{ flex: 1, height: 4, borderRadius: 2, background: C.surface3 }}>
-          <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', borderRadius: 2, background: barColor }} />
-        </div>
-        <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: barColor, minWidth: 24, textAlign: 'right' as const }}>{pct}</span>
-      </div>
-    )
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8, justifyContent: 'center' }}>
+      {/* Big moves — compact price ticker row */}
+      {bigMoves.length > 0 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: `repeat(${Math.min(bigMoves.length, 4)}, 1fr)`, gap: 5,
+        }}>
+          {bigMoves.slice(0, 4).map((m, i) => (
+            <div key={i} style={{
+              padding: '7px 8px', background: clrDim(m.pct), borderRadius: 8,
+              border: `1px solid ${clr(m.pct)}20`,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            }}>
+              <span style={{ fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: C.text3, letterSpacing: '0.05em' }}>{m.name}</span>
+              <span style={{ fontFamily: C.mono, fontSize: 13, fontWeight: 800, color: clr(m.pct), ...glow(clr(m.pct), 10) }}>
+                {m.pct >= 0 ? '+' : ''}{m.pct.toFixed(1)}%
+              </span>
+              <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3 }}>{price(m.price)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Signals list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {signals.slice(0, 4).map((s, i) => {
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        {signals.slice(0, 5).map((s, i) => {
           const sc = severityColor(s.severity)
           return (
             <div key={i} style={{
-              display: 'flex', alignItems: 'flex-start', gap: 8,
-              padding: '9px 12px', background: C.surface, borderRadius: 8,
+              display: 'flex', alignItems: 'center', gap: 7,
+              padding: '7px 10px', background: C.surface, borderRadius: 8,
               border: `1px solid ${C.border}`, borderLeft: `3px solid ${sc}60`,
             }}>
-              <span style={{ fontFamily: C.mono, fontSize: 11, color: sc, flexShrink: 0, marginTop: 1 }}>
-                {categoryIcon(s.category)}
-              </span>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <span style={{ fontFamily: C.sans, fontSize: 11, fontWeight: 600, color: C.text, lineHeight: 1.35 }}>{s.text}</span>
-                {s.explanation?.headline && (
-                  <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, lineHeight: 1.3 }}>
-                    {s.explanation.source ? `${s.explanation.source}: ` : ''}{s.explanation.headline}
-                  </span>
-                )}
-              </div>
               <span style={{
-                fontFamily: C.mono, fontSize: 8, fontWeight: 800, color: sc,
-                padding: '2px 6px', borderRadius: 4, background: `${sc}14`, flexShrink: 0,
+                width: 6, height: 6, borderRadius: '50%', background: sc, flexShrink: 0,
+                boxShadow: `0 0 6px ${sc}60`,
+              }} />
+              <span style={{ fontFamily: C.sans, fontSize: 10, fontWeight: 600, color: C.text, flex: 1, lineHeight: 1.3 }}>{s.text}</span>
+              <span style={{
+                fontFamily: C.mono, fontSize: 7, fontWeight: 800, color: sc,
+                padding: '2px 5px', borderRadius: 3, background: `${sc}14`, flexShrink: 0,
               }}>{s.severity}</span>
             </div>
           )
         })}
       </div>
 
-      {/* News heat by region */}
-      {newsHeat.length > 0 && (
-        <div style={{
-          padding: '10px 12px', background: C.surface, borderRadius: 8,
-          border: `1px solid ${C.border}`,
-        }}>
-          <span style={{
-            fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: C.text3,
-            letterSpacing: '0.1em', marginBottom: 8, display: 'block',
-          }}>NEWS HEAT BY REGION</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {newsHeat.slice(0, 3).map((h, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{
-                  fontFamily: C.mono, fontSize: 10, fontWeight: 600, color: C.text2,
-                  minWidth: 70,
-                }}>{h.region}</span>
-                {intensityBar(h.intensity)}
-              </div>
-            ))}
+      {/* Bottom row: news heat + chokepoints side by side */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        {/* News heat */}
+        {newsHeat.length > 0 && (
+          <div style={{
+            flex: 1, padding: '8px 10px', background: C.surface, borderRadius: 8,
+            border: `1px solid ${C.border}`,
+          }}>
+            <span style={{
+              fontFamily: C.mono, fontSize: 7, fontWeight: 700, color: C.text3,
+              letterSpacing: '0.1em', marginBottom: 6, display: 'block',
+            }}>NEWS HEAT</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {newsHeat.slice(0, 4).map((h, i) => {
+                const barColor = h.intensity >= 70 ? C.red : h.intensity >= 40 ? C.amber : C.greenMed
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: C.mono, fontSize: 8, fontWeight: 600, color: C.text2, minWidth: 52 }}>{h.region}</span>
+                    <div style={{ flex: 1, height: 3, borderRadius: 2, background: C.surface3 }}>
+                      <div style={{ width: `${Math.min(h.intensity, 100)}%`, height: '100%', borderRadius: 2, background: barColor }} />
+                    </div>
+                    <span style={{ fontFamily: C.mono, fontSize: 7, fontWeight: 700, color: barColor, minWidth: 16, textAlign: 'right' as const }}>{h.intensity}</span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Chokepoints */}
+        {chokepoints.length > 0 && (
+          <div style={{
+            flex: 1, padding: '8px 10px', background: C.surface, borderRadius: 8,
+            border: `1px solid ${C.border}`,
+          }}>
+            <span style={{
+              fontFamily: C.mono, fontSize: 7, fontWeight: 700, color: C.text3,
+              letterSpacing: '0.1em', marginBottom: 6, display: 'block',
+            }}>CHOKEPOINTS</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {chokepoints.map((cp, i) => {
+                const cpColor = cp.status === 'DISRUPTED' ? C.red : cp.status === 'ELEVATED' ? C.amber : C.text3
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                    <span style={{
+                      width: 5, height: 5, borderRadius: '50%', background: cpColor, flexShrink: 0, marginTop: 3,
+                      boxShadow: `0 0 4px ${cpColor}60`,
+                    }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: C.text }}>{cp.name}</span>
+                      <span style={{ fontFamily: C.mono, fontSize: 7, color: cpColor, fontWeight: 600 }}>{cp.status}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

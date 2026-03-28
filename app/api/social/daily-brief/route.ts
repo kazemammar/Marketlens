@@ -496,22 +496,39 @@ function buildSlides(
   }
 
   const builders: Record<SlideType, () => SlideData> = {
-    cover: () => ({
-      type: 'cover',
-      title: groq.briefTitle,
-      label: EDITION_LABELS[edition],
-      content: {
-        subtitle: groq.briefSubtitle,
-        edition,
-      },
-    }),
+    cover: () => {
+      // Edition-specific hero data for visual differentiation
+      const heroSyms = edition === 'morning'
+        ? ['SPY', 'QQQ', 'BTC-USD']           // pre-market focus
+        : edition === 'close'
+        ? ['SPY', 'QQQ', 'DIA', 'IWM']        // full index scorecard
+        : ['SPY', 'QQQ', 'BTC-USD', 'GC=F']   // weekly overview
+      const heroQuotes = heroSyms.map(sym => ({
+        symbol: sym, name: SYMBOL_LABELS[sym] ?? sym,
+        price: d.quotes[sym]?.price ?? 0,
+        changePercent: d.quotes[sym]?.changePercent ?? 0,
+      }))
+      return {
+        type: 'cover' as SlideType,
+        title: groq.briefTitle,
+        label: EDITION_LABELS[edition],
+        content: {
+          subtitle: groq.briefSubtitle,
+          edition,
+          heroQuotes,
+          topGainer: d.gainers[0] ?? null,
+          topLoser: d.losers[0] ?? null,
+          fearGreedScore: d.fearGreed?.score ?? null,
+        },
+      }
+    },
 
     scoreboard: () => ({
       type: 'scoreboard',
       title: weekly ? 'Weekly Levels' : 'Market Snapshot',
       label: weekly ? 'WEEK CLOSE' : 'KEY LEVELS',
       content: {
-        quotes: ['SPY', 'QQQ', 'DIA', 'IWM', 'BTC-USD', 'GC=F'].map(sym => {
+        quotes: ['SPY', 'QQQ', 'DIA', 'IWM', 'BTC-USD', 'GC=F', 'CL=F', 'DX-Y.NYB'].map(sym => {
           const q = d.quotes[sym]
           return {
             symbol: sym, name: SYMBOL_LABELS[sym] ?? sym,
@@ -553,8 +570,8 @@ function buildSlides(
       title: weekly ? "Week's Top Movers" : 'Top Movers',
       label: 'WINNERS & LOSERS',
       content: {
-        gainers: d.gainers.slice(0, 4),
-        losers:  d.losers.slice(0, 4),
+        gainers: d.gainers.slice(0, 5),
+        losers:  d.losers.slice(0, 5),
       },
     }),
 

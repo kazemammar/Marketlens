@@ -180,12 +180,35 @@ export default function DailyBriefRenderer() {
       for (let i = 0; i < data.slides.length; i++) {
         const el = slideRefs.current[i]
         if (!el) continue
-        const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
-        const link = document.createElement('a')
-        link.download = `marketlens-${data.edition}-${i + 1}-${data.slides[i].type}.png`
-        link.href = dataUrl
-        link.click()
-        if (i < data.slides.length - 1) await new Promise(r => setTimeout(r, 300))
+        try {
+          const dataUrl = await toPng(el, {
+            pixelRatio: 3,
+            backgroundColor: C.bg,
+            // Skip external images that would taint the canvas
+            filter: (node: HTMLElement) => {
+              if (node instanceof HTMLImageElement && node.src && !node.src.startsWith(window.location.origin) && !node.src.startsWith('data:')) {
+                return false
+              }
+              return true
+            },
+          })
+          const link = document.createElement('a')
+          link.download = `marketlens-${data.edition}-${i + 1}-${data.slides[i].type}.png`
+          link.href = dataUrl
+          link.click()
+        } catch {
+          // Retry without filtering — some slides have no external images
+          try {
+            const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg, cacheBust: true })
+            const link = document.createElement('a')
+            link.download = `marketlens-${data.edition}-${i + 1}-${data.slides[i].type}.png`
+            link.href = dataUrl
+            link.click()
+          } catch (e2) {
+            console.warn(`Slide ${i + 1} (${data.slides[i].type}) export failed, skipping`, e2)
+          }
+        }
+        if (i < data.slides.length - 1) await new Promise(r => setTimeout(r, 400))
       }
     } catch (err) {
       console.error('Download all failed:', err)

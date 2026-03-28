@@ -29,7 +29,6 @@ import NewsBriefing         from '@/components/warroom/NewsBriefing'
 import SectorSentimentPulse from '@/components/warroom/SectorSentimentPulse'
 import ChokepointIntel      from '@/components/warroom/ChokepointIntel'
 import TradeIdeas           from '@/components/warroom/TradeIdeas'
-import SocialTrending       from '@/components/warroom/SocialTrending'
 import EarningsPreview      from '@/components/warroom/EarningsPreview'
 import EventTimeline        from '@/components/warroom/EventTimeline'
 import WatchlistAlerts      from '@/components/warroom/WatchlistAlerts'
@@ -258,13 +257,6 @@ export default async function HomePage({
       <div className="px-3 sm:px-4 py-2">
         <PanelErrorBoundary fallbackTitle="Prediction Markets">
           <SectionReveal delay={0}><PredictionMarkets /></SectionReveal>
-        </PanelErrorBoundary>
-      </div>
-
-      {/* ══ SOCIAL TRENDING — Stocktwits ═══════════════════════════════════ */}
-      <div className="px-3 sm:px-4 py-2">
-        <PanelErrorBoundary fallbackTitle="Social Trending">
-          <SocialTrending />
         </PanelErrorBoundary>
       </div>
 

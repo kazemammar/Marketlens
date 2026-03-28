@@ -1,14 +1,5 @@
 import { cachedFetch } from '@/lib/cache/redis'
 
-export interface StocktwitsSymbol {
-  symbol: string
-  title: string
-  watchlistCount: number
-  trendingScore: number
-  trendingSummary: string | null
-  rank: number
-}
-
 export interface StocktwitsSentiment {
   symbol: string
   bullish: number
@@ -16,40 +7,6 @@ export interface StocktwitsSentiment {
   totalMessages: number
   sentiment: 'bullish' | 'bearish' | 'neutral'
   sentimentScore: number // 0-100, 50 = neutral
-}
-
-export async function getTrendingSymbols(): Promise<StocktwitsSymbol[]> {
-  return cachedFetch<StocktwitsSymbol[]>(
-    'stocktwits:trending:v1',
-    300, // 5 min cache
-    async () => {
-      try {
-        const res = await fetch('https://api.stocktwits.com/api/2/trending/symbols.json', {
-          signal: AbortSignal.timeout(8000),
-          headers: { 'User-Agent': 'MarketLens/1.0' },
-        })
-        if (!res.ok) return []
-        const data = await res.json()
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (data.symbols ?? [])
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .filter((s: any) => s.instrument_class === 'Stock' || s.instrument_class === 'ExchangeTradedCommodity' || s.instrument_class === 'ExchangeTradedFund')
-          .slice(0, 15)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .map((s: any, i: number) => ({
-            symbol: s.symbol,
-            title: s.title,
-            watchlistCount: s.watchlist_count ?? 0,
-            trendingScore: s.trending_score ?? 0,
-            trendingSummary: s.trends?.summary ?? null,
-            rank: i + 1,
-          }))
-      } catch {
-        return []
-      }
-    }
-  )
 }
 
 export async function getSymbolSentiment(symbol: string): Promise<StocktwitsSentiment | null> {

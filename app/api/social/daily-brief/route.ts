@@ -1,16 +1,20 @@
 // GET /api/social/daily-brief?edition=morning|close|weekend|weekly
-// Pulls from 18 dashboard endpoints, Groq writes narrative + picks best slides.
-// Cache: 30 min per edition per day.
+// Pulls from 18 dashboard endpoints + archived articles from Redis,
+// Groq writes narrative + picks best slides.
 //
-// Editions:
-//   morning  — weekday pre-market: overnight recap + what to watch today
-//   close    — weekday post-market: day recap + tomorrow setup
-//   weekend  — Monday AM: full previous-week recap + this week preview (9 slides)
-//   weekly   — Friday PM: week-in-review + next week outlook (9 slides)
+// Articles are accumulated hourly by the cron/warm job into a Redis
+// sorted set (news:archive). Each edition pulls from a specific time
+// window so important stories are never lost to RSS rotation.
+//
+// Editions & time windows (all UTC):
+//   morning  — weekday pre-market: yesterday 17:00 → today 14:00
+//   close    — weekday post-market: today 07:00 → today 22:00
+//   weekend  — Monday AM: previous Friday 17:00 → Monday 14:00
+//   weekly   — Friday PM: Monday 07:00 → Friday 22:00
 
 import { NextRequest, NextResponse } from 'next/server'
 import { groqChat } from '@/lib/api/groq'
-import { cachedFetch } from '@/lib/cache/redis'
+import { cachedFetch, redis } from '@/lib/cache/redis'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +73,70 @@ function isWeeklyEdition(ed: Edition): boolean {
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+/** Time window (UTC timestamps) for each edition's article pool */
+function editionTimeWindow(edition: Edition): { from: number; to: number } {
+  const now = new Date()
+  const y = now.getUTCFullYear(), m = now.getUTCMonth(), d = now.getUTCDate()
+  const dayOfWeek = now.getUTCDay() // 0=Sun
+
+  switch (edition) {
+    case 'morning': {
+      // Yesterday 17:00 UTC → today 14:00 UTC
+      const from = Date.UTC(y, m, d - 1, 17, 0)
+      const to   = Date.UTC(y, m, d, 14, 0)
+      return { from, to }
+    }
+    case 'close': {
+      // Today 07:00 UTC → today 22:00 UTC
+      const from = Date.UTC(y, m, d, 7, 0)
+      const to   = Date.UTC(y, m, d, 22, 0)
+      return { from, to }
+    }
+    case 'weekend': {
+      // Previous Friday 17:00 → Monday 14:00 UTC
+      const friday = new Date(Date.UTC(y, m, d))
+      friday.setUTCDate(d - ((dayOfWeek + 2) % 7))
+      const from = Date.UTC(friday.getUTCFullYear(), friday.getUTCMonth(), friday.getUTCDate(), 17, 0)
+      const to   = Date.UTC(y, m, d, 14, 0)
+      return { from, to }
+    }
+    case 'weekly': {
+      // Monday 07:00 → Friday 22:00 UTC
+      const monday = new Date(Date.UTC(y, m, d))
+      monday.setUTCDate(d - ((dayOfWeek + 6) % 7))
+      const from = Date.UTC(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate(), 7, 0)
+      const to   = Date.UTC(y, m, d, 22, 0)
+      return { from, to }
+    }
+  }
+}
+
+/** Cache TTL per edition — briefs don't need to regenerate within their window */
+function editionCacheTtl(edition: Edition): number {
+  switch (edition) {
+    case 'morning': return 6 * 3600   // 6 hours — valid until close edition
+    case 'close':   return 10 * 3600  // 10 hours — valid until next morning
+    case 'weekend': return 24 * 3600  // 24 hours
+    case 'weekly':  return 24 * 3600  // 24 hours
+  }
+}
+
+/** Retrieve archived articles from Redis sorted set within a time window */
+async function getArchivedArticles(
+  edition: Edition
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any[]> {
+  try {
+    const { from, to } = editionTimeWindow(edition)
+    // Upstash auto-deserializes JSON members
+    const results = await redis.zrange('news:archive', from, to, { byScore: true })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (results as any[]).filter(Boolean)
+  } catch {
+    return []
+  }
 }
 
 function getWeekDateRange(): string {
@@ -137,7 +205,7 @@ export async function GET(req: NextRequest) {
   try {
     const payload = await cachedFetch<DailyBriefPayload>(
       cacheKey,
-      1800, // 30 min
+      editionCacheTtl(edition),
       () => generateBrief(edition, date),
     )
     return NextResponse.json(payload)
@@ -193,7 +261,7 @@ async function fetchWeeklyChanges(): Promise<Record<string, { pct: number; price
 async function generateBrief(edition: Edition, date: string): Promise<DailyBriefPayload> {
   const base = process.env.NEXT_PUBLIC_BASE_URL || 'https://marketlens.live'
 
-  // 1. Fetch all 18 endpoints in parallel
+  // 1. Fetch all endpoints + archived articles in parallel
   const endpoints: [string, string][] = [
     ['quotes',           '/api/quotes?symbols=SPY,QQQ,DIA,IWM,GC%3DF,BZ%3DF,SI%3DF,NG%3DF,BTC-USD,ETH-USD,SOL-USD,DX-Y.NYB'],
     ['movers',           '/api/movers'],
@@ -215,9 +283,11 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     ['energy',           '/api/energy'],
   ]
 
-  const settled = await Promise.allSettled(
-    endpoints.map(([, path]) => fetchEndpoint(base, path))
-  )
+  // Fetch archived articles from Redis alongside live API calls
+  const [settled, archivedArticles] = await Promise.all([
+    Promise.allSettled(endpoints.map(([, path]) => fetchEndpoint(base, path))),
+    getArchivedArticles(edition),
+  ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: Record<string, any> = {}
@@ -252,6 +322,24 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
       }
     }
     data.quotes = quotes
+  }
+
+  // Merge archived articles with live RSS — archive is primary, live fills gaps
+  if (archivedArticles.length > 0) {
+    const liveArticles = Array.isArray(data.news)
+      ? data.news
+      : (data.news?.articles ?? data.news?.data ?? [])
+    // Deduplicate: archive first, then live articles not already in archive
+    const seenHeadlines = new Set(archivedArticles.map(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (a: any) => (a.headline ?? a.title ?? '').toLowerCase().trim()
+    ))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const uniqueLive = liveArticles.filter((a: any) => {
+      const hl = (a.headline ?? a.title ?? '').toLowerCase().trim()
+      return hl && !seenHeadlines.has(hl)
+    })
+    data.news = { articles: [...archivedArticles, ...uniqueLive] }
   }
 
   const extracted = extractData(data)

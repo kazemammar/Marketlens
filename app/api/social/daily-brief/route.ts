@@ -91,6 +91,40 @@ async function fetchEndpoint(base: string, path: string): Promise<unknown> {
   return r.json()
 }
 
+/** Fetch og:image from an article URL. Returns image URL or null. */
+async function fetchOgImage(articleUrl: string): Promise<string | null> {
+  try {
+    const r = await fetch(articleUrl, {
+      signal: AbortSignal.timeout(4000),
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MarketLens/1.0)' },
+      redirect: 'follow',
+    })
+    if (!r.ok) return null
+    // Read only first 50KB to find og:image quickly
+    const reader = r.body?.getReader()
+    if (!reader) return null
+    let html = ''
+    const decoder = new TextDecoder()
+    while (html.length < 50000) {
+      const { done, value } = await reader.read()
+      if (done) break
+      html += decoder.decode(value, { stream: true })
+      // Check if we've passed </head> — og:image is always in <head>
+      if (html.includes('</head>')) break
+    }
+    reader.cancel().catch(() => {})
+
+    // Match og:image or twitter:image meta tags
+    const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
+      ?? html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i)
+      ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)
+    return ogMatch?.[1] ?? null
+  } catch {
+    return null
+  }
+}
+
 // ─── GET handler ────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
@@ -236,6 +270,20 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     }
   }
 
+  // Backfill missing images via OG tags from article URLs
+  const missingImg = extracted.newsArticles.filter(a => !a.imageUrl && a.url)
+  if (missingImg.length > 0) {
+    const ogResults = await Promise.allSettled(
+      missingImg.map(a => fetchOgImage(a.url!))
+    )
+    missingImg.forEach((a, i) => {
+      const result = ogResults[i]
+      if (result.status === 'fulfilled' && result.value) {
+        a.imageUrl = result.value
+      }
+    })
+  }
+
   const slides = buildSlides(groqResponse, extracted, edition)
 
   return {
@@ -276,8 +324,8 @@ interface ExtractedData {
   predictions: any[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   energy: any
-  newsArticles: Array<{ headline: string; imageUrl: string | null; source: string }>
-  newsArticlesAll: Array<{ headline: string; imageUrl: string | null; source: string }>
+  newsArticles: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null }>
+  newsArticlesAll: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null }>
   heatmapStocks: Array<{ symbol: string; name: string; changePercent: number; weight: number }>
 }
 
@@ -445,6 +493,7 @@ function extractData(raw: Record<string, any>): ExtractedData {
     headline: (a.headline ?? a.title ?? '') as string,
     imageUrl: (a.imageUrl ?? a.image ?? a.thumbnail ?? null) as string | null,
     source: (a.source ?? '') as string,
+    url: (a.url ?? a.link ?? null) as string | null,
   })).filter((a: { headline: string }) => a.headline)
   // Default selection (first 6) — overridden after Groq responds
   let newsArticles = newsArticlesAll.slice(0, 6)

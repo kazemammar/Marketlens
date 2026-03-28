@@ -1,15 +1,20 @@
 // GET /api/cron/warm
 // Vercel Hobby plan only allows 1 cron job.
-// This single endpoint handles both cache warming AND daily tasks (snapshots).
-// For more frequent warming, use a free external cron service:
-//   Service: https://cron-job.org (free)
+// This endpoint warms the most critical homepage panels.
+//
+// AI-powered endpoints (market-brief, trade-ideas, earnings-preview,
+// market-events, sector-narratives) are excluded — they take 5-10s via Groq
+// and have 30min-24hr cache TTLs, so they warm on first user visit.
+// Long-TTL endpoints (economics 6hr, central-banks 6hr, calendars 1hr)
+// are also excluded — they stay cached for hours.
+//
+// External cron: https://cron-job.org (free)
 //   URL: https://marketlens.live/api/cron/warm
-//   Schedule: Every 15 minutes, Mon-Fri 13:00-21:00 UTC
+//   Schedule: Every 60 minutes
+//   Timeout: 30s (free tier max)
 //   Auth header: Authorization: Bearer <CRON_SECRET>
 
 import { NextRequest, NextResponse } from 'next/server'
-
-const TABS = ['stock', 'crypto', 'forex', 'commodity', 'etf'] as const
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -26,52 +31,34 @@ export async function GET(req: NextRequest) {
 
   const warm = async (key: string, path: string) => {
     try {
-      const r = await fetch(`${base}${path}`, { headers: h })
+      const r = await fetch(`${base}${path}`, {
+        headers: h,
+        signal: AbortSignal.timeout(8000),
+      })
       results[key] = { ok: r.ok, status: r.status }
     } catch (err) {
       results[key] = { ok: false, error: String(err) }
     }
   }
 
-  // Batch warm calls (5 at a time with 500ms gap) to avoid burst pressure
-  // on Upstash free tier — 20 simultaneous Redis hits can trigger throttling.
-  const calls: Array<() => Promise<void>> = [
-    // Market tabs — the homepage card grids
-    ...TABS.map((tab) => () => warm(`market_${tab}`, `/api/market?tab=${tab}`)),
-    // Warroom feeds
-    () => warm('market_pulse',      '/api/market-pulse'),
-    () => warm('market_brief',      '/api/market-brief'),
-    () => warm('signals',           '/api/signals'),
-    () => warm('movers',            '/api/movers'),
-    () => warm('news',              '/api/news?page=1&limit=50'),
-    () => warm('economics',         '/api/economics'),
-    () => warm('market_risk',       '/api/market-risk'),
-    () => warm('economic_calendar', '/api/economic-calendar'),
-    () => warm('earnings_calendar', '/api/earnings-calendar'),
-    () => warm('trending',          '/api/trending'),
-    () => warm('chokepoints',       '/api/chokepoints'),
-    () => warm('energy',            '/api/energy'),
-    () => warm('central_banks',     '/api/central-banks'),
-    () => warm('forex_strength',    '/api/forex/strength'),
-    () => warm('predictions',       '/api/predictions'),
-    () => warm('fear_greed',        '/api/fear-greed'),
-    () => warm('commodities_strip', '/api/commodities-strip'),
-    () => warm('earthquakes',       '/api/earthquakes'),
-    () => warm('trade_ideas',      '/api/trade-ideas'),
-    () => warm('news_heat',        '/api/news-heat'),
-    () => warm('ipo_calendar',      '/api/ipo-calendar'),
-    () => warm('market_events',    '/api/market-events'),
-    () => warm('earnings_preview', '/api/earnings-preview'),
-    () => warm('homepage_bundle',   '/api/homepage-data'),
-    // Daily tasks (previously a separate cron — merged for Hobby plan 1-cron limit)
-    () => warm('portfolio_snapshots', '/api/cron/snapshot'),
-  ]
-
-  // Execute in batches of 4 with 800ms gap to avoid Redis burst
-  for (let i = 0; i < calls.length; i += 4) {
-    await Promise.allSettled(calls.slice(i, i + 4).map(fn => fn()))
-    if (i + 4 < calls.length) await new Promise(r => setTimeout(r, 800))
-  }
+  // All in parallel — only fast endpoints that serve the homepage.
+  // Total: 14 endpoints, each with 8s timeout = well under 20s total.
+  await Promise.allSettled([
+    warm('market_stock',      '/api/market?tab=stock'),
+    warm('market_crypto',     '/api/market?tab=crypto'),
+    warm('market_pulse',      '/api/market-pulse'),
+    warm('signals',           '/api/signals'),
+    warm('movers',            '/api/movers'),
+    warm('news',              '/api/news?page=1&limit=50'),
+    warm('market_risk',       '/api/market-risk'),
+    warm('trending',          '/api/trending'),
+    warm('fear_greed',        '/api/fear-greed'),
+    warm('commodities_strip', '/api/commodities-strip'),
+    warm('chokepoints',       '/api/chokepoints'),
+    warm('energy',            '/api/energy'),
+    warm('earthquakes',       '/api/earthquakes'),
+    warm('news_heat',         '/api/news-heat'),
+  ])
 
   return NextResponse.json({ ok: true, ran: new Date().toISOString(), results })
 }

@@ -1021,10 +1021,10 @@ function buildSlides(
       const heroSyms = edition === 'weekend'
         ? ['BTC-USD', 'ETH-USD', 'SOL-USD', 'GC=F'] // crypto + gold (only 24/7 markets)
         : edition === 'morning'
-        ? ['SPY', 'QQQ', 'BTC-USD']           // pre-market focus
+        ? ['SPY', 'QQQ', 'BTC-USD', 'BZ=F']   // pre-market focus + Brent
         : edition === 'close'
-        ? ['SPY', 'QQQ', 'DIA', 'IWM']        // full index scorecard
-        : ['SPY', 'QQQ', 'BTC-USD', 'GC=F']   // weekly overview
+        ? ['SPY', 'QQQ', 'BZ=F', 'GC=F']      // full index + Brent + Gold
+        : ['SPY', 'QQQ', 'BZ=F', 'GC=F']      // weekly overview + Brent + Gold
       const heroQuotes = heroSyms.map(sym => ({
         symbol: sym, name: SYMBOL_LABELS[sym] ?? sym,
         price: d.quotes[sym]?.price ?? 0,

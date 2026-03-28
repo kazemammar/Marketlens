@@ -701,6 +701,8 @@ WRITING RULES:
   const must: SlideType[] = []
   if (d.heatmapStocks.length > 0) must.push('heatmap' as SlideType)
   if (d.newsArticles.length > 0) must.push('headlines' as SlideType)
+  // Pulse (Market Vitals dashboard) — always include as a premium summary card
+  must.push('pulse' as SlideType)
   // For weekly editions, always include narrative, sentiment, and outlook
   if (weekly) {
     must.push('narrative' as SlideType, 'sentiment' as SlideType, 'outlook' as SlideType)
@@ -940,15 +942,36 @@ function buildSlides(
       }
     },
 
-    pulse: () => ({
-      type: 'pulse',
-      title: 'AI Market Pulse',
-      label: 'AI ANALYSIS',
-      content: {
-        pulseText: d.pulseText,
-        headlines: d.headlines.slice(0, 6),
-      },
-    }),
+    pulse: () => {
+      const metrics = [
+        { key: 'SPY',     label: 'EQUITIES',    sym: 'SPY' },
+        { key: 'BTC',     label: 'CRYPTO',       sym: 'BTC-USD' },
+        { key: 'GOLD',    label: 'GOLD',         sym: 'GC=F' },
+        { key: 'OIL',     label: 'BRENT CRUDE',  sym: 'BZ=F' },
+        { key: 'DOLLAR',  label: 'US DOLLAR',    sym: 'DX-Y.NYB' },
+      ].map(m => {
+        const q = d.quotes[m.sym]
+        return { key: m.key, label: m.label, price: q?.price ?? 0, changePercent: q?.changePercent ?? 0 }
+      })
+      // Derive bias from risk assets only (equities + crypto), not safe havens
+      const spyPct = d.quotes['SPY']?.changePercent ?? 0
+      const btcPct = d.quotes['BTC-USD']?.changePercent ?? 0
+      const riskAvg = (spyPct + btcPct) / 2
+      const bias = riskAvg > 1 ? 'RISK-ON' : riskAvg > 0.2 ? 'LEAN BULLISH' : riskAvg > -0.2 ? 'MIXED' : riskAvg > -1 ? 'LEAN BEARISH' : 'RISK-OFF'
+      return {
+        type: 'pulse',
+        title: 'Market Vitals',
+        label: 'PULSE CHECK',
+        content: {
+          metrics,
+          bias,
+          fearGreed: d.fearGreed ? { score: d.fearGreed.score, rating: d.fearGreed.rating } : null,
+          cryptoFearGreed: d.cryptoFearGreed ? { score: d.cryptoFearGreed.score, label: d.cryptoFearGreed.label } : null,
+          riskLevel: d.riskLevel ? { score: d.riskLevel.score, level: d.riskLevel.label } : null,
+          sentimentVerdict: groq.sentimentVerdict,
+        },
+      }
+    },
 
     cta: () => {
       const followCtas: Record<Edition, string> = {

@@ -124,8 +124,9 @@ function gaugeArc(from: number, to: number, cx: number, cy: number, r: number): 
   const a2 = Math.PI * (1 - to / 100)
   const x1 = cx + r * Math.cos(a1), y1 = cy - r * Math.sin(a1)
   const x2 = cx + r * Math.cos(a2), y2 = cy - r * Math.sin(a2)
-  const large = (to - from) > 50 ? 1 : 0
-  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 ${large} 0 ${x2.toFixed(1)} ${y2.toFixed(1)}`
+  // Semicircular gauge: arc never exceeds 180°, so large-arc is always 0.
+  // Using 1 here would flip arcs > 50% through the bottom of the circle.
+  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 0 ${x2.toFixed(1)} ${y2.toFixed(1)}`
 }
 
 function sparklinePath(values: number[], w: number, h: number, padding = 4): { line: string; area: string } {
@@ -1545,38 +1546,146 @@ function OutlookSlide({ c, edition }: { c: Record<string, any>; edition: Edition
   )
 }
 
-// ─── PULSE ──────────────────────────────────────────────────────────────────
+// ─── PULSE — Market Vitals Dashboard ────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PulseSlide({ c }: { c: Record<string, any> }) {
-  const headlines: string[] = c.headlines ?? []
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
-      {c.pulseText && (
-        <div style={{
-          padding: '14px 16px', borderRadius: 10, background: C.surface,
-          border: `1px solid ${C.border}`,
-        }}>
-          <p style={{ fontFamily: C.sans, fontSize: 13, color: C.text2, margin: 0, lineHeight: 1.6 }}>{c.pulseText}</p>
-        </div>
-      )}
+  const metrics: { key: string; label: string; price: number; changePercent: number }[] = c.metrics ?? []
+  const bias: string = c.bias ?? 'MIXED'
+  const fg = c.fearGreed
+  const risk = c.riskLevel
 
-      {headlines.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, letterSpacing: '0.12em', fontWeight: 600 }}>HEADLINES</span>
-          {headlines.slice(0, 6).map((h, i) => (
-            <div key={i} style={{
-              padding: '7px 10px', background: C.surface, borderRadius: 8,
-              border: `1px solid ${C.border}`, display: 'flex', alignItems: 'flex-start', gap: 8,
-            }}>
-              <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 800, color: C.text3, flexShrink: 0 }}>{i + 1}</span>
+  const biasColor = bias.includes('RISK-ON') || bias.includes('BULLISH') ? C.green
+    : bias.includes('RISK-OFF') || bias.includes('BEARISH') ? C.red : C.amber
+  const biasBg = bias.includes('RISK-ON') || bias.includes('BULLISH') ? C.greenDim
+    : bias.includes('RISK-OFF') || bias.includes('BEARISH') ? C.redDim : C.amberDim
+
+  // Max bar width for diverging bars
+  const maxPct = Math.max(3, ...metrics.map(m => Math.abs(m.changePercent)))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 10, padding: '0' }}>
+      {/* Bias badge */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <div style={{
+          padding: '6px 20px', borderRadius: 20, background: biasBg,
+          border: `1px solid ${biasColor}40`,
+        }}>
+          <span style={{ fontFamily: C.mono, fontSize: 14, fontWeight: 900, color: biasColor, letterSpacing: '0.12em' }}>{bias}</span>
+        </div>
+      </div>
+
+      {/* Diverging bar chart */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 6,
+        padding: '12px 14px', borderRadius: 10, background: C.surface,
+        border: `1px solid ${C.border}`,
+      }}>
+        {metrics.map(m => {
+          const pos = m.changePercent >= 0
+          const barWidth = Math.min(100, (Math.abs(m.changePercent) / maxPct) * 100)
+          const barColor = pos ? C.green : C.red
+          return (
+            <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              {/* Label */}
               <span style={{
-                fontFamily: C.sans, fontSize: 11, color: C.text2, lineHeight: 1.35,
-                overflow: 'hidden', display: '-webkit-box',
-                WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
-              }}>{h}</span>
+                fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: C.text3,
+                width: 80, flexShrink: 0, letterSpacing: '0.04em',
+              }}>{m.label}</span>
+
+              {/* Diverging bar — centered */}
+              <div style={{ flex: 1, height: 20, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                {/* Center line */}
+                <div style={{
+                  position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1,
+                  background: `${C.text3}30`,
+                }} />
+                {/* Bar fill */}
+                <div style={{
+                  position: 'absolute',
+                  ...(pos
+                    ? { left: '50%', width: `${barWidth / 2}%` }
+                    : { right: '50%', width: `${barWidth / 2}%` }),
+                  top: 3, bottom: 3, borderRadius: 3,
+                  background: `linear-gradient(${pos ? '90deg' : '270deg'}, ${barColor}90, ${barColor}40)`,
+                  boxShadow: `0 0 8px ${barColor}30`,
+                }} />
+              </div>
+
+              {/* Value */}
+              <span style={{
+                fontFamily: C.mono, fontSize: 11, fontWeight: 800, color: pos ? C.green : C.red,
+                width: 56, textAlign: 'right', flexShrink: 0,
+              }}>{pos ? '+' : ''}{m.changePercent.toFixed(2)}%</span>
             </div>
-          ))}
+          )
+        })}
+      </div>
+
+      {/* Gauges row — F&G + Risk */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        {fg && (() => {
+          const s = fg.score ?? 50
+          const sc = s <= 20 ? '#EF4444' : s <= 40 ? '#F97316' : s <= 60 ? '#6B7280' : s <= 80 ? '#34D399' : '#22C55E'
+          return (
+            <div style={{
+              flex: 1, padding: '10px 12px', borderRadius: 10, background: C.surface,
+              border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6,
+            }}>
+              <span style={{ fontFamily: C.mono, fontSize: 7, color: C.text3, letterSpacing: '0.1em', fontWeight: 600 }}>FEAR &amp; GREED</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontFamily: C.mono, fontSize: 28, fontWeight: 900, color: C.text, lineHeight: 1 }}>{s}</span>
+                <span style={{
+                  fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: sc,
+                  padding: '2px 6px', borderRadius: 4, background: `${sc}18`,
+                }}>{(fg.rating ?? '').toUpperCase()}</span>
+              </div>
+              {/* Mini bar */}
+              <div style={{ height: 5, borderRadius: 3, background: `${C.text3}15`, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${s}%`, borderRadius: 3,
+                  background: `linear-gradient(90deg, #EF4444, #F97316, #6B7280, #34D399, #22C55E)`,
+                }} />
+              </div>
+            </div>
+          )
+        })()}
+
+        {risk && (() => {
+          const s = risk.score ?? 50
+          const rc = s > 70 ? C.red : s > 40 ? C.amber : C.green
+          const rcBg = s > 70 ? C.redDim : s > 40 ? C.amberDim : C.greenDim
+          return (
+            <div style={{
+              flex: 1, padding: '10px 12px', borderRadius: 10, background: C.surface,
+              border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 6,
+            }}>
+              <span style={{ fontFamily: C.mono, fontSize: 7, color: C.text3, letterSpacing: '0.1em', fontWeight: 600 }}>RISK LEVEL</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontFamily: C.mono, fontSize: 28, fontWeight: 900, color: C.text, lineHeight: 1 }}>{s}</span>
+                <span style={{
+                  fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: rc,
+                  padding: '2px 6px', borderRadius: 4, background: rcBg,
+                }}>{(risk.level ?? 'MODERATE').toUpperCase()}</span>
+              </div>
+              {/* Mini bar */}
+              <div style={{ height: 5, borderRadius: 3, background: `${C.text3}15`, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${s}%`, borderRadius: 3, background: rc }} />
+              </div>
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* AI verdict */}
+      {c.sentimentVerdict && (
+        <div style={{
+          padding: '8px 12px', borderRadius: 8, background: C.surface,
+          border: `1px solid ${C.border}`, borderLeft: `2px solid ${biasColor}50`,
+        }}>
+          <p style={{ fontFamily: C.sans, fontSize: 11, color: C.text2, margin: 0, lineHeight: 1.4, fontStyle: 'italic' }}>
+            &ldquo;{c.sentimentVerdict}&rdquo;
+          </p>
         </div>
       )}
     </div>

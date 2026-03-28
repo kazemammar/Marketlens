@@ -119,7 +119,7 @@ export async function GET(req: NextRequest) {
 // ─── Weekly change computation ────────────────────────────────────────────
 
 const WEEKLY_SYMBOLS = [
-  'SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'CL=F', 'SI=F', 'NG=F',
+  'SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'BZ=F', 'SI=F', 'NG=F',
   'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB',
 ]
 const YAHOO_CHART = 'https://query1.finance.yahoo.com/v8/finance/chart'
@@ -161,7 +161,7 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
 
   // 1. Fetch all 18 endpoints in parallel
   const endpoints: [string, string][] = [
-    ['quotes',           '/api/quotes?symbols=SPY,QQQ,DIA,IWM,GC%3DF,CL%3DF,SI%3DF,NG%3DF,BTC-USD,ETH-USD,SOL-USD,DX-Y.NYB'],
+    ['quotes',           '/api/quotes?symbols=SPY,QQQ,DIA,IWM,GC%3DF,BZ%3DF,SI%3DF,NG%3DF,BTC-USD,ETH-USD,SOL-USD,DX-Y.NYB'],
     ['movers',           '/api/movers'],
     ['fearGreed',        '/api/fear-greed'],
     ['marketRisk',       '/api/market-risk'],
@@ -229,7 +229,10 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
       .map((idx: number) => extracted.newsArticlesAll?.[idx - 1])  // 1-based → 0-based
       .filter(Boolean)
     if (picked.length >= 3) {
-      extracted.newsArticles = picked.slice(0, 6)
+      // Move hero story: prefer an article WITH an image for the hero (first position)
+      const withImg = picked.filter((a: { imageUrl: string | null }) => a.imageUrl)
+      const noImg = picked.filter((a: { imageUrl: string | null }) => !a.imageUrl)
+      extracted.newsArticles = [...withImg, ...noImg].slice(0, 6)
     }
   }
 
@@ -399,6 +402,20 @@ function extractData(raw: Record<string, any>): ExtractedData {
     /\b401\(k\)\b/i, /\bIRA\b.*\b(tip|trick|loophole)\b/i,
     /\bshopper perks\b/i, /\bnew perks\b/i,
     /\bwealthy savers\b/i, /\brich people\b/i,
+    // Airbnb / real estate personal
+    /\bairbnb\b.*\bguest\b/i, /\bmy (landlord|tenant|neighbor)\b/i,
+    /\bdown.payment dilemma\b/i, /\breverse mortgage\b/i,
+    /\b(gift|leave).*\b(kids|children|will)\b.*\bcash\b/i,
+    // Crime / bizarre news (not geopolitical)
+    /\bstole \d+ tons\b/i, /\bchocolate bars\b/i, /\bKitKat\b/i,
+    /\bgobsmacked\b/i, /\bno manners\b/i,
+    // Generic "growth sectors helping people" listicles
+    /\bgrowth sectors.*helping\b/i, /\bhelping people flourish\b/i,
+    // Medical / health stories
+    /\bcancer\b.*\btreatment\b/i, /\bheart attack\b/i, /\bsurgery\b/i,
+    // Entertainment / celebrity
+    /\bTruth Social\b.*\bpost\b/i, /\binstagram\b.*\bpost\b/i,
+    /\bred carpet\b/i, /\baward show\b/i,
   ]
   // Source quality tiers — prefer wire services and major business outlets
   const SOURCE_TIER: Record<string, number> = {
@@ -528,7 +545,7 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
   const weekly = isWeeklyEdition(edition)
   const middleSlideCount = weekly ? 6 : 5
 
-  const quoteLines = ['SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'CL=F', 'SI=F', 'NG=F', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB']
+  const quoteLines = ['SPY', 'QQQ', 'DIA', 'IWM', 'GC=F', 'BZ=F', 'SI=F', 'NG=F', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'DX-Y.NYB']
     .map(sym => {
       const q = d.quotes[sym]
       if (!q) return null
@@ -718,7 +735,7 @@ function buildSlides(
 
   const SYMBOL_LABELS: Record<string, string> = {
     'SPY': 'S&P 500', 'QQQ': 'Nasdaq 100', 'DIA': 'Dow Jones', 'IWM': 'Russell 2000',
-    'GC=F': 'Gold', 'CL=F': 'Crude Oil', 'SI=F': 'Silver', 'NG=F': 'Nat Gas',
+    'GC=F': 'Gold', 'BZ=F': 'Brent Crude', 'SI=F': 'Silver', 'NG=F': 'Nat Gas',
     'BTC-USD': 'Bitcoin', 'ETH-USD': 'Ethereum', 'SOL-USD': 'Solana', 'DX-Y.NYB': 'US Dollar',
   }
 
@@ -766,7 +783,7 @@ function buildSlides(
       label: weekly ? 'WEEK CHANGE' : 'KEY LEVELS',
       content: {
         isWeekly: weekly,
-        quotes: ['SPY', 'QQQ', 'DIA', 'IWM', 'BTC-USD', 'GC=F', 'CL=F', 'DX-Y.NYB'].map(sym => {
+        quotes: ['SPY', 'QQQ', 'DIA', 'IWM', 'BTC-USD', 'GC=F', 'BZ=F', 'DX-Y.NYB'].map(sym => {
           const q = d.quotes[sym]
           return {
             symbol: sym, name: SYMBOL_LABELS[sym] ?? sym,
@@ -814,7 +831,7 @@ function buildSlides(
     }),
 
     energy: () => {
-      const oil = d.quotes['CL=F']
+      const oil = d.quotes['BZ=F']
       const gold = d.quotes['GC=F']
       const silver = d.quotes['SI=F']
       const natgas = d.quotes['NG=F']

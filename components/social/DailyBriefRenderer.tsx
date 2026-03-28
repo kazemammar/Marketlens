@@ -874,88 +874,64 @@ function SentimentSlide({ c }: { c: Record<string, any> }) {
 
   const sc = score <= 20 ? '#EF4444' : score <= 40 ? '#F97316' : score <= 60 ? '#6B7280' : score <= 80 ? '#34D399' : '#22C55E'
 
-  // Gauge geometry — centered, smooth wedge approach
-  const W = 340, gcx = W / 2, gcy = 150, gr = 112
-  const sw = 20 // stroke width for zone arcs
-  const rInner = gr - sw / 2, rOuter = gr + sw / 2
-
-  // Build smooth filled wedge paths (no gaps, no stroke artifacts)
-  function wedgePath(from: number, to: number): string {
-    const a1 = Math.PI * (1 - from / 100)
-    const a2 = Math.PI * (1 - to / 100)
-    const ox1 = gcx + rOuter * Math.cos(a1), oy1 = gcy - rOuter * Math.sin(a1)
-    const ox2 = gcx + rOuter * Math.cos(a2), oy2 = gcy - rOuter * Math.sin(a2)
-    const ix1 = gcx + rInner * Math.cos(a2), iy1 = gcy - rInner * Math.sin(a2)
-    const ix2 = gcx + rInner * Math.cos(a1), iy2 = gcy - rInner * Math.sin(a1)
-    const large = (to - from) > 50 ? 1 : 0
-    return `M ${ox1.toFixed(1)} ${oy1.toFixed(1)} A ${rOuter} ${rOuter} 0 ${large} 0 ${ox2.toFixed(1)} ${oy2.toFixed(1)} L ${ix1.toFixed(1)} ${iy1.toFixed(1)} A ${rInner} ${rInner} 0 ${large} 1 ${ix2.toFixed(1)} ${iy2.toFixed(1)} Z`
-  }
+  // Clean gauge geometry — thin arcs, score below
+  const W = 300, gcx = W / 2, gcy = 118, gr = 100
+  const sw = 10 // thin stroke
 
   // Needle angle and tip
   const na = Math.PI * (1 - score / 100)
-  const ntx = gcx + (gr - 14) * Math.cos(na)
-  const nty = gcy - (gr - 14) * Math.sin(na)
+  const ntx = gcx + (gr + 2) * Math.cos(na)
+  const nty = gcy - (gr + 2) * Math.sin(na)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 6, padding: '0' }}>
       {/* SVG Gauge */}
-      <div style={{ textAlign: 'center', margin: '0 -8px' }}>
-        <svg width="100%" viewBox={`0 0 ${W} 178`}>
+      <div style={{ textAlign: 'center', margin: '0 -4px' }}>
+        <svg width="100%" viewBox={`0 0 ${W} 190`}>
           <defs>
-            <filter id="needleGlow">
-              <feGaussianBlur stdDeviation="4" result="b" />
-              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-            </filter>
-            <filter id="dotGlow">
-              <feGaussianBlur stdDeviation="5" result="b" />
+            <linearGradient id="gaugeGrad" gradientUnits="userSpaceOnUse" x1={gcx - gr} y1={gcy} x2={gcx + gr} y2={gcy}>
+              <stop offset="0%" stopColor="#EF4444" />
+              <stop offset="25%" stopColor="#F97316" />
+              <stop offset="50%" stopColor="#6B7280" />
+              <stop offset="75%" stopColor="#34D399" />
+              <stop offset="100%" stopColor="#22C55E" />
+            </linearGradient>
+            <filter id="needleGlow2">
+              <feGaussianBlur stdDeviation="3" result="b" />
               <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
           </defs>
 
-          {/* Background track — faint ring */}
+          {/* Background track */}
           <path d={gaugeArc(0, 100, gcx, gcy, gr)} fill="none"
-            stroke="rgba(255,255,255,0.06)" strokeWidth={sw} strokeLinecap="butt" />
+            stroke="rgba(255,255,255,0.06)" strokeWidth={sw + 6} strokeLinecap="round" />
 
-          {/* Zone wedges — filled shapes, no gaps, no stroke artifacts */}
-          {zones.map((z, i) => (
-            <path key={i} d={wedgePath(z.from, z.to)} fill={z.color} opacity={0.28} />
-          ))}
+          {/* Gradient arc — clean colored band */}
+          <path d={gaugeArc(0, 100, gcx, gcy, gr)} fill="none"
+            stroke="url(#gaugeGrad)" strokeWidth={sw} strokeLinecap="round" opacity={0.55} />
 
-          {/* Thin separator lines between zones */}
-          {[20, 40, 60, 80].map(t => {
-            const a = Math.PI * (1 - t / 100)
-            const x1 = gcx + rInner * Math.cos(a), y1 = gcy - rInner * Math.sin(a)
-            const x2 = gcx + rOuter * Math.cos(a), y2 = gcy - rOuter * Math.sin(a)
-            return <line key={t} x1={x1} y1={y1} x2={x2} y2={y2} stroke={C.bg} strokeWidth={2} />
-          })}
-
-          {/* Score fill arc — bright, shows how far the needle has traveled */}
+          {/* Active arc — bright fill up to score */}
           {score > 1 && (
             <path d={gaugeArc(0, Math.min(score, 99), gcx, gcy, gr)} fill="none"
-              stroke={sc} strokeWidth={sw} opacity={0.65} strokeLinecap="round" />
+              stroke={sc} strokeWidth={sw + 2} strokeLinecap="round" opacity={0.9} />
           )}
 
-          {/* Tick labels: 0 and 100 */}
-          <text x={gcx - rOuter - 10} y={gcy + 12} textAnchor="end" fill="#EF4444"
-            style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 700 }}>0</text>
-          <text x={gcx + rOuter + 10} y={gcy + 12} textAnchor="start" fill="#22C55E"
-            style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 700 }}>100</text>
+          {/* Zone labels along the arc */}
+          <text x={gcx - gr - 14} y={gcy + 6} textAnchor="end" fill="#EF4444"
+            style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700 }}>0</text>
+          <text x={gcx + gr + 14} y={gcy + 6} textAnchor="start" fill="#22C55E"
+            style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700 }}>100</text>
 
-          {/* Needle */}
+          {/* Needle — thin, clean */}
           <line x1={gcx} y1={gcy} x2={ntx} y2={nty}
-            stroke={sc} strokeWidth={3} strokeLinecap="round" filter="url(#needleGlow)" />
+            stroke={C.text} strokeWidth={2.5} strokeLinecap="round" filter="url(#needleGlow2)" />
+          <circle cx={ntx} cy={nty} r={4} fill={sc} />
+          <circle cx={gcx} cy={gcy} r={4} fill={C.surface2} stroke={C.text3} strokeWidth={1.5} />
 
-          {/* Needle tip dot */}
-          <circle cx={ntx} cy={nty} r={5} fill={sc} filter="url(#dotGlow)" />
-
-          {/* Center hub */}
-          <circle cx={gcx} cy={gcy} r={6} fill={sc} opacity={0.5} />
-          <circle cx={gcx} cy={gcy} r={2.5} fill={C.text} />
-
-          {/* Score — large centered above hub */}
-          <text x={gcx} y={gcy - 34} textAnchor="middle" fill={C.text}
-            style={{ fontFamily: C.mono, fontSize: 52, fontWeight: 900 }}>{score}</text>
-          <text x={gcx} y={gcy - 12} textAnchor="middle" fill={sc}
+          {/* Score — big number below gauge */}
+          <text x={gcx} y={gcy + 42} textAnchor="middle" fill={C.text}
+            style={{ fontFamily: C.mono, fontSize: 48, fontWeight: 900 }}>{score}</text>
+          <text x={gcx} y={gcy + 60} textAnchor="middle" fill={sc}
             style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 700, letterSpacing: '0.16em' }}>
             {rating.toUpperCase()}
           </text>
@@ -1194,7 +1170,7 @@ function EnergySlide({ c }: { c: Record<string, any> }) {
           textAlign: 'center', padding: '12px 0', borderRadius: 12,
           background: `radial-gradient(circle at 50% 50%, ${clr(oil.changePercent)}06 0%, transparent 70%)`,
         }}>
-          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 4, fontWeight: 600 }}>CRUDE OIL</div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 4, fontWeight: 600 }}>BRENT CRUDE</div>
           <div style={{ fontFamily: C.mono, fontSize: 46, fontWeight: 900, color: C.text, ...tab, ...glow(C.text, 16), lineHeight: 1 }}>
             {price(oil.price)}
           </div>
@@ -1665,7 +1641,7 @@ function CtaSlide({ c }: { c: Record<string, any> }) {
 
       {/* Feature pills */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', maxWidth: 340 }}>
-        {['Live Charts', 'AI Sentiment', 'News Hub', 'Warroom', 'Crypto', 'Commodities'].map(f => (
+        {['Live Charts', 'AI Sentiment', 'News Hub', 'Geopolitics', 'Crypto', 'Commodities'].map(f => (
           <span key={f} style={{
             fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: C.text3,
             padding: '3px 10px', borderRadius: 6, background: C.surface,

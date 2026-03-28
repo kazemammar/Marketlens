@@ -120,13 +120,18 @@ const glow = (c: string, blur = 20): React.CSSProperties => ({ textShadow: `0 0 
 const tab: React.CSSProperties = { fontVariantNumeric: 'tabular-nums' }
 
 function gaugeArc(from: number, to: number, cx: number, cy: number, r: number): string {
-  const a1 = Math.PI * (1 - from / 100)
-  const a2 = Math.PI * (1 - to / 100)
-  const x1 = cx + r * Math.cos(a1), y1 = cy - r * Math.sin(a1)
-  const x2 = cx + r * Math.cos(a2), y2 = cy - r * Math.sin(a2)
-  // Semicircular gauge: arc never exceeds 180°, so large-arc is always 0.
-  // Using 1 here would flip arcs > 50% through the bottom of the circle.
-  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 0 ${x2.toFixed(1)} ${y2.toFixed(1)}`
+  const pt = (v: number) => {
+    const a = Math.PI * (1 - v / 100)
+    return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }
+  }
+  const p1 = pt(from), p2 = pt(to)
+  // For arcs near 180° the sweep-flag=0 is ambiguous and SVG picks the bottom
+  // semicircle. Split into two sub-arcs via the midpoint to stay on the dome.
+  if (to - from >= 90) {
+    const pm = pt((from + to) / 2)
+    return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${r} ${r} 0 0 0 ${pm.x.toFixed(1)} ${pm.y.toFixed(1)} A ${r} ${r} 0 0 0 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
+  }
+  return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${r} ${r} 0 0 0 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
 }
 
 function sparklinePath(values: number[], w: number, h: number, padding = 4): { line: string; area: string } {

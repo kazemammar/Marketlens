@@ -612,7 +612,7 @@ Respond with valid JSON only — no markdown fences:
 {
   "briefTitle": "<powerful headline, max 10 words, attention-grabbing and specific>",
   "briefSubtitle": "<max 65 chars, use · separator, e.g. 'S&P -3.2% · Oil $99 · Gold $4524 · Fear: 10' — use human names not ticker symbols, use actual numbers from data>",
-  "whyMoved": "<exactly 3 bullet points separated by \\n, each starts with a bold label then a colon then details. Example: 'OIL SHOCK: Saudi output cut sent crude to $99, highest in 6 weeks\\nTECH ROUT: NVDA, META, AMZN all dropped 3%+ on earnings fears\\nGOLD RUSH: Safe-haven buying pushed gold above $4500'. Use specific numbers.>",
+  "whyMoved": "<exactly 4 bullet points separated by \\n, each starts with a bold label then a colon then details. Example: 'OIL SHOCK: Saudi output cut sent crude to $99, highest in 6 weeks\\nTECH ROUT: NVDA, META, AMZN all dropped 3%+ on earnings fears\\nGOLD RUSH: Safe-haven buying pushed gold above $4500\\nYIELD SPIKE: 10Y treasury hit 4.8%, highest since October'. Use specific numbers.>",
   ${weekRecapField}
   "energyNarrative": "<1 sentence on oil/commodities, max 20 words>",
   "cryptoNarrative": "<1 sentence on crypto, max 20 words>",
@@ -915,7 +915,7 @@ function buildSlides(
           earnings: d.earnings.slice(0, 6).map((e: { symbol?: string; ticker?: string }) =>
             e.symbol ?? e.ticker ?? ''
           ).filter(Boolean),
-          predictions: d.predictions.slice(0, 3).map((p: { question?: string; title?: string; probability?: number; yesPrice?: number }) => {
+          predictions: d.predictions.slice(0, 5).map((p: { question?: string; title?: string; probability?: number; yesPrice?: number }) => {
             const prob = p.probability ?? p.yesPrice ?? 0
             return { title: p.question ?? p.title ?? '', probability: prob > 1 ? prob : Math.round(prob * 100) }
           }).filter((p: { title: string }) => p.title),

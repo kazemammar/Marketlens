@@ -354,7 +354,7 @@ function SlideFrame({ slide, index, total, date, edition }: {
 
         {/* Content */}
         <div style={{
-          flex: 1, padding: isCover || isCta ? '0 20px' : '8px 20px 0',
+          flex: 1, padding: isCover || isCta ? '0 20px' : '4px 20px 0',
           overflow: 'hidden', display: 'flex', flexDirection: 'column',
           position: 'relative', zIndex: 1,
         }}>
@@ -451,11 +451,11 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-evenly', padding: '2px 0 4px',
+      display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 12, padding: '0',
       background: sentTint !== 'transparent' ? `radial-gradient(ellipse at 50% 40%, ${sentTint} 0%, transparent 70%)` : undefined,
     }}>
       {/* Edition label with icon + flanking gradient lines */}
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: 'center', flexShrink: 0 }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 36, height: 1, background: `linear-gradient(90deg, transparent, ${accent}60)` }} />
           <span style={{
@@ -546,7 +546,7 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
           return (
             <div key={q.symbol} style={{
               background: `linear-gradient(180deg, ${c2}${alpha} 0%, ${C.surface} 100%)`,
-              borderRadius: 10, padding: '10px 6px 8px',
+              borderRadius: 10, padding: '12px 6px 10px',
               border: `1px solid ${C.border}`, textAlign: 'center',
               borderBottom: `2px solid ${c2}50`,
             }}>
@@ -568,7 +568,7 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
         {topG && (
           <div style={{
             flex: 1, display: 'flex', alignItems: 'center', gap: 5,
-            padding: '7px 10px', borderRadius: 8, background: C.greenDim,
+            padding: '8px 10px', borderRadius: 8, background: C.greenDim,
             borderLeft: `3px solid ${C.green}60`,
           }}>
             <span style={{ fontFamily: C.mono, fontSize: 7, color: C.text3, fontWeight: 700 }}>TOP</span>
@@ -579,7 +579,7 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
         {topL && (
           <div style={{
             flex: 1, display: 'flex', alignItems: 'center', gap: 5,
-            padding: '7px 10px', borderRadius: 8, background: C.redDim,
+            padding: '8px 10px', borderRadius: 8, background: C.redDim,
             borderLeft: `3px solid ${C.red}60`,
           }}>
             <span style={{ fontFamily: C.mono, fontSize: 7, color: C.text3, fontWeight: 700 }}>BOT</span>
@@ -897,7 +897,7 @@ function SentimentSlide({ c }: { c: Record<string, any> }) {
   const nty = gcy - (gr - 14) * Math.sin(na)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 0, paddingBottom: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 6, padding: '0' }}>
       {/* SVG Gauge */}
       <div style={{ textAlign: 'center', margin: '0 -8px' }}>
         <svg width="100%" viewBox={`0 0 ${W} 178`}>
@@ -1050,14 +1050,14 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
   const bullets = narrative.split(/\n/)
     .map((b: string) => b.replace(/^[\-\*\d\.]+\s*/, '').trim())
     .filter((b: string) => b.length > 10)
-    .slice(0, 4)
+    .slice(0, 5)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 2 }}>
-      <h3 style={{ fontFamily: C.sans, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.3px' }}>{title}</h3>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 6, padding: '0' }}>
+      <h3 style={{ fontFamily: C.sans, fontSize: 20, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.3px', flexShrink: 0 }}>{title}</h3>
 
-      {/* Narrative bullets — scannable cards instead of a text wall */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1, justifyContent: 'center', marginTop: 6 }}>
+      {/* Narrative bullets — flex:1 fills available space, space-evenly distributes cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flex: 1, justifyContent: 'space-evenly' }}>
         {bullets.map((bullet: string, i: number) => {
           const colonIdx = bullet.indexOf(':')
           const hasTopic = colonIdx > 0 && colonIdx < 30
@@ -1066,26 +1066,26 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
           return (
             <div key={i} style={{
               display: 'flex', gap: 10, alignItems: 'flex-start',
-              padding: '12px 14px', borderRadius: 10,
+              padding: '18px 14px', borderRadius: 10,
               background: C.surface, border: `1px solid ${C.border}`,
               borderLeft: `3px solid ${accent}50`,
             }}>
               <span style={{
-                fontFamily: C.mono, fontSize: 18, fontWeight: 900, color: accent,
-                width: 24, textAlign: 'center', flexShrink: 0, ...glow(accent, 10), lineHeight: 1,
+                fontFamily: C.mono, fontSize: 22, fontWeight: 900, color: accent,
+                width: 26, textAlign: 'center', flexShrink: 0, ...glow(accent, 10), lineHeight: 1,
               }}>{i + 1}</span>
               <div style={{ flex: 1 }}>
                 {topic ? (
                   <>
-                    <span style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: C.text, letterSpacing: '0.04em' }}>
+                    <span style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 800, color: C.text, letterSpacing: '0.04em' }}>
                       {topic.toUpperCase()}
                     </span>
-                    <p style={{ fontFamily: C.sans, fontSize: 12, color: C.text2, margin: '3px 0 0', lineHeight: 1.45 }}>
+                    <p style={{ fontFamily: C.sans, fontSize: 13, color: C.text2, margin: '4px 0 0', lineHeight: 1.5 }}>
                       {explanation}
                     </p>
                   </>
                 ) : (
-                  <p style={{ fontFamily: C.sans, fontSize: 12, color: C.text2, margin: 0, lineHeight: 1.45 }}>{bullet}</p>
+                  <p style={{ fontFamily: C.sans, fontSize: 13, color: C.text2, margin: 0, lineHeight: 1.5 }}>{bullet}</p>
                 )}
               </div>
             </div>
@@ -1095,7 +1095,7 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
 
       {/* Chokepoint alerts — only non-normal statuses */}
       {cps.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, letterSpacing: '0.12em', fontWeight: 600 }}>SUPPLY CHAIN ALERTS</span>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {cps.slice(0, 3).map((cp: any, i: number) => {
@@ -1103,7 +1103,7 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
             return (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 8,
-                padding: '7px 10px', background: C.surface, borderRadius: 8,
+                padding: '10px 12px', background: C.surface, borderRadius: 8,
                 border: `1px solid ${C.border}`, borderLeft: `3px solid ${cl}60`,
               }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: cl, flexShrink: 0, boxShadow: `0 0 6px ${cl}60` }} />
@@ -1188,13 +1188,13 @@ function EnergySlide({ c }: { c: Record<string, any> }) {
   ].filter(o => o.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
       {oil && (
         <div style={{
-          textAlign: 'center', padding: '18px 0', borderRadius: 12,
+          textAlign: 'center', padding: '12px 0', borderRadius: 12,
           background: `radial-gradient(circle at 50% 50%, ${clr(oil.changePercent)}06 0%, transparent 70%)`,
         }}>
-          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 6, fontWeight: 600 }}>CRUDE OIL</div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 4, fontWeight: 600 }}>CRUDE OIL</div>
           <div style={{ fontFamily: C.mono, fontSize: 46, fontWeight: 900, color: C.text, ...tab, ...glow(C.text, 16), lineHeight: 1 }}>
             {price(oil.price)}
           </div>
@@ -1264,13 +1264,13 @@ function CryptoSlide({ c }: { c: Record<string, any> }) {
   ].filter(o => o.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
       {btc && (
         <div style={{
-          textAlign: 'center', padding: '18px 0', borderRadius: 12,
+          textAlign: 'center', padding: '12px 0', borderRadius: 12,
           background: `radial-gradient(circle at 50% 50%, ${clr(btc.changePercent)}06 0%, transparent 70%)`,
         }}>
-          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 6, fontWeight: 600 }}>BITCOIN</div>
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 4, fontWeight: 600 }}>BITCOIN</div>
           <div style={{ fontFamily: C.mono, fontSize: 40, fontWeight: 900, color: C.text, ...tab, ...glow(C.text, 16), lineHeight: 1 }}>
             {price(btc.price)}
           </div>
@@ -1341,7 +1341,7 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
   const maxScore = Math.max(...currencies.map(f => Math.abs(f.score)), 1)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 2, paddingBottom: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
       {dxy && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1360,7 +1360,7 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
       )}
 
       {currencies.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flex: 1, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
           {currencies.slice(0, 10).map(f => {
             const bw = (Math.abs(f.score) / maxScore) * 50
             const fc = f.score >= 0 ? C.green : C.red
@@ -1387,7 +1387,7 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
           })}
         </div>
       ) : (
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0' }}>
           <span style={{ fontFamily: C.mono, fontSize: 11, color: C.text3 }}>Strength data unavailable</span>
         </div>
       )}
@@ -1418,12 +1418,12 @@ function SectorsSlide({ c }: { c: Record<string, any> }) {
   const rows = Math.ceil(sectors.length / cols)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 4, paddingTop: 4, paddingBottom: 4 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 4, padding: '0' }}>
       <div style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
-        gap: 4, flex: 1,
+        gap: 4,
       }}>
         {sectors.slice(0, 12).map(s => {
           const intensity = Math.min(Math.abs(s.score) / mx, 1)
@@ -1509,51 +1509,51 @@ function OutlookSlide({ c, edition }: { c: Record<string, any>; edition: Edition
   const predictions: Array<{ title: string; probability: number }> = c.predictions ?? []
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 10, paddingTop: 4, paddingBottom: 2 }}>
-      {/* Watch items — 3 large, scannable cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8, padding: '0' }}>
+      {/* Watch items — flex:1 fills space, space-evenly distributes cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'space-evenly' }}>
         {items.slice(0, 3).map((item, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', gap: 12,
-            padding: '14px 16px', background: C.surface, borderRadius: 12,
+            padding: '20px 16px', background: C.surface, borderRadius: 12,
             border: `1px solid ${C.border}`, borderLeft: `3px solid ${accent}50`,
           }}>
             <span style={{
-              fontFamily: C.mono, fontSize: 24, fontWeight: 900, color: accent,
-              width: 28, textAlign: 'center', flexShrink: 0, ...glow(accent, 10),
+              fontFamily: C.mono, fontSize: 28, fontWeight: 900, color: accent,
+              width: 32, textAlign: 'center', flexShrink: 0, ...glow(accent, 10),
             }}>{i + 1}</span>
             <span style={{ fontFamily: C.sans, fontSize: 14, color: C.text2, lineHeight: 1.5 }}>{item}</span>
           </div>
         ))}
       </div>
 
-      {/* Predictions — 2 items with visual progress bars */}
+      {/* Predictions — up to 5 items with visual progress bars */}
       {predictions.length > 0 && (
         <div style={{
-          padding: '10px 12px', borderRadius: 10,
+          padding: '14px 14px', borderRadius: 12,
           background: C.surface, border: `1px solid ${C.border}`,
         }}>
-          <div style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, letterSpacing: '0.1em', marginBottom: 6, fontWeight: 600 }}>PREDICTION MARKETS</div>
-          {predictions.slice(0, 3).map((p, i) => {
+          <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.1em', marginBottom: 8, fontWeight: 600 }}>PREDICTION MARKETS</div>
+          {predictions.slice(0, 5).map((p, i) => {
             const prob = p.probability ?? 0
             const barClr = prob >= 70 ? C.green : prob >= 30 ? C.amber : C.text3
             return (
-              <div key={i} style={{ marginTop: i > 0 ? 8 : 0 }}>
+              <div key={i} style={{ marginTop: i > 0 ? 10 : 0 }}>
                 <div style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  marginBottom: 4,
+                  marginBottom: 5,
                 }}>
                   <span style={{
-                    fontFamily: C.sans, fontSize: 10, color: C.text2, flex: 1, lineHeight: 1.3,
+                    fontFamily: C.sans, fontSize: 11, color: C.text2, flex: 1, lineHeight: 1.35,
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const,
                     marginRight: 8,
                   }}>{p.title}</span>
                   <span style={{
-                    fontFamily: C.mono, fontSize: 12, fontWeight: 800, color: barClr,
+                    fontFamily: C.mono, fontSize: 14, fontWeight: 800, color: barClr,
                     ...tab, flexShrink: 0, ...glow(barClr, 6),
                   }}>{prob.toFixed(0)}%</span>
                 </div>
-                <div style={{ height: 5, background: C.dim, borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: C.dim, borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', borderRadius: 3,
                     width: `${Math.max(prob, 2)}%`,
@@ -1575,7 +1575,7 @@ function OutlookSlide({ c, edition }: { c: Record<string, any>; edition: Edition
 function PulseSlide({ c }: { c: Record<string, any> }) {
   const headlines: string[] = c.headlines ?? []
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
       {c.pulseText && (
         <div style={{
           padding: '14px 16px', borderRadius: 10, background: C.surface,
@@ -1586,7 +1586,7 @@ function PulseSlide({ c }: { c: Record<string, any> }) {
       )}
 
       {headlines.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, marginTop: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, letterSpacing: '0.12em', fontWeight: 600 }}>HEADLINES</span>
           {headlines.slice(0, 6).map((h, i) => (
             <div key={i} style={{
@@ -1617,7 +1617,7 @@ function CtaSlide({ c }: { c: Record<string, any> }) {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', height: '100%',
-      alignItems: 'center', justifyContent: 'center', gap: 24, textAlign: 'center',
+      alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center',
     }}>
       {/* Exact MarketLensLogo — icon + wordmark + LIVE */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

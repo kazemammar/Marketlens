@@ -159,6 +159,8 @@ export default function DailyBriefRenderer() {
   const [data, setData] = useState<BriefPayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [downloadingAll, setDownloadingAll] = useState(false)
 
   const fetchBrief = useCallback(async (ed: Edition, refresh = false) => {
     setLoading(true); setError(false)
@@ -211,9 +213,6 @@ export default function DailyBriefRenderer() {
 
   const total = data.slides.length
   const dateStr = new Date(data.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-
-  const slideRefs = useRef<(HTMLDivElement | null)[]>([])
-  const [downloadingAll, setDownloadingAll] = useState(false)
 
   const handleDownloadAll = useCallback(async () => {
     if (downloadingAll || !data) return

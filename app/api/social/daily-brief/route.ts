@@ -342,7 +342,7 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     data.news = { articles: [...archivedArticles, ...uniqueLive] }
   }
 
-  const extracted = extractData(data)
+  const extracted = extractData(data, edition)
   const groqResponse = await callGroq(edition, extracted)
 
   // Reorder newsArticles based on Groq's importance ranking
@@ -412,13 +412,13 @@ interface ExtractedData {
   predictions: any[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   energy: any
-  newsArticles: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null }>
-  newsArticlesAll: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null }>
+  newsArticles: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>
+  newsArticlesAll: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>
   heatmapStocks: Array<{ symbol: string; name: string; changePercent: number; weight: number }>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractData(raw: Record<string, any>): ExtractedData {
+function extractData(raw: Record<string, any>, edition: Edition): ExtractedData {
   const quotes = raw.quotes ?? {}
 
   let gainers: ExtractedData['gainers'] = []
@@ -561,27 +561,75 @@ function extractData(raw: Record<string, any>): ExtractedData {
     'Seeking Alpha': 3, 'Benzinga': 3, 'OilPrice.com': 3,
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const articles = allArticles
+  const filtered = allArticles
     .filter((a: any) => {
       const hl = (a.headline ?? a.title ?? '') as string
       return hl && !JUNK_PATTERNS.some(p => p.test(hl))
     })
-    .sort((a: { source?: string }, b: { source?: string }) => {
+
+  // For weekly/weekend editions: sample evenly across days so the full
+  // time window is represented, not just the earliest articles.
+  // For daily editions: sort by source quality (wire services first).
+  const weekly = isWeeklyEdition(edition)
+  const headlineLimit = weekly ? 25 : 15   // more headlines for week-long editions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let articles: any[]
+  if (weekly && filtered.length > headlineLimit) {
+    // Group by day, then round-robin pick from each day (newest first within each day)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const byDay = new Map<string, any[]>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const a of filtered) {
+      const ts = a.publishedAt ?? Date.now()
+      const day = new Date(ts).toISOString().slice(0, 10)
+      if (!byDay.has(day)) byDay.set(day, [])
+      byDay.get(day)!.push(a)
+    }
+    // Sort each day's articles by source quality
+    for (const dayArticles of byDay.values()) {
+      dayArticles.sort((a: { source?: string }, b: { source?: string }) => {
+        const ta = SOURCE_TIER[a.source ?? ''] ?? 5
+        const tb = SOURCE_TIER[b.source ?? ''] ?? 5
+        return ta - tb
+      })
+    }
+    // Round-robin across days (most recent day first)
+    const days = [...byDay.keys()].sort().reverse()
+    articles = []
+    let idx = 0
+    while (articles.length < headlineLimit) {
+      let added = false
+      for (const day of days) {
+        const dayArts = byDay.get(day)!
+        if (idx < dayArts.length) {
+          articles.push(dayArts[idx])
+          added = true
+          if (articles.length >= headlineLimit) break
+        }
+      }
+      if (!added) break
+      idx++
+    }
+  } else {
+    // Daily editions: source quality sort, newest articles naturally first from archive
+    articles = filtered.sort((a: { source?: string }, b: { source?: string }) => {
       const ta = SOURCE_TIER[a.source ?? ''] ?? 5
       const tb = SOURCE_TIER[b.source ?? ''] ?? 5
-      return ta - tb // lower tier = higher priority
-    })
+      return ta - tb
+    }).slice(0, headlineLimit)
+  }
 
-  const headlines = articles.slice(0, 15).map((a: { headline?: string; title?: string }) => a.headline ?? a.title ?? '')
+  const headlines = articles.map((a: { headline?: string; title?: string }) => a.headline ?? a.title ?? '')
     .filter(Boolean)
 
-  // Keep up to 15 articles — Groq will pick the 6 most important by index
+  // Groq will pick the 6 most important by index
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const newsArticlesAll = articles.slice(0, 15).map((a: any) => ({
+  const newsArticlesAll = articles.map((a: any) => ({
     headline: (a.headline ?? a.title ?? '') as string,
     imageUrl: (a.imageUrl ?? a.image ?? a.thumbnail ?? null) as string | null,
     source: (a.source ?? '') as string,
     url: (a.url ?? a.link ?? null) as string | null,
+    publishedAt: (a.publishedAt ?? null) as number | null,
   })).filter((a: { headline: string }) => a.headline)
   // Default selection (first 6) — overridden after Groq responds
   let newsArticles = newsArticlesAll.slice(0, 6)
@@ -713,8 +761,14 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
     .map(s => `${s.sector}: ${s.score > 0 ? '+' : ''}${s.score.toFixed(1)}`)
     .join(', ')
 
-  // Pass up to 15 headlines with source for Groq to rank by importance
-  const headlineBlock = d.headlines.slice(0, 15).map((h, i) => `${i + 1}. ${h}`).join('\n')
+  // Pass headlines for Groq to rank by importance (more for weekly editions)
+  // For weekly: include source + date so Groq can assess day-by-day importance
+  const headlineBlock = d.newsArticlesAll.slice(0, weekly ? 25 : 15).map((a, i) => {
+    const dateStr = a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-US', { weekday: 'short' }) : ''
+    return weekly && dateStr
+      ? `${i + 1}. [${dateStr}] [${a.source}] ${a.headline}`
+      : `${i + 1}. ${a.headline}`
+  }).join('\n')
 
   const earningsList = d.earnings.slice(0, 8).map((e: { symbol?: string; ticker?: string }) =>
     e.symbol ?? e.ticker ?? ''

@@ -4,65 +4,61 @@ import { useEffect, useState } from 'react'
 import type { EconomicIndicator } from '@/app/api/economics/route'
 import CentralBankRates from '@/components/economics/CentralBankRates'
 
-// ─── Mini sparkline SVG ────────────────────────────────────────────────────
+// ─── Mini sparkline SVG (matches AssetCard style) ─────────────────────────
 
-function Sparkline({ data }: { data: Array<{ date: string; value: number }> }) {
-  if (data.length < 2) return null
+function Sparkline({ values, isPositive, gradientId }: { values: number[]; isPositive: boolean; gradientId: string }) {
+  if (values.length < 2) return null
 
-  const values = data.map((d) => d.value)
-  const min    = Math.min(...values)
-  const max    = Math.max(...values)
-  const range  = max - min || 1
+  const W = 72, H = 28, PAD = 2
+  const min   = Math.min(...values)
+  const max   = Math.max(...values)
+  const range = max - min || 1
 
-  const W = 100
-  const H = 40
+  const coords = values.map((v, i) => ({
+    x: PAD + (i / (values.length - 1)) * (W - 2 * PAD),
+    y: PAD + (1 - (v - min) / range) * (H - 2 * PAD),
+  }))
 
-  const pts = values.map((v, i) => {
-    const x = (i / (values.length - 1)) * W
-    const y = H - ((v - min) / range) * H
-    return `${x},${y}`
-  })
+  let d = `M ${coords[0].x},${coords[0].y}`
+  for (let i = 1; i < coords.length; i++) {
+    const prev = coords[i - 1]
+    const cur  = coords[i]
+    const cpx  = (prev.x + cur.x) / 2
+    d += ` C ${cpx},${prev.y} ${cpx},${cur.y} ${cur.x},${cur.y}`
+  }
 
-  const lastVal  = values[values.length - 1]
-  const firstVal = values[0]
-  const trending = lastVal >= firstVal
-
-  const areaPoints = `0,${H} ${pts.join(' ')} ${W},${H}`
-  const gradId = trending ? 'sparkUp' : 'sparkDown'
+  const fillD  = `${d} L ${coords[coords.length - 1].x},${H} L ${coords[0].x},${H} Z`
+  const clrVar = isPositive ? 'var(--price-up)' : 'var(--price-down)'
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="shrink-0" aria-hidden>
       <defs>
-        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={trending ? 'var(--price-up)' : 'var(--price-down)'} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={trending ? 'var(--price-up)' : 'var(--price-down)'} stopOpacity="0" />
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" style={{ stopColor: clrVar, stopOpacity: 0.22 }} />
+          <stop offset="100%" style={{ stopColor: clrVar, stopOpacity: 0 }} />
         </linearGradient>
       </defs>
-      <polygon points={areaPoints} fill={`url(#${gradId})`} />
-      <polyline
-        points={pts.join(' ')}
-        fill="none"
-        stroke={trending ? 'var(--price-up)' : 'var(--price-down)'}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.8"
-      />
+      <path d={fillD} fill={`url(#${gradientId})`} />
+      <path d={d} fill="none" style={{ stroke: clrVar }} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
 
-// ─── Large indicator card ──────────────────────────────────────────────────
+// ─── Indicator card (compact, matches AssetCard layout) ───────────────────
 
-function LargeCard({ ind }: { ind: EconomicIndicator }) {
-  const isInverted = ind.id === 'YIELD_SPREAD' && (ind.value ?? 0) < 0
-  const positive   = (ind.change ?? 0) > 0
-  const negative   = (ind.change ?? 0) < 0
+function IndicatorCard({ ind }: { ind: EconomicIndicator }) {
+  const isInverted  = ind.id === 'YIELD_SPREAD' && (ind.value ?? 0) < 0
+  const positive    = (ind.change ?? 0) > 0
+  const negative    = (ind.change ?? 0) < 0
+  const isPositive  = positive
   const changeColor = positive
     ? 'var(--price-up)'
     : negative
       ? 'var(--price-down)'
       : 'var(--price-flat)'
+
+  const gradientId = `econ-${ind.id.replace(/[^a-z0-9]/gi, '')}`
+  const histValues = ind.history.map((h) => h.value)
 
   function formatVal() {
     if (ind.value === null) return '—'
@@ -71,66 +67,41 @@ function LargeCard({ ind }: { ind: EconomicIndicator }) {
     return ind.value.toFixed(1)
   }
 
-  function formatDate(s: string) {
-    if (!s) return ''
-    return new Date(s).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-  }
-
   return (
     <div
       className="flex flex-col gap-2.5 rounded border bg-[var(--surface)] p-2.5 transition hover:border-[var(--accent)]/30"
       style={{ borderColor: isInverted ? 'rgba(239,68,68,0.5)' : 'var(--border)' }}
     >
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-muted)]">
-            {ind.name}
+        <div className="min-w-0">
+          <span className="block truncate font-mono text-[12px] font-bold text-[var(--text)]">
+            {ind.id.replace(/_/g, ' ')}
           </span>
-          <div className="mt-1 font-mono text-[28px] font-bold leading-none tabular-nums text-[var(--text)]">
-            {formatVal()}
-          </div>
+          <p className="mt-0.5 truncate font-mono text-[10px] text-[var(--text-muted)]">{ind.name}</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {isInverted && (
-            <span className="rounded border border-red-500/40 bg-red-500/10 px-1.5 py-0.5 font-mono text-[8px] font-bold text-red-400">
-              INVERTED
-            </span>
-          )}
-          {ind.change !== null && ind.change !== 0 && (
-            <span
-              className="font-mono text-[11px] font-semibold tabular-nums"
-              style={{ color: changeColor }}
-            >
-              {positive ? '+' : ''}{ind.change.toFixed(2)}{ind.unit === '%' ? 'pp' : ''}
-            </span>
-          )}
-          <span className="font-mono text-[9px] text-[var(--text-muted)]">
-            {formatDate(ind.date)}
-          </span>
-        </div>
+        <Sparkline values={histValues} isPositive={isPositive} gradientId={gradientId} />
       </div>
 
-      {/* Sparkline */}
-      {ind.history.length > 1 && (
-        <div className="rounded bg-[var(--surface-2)] p-2">
-          <Sparkline data={ind.history} />
-          <div className="mt-1 flex justify-between">
-            <span className="font-mono text-[8px] text-[var(--text-muted)]">
-              {ind.history[0]?.date ? new Date(ind.history[0].date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : ''}
-            </span>
-            <span className="font-mono text-[8px] text-[var(--text-muted)]">
-              {ind.history[ind.history.length - 1]?.date ? new Date(ind.history[ind.history.length - 1].date).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : ''}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Interpretation */}
-      {ind.interpretation && (
-        <p className="font-mono text-[10px] leading-relaxed text-[var(--text-muted)]">
-          {ind.interpretation}
+      <div className="flex items-end justify-between">
+        <p className="font-mono text-[16px] font-bold tabular-nums text-[var(--text)]">
+          {formatVal()}
         </p>
-      )}
+        <div className="flex items-center gap-1">
+          {isInverted && (
+            <span className="rounded border border-red-500/40 bg-red-500/10 px-1 py-0.5 font-mono text-[7px] font-bold text-red-400">
+              INV
+            </span>
+          )}
+          {ind.change !== null && ind.change !== 0 ? (
+            <div className="flex items-center gap-1 font-mono text-[11px] font-semibold tabular-nums" style={{ color: changeColor }}>
+              <span className="font-mono text-[9px] leading-none">{positive ? '▲' : '▼'}</span>
+              <span>{positive ? '+' : ''}{ind.change.toFixed(2)}{ind.unit === '%' ? 'pp' : ''}</span>
+            </div>
+          ) : (
+            <span className="font-mono text-[11px] font-semibold tabular-nums" style={{ color: 'var(--price-flat)' }}>—</span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -243,22 +214,27 @@ export default function EconomicsPage() {
           </div>
           <div className="p-3">
             {loading ? (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} className="h-40 rounded border border-[var(--border)] bg-[var(--surface)]">
-                    <div className="flex h-full animate-pulse flex-col gap-3 p-4">
-                      <div className="skeleton h-2 w-24 rounded" />
-                      <div className="skeleton h-8 w-20 rounded" />
-                      <div className="skeleton flex-1 rounded" />
-                      <div className="skeleton h-2 w-32 rounded" />
+                  <div key={i} className="flex flex-col gap-2.5 rounded border border-[var(--border)] bg-[var(--surface)] p-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="h-3.5 w-16 animate-pulse rounded bg-[var(--surface-2)]" />
+                        <div className="h-3 w-24 animate-pulse rounded bg-[var(--surface-2)]" />
+                      </div>
+                      <div className="h-7 w-18 animate-pulse rounded bg-[var(--surface-2)]" />
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <div className="h-5 w-20 animate-pulse rounded bg-[var(--surface-2)]" />
+                      <div className="h-3 w-12 animate-pulse rounded bg-[var(--surface-2)]" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {indicators.map((ind) => (
-                  <LargeCard key={ind.id} ind={ind} />
+                  <IndicatorCard key={ind.id} ind={ind} />
                 ))}
               </div>
             )}

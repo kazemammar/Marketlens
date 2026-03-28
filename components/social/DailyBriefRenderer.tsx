@@ -451,7 +451,7 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', padding: '6px 0 4px',
+      display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-evenly', padding: '2px 0 4px',
       background: sentTint !== 'transparent' ? `radial-gradient(ellipse at 50% 40%, ${sentTint} 0%, transparent 70%)` : undefined,
     }}>
       {/* Edition label with icon + flanking gradient lines */}
@@ -720,7 +720,7 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
       {/* Hero story — always has visual background */}
       <div style={{
         position: 'relative', borderRadius: 12, overflow: 'hidden',
-        flexShrink: 0, height: '38%',
+        flexShrink: 0, height: '34%',
         background: `linear-gradient(135deg, ${accent}18 0%, #1a1a2e 40%, ${C.surface2} 100%)`,
       }}>
         {hero.imageUrl ? (
@@ -1057,7 +1057,7 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
       <h3 style={{ fontFamily: C.sans, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.3px' }}>{title}</h3>
 
       {/* Narrative bullets — scannable cards instead of a text wall */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'center', marginTop: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1, justifyContent: 'center', marginTop: 6 }}>
         {bullets.map((bullet: string, i: number) => {
           const colonIdx = bullet.indexOf(':')
           const hasTopic = colonIdx > 0 && colonIdx < 30
@@ -1509,9 +1509,9 @@ function OutlookSlide({ c, edition }: { c: Record<string, any>; edition: Edition
   const predictions: Array<{ title: string; probability: number }> = c.predictions ?? []
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 10, paddingTop: 4, paddingBottom: 2 }}>
       {/* Watch items — 3 large, scannable cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {items.slice(0, 3).map((item, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', gap: 12,
@@ -1532,10 +1532,9 @@ function OutlookSlide({ c, edition }: { c: Record<string, any>; edition: Edition
         <div style={{
           padding: '10px 12px', borderRadius: 10,
           background: C.surface, border: `1px solid ${C.border}`,
-          marginTop: 8,
         }}>
           <div style={{ fontFamily: C.mono, fontSize: 8, color: C.text3, letterSpacing: '0.1em', marginBottom: 6, fontWeight: 600 }}>PREDICTION MARKETS</div>
-          {predictions.slice(0, 2).map((p, i) => {
+          {predictions.slice(0, 3).map((p, i) => {
             const prob = p.probability ?? 0
             const barClr = prob >= 70 ? C.green : prob >= 30 ? C.amber : C.text3
             return (

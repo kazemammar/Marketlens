@@ -120,6 +120,18 @@ const arrow = (n: number | null | undefined) => (n ?? 0) >= 0 ? '▲' : '▼'
 const glow = (c: string, blur = 20): React.CSSProperties => ({ textShadow: `0 0 ${blur}px ${c}80` })
 const tab: React.CSSProperties = { fontVariantNumeric: 'tabular-nums' }
 
+// Edition-aware timeframe labels for % change context
+const TIMEFRAME: Record<Edition, string> = {
+  morning: 'OVERNIGHT',
+  close: 'TODAY',
+  weekend: '24H',
+  weekly: 'THIS WEEK',
+}
+const timeframeStyle: React.CSSProperties = {
+  fontFamily: C.mono, fontSize: 7, color: C.text3,
+  letterSpacing: '0.08em', fontWeight: 600,
+}
+
 
 function sparklinePath(values: number[], w: number, h: number, padding = 4): { line: string; area: string } {
   if (values.length < 2) return { line: '', area: '' }
@@ -803,16 +815,16 @@ function SlideContent({ slide, edition }: { slide: SlideData; edition: Edition }
   const c = slide.content
   switch (slide.type) {
     case 'cover':      return <CoverSlide c={c} title={slide.title} edition={edition} />
-    case 'heatmap':    return <HeatmapSlide c={c} />
+    case 'heatmap':    return <HeatmapSlide c={c} edition={edition} />
     case 'headlines':  return <HeadlinesSlide c={c} edition={edition} />
-    case 'signals':    return <SignalsSlide c={c} />
-    case 'scoreboard': return <ScoreboardSlide c={c} />
+    case 'signals':    return <SignalsSlide c={c} edition={edition} />
+    case 'scoreboard': return <ScoreboardSlide c={c} edition={edition} />
     case 'sentiment':  return <SentimentSlide c={c} />
     case 'narrative':  return <NarrativeSlide c={c} title={slide.title} edition={edition} />
-    case 'movers':     return <MoversSlide c={c} />
-    case 'energy':     return <EnergySlide c={c} />
-    case 'crypto':     return <CryptoSlide c={c} />
-    case 'forex':      return <ForexSlide c={c} />
+    case 'movers':     return <MoversSlide c={c} edition={edition} />
+    case 'energy':     return <EnergySlide c={c} edition={edition} />
+    case 'crypto':     return <CryptoSlide c={c} edition={edition} />
+    case 'forex':      return <ForexSlide c={c} edition={edition} />
     case 'sectors':    return <SectorsSlide c={c} />
     case 'radar':      return <RadarSlide c={c} />
     case 'outlook':    return <OutlookSlide c={c} edition={edition} />
@@ -944,9 +956,7 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
               <div style={{ fontFamily: C.mono, fontSize: 12, fontWeight: 800, color: c2, ...tab, ...glow(c2, 12), marginTop: 3 }}>
                 {arrow(q.changePercent)} {pct(q.changePercent)}
               </div>
-              {c.isWeekly && (
-                <div style={{ fontFamily: C.mono, fontSize: 7, color: C.text3, marginTop: 2, letterSpacing: '0.08em' }}>THIS WEEK</div>
-              )}
+              <div style={{ ...timeframeStyle, marginTop: 2 }}>{TIMEFRAME[edition]}</div>
             </div>
           )
         })}
@@ -984,7 +994,7 @@ function CoverSlide({ c, title, edition }: { c: Record<string, any>; title: stri
 // ─── HEATMAP — S&P 500 treemap ──────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function HeatmapSlide({ c }: { c: Record<string, any> }) {
+function HeatmapSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const stocks: Array<{ symbol: string; name: string; changePercent: number; weight: number }> = c.stocks ?? []
   const spyChange = c.spyChange as number | null
 
@@ -1006,7 +1016,10 @@ function HeatmapSlide({ c }: { c: Record<string, any> }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 4, paddingTop: 2, paddingBottom: 2 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontFamily: C.sans, fontSize: 16, fontWeight: 800, color: C.text }}>S&amp;P 500</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <span style={{ fontFamily: C.sans, fontSize: 16, fontWeight: 800, color: C.text }}>S&amp;P 500</span>
+          <span style={timeframeStyle}>{TIMEFRAME[edition]}</span>
+        </div>
         {spyChange != null && (
           <span style={{
             fontFamily: C.mono, fontSize: 13, fontWeight: 800,
@@ -1222,7 +1235,7 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
 // ─── SIGNALS — overnight/intraday market-moving alerts ─────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function SignalsSlide({ c }: { c: Record<string, any> }) {
+function SignalsSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const signals: Array<{ text: string; severity: string; category: string; explanation?: { type: string; headline?: string; source?: string } }> = c.signals ?? []
   const newsHeat: Array<{ region: string; intensity: number; articles: number }> = c.newsHeat ?? []
   const bigMoves: Array<{ sym: string; name: string; pct: number; price: number }> = c.bigMoves ?? []
@@ -1248,7 +1261,7 @@ function SignalsSlide({ c }: { c: Record<string, any> }) {
               <span style={{ fontFamily: C.mono, fontSize: 13, fontWeight: 800, color: clr(m.pct), ...glow(clr(m.pct), 10) }}>
                 {m.pct >= 0 ? '+' : ''}{m.pct.toFixed(1)}%
               </span>
-              <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3 }}>{price(m.price)}</span>
+              <span style={{ fontFamily: C.mono, fontSize: 7, color: C.text3, letterSpacing: '0.06em' }}>{price(m.price)} · {TIMEFRAME[edition]}</span>
             </div>
           ))}
         </div>
@@ -1344,12 +1357,15 @@ function SignalsSlide({ c }: { c: Record<string, any> }) {
 // ─── SCOREBOARD — heatmap grid ──────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ScoreboardSlide({ c }: { c: Record<string, any> }) {
+function ScoreboardSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const quotes = c.quotes ?? []
   const isWeekly = c.isWeekly === true
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8 }}>
-      <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Market Snapshot</h3>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Market Snapshot</h3>
+        <span style={timeframeStyle}>{TIMEFRAME[edition]}</span>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flex: 1 }}>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {quotes.map((q: any) => {
@@ -1633,7 +1649,7 @@ function NarrativeSlide({ c, title, edition }: { c: Record<string, any>; title: 
 // ─── MOVERS ─────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function MoversSlide({ c }: { c: Record<string, any> }) {
+function MoversSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const gainers = c.gainers ?? []
   const losers = c.losers ?? []
   const maxG = Math.max(...gainers.map((m: { changePercent: number }) => Math.abs(m.changePercent)), 0.01)
@@ -1671,6 +1687,7 @@ function MoversSlide({ c }: { c: Record<string, any> }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
         <div style={{ width: 3, height: 14, background: C.green, borderRadius: 2, boxShadow: `0 0 4px ${C.green}60` }} />
         <span style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: C.green, letterSpacing: '0.14em' }}>WINNERS</span>
+        <span style={{ ...timeframeStyle, marginLeft: 'auto' }}>{TIMEFRAME[edition]}</span>
       </div>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {gainers.slice(0, 5).map((m: any, i: number) => <Row key={i} m={m} i={i} cl={C.green} clD={C.greenDim} max={maxG} />)}
@@ -1690,7 +1707,7 @@ function MoversSlide({ c }: { c: Record<string, any> }) {
 // ─── ENERGY ─────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function EnergySlide({ c }: { c: Record<string, any> }) {
+function EnergySlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const oil = c.oil
   const oilUp = oil && (oil.changePercent ?? 0) >= 0
   const items = [
@@ -1721,6 +1738,7 @@ function EnergySlide({ c }: { c: Record<string, any> }) {
               {pct(oil.changePercent)}
             </span>
           </div>
+          <div style={{ ...timeframeStyle, marginTop: 4 }}>{TIMEFRAME[edition]}</div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
             <svg width={160} height={32} viewBox="0 0 160 32" style={{ opacity: 0.35 }}>
               <defs>
@@ -1768,7 +1786,7 @@ function EnergySlide({ c }: { c: Record<string, any> }) {
 // ─── CRYPTO ─────────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CryptoSlide({ c }: { c: Record<string, any> }) {
+function CryptoSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const btc = c.btc
   const btcUp = btc && (btc.changePercent ?? 0) >= 0
   const alts = [
@@ -1798,6 +1816,7 @@ function CryptoSlide({ c }: { c: Record<string, any> }) {
               {pct(btc.changePercent)}
             </span>
           </div>
+          <div style={{ ...timeframeStyle, marginTop: 4 }}>{edition === 'weekly' ? 'THIS WEEK' : '24H'}</div>
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
             <svg width={160} height={32} viewBox="0 0 160 32" style={{ opacity: 0.3 }}>
               <polyline points={btcUp ? '0,26 22,22 44,24 66,16 88,14 110,10 132,6 160,3' : '0,4 22,7 44,12 66,9 88,16 110,20 132,24 160,28'}
@@ -1849,14 +1868,17 @@ function CryptoSlide({ c }: { c: Record<string, any> }) {
 // ─── FOREX — diverging strength bars ────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ForexSlide({ c }: { c: Record<string, any> }) {
+function ForexSlide({ c, edition }: { c: Record<string, any>; edition: Edition }) {
   const dxy = c.dxy
   const currencies: Array<{ currency: string; score: number }> = c.currencies ?? []
   const maxScore = Math.max(...currencies.map(f => Math.abs(f.score)), 1)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10, padding: '0' }}>
-      <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Currency Markets</h3>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+        <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Currency Markets</h3>
+        <span style={timeframeStyle}>{TIMEFRAME[edition]}</span>
+      </div>
       {dxy && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',

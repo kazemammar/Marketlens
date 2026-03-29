@@ -102,6 +102,39 @@ function SharePrompt({ text, color }: { text: string; color: string }) {
   )
 }
 
+// ─── Card dimensions (fixed for consistent export) ─────────────────────────
+const CARD_W = 540
+const CARD_H = 675  // 540 × 5/4 = 4:5 aspect ratio
+
+/** Proxy external image through our CORS-safe endpoint */
+const proxyImg = (url: string | null | undefined): string | null =>
+  url ? `/api/proxy/image?url=${encodeURIComponent(url)}` : null
+
+/** Convert all <img> in a container to inline base64 data URLs for canvas export */
+async function inlineImages(container: HTMLElement): Promise<Array<{ img: HTMLImageElement; original: string }>> {
+  const imgs = container.querySelectorAll('img')
+  const originals: Array<{ img: HTMLImageElement; original: string }> = []
+  await Promise.allSettled(
+    Array.from(imgs).map(async (img) => {
+      if (!img.src || img.src.startsWith('data:')) return
+      try {
+        let res = await fetch(img.src, { mode: 'cors' }).catch(() => null)
+        if (!res?.ok) res = await fetch(`/api/proxy/image?url=${encodeURIComponent(img.src)}`)
+        if (!res.ok) return
+        const blob = await res.blob()
+        const dataUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result as string)
+          reader.readAsDataURL(blob)
+        })
+        originals.push({ img, original: img.src })
+        img.src = dataUrl
+      } catch { /* skip */ }
+    }),
+  )
+  return originals
+}
+
 // ─── Utilities ──────────────────────────────────────────────────────────────
 
 function fmt(n: number | null | undefined, d = 2): string {
@@ -209,44 +242,6 @@ export default function DailyBriefRenderer() {
     } catch { setError(true) } finally { setLoading(false) }
   }, [])
 
-  /** Convert all cross-origin <img> in a container to inline base64 data URLs */
-  const inlineImages = useCallback(async (container: HTMLElement): Promise<Array<{ img: HTMLImageElement; original: string }>> => {
-    const imgs = container.querySelectorAll('img')
-    const originals: Array<{ img: HTMLImageElement; original: string }> = []
-    await Promise.allSettled(
-      Array.from(imgs).map(async (img) => {
-        if (!img.src || img.src.startsWith('data:')) return
-        try {
-          const res = await fetch(img.src, { mode: 'cors' })
-          if (!res.ok) throw new Error('fetch failed')
-          const blob = await res.blob()
-          const dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onloadend = () => resolve(reader.result as string)
-            reader.readAsDataURL(blob)
-          })
-          originals.push({ img, original: img.src })
-          img.src = dataUrl
-        } catch {
-          try {
-            const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(img.src)}`
-            const res = await fetch(proxyUrl)
-            if (!res.ok) throw new Error('proxy failed')
-            const blob = await res.blob()
-            const dataUrl = await new Promise<string>((resolve) => {
-              const reader = new FileReader()
-              reader.onloadend = () => resolve(reader.result as string)
-              reader.readAsDataURL(blob)
-            })
-            originals.push({ img, original: img.src })
-            img.src = dataUrl
-          } catch { /* skip */ }
-        }
-      }),
-    )
-    return originals
-  }, [])
-
   // Active slides are builder slides in builder mode, API slides in preview mode
   const activeSlides = mode === 'builder' ? builderSlides : (data?.slides ?? [])
 
@@ -267,7 +262,9 @@ export default function DailyBriefRenderer() {
         const filename = `${i + 1}-${slides[i].type}.png`
         const inlined = await inlineImages(el)
         try {
-          const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
+          const dataUrl = await toPng(el, {
+            width: CARD_W, height: CARD_H, pixelRatio: 2, backgroundColor: C.bg,
+          })
           zip.file(filename, dataUrl.split(',')[1], { base64: true })
         } catch (e) {
           console.warn(`Slide ${i + 1} (${slides[i].type}) export failed, skipping`, e)
@@ -636,6 +633,19 @@ function SlideFrame({ slide, index, total, date, edition, onRef }: {
     onRef?.(el)
   }, [onRef])
   const [downloading, setDownloading] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+
+  // Measure container width and compute scale so the fixed-size card fits
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const measure = () => setScale(Math.min(el.clientWidth / CARD_W, 1))
+    measure()
+    const ro = new ResizeObserver(() => measure())
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const handleDownload = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -643,26 +653,11 @@ function SlideFrame({ slide, index, total, date, edition, onRef }: {
     setDownloading(true)
     try {
       const { toPng } = await import('html-to-image')
-      // Inline cross-origin images before export
-      const imgs = slideRef.current.querySelectorAll('img')
-      const originals: Array<{ img: HTMLImageElement; src: string }> = []
-      await Promise.allSettled(
-        Array.from(imgs).map(async (img) => {
-          if (!img.src || img.src.startsWith('data:')) return
-          try {
-            let res = await fetch(img.src, { mode: 'cors' }).catch(() => null)
-            if (!res?.ok) res = await fetch(`/api/proxy/image?url=${encodeURIComponent(img.src)}`)
-            if (!res.ok) return
-            const blob = await res.blob()
-            const dataUrl = await new Promise<string>((resolve) => {
-              const reader = new FileReader(); reader.onloadend = () => resolve(reader.result as string); reader.readAsDataURL(blob)
-            })
-            originals.push({ img, src: img.src }); img.src = dataUrl
-          } catch { /* skip */ }
-        }),
-      )
-      const dataUrl = await toPng(slideRef.current, { pixelRatio: 3, backgroundColor: C.bg })
-      for (const { img, src } of originals) img.src = src // restore
+      const inlined = await inlineImages(slideRef.current)
+      const dataUrl = await toPng(slideRef.current, {
+        width: CARD_W, height: CARD_H, pixelRatio: 2, backgroundColor: C.bg,
+      })
+      for (const { img, original } of inlined) img.src = original
       const link = document.createElement('a')
       link.download = `marketlens-${edition}-${index + 1}-${slide.type}.png`
       link.href = dataUrl
@@ -675,15 +670,19 @@ function SlideFrame({ slide, index, total, date, edition, onRef }: {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', maxWidth: 540 }}>
-      <div ref={setRef} style={{
-        width: '100%', aspectRatio: '4/5',
-        background: C.bg, borderRadius: 20,
-        border: `1px solid ${C.borderMed}`,
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        boxShadow: `0 4px 40px rgba(0,0,0,0.6), 0 0 60px ${accent}08`,
-        position: 'relative',
-      }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', maxWidth: CARD_W }}>
+      {/* Height placeholder for layout flow (transform:scale doesn't affect flow) */}
+      <div style={{ height: CARD_H * scale }}>
+        {/* Scaling wrapper — transforms visually but card stays fixed-size for export */}
+        <div style={{ width: CARD_W, height: CARD_H, transformOrigin: 'top left', transform: scale < 1 ? `scale(${scale})` : undefined }}>
+          <div ref={setRef} style={{
+            width: CARD_W, height: CARD_H,
+            background: C.bg, borderRadius: 20,
+            border: `1px solid ${C.borderMed}`,
+            display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            boxShadow: `0 4px 40px rgba(0,0,0,0.6), 0 0 60px ${accent}08`,
+            position: 'relative',
+          }}>
         {/* Background gradient layers */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: 20, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 50% 20%, #101018 0%, ${C.bg} 70%)` }} />
@@ -791,10 +790,12 @@ function SlideFrame({ slide, index, total, date, edition, onRef }: {
           </div>
         </div>
       </div>
+        </div>{/* end scaling wrapper */}
+      </div>{/* end height placeholder */}
 
-      {/* Download button overlay */}
+      {/* Download button overlay — outside the scaled region */}
       <button onClick={handleDownload} style={{
-        position: 'absolute', top: 12, right: 12, zIndex: 10,
+        position: 'absolute', top: 12 * scale, right: 0, zIndex: 10,
         width: 36, height: 36, borderRadius: 10,
         background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
         border: `1px solid ${C.borderMed}`, cursor: 'pointer',
@@ -1138,10 +1139,10 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
       }}>
         {hero.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={hero.imageUrl} alt="" style={{
+          <img src={proxyImg(hero.imageUrl) ?? ''} alt="" style={{
             position: 'absolute', inset: 0, width: '100%', height: '100%',
             objectFit: 'cover',
-          }} crossOrigin="anonymous" />
+          }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         ) : (
           /* Decorative fallback: abstract chart pattern */
           <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
@@ -1195,9 +1196,9 @@ function HeadlinesSlide({ c, edition }: { c: Record<string, any>; edition: Editi
           }}>
             {a.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={a.imageUrl} alt="" style={{
+              <img src={proxyImg(a.imageUrl) ?? ''} alt="" style={{
                 width: 44, height: 44, borderRadius: 6, objectFit: 'cover', flexShrink: 0,
-              }} crossOrigin="anonymous" />
+              }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
             ) : (
               <div style={{
                 width: 44, height: 44, borderRadius: 6, flexShrink: 0,

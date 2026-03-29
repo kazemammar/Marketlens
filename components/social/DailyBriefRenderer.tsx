@@ -12,7 +12,8 @@ type SlideType =
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface SlideData { type: SlideType; title: string; label: string; content: Record<string, any> }
-interface BriefPayload { slides: SlideData[]; edition: Edition; generatedAt: string; date: string; slideCount: number }
+interface ScoredSlideData extends SlideData { score: number; reason: string; selected: boolean }
+interface BriefPayload { slides: SlideData[]; allSlides: ScoredSlideData[]; edition: Edition; generatedAt: string; date: string; slideCount: number }
 
 // ─── Design System ──────────────────────────────────────────────────────────
 
@@ -146,6 +147,23 @@ function heatColor(pctVal: number): { bg: string; fg: string } {
   return { bg: 'rgba(255,255,255,0.04)', fg: 'rgba(255,255,255,0.5)' }
 }
 
+// ─── Slide type labels for builder UI ───────────────────────────────────────
+
+const SLIDE_TYPE_LABELS: Record<SlideType, string> = {
+  cover: 'Cover', scoreboard: 'Scoreboard', sentiment: 'Sentiment',
+  narrative: 'Narrative', movers: 'Top Movers', energy: 'Energy & Commodities',
+  crypto: 'Crypto', forex: 'Forex', sectors: 'Sectors', radar: 'Radar',
+  outlook: 'Outlook', pulse: 'Pulse', cta: 'Follow CTA',
+  heatmap: 'Heatmap', headlines: 'Headlines', signals: 'Signals',
+}
+
+const SLIDE_TYPE_ICONS: Record<SlideType, string> = {
+  cover: '📰', scoreboard: '📊', sentiment: '🎯', narrative: '📝',
+  movers: '🔥', energy: '⛽', crypto: '₿', forex: '💱',
+  sectors: '🏭', radar: '📡', outlook: '🔮', pulse: '💓',
+  cta: '📢', heatmap: '🗺️', headlines: '📰', signals: '⚡',
+}
+
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export default function DailyBriefRenderer() {
@@ -161,6 +179,11 @@ export default function DailyBriefRenderer() {
   const [error, setError] = useState(false)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
   const [downloadingAll, setDownloadingAll] = useState(false)
+  const [mode, setMode] = useState<'preview' | 'builder'>('preview')
+  // Builder state: custom slide order (initialized from API response)
+  const [builderSlides, setBuilderSlides] = useState<SlideData[]>([])
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
 
   const fetchBrief = useCallback(async (ed: Edition, refresh = false) => {
     setLoading(true); setError(false)
@@ -168,7 +191,9 @@ export default function DailyBriefRenderer() {
       const url = `/api/social/daily-brief?edition=${ed}${refresh ? '&refresh=1' : ''}`
       const r = await fetch(url)
       if (!r.ok) throw new Error('fetch failed')
-      setData(await r.json())
+      const payload: BriefPayload = await r.json()
+      setData(payload)
+      setBuilderSlides(payload.slides.map(s => ({ ...s })))
     } catch { setError(true) } finally { setLoading(false) }
   }, [])
 
@@ -191,7 +216,6 @@ export default function DailyBriefRenderer() {
           originals.push({ img, original: img.src })
           img.src = dataUrl
         } catch {
-          // If CORS fetch fails, try via our proxy
           try {
             const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(img.src)}`
             const res = await fetch(proxyUrl)
@@ -204,14 +228,15 @@ export default function DailyBriefRenderer() {
             })
             originals.push({ img, original: img.src })
             img.src = dataUrl
-          } catch {
-            // Give up on this image — it won't show in the export
-          }
+          } catch { /* skip */ }
         }
       }),
     )
     return originals
   }, [])
+
+  // Active slides are builder slides in builder mode, API slides in preview mode
+  const activeSlides = mode === 'builder' ? builderSlides : (data?.slides ?? [])
 
   const handleDownloadAll = useCallback(async () => {
     if (downloadingAll || !data) return
@@ -222,20 +247,19 @@ export default function DailyBriefRenderer() {
         import('jszip').then(m => m.default),
       ])
       const zip = new JSZip()
+      const slides = activeSlides
 
-      for (let i = 0; i < data.slides.length; i++) {
+      for (let i = 0; i < slides.length; i++) {
         const el = slideRefs.current[i]
         if (!el) continue
-        const filename = `${i + 1}-${data.slides[i].type}.png`
-        // Inline cross-origin images as base64 before export
+        const filename = `${i + 1}-${slides[i].type}.png`
         const inlined = await inlineImages(el)
         try {
           const dataUrl = await toPng(el, { pixelRatio: 3, backgroundColor: C.bg })
           zip.file(filename, dataUrl.split(',')[1], { base64: true })
         } catch (e) {
-          console.warn(`Slide ${i + 1} (${data.slides[i].type}) export failed, skipping`, e)
+          console.warn(`Slide ${i + 1} (${slides[i].type}) export failed, skipping`, e)
         }
-        // Restore original src values
         for (const { img, original } of inlined) img.src = original
       }
 
@@ -250,9 +274,66 @@ export default function DailyBriefRenderer() {
     } finally {
       setDownloadingAll(false)
     }
-  }, [downloadingAll, data])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [downloadingAll, data, mode, builderSlides])
 
   useEffect(() => { fetchBrief(edition) }, [edition, fetchBrief])
+
+  // Keep slideRefs in sync with active slides count (prevents stale refs after builder edits)
+  useEffect(() => {
+    slideRefs.current = slideRefs.current.slice(0, activeSlides.length)
+  }, [activeSlides.length])
+
+  // ── Builder actions ─────────────────────────────────────────────────────
+  const addSlide = useCallback((slide: ScoredSlideData) => {
+    setBuilderSlides(prev => {
+      if (prev.find(s => s.type === slide.type)) return prev
+      // Insert before CTA (last slide)
+      const ctaIdx = prev.findIndex(s => s.type === 'cta')
+      if (ctaIdx >= 0) {
+        const next = [...prev]
+        next.splice(ctaIdx, 0, slide)
+        return next
+      }
+      return [...prev, slide]
+    })
+  }, [])
+
+  const removeSlide = useCallback((type: SlideType) => {
+    if (type === 'cover' || type === 'cta') return
+    setBuilderSlides(prev => prev.filter(s => s.type !== type))
+  }, [])
+
+  const handleDragStart = useCallback((idx: number) => {
+    const s = builderSlides[idx]
+    if (s.type === 'cover' || s.type === 'cta') return
+    setDragIdx(idx)
+  }, [builderSlides])
+
+  const handleDragOver = useCallback((e: React.DragEvent, idx: number) => {
+    e.preventDefault()
+    // Don't allow drop on cover (idx=0) or cta (last)
+    if (idx === 0 || idx === builderSlides.length - 1) return
+    setDragOverIdx(idx)
+  }, [builderSlides.length])
+
+  const handleDrop = useCallback((dropIdx: number) => {
+    if (dragIdx == null || dragIdx === dropIdx) { setDragIdx(null); setDragOverIdx(null); return }
+    // Don't move to cover or cta position
+    if (dropIdx === 0 || dropIdx === builderSlides.length - 1) { setDragIdx(null); setDragOverIdx(null); return }
+    setBuilderSlides(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(dragIdx, 1)
+      next.splice(dropIdx, 0, moved)
+      return next
+    })
+    setDragIdx(null)
+    setDragOverIdx(null)
+  }, [dragIdx, builderSlides.length])
+
+  const resetBuilder = useCallback(() => {
+    if (data) setBuilderSlides(data.slides.map(s => ({ ...s })))
+  }, [data])
 
   const editions: { key: Edition; label: string }[] = [
     { key: 'morning', label: 'Morning' },
@@ -291,13 +372,37 @@ export default function DailyBriefRenderer() {
     </Shell>
   )
 
-  const total = data.slides.length
+  const total = activeSlides.length
   const dateStr = new Date(data.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  const accent = EDITION_ACCENT[edition]
+
+  // Pool: all slides not currently in the builder
+  const poolSlides = (data.allSlides ?? [])
+    .filter(s => s.type !== 'cover' && s.type !== 'cta')
+    .filter(s => !builderSlides.find(bs => bs.type === s.type))
+    .sort((a, b) => b.score - a.score)
 
   return (
     <Shell>
       <EditionBar editions={editions} active={edition} onChange={setEdition} />
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+
+      {/* Mode toggle + action buttons */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        <div style={{
+          display: 'flex', gap: 2, padding: 2, background: C.surface, borderRadius: 8,
+          border: `1px solid ${C.border}`,
+        }}>
+          {(['preview', 'builder'] as const).map(m => (
+            <button key={m} onClick={() => setMode(m)} style={{
+              fontFamily: C.mono, fontSize: 10, fontWeight: mode === m ? 700 : 500,
+              padding: '5px 14px', borderRadius: 6,
+              background: mode === m ? accent : 'transparent',
+              color: mode === m ? '#000' : C.text3,
+              border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+              textTransform: 'uppercase', letterSpacing: '0.08em',
+            }}>{m}</button>
+          ))}
+        </div>
         <button
           onClick={() => fetchBrief(edition, true)}
           style={{
@@ -309,13 +414,21 @@ export default function DailyBriefRenderer() {
         >
           ↻ Regenerate
         </button>
+        {mode === 'builder' && (
+          <button onClick={resetBuilder} style={{
+            fontFamily: C.mono, fontSize: 11, fontWeight: 600,
+            padding: '6px 18px', borderRadius: 8,
+            background: 'transparent', color: C.amber,
+            border: `1px solid ${C.amberDim}`, cursor: 'pointer',
+          }}>↺ Reset</button>
+        )}
         <button
           onClick={handleDownloadAll}
           disabled={downloadingAll}
           style={{
             fontFamily: C.mono, fontSize: 11, fontWeight: 600,
             padding: '6px 18px', borderRadius: 8,
-            background: downloadingAll ? C.surface2 : EDITION_ACCENT[edition],
+            background: downloadingAll ? C.surface2 : accent,
             color: downloadingAll ? C.text3 : '#000',
             border: 'none', cursor: downloadingAll ? 'wait' : 'pointer',
             opacity: downloadingAll ? 0.6 : 1,
@@ -325,10 +438,140 @@ export default function DailyBriefRenderer() {
           {downloadingAll ? `Exporting…` : `↓ Download All (${total})`}
         </button>
       </div>
+
+      {/* Builder mode: split layout */}
+      {mode === 'builder' && (
+        <div style={{
+          display: 'flex', gap: 16, marginBottom: 24, maxWidth: 1200, margin: '0 auto 24px',
+          flexDirection: 'row', flexWrap: 'wrap',
+        }}>
+          {/* Selected slides — drag to reorder */}
+          <div style={{ flex: '1 1 380px', minWidth: 300 }}>
+            <div style={{
+              fontFamily: C.mono, fontSize: 10, fontWeight: 700, color: accent,
+              letterSpacing: '0.15em', marginBottom: 10, textTransform: 'uppercase',
+            }}>
+              SELECTED ({builderSlides.length} slides)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {builderSlides.map((slide, idx) => {
+                const locked = slide.type === 'cover' || slide.type === 'cta'
+                const isDragging = dragIdx === idx
+                const isDragOver = dragOverIdx === idx
+                return (
+                  <div
+                    key={slide.type}
+                    draggable={!locked}
+                    onDragStart={() => handleDragStart(idx)}
+                    onDragOver={(e) => handleDragOver(e, idx)}
+                    onDrop={() => handleDrop(idx)}
+                    onDragEnd={() => { setDragIdx(null); setDragOverIdx(null) }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 12px', borderRadius: 8,
+                      background: isDragOver ? `${accent}15` : isDragging ? `${accent}08` : C.surface,
+                      border: `1px solid ${isDragOver ? accent + '40' : C.border}`,
+                      cursor: locked ? 'default' : 'grab',
+                      opacity: isDragging ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <span style={{ fontFamily: C.mono, fontSize: 10, color: C.muted, width: 18, textAlign: 'center', ...tab }}>
+                      {idx + 1}
+                    </span>
+                    {!locked && (
+                      <span style={{ color: C.text3, fontSize: 11, cursor: 'grab' }}>⋮⋮</span>
+                    )}
+                    {locked && (
+                      <span style={{ color: C.text3, fontSize: 11 }}>🔒</span>
+                    )}
+                    <span style={{ fontFamily: C.mono, fontSize: 12, fontWeight: 600, color: C.text, flex: 1 }}>
+                      {SLIDE_TYPE_LABELS[slide.type]}
+                    </span>
+                    {!locked && (
+                      <button
+                        onClick={() => removeSlide(slide.type)}
+                        style={{
+                          background: 'transparent', border: 'none', cursor: 'pointer',
+                          color: C.red, fontSize: 14, padding: '2px 6px', borderRadius: 4,
+                          lineHeight: 1,
+                        }}
+                        title="Remove slide"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Available slides pool */}
+          <div style={{ flex: '1 1 380px', minWidth: 300 }}>
+            <div style={{
+              fontFamily: C.mono, fontSize: 10, fontWeight: 700, color: C.text3,
+              letterSpacing: '0.15em', marginBottom: 10, textTransform: 'uppercase',
+            }}>
+              AVAILABLE ({poolSlides.length} more)
+            </div>
+            {poolSlides.length === 0 && (
+              <div style={{
+                padding: 16, textAlign: 'center',
+                fontFamily: C.mono, fontSize: 11, color: C.text3,
+                background: C.surface, borderRadius: 8, border: `1px solid ${C.border}`,
+              }}>All slides are selected</div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {poolSlides.map(slide => (
+                <div
+                  key={slide.type}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '8px 12px', borderRadius: 8,
+                    background: C.surface, border: `1px solid ${C.border}`,
+                  }}
+                >
+                  <span style={{ fontSize: 13 }}>{SLIDE_TYPE_ICONS[slide.type]}</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontFamily: C.mono, fontSize: 12, fontWeight: 600, color: C.text }}>
+                      {SLIDE_TYPE_LABELS[slide.type]}
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <span style={{
+                        fontFamily: C.mono, fontSize: 9, fontWeight: 700,
+                        color: slide.score >= 60 ? C.green : slide.score >= 35 ? C.amber : C.text3,
+                      }}>
+                        {slide.score}
+                      </span>
+                      <span style={{ fontFamily: C.mono, fontSize: 8, color: C.text3 }}>
+                        {slide.reason}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => addSlide(slide)}
+                    style={{
+                      fontFamily: C.mono, fontSize: 9, fontWeight: 700,
+                      padding: '4px 10px', borderRadius: 6,
+                      background: `${accent}15`, color: accent,
+                      border: `1px solid ${accent}30`, cursor: 'pointer',
+                    }}
+                  >
+                    + Add
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Slide cards */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
-        {data.slides.map((slide, idx) => (
+        {activeSlides.map((slide, idx) => (
           <SlideFrame
-            key={idx} slide={slide} index={idx} total={total} date={dateStr} edition={data.edition}
+            key={`${slide.type}-${idx}`} slide={slide} index={idx} total={total} date={dateStr} edition={data.edition}
             onRef={(el) => { slideRefs.current[idx] = el }}
           />
         ))}
@@ -989,7 +1232,7 @@ function SignalsSlide({ c }: { c: Record<string, any> }) {
     sev === 'HIGH' ? C.red : sev === 'MED' ? C.amber : C.text3
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8 }}>
       {/* Big moves — compact price ticker row */}
       {bigMoves.length > 0 && (
         <div style={{
@@ -1012,20 +1255,20 @@ function SignalsSlide({ c }: { c: Record<string, any> }) {
       )}
 
       {/* Signals list */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
         {signals.slice(0, 5).map((s, i) => {
           const sc = severityColor(s.severity)
           return (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 7,
-              padding: '7px 10px', background: C.surface, borderRadius: 8,
+              padding: '10px 12px', background: C.surface, borderRadius: 8,
               border: `1px solid ${C.border}`, borderLeft: `3px solid ${sc}60`,
             }}>
               <span style={{
                 width: 6, height: 6, borderRadius: '50%', background: sc, flexShrink: 0,
                 boxShadow: `0 0 6px ${sc}60`,
               }} />
-              <span style={{ fontFamily: C.sans, fontSize: 10, fontWeight: 600, color: C.text, flex: 1, lineHeight: 1.3 }}>{s.text}</span>
+              <span style={{ fontFamily: C.sans, fontSize: 11, fontWeight: 600, color: C.text, flex: 1, lineHeight: 1.3 }}>{s.text}</span>
               <span style={{
                 fontFamily: C.mono, fontSize: 7, fontWeight: 800, color: sc,
                 padding: '2px 5px', borderRadius: 3, background: `${sc}14`, flexShrink: 0,
@@ -1040,7 +1283,7 @@ function SignalsSlide({ c }: { c: Record<string, any> }) {
         {/* News heat */}
         {newsHeat.length > 0 && (
           <div style={{
-            flex: 1, padding: '8px 10px', background: C.surface, borderRadius: 8,
+            flex: 1, padding: '10px 12px', background: C.surface, borderRadius: 8,
             border: `1px solid ${C.border}`,
           }}>
             <span style={{
@@ -1067,7 +1310,7 @@ function SignalsSlide({ c }: { c: Record<string, any> }) {
         {/* Chokepoints */}
         {chokepoints.length > 0 && (
           <div style={{
-            flex: 1, padding: '8px 10px', background: C.surface, borderRadius: 8,
+            flex: 1, padding: '10px 12px', background: C.surface, borderRadius: 8,
             border: `1px solid ${C.border}`,
           }}>
             <span style={{
@@ -1105,8 +1348,9 @@ function ScoreboardSlide({ c }: { c: Record<string, any> }) {
   const quotes = c.quotes ?? []
   const isWeekly = c.isWeekly === true
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8 }}>
+      <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Market Snapshot</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flex: 1 }}>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {quotes.map((q: any) => {
           const c2 = clr(q.changePercent)
@@ -1116,7 +1360,7 @@ function ScoreboardSlide({ c }: { c: Record<string, any> }) {
           return (
             <div key={q.symbol} style={{
               background: `linear-gradient(135deg, ${bgColor} 0%, ${C.surface} 100%)`,
-              borderRadius: 10, padding: '12px 12px 10px',
+              borderRadius: 10, padding: '16px 14px 14px',
               border: `1px solid ${C.border}`, borderLeft: `3px solid ${c2}60`,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -1126,7 +1370,7 @@ function ScoreboardSlide({ c }: { c: Record<string, any> }) {
                   padding: '1px 6px', borderRadius: 3, background: clrDim(q.changePercent),
                 }}>{isWeekly ? 'WK' : arrow(q.changePercent)}</span>
               </div>
-              <div style={{ fontFamily: C.mono, fontSize: 22, fontWeight: 800, color: C.text, ...tab, ...glow(C.text, 8), lineHeight: 1 }}>
+              <div style={{ fontFamily: C.mono, fontSize: 26, fontWeight: 800, color: C.text, ...tab, ...glow(C.text, 8), lineHeight: 1 }}>
                 {price(q.price)}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 6 }}>
@@ -1143,6 +1387,7 @@ function ScoreboardSlide({ c }: { c: Record<string, any> }) {
           )
         })}
       </div>
+      <SharePrompt text="SHARE THIS" color={C.text3} />
     </div>
   )
 }
@@ -1455,11 +1700,12 @@ function EnergySlide({ c }: { c: Record<string, any> }) {
   ].filter(o => o.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8, padding: '0' }}>
       {oil && (
         <div style={{
-          textAlign: 'center', padding: '12px 0', borderRadius: 12,
+          textAlign: 'center', padding: '20px 0', borderRadius: 12, flex: 1,
           background: `radial-gradient(circle at 50% 50%, ${clr(oil.changePercent)}06 0%, transparent 70%)`,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         }}>
           <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 4, fontWeight: 600 }}>BRENT CRUDE</div>
           <div style={{ fontFamily: C.mono, fontSize: 46, fontWeight: 900, color: C.text, ...tab, ...glow(C.text, 16), lineHeight: 1 }}>
@@ -1492,7 +1738,7 @@ function EnergySlide({ c }: { c: Record<string, any> }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: items.length === 3 ? '1fr 1fr 1fr' : '1fr 1fr', gap: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: items.length === 3 ? '1fr 1fr 1fr' : '1fr 1fr', gap: 6, flex: 0 }}>
         {items.map(({ name, data }) => {
           const c2 = clr(data.changePercent)
           return (
@@ -1531,11 +1777,12 @@ function CryptoSlide({ c }: { c: Record<string, any> }) {
   ].filter(o => o.data)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 8, padding: '0' }}>
       {btc && (
         <div style={{
-          textAlign: 'center', padding: '12px 0', borderRadius: 12,
+          textAlign: 'center', padding: '20px 0', borderRadius: 12, flex: 1,
           background: `radial-gradient(circle at 50% 50%, ${clr(btc.changePercent)}06 0%, transparent 70%)`,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         }}>
           <div style={{ fontFamily: C.mono, fontSize: 9, color: C.text3, letterSpacing: '0.2em', marginBottom: 4, fontWeight: 600 }}>BITCOIN</div>
           <div style={{ fontFamily: C.mono, fontSize: 40, fontWeight: 900, color: C.text, ...tab, ...glow(C.text, 16), lineHeight: 1 }}>
@@ -1560,7 +1807,7 @@ function CryptoSlide({ c }: { c: Record<string, any> }) {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flex: 0 }}>
         {alts.map(({ name, sym, data }) => {
           const c2 = clr(data.changePercent)
           return (
@@ -1608,7 +1855,8 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
   const maxScore = Math.max(...currencies.map(f => Math.abs(f.score)), 1)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 8, padding: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10, padding: '0' }}>
+      <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Currency Markets</h3>
       {dxy && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1627,18 +1875,18 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
       )}
 
       {currencies.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1, justifyContent: 'space-evenly' }}>
           {currencies.slice(0, 10).map(f => {
             const bw = (Math.abs(f.score) / maxScore) * 50
             const fc = f.score >= 0 ? C.green : C.red
             const intensity = Math.min(Math.abs(f.score) / maxScore, 1)
             return (
               <div key={f.currency} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 800, color: C.text, width: 30 }}>{f.currency}</span>
-                <div style={{ flex: 1, height: 14, position: 'relative', background: C.surface, borderRadius: 7, overflow: 'hidden' }}>
+                <span style={{ fontFamily: C.mono, fontSize: 13, fontWeight: 800, color: C.text, width: 30 }}>{f.currency}</span>
+                <div style={{ flex: 1, height: 20, position: 'relative', background: C.surface, borderRadius: 10, overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: C.muted }} />
                   <div style={{
-                    position: 'absolute', height: '100%', borderRadius: 7,
+                    position: 'absolute', height: '100%', borderRadius: 10,
                     background: `linear-gradient(${f.score >= 0 ? '90deg' : '270deg'}, ${fc}40, ${fc})`,
                     width: `${Math.max(bw, 2)}%`,
                     opacity: 0.5 + intensity * 0.5,
@@ -1646,7 +1894,7 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
                   }} />
                 </div>
                 <span style={{
-                  fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: fc,
+                  fontFamily: C.mono, fontSize: 12, fontWeight: 800, color: fc,
                   width: 36, textAlign: 'right', ...tab, ...glow(fc, 6),
                 }}>{f.score > 0 ? '+' : ''}{f.score.toFixed(1)}</span>
               </div>
@@ -1665,6 +1913,7 @@ function ForexSlide({ c }: { c: Record<string, any> }) {
           padding: '8px 12px', borderRadius: 8, background: C.surface, border: `1px solid ${C.border}`,
         }}>{c.narrative}</p>
       )}
+      <SharePrompt text="SHARE THIS" color={C.text3} />
     </div>
   )
 }
@@ -1684,13 +1933,18 @@ function SectorsSlide({ c }: { c: Record<string, any> }) {
   const cols = 3
   const rows = Math.ceil(sectors.length / cols)
 
+  const posCount = sectors.filter(s => s.score > 0).length
+  const negCount = sectors.filter(s => s.score < 0).length
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 4, padding: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 4, padding: '0' }}>
+      <h3 style={{ fontFamily: C.mono, fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '0.04em' }}>Sector Rotation</h3>
       <div style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${cols}, 1fr)`,
         gridTemplateRows: `repeat(${rows}, 1fr)`,
         gap: 4,
+        flex: 1,
       }}>
         {sectors.slice(0, 12).map(s => {
           const intensity = Math.min(Math.abs(s.score) / mx, 1)
@@ -1701,23 +1955,33 @@ function SectorsSlide({ c }: { c: Record<string, any> }) {
             <div key={s.sector} style={{
               background: bg, borderRadius: 8,
               display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', padding: '6px 4px',
+              alignItems: 'center', justifyContent: 'center', padding: '14px 6px',
               border: '1px solid rgba(255,255,255,0.04)',
             }}>
               <span style={{
-                fontFamily: C.mono, fontSize: 8, fontWeight: 700, color: fc, opacity: 0.7,
+                fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: fc, opacity: 0.7,
                 letterSpacing: '0.04em', textAlign: 'center',
                 overflow: 'hidden', textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap' as const, maxWidth: '100%',
               }}>{s.sector.replace('Communication Services', 'Comms').replace('Consumer Discretionary', 'Disc.').replace('Consumer Staples', 'Staples').replace('Information Technology', 'Tech').replace('Health Care', 'Health').replace('Real Estate', 'Real Est.').toUpperCase()}</span>
               <span style={{
-                fontFamily: C.mono, fontSize: 16, fontWeight: 900, color: fc, ...tab,
+                fontFamily: C.mono, fontSize: 22, fontWeight: 900, color: fc, ...tab,
                 marginTop: 2,
               }}>{s.score > 0 ? '+' : ''}{s.score.toFixed(1)}</span>
             </div>
           )
         })}
       </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '4px 0' }}>
+        <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: C.green }}>
+          {posCount} POSITIVE
+        </span>
+        <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 600, color: C.text3 }}>/</span>
+        <span style={{ fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: C.red }}>
+          {negCount} NEGATIVE
+        </span>
+      </div>
+      <SharePrompt text="SHARE THIS" color={C.text3} />
     </div>
   )
 }
@@ -1730,16 +1994,22 @@ function RadarSlide({ c }: { c: Record<string, any> }) {
   const signals = c.signals ?? []
   const vc = verdict === 'BUY' ? C.green : verdict === 'SELL' ? C.red : C.amber
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const buyCount = signals.filter((s: any) => s.signal === 'BUY' || s.signal === 'BULLISH').length
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sellCount = signals.filter((s: any) => s.signal === 'SELL' || s.signal === 'BEARISH').length
+  const holdCount = signals.length - buyCount - sellCount
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 12 }}>
       <div style={{ textAlign: 'center' }}>
         <span style={{
-          fontFamily: C.mono, fontSize: 38, fontWeight: 900, color: vc,
+          fontFamily: C.mono, fontSize: 48, fontWeight: 900, color: vc,
           ...glow(vc, 24), letterSpacing: '0.08em',
         }}>{verdict}</span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, justifyContent: 'space-evenly' }}>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {signals.slice(0, 6).map((s: any, i: number) => {
           const sc = s.signal === 'BUY' || s.signal === 'BULLISH' ? C.green
@@ -1747,22 +2017,38 @@ function RadarSlide({ c }: { c: Record<string, any> }) {
           return (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 12px', background: C.surface, borderRadius: 8,
+              padding: '12px 14px', background: C.surface, borderRadius: 8,
               border: `1px solid ${C.border}`, borderLeft: `3px solid ${sc}60`,
             }}>
               <span style={{
                 width: 7, height: 7, borderRadius: '50%', background: sc, flexShrink: 0,
                 boxShadow: `0 0 6px ${sc}60`,
               }} />
-              <span style={{ fontFamily: C.mono, fontSize: 11, fontWeight: 600, color: C.text, flex: 1 }}>{s.name ?? s.indicator ?? `Signal ${i + 1}`}</span>
+              <span style={{ fontFamily: C.mono, fontSize: 13, fontWeight: 600, color: C.text, flex: 1 }}>{s.name ?? s.indicator ?? `Signal ${i + 1}`}</span>
               <span style={{
-                fontFamily: C.mono, fontSize: 9, fontWeight: 800, color: sc,
+                fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: sc,
                 padding: '2px 8px', borderRadius: 4, background: `${sc}14`,
               }}>{s.signal ?? s.value ?? '—'}</span>
             </div>
           )
         })}
       </div>
+
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
+        padding: '6px 0',
+      }}>
+        <span style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: C.green }}>
+          {buyCount} BUY
+        </span>
+        <span style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: C.amber }}>
+          {holdCount} HOLD
+        </span>
+        <span style={{ fontFamily: C.mono, fontSize: 10, fontWeight: 800, color: C.red }}>
+          {sellCount} SELL
+        </span>
+      </div>
+      <SharePrompt text="SHARE THIS" color={C.text3} />
     </div>
   )
 }
@@ -1854,7 +2140,7 @@ function PulseSlide({ c }: { c: Record<string, any> }) {
   const maxPct = Math.max(3, ...metrics.map(m => Math.abs(m.changePercent)))
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center', gap: 10, padding: '0' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 10, padding: '0' }}>
       {/* Bias badge */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
         <div style={{
@@ -1867,7 +2153,7 @@ function PulseSlide({ c }: { c: Record<string, any> }) {
 
       {/* Diverging bar chart */}
       <div style={{
-        display: 'flex', flexDirection: 'column', gap: 6,
+        display: 'flex', flexDirection: 'column', gap: 6, flex: 1,
         padding: '12px 14px', borderRadius: 10, background: C.surface,
         border: `1px solid ${C.border}`,
       }}>
@@ -1879,12 +2165,12 @@ function PulseSlide({ c }: { c: Record<string, any> }) {
             <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
               {/* Label */}
               <span style={{
-                fontFamily: C.mono, fontSize: 9, fontWeight: 700, color: C.text3,
+                fontFamily: C.mono, fontSize: 10, fontWeight: 700, color: C.text3,
                 width: 80, flexShrink: 0, letterSpacing: '0.04em',
               }}>{m.label}</span>
 
               {/* Diverging bar — centered */}
-              <div style={{ flex: 1, height: 20, position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <div style={{ flex: 1, height: 24, position: 'relative', display: 'flex', alignItems: 'center' }}>
                 {/* Center line */}
                 <div style={{
                   position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1,

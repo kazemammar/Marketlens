@@ -38,14 +38,17 @@ interface GroqBriefResponse {
   weekRecap:         string   // weekly/weekend only
   watchItems:        string[]
   slideOrder:        SlideType[]
+  allScores:         SlideScore[]
   topHeadlineIndices: number[] // 1-based indices of the 6 most important headlines
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface SlideData { type: SlideType; title: string; label: string; content: Record<string, any> }
+interface ScoredSlideData extends SlideData { score: number; reason: string; selected: boolean }
 
 interface DailyBriefPayload {
   slides:      SlideData[]
+  allSlides:   ScoredSlideData[]
   edition:     Edition
   generatedAt: string
   date:        string
@@ -352,6 +355,7 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     ['energy',           '/api/energy'],
     ['signals',          '/api/signals'],
     ['newsHeat',         '/api/news-heat'],
+    ['trending',         '/api/trending'],
   ]
 
   // Fetch archived articles from Redis alongside live API calls
@@ -486,14 +490,15 @@ async function generateBrief(edition: Edition, date: string): Promise<DailyBrief
     })
   }
 
-  const slides = buildSlides(groqResponse, extracted, edition)
+  const { selectedSlides, allSlides } = buildSlides(groqResponse, extracted, edition)
 
   return {
-    slides,
+    slides: selectedSlides,
+    allSlides,
     edition,
     generatedAt: new Date().toISOString(),
     date,
-    slideCount: slides.length,
+    slideCount: selectedSlides.length,
   }
 }
 
@@ -531,6 +536,7 @@ interface ExtractedData {
   newsArticles: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>
   newsArticlesAll: Array<{ headline: string; imageUrl: string | null; source: string; url: string | null; publishedAt: number | null }>
   heatmapStocks: Array<{ symbol: string; name: string; changePercent: number; weight: number }>
+  trendingKeywords: Array<{ keyword: string; spike: number; severity: string }>
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -792,6 +798,15 @@ function extractData(raw: Record<string, any>, edition: Edition): ExtractedData 
       articles: h.articles ?? h.count ?? 0,
     }))
 
+  const trendingRaw = raw.trending
+  const trendingKeywords = (trendingRaw?.keywords ?? (Array.isArray(trendingRaw) ? trendingRaw : []))
+    .slice(0, 8)
+    .map((t: { keyword?: string; spike?: number; severity?: string }) => ({
+      keyword: t.keyword ?? '',
+      spike: t.spike ?? 0,
+      severity: t.severity ?? 'LOW',
+    }))
+
   // Heatmap: top 15 S&P stocks by market-cap weight
   const HEATMAP_WEIGHTS: Record<string, number> = {
     AAPL: 36, MSFT: 31, NVDA: 30, AMZN: 22, GOOGL: 21,
@@ -819,7 +834,7 @@ function extractData(raw: Record<string, any>, edition: Edition): ExtractedData 
     radarVerdict, chokepoints, forexStrength, sectorSentiment, headlines,
     newsArticles, newsArticlesAll, heatmapStocks,
     pulseText, commodities, centralBanks, econEvents, earnings, predictions, energy,
-    signals, newsHeat,
+    signals, newsHeat, trendingKeywords,
   }
 }
 
@@ -873,7 +888,7 @@ function scoreSlides(
   d: ExtractedData,
   edition: Edition,
   groqNarrative: { whyMoved: string; weekRecap: string },
-): SlideType[] {
+): { selected: SlideType[]; allScores: SlideScore[] } {
   const isWeekend = edition === 'weekend'
   const isWeekly  = edition === 'weekly'
   const middleCount = isWeekend ? 4 : isWeekly ? 6 : 5
@@ -915,8 +930,13 @@ function scoreSlides(
   // ── signals ──────────────────────────────────────────────────
   {
     let sc = 15, why = 'base'
-    const high = d.signals.filter(sg => sg.severity === 'HIGH').length
-    const med  = d.signals.filter(sg => sg.severity === 'MED').length
+    // Weekend: only count crypto signals for scoring (non-crypto markets are closed)
+    const CRYPTO_KW = ['bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'sol', 'crypto']
+    const relevantSignals = edition === 'weekend'
+      ? d.signals.filter(sg => CRYPTO_KW.some(kw => sg.text.toLowerCase().includes(kw)))
+      : d.signals
+    const high = relevantSignals.filter(sg => sg.severity === 'HIGH').length
+    const med  = relevantSignals.filter(sg => sg.severity === 'MED').length
     sc += Math.min(high, 3) * 20
     sc += Math.min(med, 3) * 8
     if (high > 0) why = `${high} HIGH signals`
@@ -942,7 +962,7 @@ function scoreSlides(
 
   // ── movers ───────────────────────────────────────────────────
   {
-    let sc = 30, why = 'base'
+    let sc = 50, why = 'base'
     const topGain = d.gainers[0]?.changePercent ?? 0
     const topLoss = d.losers[0]?.changePercent ?? 0
     if (topGain > 8 || topLoss < -8)      { sc += 25; why = `extreme mover ${Math.max(topGain, abs(topLoss)).toFixed(1)}%` }
@@ -959,8 +979,8 @@ function scoreSlides(
     const brentPct = abs(q['BZ=F']?.changePercent)
     const ngPct    = abs(q['NG=F']?.changePercent)
     const goldPct  = abs(q['GC=F']?.changePercent)
-    if (brentPct > 3)      { sc += 35; why = `Brent ${brentPct.toFixed(1)}%` }
-    else if (brentPct > 2) { sc += 25; why = `Brent ${brentPct.toFixed(1)}%` }
+    if (brentPct > 3)      { sc += 25; why = `Brent ${brentPct.toFixed(1)}%` }
+    else if (brentPct > 2) { sc += 18; why = `Brent ${brentPct.toFixed(1)}%` }
     if (ngPct > 4)   { sc += 20; why += `, NatGas ${ngPct.toFixed(1)}%` }
     if (goldPct > 1.5) { sc += 15; why += `, Gold ${goldPct.toFixed(1)}%` }
     const activeChokepoints = d.chokepoints.filter(c => c.status !== 'NORMAL').length
@@ -980,13 +1000,13 @@ function scoreSlides(
     const cfg = d.cryptoFearGreed?.score ?? 50
     if (cfg <= 15 || cfg >= 85)      { sc += 15; why += `, crypto F&G ${cfg}` }
     else if (cfg <= 25 || cfg >= 75) { sc += 10; why += `, crypto F&G ${cfg}` }
-    if (isWeekend) { sc += 15; why += ' (weekend — only live market)' }
+    if (isWeekend) { sc = 100; why = 'guaranteed for weekend (only live market)' }
     s('crypto', sc, why)
   }
 
   // ── forex ────────────────────────────────────────────────────
   {
-    let sc = 15, why = 'base'
+    let sc = 25, why = 'base'
     const dxyPct = abs(q['DX-Y.NYB']?.changePercent)
     if (dxyPct > 0.8)      { sc += 25; why = `DXY ${dxyPct.toFixed(2)}%` }
     else if (dxyPct > 0.5) { sc += 15; why = `DXY ${dxyPct.toFixed(2)}%` }
@@ -1000,7 +1020,7 @@ function scoreSlides(
 
   // ── sectors ──────────────────────────────────────────────────
   {
-    let sc = 15, why = 'base'
+    let sc = 25, why = 'base'
     const secScores = d.sectorSentiment.map(x => x.score)
     const secSpread = secScores.length > 1 ? Math.max(...secScores) - Math.min(...secScores) : 0
     if (secSpread > 6) { sc += 25; why = `rotation spread ${secSpread.toFixed(1)}` }
@@ -1013,7 +1033,7 @@ function scoreSlides(
 
   // ── radar ────────────────────────────────────────────────────
   {
-    let sc = 15, why = 'base'
+    let sc = 25, why = 'base'
     const verdict = d.radarVerdict?.verdict ?? 'MIXED'
     if (verdict === 'BUY' || verdict === 'SELL') { sc += 25; why = `radar ${verdict}` }
     const signalCount = d.radarVerdict?.signals?.length ?? 0
@@ -1043,14 +1063,14 @@ function scoreSlides(
     if (groqNarrative.whyMoved || groqNarrative.weekRecap) { sc += 20; why = 'Groq generated content' }
     const activeChokepoints = d.chokepoints.filter(c => c.status !== 'NORMAL').length
     if (activeChokepoints > 0) { sc += 15; why += `, ${activeChokepoints} chokepoints` }
-    // Guarantee for recap editions
-    if (isWeekend || isWeekly) { sc = 100; why = 'guaranteed for recap edition' }
+    // Guarantee for recap editions and close
+    if (isWeekend || isWeekly || edition === 'close') { sc = 100; why = `guaranteed for ${edition} edition` }
     s('narrative', sc, why)
   }
 
   // ── pulse ────────────────────────────────────────────────────
   {
-    let sc = 20, why = 'base'
+    let sc = 30, why = 'base'
     const spyPct = q['SPY']?.changePercent ?? 0
     const btcPct = q['BTC-USD']?.changePercent ?? 0
     const riskAvg = (spyPct + btcPct) / 2
@@ -1103,7 +1123,7 @@ function scoreSlides(
   // Log for debugging
   console.log('[daily-brief] slide scores:', selected.map(x => `${x.type}:${x.score} (${x.reason})`).join(', '))
 
-  return selected.map(x => x.type)
+  return { selected: selected.map(x => x.type), allScores: eligible }
 }
 
 // ─── Groq call ──────────────────────────────────────────────────────────────
@@ -1174,6 +1194,11 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
     .map(s => `${s.sector}: ${s.score > 0 ? '+' : ''}${s.score.toFixed(1)}`)
     .join(', ')
 
+  const cbLines = d.centralBanks.slice(0, 6).map(cb => {
+    const chg = cb.change ? ` (${cb.change > 0 ? '+' : ''}${cb.change}bp)` : ''
+    return `${cb.bank}: ${cb.rate}%${chg}`
+  }).join(', ')
+
   // Pass headlines for Groq to rank by importance (more for weekly editions)
   // For weekly wrap: include source + date so Groq can assess day-by-day importance
   const isWeeklyWrap = edition === 'weekly'
@@ -1195,7 +1220,7 @@ async function callGroq(edition: Edition, d: ExtractedData): Promise<GroqBriefRe
   }).join('\n')
 
   const weekRecapField = edition === 'weekly'
-    ? `"weekRecap": "<exactly 4 bullets separated by \\n. Format: DAY_LABEL: what happened — consequence. NO dollar amounts (we inject real prices). NO markdown. Example format: 'MONDAY: Markets opened cautious on tariff fears — S&P fell sharply\\nWEDNESDAY: Brent crude spiked after Saudi supply cut\\nTHURSDAY: Tech earnings disappointed — NVDA and META led selloff\\nFRIDAY: Fear index reached extreme levels, worst reading since 2022'>",`
+    ? `"weekRecap": "<exactly 4 bullets separated by \\n. Each bullet: DAY_NAME: specific event from THIS week's data above — market consequence. Cover 4 DIFFERENT days using REAL events from the MARKET DATA provided. NO dollar amounts or percentages (we inject real prices). NO markdown. Do NOT invent events — only reference data you can see above.>",`
     : ''
 
   // Signals summary for Groq context
@@ -1221,7 +1246,8 @@ CRYPTO FEAR & GREED: ${d.cryptoFearGreed ? `${d.cryptoFearGreed.score} (${d.cryp
 CHOKEPOINTS: ${chokepointLines}
 ${signalLines ? `\nSIGNALS:\n${signalLines}` : ''}
 ${isWeekend ? '' : `FOREX: ${fxLines || 'N/A'}
-SECTORS: ${sectorLines || 'N/A'}`}
+SECTORS: ${sectorLines || 'N/A'}
+CENTRAL BANKS: ${cbLines || 'N/A'}`}
 
 HEADLINES:
 ${headlineBlock || 'N/A'}
@@ -1284,7 +1310,7 @@ WRITING RULES:
   try { parsed = JSON.parse(raw) } catch { parsed = {} }
 
   // ── Data-driven slide selection — scored by how interesting the data is ────
-  const dynamicMiddle = scoreSlides(d, edition, {
+  const { selected: dynamicMiddle, allScores } = scoreSlides(d, edition, {
     whyMoved: parsed.whyMoved ?? '',
     weekRecap: parsed.weekRecap ?? '',
   })
@@ -1353,6 +1379,7 @@ WRITING RULES:
     watchItems:       Array.isArray(parsed.watchItems) ? parsed.watchItems.slice(0, 6) : [],
     topHeadlineIndices: Array.isArray(parsed.topHeadlineIndices) ? parsed.topHeadlineIndices : [],
     slideOrder:       slideOrder as SlideType[],
+    allScores,
   }
 }
 
@@ -1362,7 +1389,7 @@ function buildSlides(
   groq: GroqBriefResponse,
   d: ExtractedData,
   edition: Edition,
-): SlideData[] {
+): { selectedSlides: SlideData[]; allSlides: ScoredSlideData[] } {
   const weekly = isWeeklyEdition(edition)
 
   const SYMBOL_LABELS: Record<string, string> = {
@@ -1426,6 +1453,7 @@ function buildSlides(
           topHeadline: d.newsArticles[0]?.headline ?? d.headlines[0] ?? null,
           isWeekly: edition === 'weekly',
           dateRange: edition === 'weekly' ? getWeekDateRange() : null,
+          trendingKeywords: d.trendingKeywords.filter(t => t.severity === 'HIGH' || t.spike > 3).slice(0, 3).map(t => t.keyword),
         },
       }
     },
@@ -1450,13 +1478,13 @@ function buildSlides(
 
     sentiment: () => ({
       type: 'sentiment',
-      title: 'Market Sentiment',
-      label: 'FEAR & GREED',
+      title: edition === 'weekend' ? 'Crypto Sentiment' : 'Market Sentiment',
+      label: edition === 'weekend' ? 'CRYPTO SENTIMENT' : 'FEAR & GREED',
       content: {
-        fearGreed: d.fearGreed,
+        fearGreed: edition === 'weekend' ? null : d.fearGreed,
         cryptoFearGreed: d.cryptoFearGreed,
-        riskLevel: d.riskLevel,
-        radarVerdict: d.radarVerdict?.verdict ?? 'MIXED',
+        riskLevel: edition === 'weekend' ? null : d.riskLevel,
+        radarVerdict: edition === 'weekend' ? null : (d.radarVerdict?.verdict ?? 'MIXED'),
         sentimentVerdict: groq.sentimentVerdict,
       },
     }),
@@ -1563,23 +1591,39 @@ function buildSlides(
 
     signals: () => {
       // Top movers: pick the biggest absolute % moves from key assets
-      const ASSET_LABELS: Record<string, string> = {
+      // Weekend: crypto only (all other markets closed)
+      const ALL_ASSETS: Record<string, string> = {
         SPY: 'S&P 500', QQQ: 'Nasdaq', 'BZ=F': 'Brent Crude', 'GC=F': 'Gold',
         'BTC-USD': 'Bitcoin', 'ETH-USD': 'Ethereum', 'DX-Y.NYB': 'Dollar',
         'NG=F': 'Nat Gas', 'SI=F': 'Silver', 'SOL-USD': 'Solana',
       }
-      const bigMoves = Object.entries(ASSET_LABELS)
+      const CRYPTO_ONLY: Record<string, string> = {
+        'BTC-USD': 'Bitcoin', 'ETH-USD': 'Ethereum', 'SOL-USD': 'Solana',
+      }
+      const assetLabels = edition === 'weekend' ? CRYPTO_ONLY : ALL_ASSETS
+      const bigMoves = Object.entries(assetLabels)
         .map(([sym, name]) => ({ sym, name, pct: d.quotes[sym]?.changePercent ?? 0, price: d.quotes[sym]?.price ?? 0 }))
         .filter(m => Math.abs(m.pct) > 0.5)
         .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
         .slice(0, 4)
 
+      const signalTitle: Record<Edition, string> = {
+        morning: 'Overnight Signals', close: "Today's Signals",
+        weekend: 'Weekend Signals', weekly: "Week's Key Signals",
+      }
+
+      // Weekend: filter signals to crypto-only (other markets are closed/stale)
+      const CRYPTO_KEYWORDS = ['bitcoin', 'btc', 'ethereum', 'eth', 'solana', 'sol', 'crypto']
+      const filteredSignals = edition === 'weekend'
+        ? d.signals.filter(sg => CRYPTO_KEYWORDS.some(kw => sg.text.toLowerCase().includes(kw))).slice(0, 5)
+        : d.signals.slice(0, 5)
+
       return {
         type: 'signals' as SlideType,
-        title: edition === 'morning' ? 'Overnight Signals' : "Today's Signals",
+        title: signalTitle[edition],
         label: 'WHAT MOVED',
         content: {
-          signals: d.signals.slice(0, 5),
+          signals: filteredSignals,
           newsHeat: d.newsHeat.slice(0, 4),
           bigMoves,
           activeChokepoints: d.chokepoints.filter(c => c.status !== 'NORMAL').slice(0, 2),
@@ -1672,8 +1716,34 @@ function buildSlides(
     },
   }
 
-  return groq.slideOrder.map(type => {
+  // Build ALL slides (for card builder pool), attach score metadata
+  const allSlides: ScoredSlideData[] = []
+  const selectedSet = new Set(groq.slideOrder)
+
+  for (const { type, score, reason } of groq.allScores) {
+    const builder = builders[type]
+    if (!builder) continue
+    allSlides.push({
+      ...builder(),
+      score,
+      reason,
+      selected: selectedSet.has(type),
+    })
+  }
+
+  // Always include cover and cta in allSlides (they have no scoring)
+  if (!allSlides.find(s => s.type === 'cover')) {
+    allSlides.unshift({ ...builders.cover(), score: 100, reason: 'always first', selected: true })
+  }
+  if (!allSlides.find(s => s.type === 'cta')) {
+    allSlides.push({ ...builders.cta(), score: 100, reason: 'always last', selected: true })
+  }
+
+  // Selected slides in the order determined by scoring
+  const selectedSlides = groq.slideOrder.map(type => {
     const builder = builders[type]
     return builder ? builder() : builders.cover()
   })
+
+  return { selectedSlides, allSlides }
 }
